@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office A - Monthly Report Submission Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #0056b3; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .report-section { border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
+        .button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
+        button { background-color: #007bff; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #0056b3; }
+        #status { margin-top: 20px; padding: 10px; border-radius: 4px; display: none; text-align: center; font-weight: bold; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Office A Reporting Portal</h2>
+    <p>Select your office, choose a report subject, attach your document, and submit.</p>
+
+    <div class="form-group">
+        <label for="officeSelect">Select Sub-Office:</label>
+        <select id="officeSelect">
+            <option value="">-- Choose Office --</option>
+            <option value="SubOffice_1">Sub-Office 1</option>
+            <option value="SubOffice_2">Sub-Office 2</option>
+            <option value="SubOffice_3">Sub-Office 3</option>
+            <option value="SubOffice_4">Sub-Office 4</option>
+            <option value="SubOffice_5">Sub-Office 5</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="fileInput">Select Document (PDF, Excel, Word, etc.):</label>
+        <input type="file" id="fileInput">
+    </div>
+
+    <div class="report-section">
+        <h3>Select Report Subject to Upload</h3>
+        <div class="button-grid">
+            <button onclick="uploadReport('Report_A')">Report A</button>
+            <button onclick="uploadReport('Report_B')">Report B</button>
+            <button onclick="uploadReport('Report_C')">Report C</button>
+            <button onclick="uploadReport('Report_D')">Report D</button>
+            <button onclick="uploadReport('Report_E')">Report E</button>
+        </div>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuNh4mkgddf5CaG-APmwvAZRzu-_ZhaBE6TxPjI5ziw5fc6lvnxgHt8axzNr1ij06ifw/exec";
+
+    function uploadReport(reportType) {
+        const office = document.getElementById('officeSelect').value;
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+
+        if (!office) {
+            alert("Please select your sub-office first.");
+            return;
+        }
+        if (fileInput.files.length === 0) {
+            alert("Please select a file to upload.");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        statusDiv.style.display = "block";
+        statusDiv.className = "loading";
+        statusDiv.innerText = "Uploading report, please wait...";
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            const base64Data = reader.result.split(',')[1];
+            const payload = {
+                office: office,
+                reportType: reportType,
+                fileName: file.name,
+                mimeType: file.type,
+                fileData: base64Data
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                statusDiv.className = "success";
+                statusDiv.innerText = `Successfully uploaded ${reportType} for ${office}!`;
+                fileInput.value = ""; 
+            })
+            .catch(error => {
+                statusDiv.className = "error";
+                statusDiv.innerText = "Upload failed: " + error;
+            });
+        };
+        reader.onerror = function (error) {
+            statusDiv.className = "error";
+            statusDiv.innerText = "Error reading file: " + error;
+        };
+    }
+</script>
+
+</body>
+</html>
