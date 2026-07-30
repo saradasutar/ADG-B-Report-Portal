@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADG(B) — Head Office: Manage Subjects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#122b46; --navy-deep:#0b1c30; --steel:#2f5d84;
+    --paper:#f6f5f1; --card:#ffffff; --ink:#1b2430; --ink-soft:#5a6472;
+    --line:#dcdfe4; --gold:#b3872f; --gold-soft:#e9d6ab;
+    --ok:#276b45; --ok-bg:#e7f2ea; --err:#a33327; --err-bg:#faeae8;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;}
+  header.masthead{background:linear-gradient(180deg,var(--navy) 0%, var(--navy-deep) 100%);border-bottom:3px solid var(--gold);padding:22px 24px 18px;}
+  .masthead-inner{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:16px;}
+  .seal{width:46px;height:46px;flex:none;border-radius:50%;border:2px solid var(--gold-soft);display:flex;align-items:center;justify-content:center;font-family:'Source Serif 4',serif;font-weight:700;color:var(--gold-soft);font-size:15px;}
+  .masthead-text .eyebrow{color:var(--gold-soft);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;margin-bottom:3px;}
+  .masthead-text h1{font-family:'Source Serif 4',serif;color:#fff;font-size:20px;font-weight:600;margin:0;}
+  .masthead-text p{margin:3px 0 0;color:#b9c6d6;font-size:12.5px;}
+
+  main{max-width:560px;margin:0 auto;padding:38px 24px 70px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(18,43,70,.05),0 8px 24px rgba(18,43,70,.04);padding:32px 32px 28px;}
+  .card h2{font-family:'Source Serif 4',serif;font-size:17px;font-weight:600;margin:0 0 4px;color:var(--navy);}
+  .card .sub{color:var(--ink-soft);font-size:13px;margin:0 0 24px;line-height:1.5;}
+
+  fieldset{border:none;padding:0;margin:0 0 18px;}
+  label{display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--navy);margin-bottom:7px;}
+  input[type="text"], input[type="password"]{width:100%;font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink);background:#fff;border:1px solid #c6ccd4;border-radius:var(--radius);padding:11px 12px;}
+  input:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(47,93,132,.15);}
+
+  button.submit{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);font-weight:600;font-size:14.5px;padding:13px 18px;cursor:pointer;}
+  button.submit:hover{background:var(--steel);}
+  button.submit:disabled{background:#9aa4b0;cursor:not-allowed;}
+
+  .banner{border-radius:var(--radius);padding:12px 14px;font-size:13.5px;margin-top:16px;display:none;}
+  .banner.error{background:var(--err-bg);color:var(--err);border:1px solid #f0c9c3;}
+  .banner.ok{background:var(--ok-bg);color:var(--ok);border:1px solid #bfe0cb;}
+
+  .list{margin-top:30px;}
+  .list h3{font-family:'Source Serif 4',serif;font-size:14px;color:var(--navy);margin:0 0 10px;}
+  .list ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+  .list li{padding:9px 2px;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--ink);}
+  .list .empty{color:var(--ink-soft);font-size:13px;padding:9px 2px;}
+
+  a.back{display:inline-block;margin-top:26px;font-size:12.5px;color:var(--ink-soft);text-decoration:none;}
+  a.back:hover{color:var(--navy);}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="seal">ADG</div>
+    <div class="masthead-text">
+      <div class="eyebrow">Head office only</div>
+      <h1>Manage Report Subjects</h1>
+      <p>Subjects created here become available to all sub-offices</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Add a new subject</h2>
+    <p class="sub">This creates a new folder in the Drive and makes it selectable on the sub-office submission form. Keep this page's link private — don't share it with the sub-offices, only the submission form link.</p>
+
+    <form id="createForm">
+      <fieldset>
+        <label for="subjectName">Subject name</label>
+        <input type="text" id="subjectName" placeholder="e.g. Budget Utilisation" required autocomplete="off">
+      </fieldset>
+      <button type="submit" class="submit" id="submitBtn">Create subject</button>
+      <div class="banner error" id="errorBanner"></div>
+      <div class="banner ok" id="okBanner"></div>
+    </form>
+
+    <div class="list">
+      <h3>Current subjects</h3>
+      <ul id="subjectList"></ul>
+    </div>
+
+    <a class="back" href="index.html">← Back to submission form</a>
+  </div>
+</main>
+
+<script>
+  // Must match ENDPOINT_URL in index.html
+  const ENDPOINT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+  const form = document.getElementById('createForm');
+  const subjectName = document.getElementById('subjectName');
+  const submitBtn = document.getElementById('submitBtn');
+  const errorBanner = document.getElementById('errorBanner');
+  const okBanner = document.getElementById('okBanner');
+  const subjectList = document.getElementById('subjectList');
+
+  async function loadList(){
+    if (ENDPOINT_URL.indexOf('PASTE_YOUR') === 0) return;
+    try{
+      const resp = await fetch(ENDPOINT_URL + '?action=subjects');
+      const data = await resp.json();
+      const subjects = data.subjects || [];
+      subjectList.innerHTML = subjects.length
+        ? subjects.map(s => `<li>${s}</li>`).join('')
+        : '<li class="empty">No subjects yet</li>';
+    }catch(e){
+      subjectList.innerHTML = '<li class="empty">Could not load list</li>';
+    }
+  }
+  loadList();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBanner.style.display = 'none';
+    okBanner.style.display = 'none';
+
+    if (ENDPOINT_URL.indexOf('PASTE_YOUR') === 0){
+      errorBanner.textContent = 'This page is not connected to the backend yet. See SETUP.md.';
+      errorBanner.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating…';
+    try{
+      const resp = await fetch(ENDPOINT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          type: 'createSubject',
+          subject: subjectName.value.trim()
+        })
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.error || 'Could not create subject.');
+
+      okBanner.textContent = `Subject "${data.subject}" created and now available on the submission form.`;
+      okBanner.style.display = 'block';
+      form.reset();
+      loadList();
+    }catch(err){
+      errorBanner.textContent = err.message;
+      errorBanner.style.display = 'block';
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create subject';
+    }
+  });
+</script>
+</body>
+</html>
