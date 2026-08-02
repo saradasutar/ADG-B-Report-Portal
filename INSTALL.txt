@@ -1,0 +1,16 @@
+ADG(B) PORTAL — FINAL UPLOAD RECEIPT FIX
+
+1. Open the Apps Script project used by the portal.
+2. Replace the complete Code.gs with the supplied Code.gs.
+3. Replace all six CHANGE-... security-code placeholders with new private codes.
+4. Save, run setPortalSecurityCodes(), and wait for Execution completed.
+5. Deploy > Manage deployments > Edit > Version: New version > Deploy.
+6. In GitHub, replace the complete existing index.html with the supplied index.html.
+7. Commit the change, wait 2–3 minutes, and press Ctrl+Shift+R on the portal.
+8. Test a PDF upload.
+
+The new version stores a short-lived receipt for every POST request. The page
+checks that receipt through the same JSONP connection already used to load the
+matrix. It no longer depends on the blocked iframe completion message.
+
+IMPORTANT: Use new security codes. Previously shared codes must not be reused.
