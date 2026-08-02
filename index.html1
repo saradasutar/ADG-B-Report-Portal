@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O/o ADG(B) Report Submission Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <header class="bg-blue-900 text-white shadow-md py-6 px-8 mb-8">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">O/o ADG(B) Report Portal</h1>
+                <p class="text-blue-200 text-sm">Central Public Works Department - Bengaluru</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-2 bg-blue-950 p-1 rounded-lg">
+                <button onclick="switchTab('submit')" id="tab-submit" class="px-4 py-2 rounded-md font-medium text-sm bg-white text-blue-900 shadow">Sub-Office Submission</button>
+                <button onclick="switchTab('admin')" id="tab-admin" class="px-4 py-2 rounded-md font-medium text-sm text-blue-200 hover:text-white">Head Office Admin</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 pb-12">
+        <!-- Sub-Office View -->
+        <section id="view-submit" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+            <h2 class="text-xl font-semibold mb-6 text-blue-900 border-b pb-3">Submit Official Report (PDF)</h2>
+            <form id="submissionForm" onsubmit="handleSubmission(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Select Sub-Office</label>
+                    <select id="officeName" required class="w-full border border-slate-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">-- Choose Office --</option>
+                        <option value="CE(B)">CE(B)</option>
+                        <option value="CE(HAL)">CE(HAL)</option>
+                        <option value="SE&PD">SE&PD</option>
+                        <option value="SE(Mysore)">SE(Mysore)</option>
+                        <option value="SE(Hubli)">SE(Hubli)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Select Active Subject / Report Category</label>
+                    <select id="subjectSelect" required class="w-full border border-slate-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Loading subjects...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Upload Report (PDF Only)</label>
+                    <input type="file" id="pdfFile" accept="application/pdf" required class="w-full border border-slate-300 rounded-lg p-2 bg-slate-50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition">Submit Report</button>
+                <div id="subStatus" class="text-center text-sm font-medium"></div>
+            </form>
+        </section>
+
+        <!-- Head Office Admin View -->
+        <section id="view-admin" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 hidden">
+            <h2 class="text-xl font-semibold mb-6 text-blue-900 border-b pb-3">Manage Report Subjects</h2>
+            <div class="flex gap-3 mb-8">
+                <input type="text" id="newSubjectName" placeholder="Enter new subject name (e.g. Monthly Review - August)" class="flex-1 border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="createSubject()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition">Create Subject</button>
+            </div>
+            
+            <h3 class="font-semibold text-slate-700 mb-3">Active Subjects List</h3>
+            <div id="adminSubjectList" class="space-y-3">
+                <p class="text-slate-500 text-sm">Loading...</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL"; // <-- Paste Web App URL here
+
+        function switchTab(tab) {
+            if(tab === 'submit') {
+                document.getElementById('view-submit').classList.remove('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('tab-submit').className = "px-4 py-2 rounded-md font-medium text-sm bg-white text-blue-900 shadow";
+                document.getElementById('tab-admin').className = "px-4 py-2 rounded-md font-medium text-sm text-blue-200 hover:text-white";
+                loadSubjects();
+            } else {
+                document.getElementById('view-admin').classList.remove('hidden');
+                document.getElementById('view-submit').classList.add('hidden');
+                document.getElementById('tab-admin').className = "px-4 py-2 rounded-md font-medium text-sm bg-white text-blue-900 shadow";
+                document.getElementById('tab-submit').className = "px-4 py-2 rounded-md font-medium text-sm text-blue-200 hover:text-white";
+                loadSubjectsAdmin();
+            }
+        }
+
+        async function loadSubjects() {
+            try {
+                const res = await fetch(`${API_URL}?action=getSubjects`);
+                const data = await res.json();
+                const select = document.getElementById('subjectSelect');
+                select.innerHTML = '<option value="">-- Choose Subject --</option>';
+                if(data.subjects) {
+                    data.subjects.forEach(sub => {
+                        select.innerHTML += `<option value="${sub.name}">${sub.name}</option>`;
+                    });
+                }
+            } catch(e) {
+                document.getElementById('subjectSelect').innerHTML = '<option value="">Error loading subjects</option>';
+            }
+        }
+
+        async function loadSubjectsAdmin() {
+            try {
+                const res = await fetch(`${API_URL}?action=getSubjects`);
+                const data = await res.json();
+                const container = document.getElementById('adminSubjectList');
+                container.innerHTML = '';
+                if(data.subjects && data.subjects.length > 0) {
+                    data.subjects.forEach(sub => {
+                        container.innerHTML += `
+                            <div class="flex justify-between items-center p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                <span class="font-medium">${sub.name}</span>
+                                <button onclick="deleteSubject('${sub.name}')" class="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 rounded bg-red-50 hover:bg-red-100 transition">Delete</button>
+                            </div>`;
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-slate-500 text-sm">No active subjects created yet.</p>';
+                }
+            } catch(e) {
+                container.innerHTML = '<p class="text-red-500 text-sm">Failed to load subjects.</p>';
+            }
+        }
+
+        async function createSubject() {
+            const name = document.getElementById('newSubjectName').value.trim();
+            if(!name) return alert("Please enter a subject name.");
+            
+            event.target.innerText = "Creating...";
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'createSubject', subjectName: name })
+                });
+                document.getElementById('newSubjectName').value = '';
+                loadSubjectsAdmin();
+            } catch(e) {
+                alert("Error creating subject.");
+            }
+            event.target.innerText = "Create Subject";
+        }
+
+        async function deleteSubject(name) {
+            if(!confirm(`Are you sure you want to delete "${name}" and its corresponding Drive folder?`)) return;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteSubject', subjectName: name })
+                });
+                loadSubjectsAdmin();
+            } catch(e) {
+                alert("Error deleting subject.");
+            }
+        }
+
+        async function handleSubmission(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('subStatus');
+            const fileInput = document.getElementById('pdfFile');
+            
+            if(fileInput.files[0].size > 10 * 1024 * 1024) {
+                status.innerText = "File size exceeds 10MB limit.";
+                status.className = "text-center text-sm font-medium text-red-600";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Uploading...";
+            status.innerText = "Processing submission...";
+            status.className = "text-center text-sm font-medium text-blue-600";
+
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+            reader.onload = async function() {
+                try {
+                    const payload = {
+                        action: "submitReport",
+                        officeName: document.getElementById('officeName').value,
+                        subjectName: document.getElementById('subjectSelect').value,
+                        fileName: fileInput.files[0].name,
+                        fileData: reader.result
+                    };
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if(result.status === "success") {
+                        status.innerText = "Report submitted successfully!";
+                        status.className = "text-center text-sm font-medium text-green-600";
+                        document.getElementById('submissionForm').reset();
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch(err) {
+                    status.innerText = "Submission failed: " + err.message;
+                    status.className = "text-center text-sm font-medium text-red-600";
+                }
+                btn.disabled = false;
+                btn.innerText = "Submit Report";
+            };
+        }
+
+        loadSubjects();
+    </script>
+</body>
+</html>
