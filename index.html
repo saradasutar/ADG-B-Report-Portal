@@ -790,6 +790,7 @@
     function formatDate(value){if(!value)return'';const date=new Date(value);return Number.isNaN(date.getTime())?'Submitted':new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date)}
     function formatBytes(bytes){if(bytes<1024)return bytes+' B';if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB';return(bytes/1048576).toFixed(1)+' MB'}
     function showToast(message,type=''){const toast=document.createElement('div');toast.className='toast '+type;toast.textContent=message;$('#toastWrap').appendChild(toast);setTimeout(()=>toast.remove(),5200)}
-  </script>
+</script>
+  <script src="raw-data.js"></script>
 </body>
 </html>
