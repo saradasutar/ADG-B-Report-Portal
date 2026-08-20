@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbxaZ8SGgFHK9ONRm4bUTozlsxnF1fDa-qEPjLHZoUDP42FKqJV8hEsOIFJf0GCdWwpXqA/exec';
 
-  const RAW_FRONTEND_VERSION = '15.3';
+  const RAW_FRONTEND_VERSION = '15.4';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -28,7 +28,8 @@
     backendVersion: '',
     loaded: false,
     activeItem: null,
-    activeOffice: null
+    activeOffice: null,
+    activeEditItem: null
   };
 
   const rawHtml = value =>
@@ -176,6 +177,18 @@
       .raw-cell-btn.filled{
         border-color:#8fcbb3;background:#effbf6;color:#08744f;font-size:13px
       }
+.raw-item-name-wrap{
+        display:flex;align-items:center;justify-content:space-between;gap:8px
+      }
+      .raw-item-name-text{min-width:0;line-height:1.25}
+      .raw-item-edit-btn{
+        flex:0 0 auto;min-height:28px;border:1px solid #c6b8dc;border-radius:7px;
+        padding:0 8px;background:#fff;color:#514995;font-size:9px;font-weight:900;
+        cursor:pointer
+      }
+      .raw-item-edit-btn:hover{
+        background:#eeeaff;border-color:#8e79bd
+      }
       .raw-total-cell{
         background:linear-gradient(135deg,#fff0bc,#eadfff)!important;
         color:#453b79;font-size:15px;font-weight:900
@@ -322,7 +335,7 @@
     itemModal.innerHTML = `
       <section class="raw-modal" role="dialog" aria-modal="true" aria-labelledby="rawItemTitle">
         <h3 id="rawItemTitle">Add Raw Data Row</h3>
-        <p>Head Office can create a new particular/row for all six office columns.</p>
+        <p id="rawItemHelp">Head Office can create or edit a particular/row for all six office columns.</p>
         <form id="rawItemForm">
           <label class="raw-field">
             <span>Particular / Raw Data item</span>
@@ -408,7 +421,15 @@
 
     document.getElementById('rawTableContent')
       .addEventListener('click', event => {
-        const button = event.target.closest('[data-raw-cell]');
+        const editButton = event.target.closest('[data-raw-edit-item="1"]');
+
+        if (editButton) {
+          openRawItemEditModal(editButton.dataset.itemId);
+          return;
+        }
+
+        const button = event.target.closest('[data-raw-cell="1"]');
+
         if (!button) return;
 
         openRawCellModal(
@@ -475,7 +496,7 @@
         throw new Error(
           'Backend currently deployed is version ' +
           deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.3 as a New version.'
+          '. It does not contain Raw Data support. Deploy Code.gs V15.4 as a New version.'
         );
       }
 
@@ -626,10 +647,18 @@
       return (
         '<tr>' +
           '<th scope="row">' +
-            '<span style="color:#738099;font-size:9px;margin-right:7px">' +
-              String(index + 1).padStart(2, '0') +
-            '</span>' +
-            rawHtml(item.name) +
+            '<div class="raw-item-name-wrap">' +
+              '<span class="raw-item-name-text">' +
+                '<span style="color:#738099;font-size:9px;margin-right:7px">' +
+                  String(index + 1).padStart(2, '0') +
+                '</span>' +
+                rawHtml(item.name) +
+              '</span>' +
+              '<button type="button" class="raw-item-edit-btn" ' +
+                'data-raw-edit-item="1" ' +
+                'data-item-id="' + rawAttr(item.id) + '" ' +
+                'title="Head Office: edit this Raw Data item">✎ Edit</button>' +
+            '</div>' +
           '</th>' +
           cells +
           '<td class="raw-total-cell">' +
@@ -700,7 +729,13 @@
   }
 
   function openRawItemModal() {
+    rawState.activeEditItem = null;
+
     document.getElementById('rawItemForm').reset();
+    document.getElementById('rawItemTitle').textContent = 'Add Raw Data Row';
+    document.getElementById('rawItemHelp').textContent =
+      'Head Office can create a new particular/row for all six office columns.';
+    document.getElementById('rawItemSave').textContent = 'Add Row';
     document.getElementById('rawItemMessage').textContent = '';
     document.getElementById('rawItemBackdrop').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -710,12 +745,37 @@
     }, 50);
   }
 
+  function openRawItemEditModal(itemId) {
+    const item = rawState.items.find(entry => entry.id === itemId);
+
+    if (!item) return;
+
+    rawState.activeEditItem = item;
+
+    document.getElementById('rawItemForm').reset();
+    document.getElementById('rawItemTitle').textContent = 'Edit Raw Data Item';
+    document.getElementById('rawItemHelp').textContent =
+      'Head Office can rename this Raw Data item. Existing office values and totals will be preserved.';
+    document.getElementById('rawItemName').value = item.name;
+    document.getElementById('rawItemSave').textContent = 'Save Changes';
+    document.getElementById('rawItemMessage').textContent = '';
+    document.getElementById('rawItemBackdrop').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => {
+      const input = document.getElementById('rawItemName');
+      input.focus();
+      input.select();
+    }, 50);
+  }
+
   function closeRawItemModal() {
     const backdrop = document.getElementById('rawItemBackdrop');
     if (!backdrop || backdrop.classList.contains('hidden')) return;
 
     backdrop.classList.add('hidden');
     document.body.style.overflow = '';
+    rawState.activeEditItem = null;
   }
 
   async function saveRawCell(event) {
@@ -765,7 +825,7 @@
     } catch (error) {
       const text = error.message || 'The Raw Data value could not be saved.';
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.3 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.4 as a New version.'
         : text;
 
     } finally {
@@ -787,6 +847,7 @@
 
     const message = document.getElementById('rawItemMessage');
     const button = document.getElementById('rawItemSave');
+    const editingItem = rawState.activeEditItem;
 
     if (!itemName) {
       message.textContent = 'Enter a Raw Data item name.';
@@ -799,28 +860,42 @@
     }
 
     button.disabled = true;
-    button.textContent = 'Adding…';
+    button.textContent = editingItem ? 'Saving…' : 'Adding…';
     message.textContent = '';
 
     try {
-      await rawPost({
-        action: 'adminAddRawItem',
-        itemName: itemName,
-        securityCode: securityCode
-      });
+      if (editingItem) {
+        await rawPost({
+          action: 'adminRenameRawItem',
+          itemId: editingItem.id,
+          itemName: itemName,
+          securityCode: securityCode
+        });
+      } else {
+        await rawPost({
+          action: 'adminAddRawItem',
+          itemName: itemName,
+          securityCode: securityCode
+        });
+      }
 
       closeRawItemModal();
       await loadRawData();
 
     } catch (error) {
-      const text = error.message || 'The Raw Data row could not be added.';
+      const text =
+        error.message ||
+        (editingItem
+          ? 'The Raw Data item could not be edited.'
+          : 'The Raw Data row could not be added.');
+
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.3 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.4 as a New version.'
         : text;
 
     } finally {
       button.disabled = false;
-      button.textContent = 'Add Row';
+      button.textContent = rawState.activeEditItem ? 'Save Changes' : 'Add Row';
     }
   }
 
