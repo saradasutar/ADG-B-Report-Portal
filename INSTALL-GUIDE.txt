@@ -1,26 +1,27 @@
-ADG(B) RAW DATA V15.5 — SUBROWS
+ADG(B) RAW DATA V15.6 — SUBROW DELETE
 
 NEW
-- Every MAIN Raw Data row has a "+ Subrow" button.
-- Only Head Office can add a subrow.
+- Every Raw Data SUBROW now shows:
+  ✎ Edit   🗑 Delete
+- Delete is shown only for subrows.
 - Head Office security code is required.
-- The subrow appears immediately below its parent row.
-- Each subrow has:
-  O/o ADG(B), CE(B), CE(HAL), SE&PD, SE(Mysore), SE(Hubli), TOTAL.
-- Each subrow has its own Edit button.
-- Existing rows and values are preserved.
-- Existing main-row totals and subrow totals are calculated automatically.
+- Deleted subrow disappears from the live dashboard.
+- Historical Raw_Data entries are preserved.
+- Main Raw Data rows are protected from this delete action.
 
 APPS SCRIPT
-1. Replace complete Code.gs with V15.5 Code.gs.
+1. Replace complete Code.gs with this V15.6 Code.gs.
 2. Save.
 3. Do NOT run setupPortal().
 4. Do NOT run setPortalSecurityCodes().
 5. Deploy > Manage deployments > Edit > New version > Deploy.
 
 GITHUB
-1. Replace raw-data.js with V15.5 raw-data.js.
+1. Replace raw-data.js with this V15.6 raw-data.js.
 2. In index.html use:
-   <script src="raw-data.js?v=15.5"></script>
+   <script src="raw-data.js?v=15.6"></script>
 3. Commit.
-4. Hard refresh.
+4. Hard refresh with Command + Shift + R.
+
+EXPECTED VERSION BADGE
+Frontend v15.6 | Backend v15.6

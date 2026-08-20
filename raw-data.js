@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbwUmwkrx1wI1NrFDm6Bsvbcr0SCHSgkKTheN7_fLeVec4-w15D1k_11T8OQ4q4eV3bH5w/exec';
 
-  const RAW_FRONTEND_VERSION = '15.5';
+  const RAW_FRONTEND_VERSION = '15.6';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -189,6 +189,14 @@
       }
       .raw-item-edit-btn:hover{
         background:#eeeaff;border-color:#8e79bd
+      }
+      .raw-subrow-delete-btn{
+        flex:0 0 auto;min-height:28px;border:1px solid #e6aaa5;border-radius:7px;
+        padding:0 8px;background:#fff7f6;color:#b42318;font-size:9px;
+        font-weight:900;cursor:pointer
+      }
+      .raw-subrow-delete-btn:hover{
+        background:#ffe9e7;border-color:#cf7068
       }
       .raw-item-actions{
         flex:0 0 auto;display:flex;align-items:center;gap:5px
@@ -450,6 +458,13 @@
           return;
         }
 
+        const deleteButton = event.target.closest('[data-raw-delete-subrow="1"]');
+
+        if (deleteButton) {
+          deleteRawSubrow(deleteButton.dataset.itemId);
+          return;
+        }
+
         const editButton = event.target.closest('[data-raw-edit-item="1"]');
 
         if (editButton) {
@@ -525,7 +540,7 @@
         throw new Error(
           'Backend currently deployed is version ' +
           deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.5 as a New version.'
+          '. It does not contain Raw Data support. Deploy Code.gs V15.6 as a New version.'
         );
       }
 
@@ -696,6 +711,12 @@
                   'data-raw-edit-item="1" ' +
                   'data-item-id="' + rawAttr(item.id) + '" ' +
                   'title="Head Office: edit this Raw Data item">✎ Edit</button>' +
+                (isSubrow
+                  ? '<button type="button" class="raw-subrow-delete-btn" ' +
+                      'data-raw-delete-subrow="1" ' +
+                      'data-item-id="' + rawAttr(item.id) + '" ' +
+                      'title="Head Office: delete this subrow">🗑 Delete</button>'
+                  : '') +
               '</span>' +
             '</div>' +
           '</th>' +
@@ -810,6 +831,54 @@
     }, 50);
   }
 
+  async function deleteRawSubrow(itemId) {
+    const item = rawState.items.find(entry => entry.id === itemId);
+
+    if (!item || !item.parentId) return;
+
+    const confirmed = window.confirm(
+      'Delete the subrow "' +
+      item.name +
+      '" from the Raw Data dashboard?\n\n' +
+      'Historical office values will remain preserved.'
+    );
+
+    if (!confirmed) return;
+
+    const securityCode = window.prompt(
+      'Enter the Head Office security code to delete this subrow:'
+    );
+
+    if (securityCode === null) return;
+
+    if (!securityCode.trim()) {
+      window.alert('Head Office security code is required.');
+      return;
+    }
+
+    try {
+      await rawPost({
+        action: 'adminDeleteRawSubItem',
+        itemId: item.id,
+        securityCode: securityCode.trim()
+      });
+
+      await loadRawData();
+
+    } catch (error) {
+      const text =
+        error.message ||
+        'The Raw Data subrow could not be deleted.';
+
+      window.alert(
+        /Unsupported operation/i.test(text)
+          ? 'The deployed Apps Script does not support subrow deletion. Deploy Code.gs V15.6 as a New version.'
+          : text
+      );
+    }
+  }
+
+
   function openRawSubrowModal(parentItemId) {
     const parent = rawState.items.find(
       entry => entry.id === parentItemId
@@ -894,7 +963,7 @@
     } catch (error) {
       const text = error.message || 'The Raw Data value could not be saved.';
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.5 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.6 as a New version.'
         : text;
 
     } finally {
@@ -972,7 +1041,7 @@
               : 'The Raw Data row could not be added.'));
 
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.5 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.6 as a New version.'
         : text;
 
     } finally {
