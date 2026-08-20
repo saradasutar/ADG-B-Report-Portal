@@ -1,22 +1,26 @@
-ADG(B) PORTAL V15.3
+ADG(B) RAW DATA V15.5 — SUBROWS
 
-ADDED:
-Frontend v15.3 | Backend v15.3
-
-The version indicator appears beside the Report Submission / Raw Data tabs.
-Green dot = backend connected.
-Red dot = backend unavailable or deployment problem.
+NEW
+- Every MAIN Raw Data row has a "+ Subrow" button.
+- Only Head Office can add a subrow.
+- Head Office security code is required.
+- The subrow appears immediately below its parent row.
+- Each subrow has:
+  O/o ADG(B), CE(B), CE(HAL), SE&PD, SE(Mysore), SE(Hubli), TOTAL.
+- Each subrow has its own Edit button.
+- Existing rows and values are preserved.
+- Existing main-row totals and subrow totals are calculated automatically.
 
 APPS SCRIPT
-1. Replace Code.gs with the supplied Code.gs.
+1. Replace complete Code.gs with V15.5 Code.gs.
 2. Save.
 3. Do NOT run setupPortal().
 4. Do NOT run setPortalSecurityCodes().
 5. Deploy > Manage deployments > Edit > New version > Deploy.
 
 GITHUB
-1. Replace raw-data.js with the supplied raw-data.js.
-2. In index.html replace the old raw-data.js script line with:
-   <script src="raw-data.js?v=15.3"></script>
+1. Replace raw-data.js with V15.5 raw-data.js.
+2. In index.html use:
+   <script src="raw-data.js?v=15.5"></script>
 3. Commit.
 4. Hard refresh.

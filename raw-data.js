@@ -2,9 +2,9 @@
   'use strict';
 
   const RAW_SCRIPT_URL =
-    'https://script.google.com/macros/s/AKfycbxo5BSONLqLXPMmZv7yDSbsucaaE_XGeO9rgOv21HXj9HP0DrfICYSMZG_rqmEf3WlpnA/exec';
+    'https://script.google.com/macros/s/AKfycbxaZ8SGgFHK9ONRm4bUTozlsxnF1fDa-qEPjLHZoUDP42FKqJV8hEsOIFJf0GCdWwpXqA/exec';
 
-  const RAW_FRONTEND_VERSION = '15.4';
+  const RAW_FRONTEND_VERSION = '15.5';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -29,7 +29,8 @@
     loaded: false,
     activeItem: null,
     activeOffice: null,
-    activeEditItem: null
+    activeEditItem: null,
+    activeParentItem: null
   };
 
   const rawHtml = value =>
@@ -188,6 +189,27 @@
       }
       .raw-item-edit-btn:hover{
         background:#eeeaff;border-color:#8e79bd
+      }
+      .raw-item-actions{
+        flex:0 0 auto;display:flex;align-items:center;gap:5px
+      }
+      .raw-subrow-btn{
+        min-height:28px;border:1px solid #9cc9be;border-radius:7px;
+        padding:0 8px;background:#f5fffb;color:#08745e;font-size:9px;
+        font-weight:900;cursor:pointer
+      }
+      .raw-subrow-btn:hover{
+        background:#e5faf2;border-color:#63b39e
+      }
+      .raw-subrow-name{
+        padding-left:24px;position:relative;color:#41576c
+      }
+      .raw-subrow-name:before{
+        content:"↳";position:absolute;left:8px;top:0;color:#6c7fc5;font-weight:900
+      }
+      .raw-subrow-row th,
+      .raw-subrow-row td{
+        background:#fbfcff
       }
       .raw-total-cell{
         background:linear-gradient(135deg,#fff0bc,#eadfff)!important;
@@ -421,6 +443,13 @@
 
     document.getElementById('rawTableContent')
       .addEventListener('click', event => {
+        const subrowButton = event.target.closest('[data-raw-add-subrow="1"]');
+
+        if (subrowButton) {
+          openRawSubrowModal(subrowButton.dataset.itemId);
+          return;
+        }
+
         const editButton = event.target.closest('[data-raw-edit-item="1"]');
 
         if (editButton) {
@@ -496,7 +525,7 @@
         throw new Error(
           'Backend currently deployed is version ' +
           deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.4 as a New version.'
+          '. It does not contain Raw Data support. Deploy Code.gs V15.5 as a New version.'
         );
       }
 
@@ -644,20 +673,30 @@
         );
       }).join('');
 
+      const isSubrow = !!item.parentId;
+
       return (
-        '<tr>' +
+        '<tr class="' + (isSubrow ? 'raw-subrow-row' : '') + '">' +
           '<th scope="row">' +
             '<div class="raw-item-name-wrap">' +
-              '<span class="raw-item-name-text">' +
+              '<span class="raw-item-name-text ' + (isSubrow ? 'raw-subrow-name' : '') + '">' +
                 '<span style="color:#738099;font-size:9px;margin-right:7px">' +
                   String(index + 1).padStart(2, '0') +
                 '</span>' +
                 rawHtml(item.name) +
               '</span>' +
-              '<button type="button" class="raw-item-edit-btn" ' +
-                'data-raw-edit-item="1" ' +
-                'data-item-id="' + rawAttr(item.id) + '" ' +
-                'title="Head Office: edit this Raw Data item">✎ Edit</button>' +
+              '<span class="raw-item-actions">' +
+                (!isSubrow
+                  ? '<button type="button" class="raw-subrow-btn" ' +
+                      'data-raw-add-subrow="1" ' +
+                      'data-item-id="' + rawAttr(item.id) + '" ' +
+                      'title="Head Office: add a subrow below this row">＋ Subrow</button>'
+                  : '') +
+                '<button type="button" class="raw-item-edit-btn" ' +
+                  'data-raw-edit-item="1" ' +
+                  'data-item-id="' + rawAttr(item.id) + '" ' +
+                  'title="Head Office: edit this Raw Data item">✎ Edit</button>' +
+              '</span>' +
             '</div>' +
           '</th>' +
           cells +
@@ -730,6 +769,7 @@
 
   function openRawItemModal() {
     rawState.activeEditItem = null;
+    rawState.activeParentItem = null;
 
     document.getElementById('rawItemForm').reset();
     document.getElementById('rawItemTitle').textContent = 'Add Raw Data Row';
@@ -751,6 +791,7 @@
     if (!item) return;
 
     rawState.activeEditItem = item;
+    rawState.activeParentItem = null;
 
     document.getElementById('rawItemForm').reset();
     document.getElementById('rawItemTitle').textContent = 'Edit Raw Data Item';
@@ -769,6 +810,33 @@
     }, 50);
   }
 
+  function openRawSubrowModal(parentItemId) {
+    const parent = rawState.items.find(
+      entry => entry.id === parentItemId
+    );
+
+    if (!parent || parent.parentId) return;
+
+    rawState.activeEditItem = null;
+    rawState.activeParentItem = parent;
+
+    document.getElementById('rawItemForm').reset();
+    document.getElementById('rawItemTitle').textContent = 'Add Raw Data Subrow';
+    document.getElementById('rawItemHelp').textContent =
+      'This subrow will appear immediately below "' +
+      parent.name +
+      '" and will have all six office columns plus its own TOTAL.';
+    document.getElementById('rawItemSave').textContent = 'Add Subrow';
+    document.getElementById('rawItemMessage').textContent = '';
+    document.getElementById('rawItemBackdrop').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => {
+      document.getElementById('rawItemName').focus();
+    }, 50);
+  }
+
+
   function closeRawItemModal() {
     const backdrop = document.getElementById('rawItemBackdrop');
     if (!backdrop || backdrop.classList.contains('hidden')) return;
@@ -776,6 +844,7 @@
     backdrop.classList.add('hidden');
     document.body.style.overflow = '';
     rawState.activeEditItem = null;
+    rawState.activeParentItem = null;
   }
 
   async function saveRawCell(event) {
@@ -825,7 +894,7 @@
     } catch (error) {
       const text = error.message || 'The Raw Data value could not be saved.';
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.4 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.5 as a New version.'
         : text;
 
     } finally {
@@ -848,6 +917,7 @@
     const message = document.getElementById('rawItemMessage');
     const button = document.getElementById('rawItemSave');
     const editingItem = rawState.activeEditItem;
+    const parentItem = rawState.activeParentItem;
 
     if (!itemName) {
       message.textContent = 'Enter a Raw Data item name.';
@@ -860,7 +930,10 @@
     }
 
     button.disabled = true;
-    button.textContent = editingItem ? 'Saving…' : 'Adding…';
+    button.textContent =
+      editingItem
+        ? 'Saving…'
+        : (parentItem ? 'Adding Subrow…' : 'Adding…');
     message.textContent = '';
 
     try {
@@ -868,6 +941,13 @@
         await rawPost({
           action: 'adminRenameRawItem',
           itemId: editingItem.id,
+          itemName: itemName,
+          securityCode: securityCode
+        });
+      } else if (parentItem) {
+        await rawPost({
+          action: 'adminAddRawSubItem',
+          parentItemId: parentItem.id,
           itemName: itemName,
           securityCode: securityCode
         });
@@ -887,15 +967,20 @@
         error.message ||
         (editingItem
           ? 'The Raw Data item could not be edited.'
-          : 'The Raw Data row could not be added.');
+          : (parentItem
+              ? 'The Raw Data subrow could not be added.'
+              : 'The Raw Data row could not be added.'));
 
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.4 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.5 as a New version.'
         : text;
 
     } finally {
       button.disabled = false;
-      button.textContent = rawState.activeEditItem ? 'Save Changes' : 'Add Row';
+      button.textContent =
+        rawState.activeEditItem
+          ? 'Save Changes'
+          : (rawState.activeParentItem ? 'Add Subrow' : 'Add Row');
     }
   }
 
