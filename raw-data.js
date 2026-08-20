@@ -4,6 +4,17 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbz4hBO82UIfDu8Zm6iNDfoBKtfa_IwkKiOQh1NeFq9Uto8XGLGzRyk6Yb7tefpz59d52Q/exec';
 
+  const RAW_FRONTEND_VERSION = '15.3';
+
+  const RAW_DEFAULT_OFFICES = Object.freeze([
+    { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
+    { id: 'CEB', name: 'CE(B)' },
+    { id: 'CEHAL', name: 'CE(HAL)' },
+    { id: 'SEPD', name: 'SE&PD' },
+    { id: 'SEMYSORE', name: 'SE(Mysore)' },
+    { id: 'SEHUBLI', name: 'SE(Hubli)' }
+  ]);
+
   const rawState = {
     cycleKey: '',
     cycleName: '',
@@ -14,6 +25,7 @@
     grandTotal: 0,
     enteredCount: 0,
     totalCells: 0,
+    backendVersion: '',
     loaded: false,
     activeItem: null,
     activeOffice: null
@@ -64,6 +76,24 @@
         background:linear-gradient(135deg,#315c8d,#6653a9 55%,#128072);
         box-shadow:0 4px 12px rgba(66,65,137,.18)
       }
+      .portal-version-badge{
+        margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+        min-height:34px;padding:0 11px;border:1px solid #c5d3df;border-radius:999px;
+        background:rgba(255,255,255,.88);color:#38546b;
+        font-size:10px;font-weight:900;white-space:nowrap;
+        box-shadow:0 4px 12px rgba(39,72,101,.08)
+      }
+      .portal-version-dot{
+        width:7px;height:7px;border-radius:50%;background:#d18b18;
+        box-shadow:0 0 0 3px rgba(209,139,24,.12)
+      }
+      .portal-version-dot.ok{
+        background:#07906f;box-shadow:0 0 0 3px rgba(7,144,111,.12)
+      }
+      .portal-version-dot.error{
+        background:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.12)
+      }
+      .portal-version-sep{color:#9aa9b6}
       .raw-data-panel{
         margin-bottom:10px;border:1px solid #c8d9e6;border-radius:10px;overflow:hidden;
         background:linear-gradient(155deg,rgba(231,246,255,.98),rgba(249,238,255,.98) 46%,rgba(233,250,242,.98));
@@ -189,6 +219,9 @@
       @media(max-width:720px){
         .portal-tabs{position:sticky;top:62px;z-index:18}
         .portal-tab{flex:1;padding:0 8px}
+        .portal-version-badge{
+          width:100%;margin-left:0;justify-content:center;order:3
+        }
         .raw-data-head{align-items:flex-start}
         .raw-head-actions{width:100%}
         .raw-action-btn{flex:1}
@@ -210,6 +243,12 @@
     tabs.innerHTML = `
       <button class="portal-tab active" id="reportsTabButton" type="button">Report Submission</button>
       <button class="portal-tab" id="rawDataTabButton" type="button">Raw Data</button>
+      <div class="portal-version-badge" id="portalVersionBadge" title="Portal software versions">
+        <span class="portal-version-dot" id="portalVersionDot"></span>
+        <span>Frontend v${RAW_FRONTEND_VERSION}</span>
+        <span class="portal-version-sep">|</span>
+        <span id="portalBackendVersion">Backend checking…</span>
+      </div>
     `;
 
     cycleBar.insertAdjacentElement('afterend', tabs);
@@ -386,8 +425,30 @@
     });
   }
 
+  function updatePortalVersionBadge(backendVersion, status) {
+    const backend = document.getElementById('portalBackendVersion');
+    const dot = document.getElementById('portalVersionDot');
+
+    if (backend) {
+      backend.textContent =
+        backendVersion
+          ? 'Backend v' + backendVersion
+          : 'Backend unavailable';
+    }
+
+    if (dot) {
+      dot.classList.remove('ok', 'error');
+
+      if (status === 'ok') {
+        dot.classList.add('ok');
+      } else if (status === 'error') {
+        dot.classList.add('error');
+      }
+    }
+  }
+
+
   async function loadRawData() {
-    const content = document.getElementById('rawTableContent');
     const refresh = document.getElementById('rawRefreshButton');
 
     if (refresh) {
@@ -395,10 +456,29 @@
       refresh.textContent = 'Refreshing…';
     }
 
-    content.className = 'raw-empty';
-    content.textContent = 'Loading Raw Data…';
+    rawState.offices = RAW_DEFAULT_OFFICES.slice();
+    renderRawFallbackTable('Connecting to Raw Data backend…');
 
     try {
+      const ping = await rawJsonp('ping');
+
+      if (!ping?.ok) {
+        throw new Error(
+          ping?.message || 'Apps Script backend did not respond correctly.'
+        );
+      }
+
+      const deployedVersion = String(ping.backendVersion || 'unknown');
+      updatePortalVersionBadge(deployedVersion, 'ok');
+
+      if (!ping.supportsRawData) {
+        throw new Error(
+          'Backend currently deployed is version ' +
+          deployedVersion +
+          '. It does not contain Raw Data support. Deploy Code.gs V15.3 as a New version.'
+        );
+      }
+
       const data = await rawJsonp('rawBootstrap');
 
       if (!data?.ok) {
@@ -407,22 +487,32 @@
 
       rawState.cycleKey = String(data.cycleKey || '');
       rawState.cycleName = String(data.cycleName || '');
-      rawState.offices = Array.isArray(data.offices) ? data.offices : [];
+      rawState.offices =
+        Array.isArray(data.offices) && data.offices.length
+          ? data.offices
+          : RAW_DEFAULT_OFFICES.slice();
       rawState.items = Array.isArray(data.items) ? data.items : [];
       rawState.values = data.values || {};
       rawState.totals = data.totals || {};
       rawState.grandTotal = Number(data.grandTotal) || 0;
       rawState.enteredCount = Number(data.enteredCount) || 0;
       rawState.totalCells = Number(data.totalCells) || 0;
+      rawState.backendVersion = String(
+        data.backendVersion || ping.backendVersion || ''
+      );
       rawState.loaded = true;
+      updatePortalVersionBadge(rawState.backendVersion, 'ok');
 
       renderRawData();
 
     } catch (error) {
-      content.className = 'raw-empty';
-      content.textContent =
-        'Raw Data could not be loaded: ' +
-        (error.message || 'Unknown error');
+      rawState.loaded = false;
+      rawState.offices = RAW_DEFAULT_OFFICES.slice();
+      updatePortalVersionBadge(rawState.backendVersion || '', 'error');
+
+      renderRawFallbackTable(
+        error.message || 'Raw Data backend could not be reached.'
+      );
 
     } finally {
       if (refresh) {
@@ -432,10 +522,39 @@
     }
   }
 
+  function renderRawFallbackTable(message) {
+    const content = document.getElementById('rawTableContent');
+    if (!content) return;
+
+    const headers = RAW_DEFAULT_OFFICES
+      .map(office =>
+        '<th scope="col">' + rawHtml(office.name) + '</th>'
+      )
+      .join('');
+
+    content.className = 'raw-table-wrap';
+    content.innerHTML =
+      '<table class="raw-table">' +
+        '<thead><tr>' +
+          '<th scope="col">Particular / Raw Data Item</th>' +
+          headers +
+          '<th scope="col">TOTAL</th>' +
+        '</tr></thead>' +
+        '<tbody><tr>' +
+          '<td colspan="' + (RAW_DEFAULT_OFFICES.length + 2) + '" ' +
+            'style="padding:28px;text-align:center;color:#b42318;background:#fff;font-weight:700">' +
+            rawHtml(message) +
+          '</td>' +
+        '</tr></tbody>' +
+      '</table>';
+  }
+
   function renderRawData() {
     document.getElementById('rawCycleText').textContent =
       (rawState.cycleName || 'Current month') +
-      ' · all five offices + O/o ADG(B)';
+      ' · O/o ADG(B) + CE(B) + CE(HAL) + SE&PD + SE(Mysore) + SE(Hubli)' +
+      ' · Raw UI ' + RAW_FRONTEND_VERSION +
+      (rawState.backendVersion ? ' / Backend ' + rawState.backendVersion : '');
 
     document.getElementById('rawItemCount').textContent =
       rawState.items.length;
@@ -451,19 +570,31 @@
 
     const content = document.getElementById('rawTableContent');
 
-    if (!rawState.items.length) {
-      content.className = 'raw-empty';
-      content.innerHTML =
-        'No Raw Data rows have been created yet. ' +
-        '<strong>Head Office · Add Row</strong> can create the first row.';
-      return;
-    }
-
     const headers = rawState.offices
       .map(office =>
         '<th scope="col">' + rawHtml(office.name) + '</th>'
       )
       .join('');
+
+    if (!rawState.items.length) {
+      content.className = 'raw-table-wrap';
+      content.innerHTML =
+        '<table class="raw-table">' +
+          '<thead><tr>' +
+            '<th scope="col">Particular / Raw Data Item</th>' +
+            headers +
+            '<th scope="col">TOTAL</th>' +
+          '</tr></thead>' +
+          '<tbody><tr>' +
+            '<td colspan="' + (rawState.offices.length + 2) + '" ' +
+              'style="padding:26px;text-align:center;color:#637786;background:#fff">' +
+              'No Raw Data rows have been created yet. ' +
+              '<strong>Head Office · Add Row</strong> can create the first row.' +
+            '</td>' +
+          '</tr></tbody>' +
+        '</table>';
+      return;
+    }
 
     const rows = rawState.items.map((item, index) => {
       const cells = rawState.offices.map(office => {
@@ -632,8 +763,10 @@
       await loadRawData();
 
     } catch (error) {
-      message.textContent =
-        error.message || 'The Raw Data value could not be saved.';
+      const text = error.message || 'The Raw Data value could not be saved.';
+      message.textContent = /Unsupported operation/i.test(text)
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.3 as a New version.'
+        : text;
 
     } finally {
       button.disabled = false;
@@ -680,8 +813,10 @@
       await loadRawData();
 
     } catch (error) {
-      message.textContent =
-        error.message || 'The Raw Data row could not be added.';
+      const text = error.message || 'The Raw Data row could not be added.';
+      message.textContent = /Unsupported operation/i.test(text)
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.3 as a New version.'
+        : text;
 
     } finally {
       button.disabled = false;
