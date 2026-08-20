@@ -1,0 +1,41 @@
+ADG(B) PORTAL RAW DATA UPGRADE V15
+
+THIS UPGRADE PRESERVES THE EXISTING REPORT SUBMISSION PORTAL.
+
+WHAT IS ADDED
+- New top tab: Report Submission | Raw Data
+- Raw Data columns:
+  O/o ADG(B), CE(B), CE(HAL), SE&PD, SE(Mysore), SE(Hubli), TOTAL
+- Head Office can add Raw Data rows using the existing Head Office code.
+- O/o ADG(B) values require the Head Office code.
+- Each sub-office can enter only its own Raw Data values using its existing office code.
+- TOTAL for each row is automatic.
+- Grand Total is automatic.
+- Raw Data is stored month-wise.
+- Existing report subjects, submissions, PDFs and security codes are preserved.
+
+APPS SCRIPT
+1. Replace the complete current Code.gs with the supplied Code.gs.
+2. Save.
+3. DO NOT run setupPortal().
+4. DO NOT run setPortalSecurityCodes().
+5. Deploy > Manage deployments > Edit.
+6. Select New version.
+7. Execute as: Me.
+8. Who has access: Anyone.
+9. Deploy.
+10. Keep the same /exec URL.
+
+GITHUB
+1. Upload raw-data.js to the repository root beside index.html.
+2. Open the current index.html for editing.
+3. Immediately before </body>, add:
+   <script src="raw-data.js"></script>
+4. Commit both changes.
+5. Hard-refresh the GitHub Page.
+
+The backend will automatically create:
+- Raw_Data_Items
+- Raw_Data
+
+inside the existing ADG(B) Portal Database spreadsheet.

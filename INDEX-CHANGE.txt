@@ -1,0 +1,18 @@
+In the CURRENT index.html, go to the very bottom.
+
+Find:
+
+  </script>
+</body>
+</html>
+
+Change it to:
+
+  </script>
+  <script src="raw-data.js"></script>
+</body>
+</html>
+
+Do not delete or replace any other part of your current index.html.
+
+Then upload raw-data.js to the SAME GitHub repository root, beside index.html.
