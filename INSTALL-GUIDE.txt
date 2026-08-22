@@ -1,69 +1,25 @@
-ADG(B) REPORT PORTAL V15.8 — EXACT HR TARGET / REMINDER FEATURE
+ADG(B) REPORT PORTAL V15.9 — HR STICKY ADMIN FIX
 
-SOURCE
-This package was built from the CURRENT HR files supplied by the user:
-- HR index.html
-- HR app.js
-- HR styles.css
-- HR Code.gs
-
-WHAT IS COPIED FROM HR
-- Targets & Reminders organiser dialog
-- Reminder / Target type
-- Title
-- Due date
-- Details
-- Six colours: Yellow, Pink, Blue, Green, Purple, Orange
-- Active notes grid
-- Completed history
-- Edit
-- Delete
-- ✓ Completed
-- Restore from Completed history
-- 📌 Keep open / Pinned
-- Only one chosen note stays floating over the dashboard
-- Click floating note header to collapse/open
-- Drag floating note to any screen position
-- Keyboard arrow movement from Move note handle
-- Small / Medium / Large / X-Large size controls
-- Reset position and size
-- Open all / Unpin
-- Position, size, pinned note and collapsed state saved in this browser
-
-ADG REPORT PORTAL ADAPTATION
-- Everyone can VIEW targets/reminders.
-- All changes are Head Office-admin controlled.
-- Click 🔒 Admin in the Targets & Reminders dialog.
-- Enter the existing Head Office security code.
-- No separate HR username/password system is added.
-- Sticky records are stored in the existing Report Portal database Sheet.
-- Backend sheet uses the same 11-column HR Targets & Reminders structure.
-- Existing Report Submission, Raw Data, subrows and report PDFs are preserved.
+FIXED
+- Admin button and X no longer overlap.
+- Add/Edit sticky form stays hidden in View mode.
+- Clear View-mode message appears.
+- Click 🔒 Admin and enter the existing Head Office security code.
+- After successful unlock, Add/Edit form and admin controls appear.
+- HR-style sticky features remain:
+  Target/Reminder, due date, six colours, Edit, Delete, Completed history,
+  Keep open/pin, collapse/open, drag, keyboard movement,
+  Small/Medium/Large/X-Large sizing, Reset, Open all, Unpin.
 
 APPS SCRIPT
-1. Replace complete Code.gs with V15.8 Code.gs.
+1. Replace Code.gs with V15.9.
 2. Save.
-3. DO NOT run setupPortal().
-4. DO NOT run setPortalSecurityCodes().
-5. Deploy > New deployment > Web app OR Manage deployments > Edit > New version.
-6. Execute as: Me.
-7. Who has access: Anyone.
-8. Deploy.
-9. Test /exec?action=ping&callback=test and confirm backendVersion 15.8.
+3. Do not run setupPortal() or setPortalSecurityCodes().
+4. Deploy as New version.
 
 GITHUB
-1. Replace raw-data.js with V15.8 raw-data.js.
-2. Replace the old sticky-notes.js with V15.8 sticky-notes.js.
-3. Before </body> use:
-   <script src="raw-data.js?v=15.8"></script>
-   <script src="sticky-notes.js?v=15.8"></script>
-4. Commit.
-5. Hard refresh.
-
-CURRENT BACKEND URL EMBEDDED IN THE FRONTEND FILES
-https://script.google.com/macros/s/AKfycbwUmwkrx1wI1NrFDm6Bsvbcr0SCHSgkKTheN7_fLeVec4-w15D1k_11T8OQ4q4eV3bH5w/exec
-
-IMPORTANT
-If a new Apps Script deployment gives a NEW /exec URL, send that URL before
-uploading the final frontend files. The URL must then be inserted into both
-raw-data.js and sticky-notes.js.
+1. Replace raw-data.js and sticky-notes.js.
+2. In index.html use:
+   <script src="raw-data.js?v=15.9"></script>
+   <script src="sticky-notes.js?v=15.9"></script>
+3. Commit and hard refresh.
