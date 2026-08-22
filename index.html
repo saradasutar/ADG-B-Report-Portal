@@ -791,6 +791,7 @@
     function formatBytes(bytes){if(bytes<1024)return bytes+' B';if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB';return(bytes/1048576).toFixed(1)+' MB'}
     function showToast(message,type=''){const toast=document.createElement('div');toast.className='toast '+type;toast.textContent=message;$('#toastWrap').appendChild(toast);setTimeout(()=>toast.remove(),5200)}
 </script>
- <script src="raw-data.js?v=15.6-new"></script>
+ <script src="raw-data.js?v=15.7"></script>
+<script src="sticky-notes.js?v=15.7"></script>
 </body>
 </html>
