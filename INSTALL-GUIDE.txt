@@ -1,27 +1,53 @@
-ADG(B) RAW DATA V15.6 — SUBROW DELETE
+ADG(B) PORTAL V15.7 — ADMIN-CONTROLLED TARGET / REMINDER STICKY NOTES
 
-NEW
-- Every Raw Data SUBROW now shows:
-  ✎ Edit   🗑 Delete
-- Delete is shown only for subrows.
-- Head Office security code is required.
-- Deleted subrow disappears from the live dashboard.
-- Historical Raw_Data entries are preserved.
-- Main Raw Data rows are protected from this delete action.
+NEW TARGET / REMINDER FEATURE
+- Floating 🎯 Target / Reminder button; panel is collapsed by default.
+- Everyone can view active and completed reminders.
+- Only Head Office admin can change anything.
+- Admin unlock uses the EXISTING Head Office security code.
+- Add sticky note.
+- Six colour choices: yellow, pink, blue, green, orange, purple.
+- Small ✎ Edit and 🗑 Delete buttons.
+- ✓ Completed moves the sticky note out of Active and saves it in Completed history.
+- Completed notes can be restored by admin.
+- 📌 Pin keeps selected notes above others.
+- Pinned notes can still be collapsed/expanded by clicking their header.
+- Drag sticky notes to move/reorder them.
+- ↑ and ↓ buttons are also provided for easy movement.
+- − Size / ＋ Size changes Small / Medium / Large.
+- Size, colour, pin, collapse state and order are saved in Google Sheets.
+- Sticky data is stored automatically in a new Sticky_Notes sheet.
+- Existing reports, Raw Data, subrows and security codes are preserved.
+
+ADMIN CONTROL
+- The Target / Reminder panel opens in View mode.
+- Click 🔒 Admin inside the panel.
+- Enter the existing Head Office security code.
+- Admin controls become visible.
+- The code is retained only for the current browser-tab session.
+- Every backend write still verifies the Head Office code.
 
 APPS SCRIPT
-1. Replace complete Code.gs with this V15.6 Code.gs.
+1. Replace the complete current Code.gs with Code.gs from this package.
 2. Save.
-3. Do NOT run setupPortal().
-4. Do NOT run setPortalSecurityCodes().
-5. Deploy > Manage deployments > Edit > New version > Deploy.
+3. DO NOT run setupPortal().
+4. DO NOT run setPortalSecurityCodes().
+5. Deploy > Manage deployments > Edit > New version.
+6. Execute as: Me.
+7. Who has access: Anyone.
+8. Deploy.
 
 GITHUB
-1. Replace raw-data.js with this V15.6 raw-data.js.
-2. In index.html use:
-   <script src="raw-data.js?v=15.6"></script>
-3. Commit.
-4. Hard refresh with Command + Shift + R.
+1. Replace raw-data.js with the supplied raw-data.js.
+2. Upload sticky-notes.js beside index.html and raw-data.js.
+3. Immediately before </body> in index.html use:
+   <script src="raw-data.js?v=15.7"></script>
+   <script src="sticky-notes.js?v=15.7"></script>
+4. Commit.
+5. Hard-refresh with Command + Shift + R.
 
-EXPECTED VERSION BADGE
-Frontend v15.6 | Backend v15.6
+EXPECTED RAW DATA VERSION BADGE
+Frontend v15.7 | Backend v15.7
+
+Apps Script URL already embedded in both frontend feature files:
+https://script.google.com/macros/s/AKfycbwUmwkrx1wI1NrFDm6Bsvbcr0SCHSgkKTheN7_fLeVec4-w15D1k_11T8OQ4q4eV3bH5w/exec

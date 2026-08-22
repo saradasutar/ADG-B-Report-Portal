@@ -1,7 +1,9 @@
-In the CURRENT index.html, keep only one Raw Data script line.
+In the CURRENT index.html, keep the existing portal code.
 
-Replace the old line with:
+Immediately before </body>, use these TWO lines:
 
-<script src="raw-data.js?v=15.3"></script>
+<script src="raw-data.js?v=15.7"></script>
+<script src="sticky-notes.js?v=15.7"></script>
 
-Place it immediately before </body>.
+If an older raw-data.js script line exists, replace it with the v15.7 line.
+Do not add raw-data.js twice.
