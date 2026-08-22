@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzISOK2fBIVGOo48IYbbylpy_3hR8_DKibENOgGbaX-BdCNINK3bAGoUuSLvilRnwTP0w/exec",
-  FRONTEND_VERSION: "15.9",
+  FRONTEND_VERSION: "15.10",
   REQUEST_TIMEOUT_MS: 45000
 });
 
