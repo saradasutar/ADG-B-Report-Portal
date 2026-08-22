@@ -1,9 +1,11 @@
-In the CURRENT index.html, keep the existing portal code.
+In your CURRENT ADG-B-Report-Portal index.html:
 
-Immediately before </body>, use these TWO lines:
+1. Remove the older sticky-notes.js script line if present.
+2. Keep only ONE raw-data.js line.
+3. Immediately before </body>, use exactly:
 
-<script src="raw-data.js?v=15.7"></script>
-<script src="sticky-notes.js?v=15.7"></script>
+<script src="raw-data.js?v=15.8"></script>
+<script src="sticky-notes.js?v=15.8"></script>
 
-If an older raw-data.js script line exists, replace it with the v15.7 line.
-Do not add raw-data.js twice.
+Do not copy the HR dashboard's whole index.html into the Report Portal.
+The supplied sticky-notes.js injects the exact HR sticky-note interface safely.

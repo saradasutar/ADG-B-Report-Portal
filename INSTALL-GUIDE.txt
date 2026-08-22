@@ -1,53 +1,69 @@
-ADG(B) PORTAL V15.7 — ADMIN-CONTROLLED TARGET / REMINDER STICKY NOTES
+ADG(B) REPORT PORTAL V15.8 — EXACT HR TARGET / REMINDER FEATURE
 
-NEW TARGET / REMINDER FEATURE
-- Floating 🎯 Target / Reminder button; panel is collapsed by default.
-- Everyone can view active and completed reminders.
-- Only Head Office admin can change anything.
-- Admin unlock uses the EXISTING Head Office security code.
-- Add sticky note.
-- Six colour choices: yellow, pink, blue, green, orange, purple.
-- Small ✎ Edit and 🗑 Delete buttons.
-- ✓ Completed moves the sticky note out of Active and saves it in Completed history.
-- Completed notes can be restored by admin.
-- 📌 Pin keeps selected notes above others.
-- Pinned notes can still be collapsed/expanded by clicking their header.
-- Drag sticky notes to move/reorder them.
-- ↑ and ↓ buttons are also provided for easy movement.
-- − Size / ＋ Size changes Small / Medium / Large.
-- Size, colour, pin, collapse state and order are saved in Google Sheets.
-- Sticky data is stored automatically in a new Sticky_Notes sheet.
-- Existing reports, Raw Data, subrows and security codes are preserved.
+SOURCE
+This package was built from the CURRENT HR files supplied by the user:
+- HR index.html
+- HR app.js
+- HR styles.css
+- HR Code.gs
 
-ADMIN CONTROL
-- The Target / Reminder panel opens in View mode.
-- Click 🔒 Admin inside the panel.
+WHAT IS COPIED FROM HR
+- Targets & Reminders organiser dialog
+- Reminder / Target type
+- Title
+- Due date
+- Details
+- Six colours: Yellow, Pink, Blue, Green, Purple, Orange
+- Active notes grid
+- Completed history
+- Edit
+- Delete
+- ✓ Completed
+- Restore from Completed history
+- 📌 Keep open / Pinned
+- Only one chosen note stays floating over the dashboard
+- Click floating note header to collapse/open
+- Drag floating note to any screen position
+- Keyboard arrow movement from Move note handle
+- Small / Medium / Large / X-Large size controls
+- Reset position and size
+- Open all / Unpin
+- Position, size, pinned note and collapsed state saved in this browser
+
+ADG REPORT PORTAL ADAPTATION
+- Everyone can VIEW targets/reminders.
+- All changes are Head Office-admin controlled.
+- Click 🔒 Admin in the Targets & Reminders dialog.
 - Enter the existing Head Office security code.
-- Admin controls become visible.
-- The code is retained only for the current browser-tab session.
-- Every backend write still verifies the Head Office code.
+- No separate HR username/password system is added.
+- Sticky records are stored in the existing Report Portal database Sheet.
+- Backend sheet uses the same 11-column HR Targets & Reminders structure.
+- Existing Report Submission, Raw Data, subrows and report PDFs are preserved.
 
 APPS SCRIPT
-1. Replace the complete current Code.gs with Code.gs from this package.
+1. Replace complete Code.gs with V15.8 Code.gs.
 2. Save.
 3. DO NOT run setupPortal().
 4. DO NOT run setPortalSecurityCodes().
-5. Deploy > Manage deployments > Edit > New version.
+5. Deploy > New deployment > Web app OR Manage deployments > Edit > New version.
 6. Execute as: Me.
 7. Who has access: Anyone.
 8. Deploy.
+9. Test /exec?action=ping&callback=test and confirm backendVersion 15.8.
 
 GITHUB
-1. Replace raw-data.js with the supplied raw-data.js.
-2. Upload sticky-notes.js beside index.html and raw-data.js.
-3. Immediately before </body> in index.html use:
-   <script src="raw-data.js?v=15.7"></script>
-   <script src="sticky-notes.js?v=15.7"></script>
+1. Replace raw-data.js with V15.8 raw-data.js.
+2. Replace the old sticky-notes.js with V15.8 sticky-notes.js.
+3. Before </body> use:
+   <script src="raw-data.js?v=15.8"></script>
+   <script src="sticky-notes.js?v=15.8"></script>
 4. Commit.
-5. Hard-refresh with Command + Shift + R.
+5. Hard refresh.
 
-EXPECTED RAW DATA VERSION BADGE
-Frontend v15.7 | Backend v15.7
-
-Apps Script URL already embedded in both frontend feature files:
+CURRENT BACKEND URL EMBEDDED IN THE FRONTEND FILES
 https://script.google.com/macros/s/AKfycbwUmwkrx1wI1NrFDm6Bsvbcr0SCHSgkKTheN7_fLeVec4-w15D1k_11T8OQ4q4eV3bH5w/exec
+
+IMPORTANT
+If a new Apps Script deployment gives a NEW /exec URL, send that URL before
+uploading the final frontend files. The URL must then be inserted into both
+raw-data.js and sticky-notes.js.
