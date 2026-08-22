@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "15.10",
+  FRONTEND_VERSION: "15.11",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -43,12 +43,12 @@ function initExactHrSticky() {
     "stickyNoteType", "stickyNoteTitle", "stickyNoteDueDate", "stickyNoteDetails",
     "saveStickyNoteButton", "cancelStickyEditButton", "stickyNoteError",
     "stickyActiveSummary", "stickyActiveList", "stickyActiveEmpty",
-    "stickyCompletedCount", "stickyCompletedList", "stickyCompletedEmpty",
+    "stickyCompletedCount", "stickyCompletedList", "stickyCompletedEmpty", "stickyCompletedSection",
     "stickyFocusNote", "stickyFocusDragHandle", "stickyFocusToggle",
     "stickyFocusType", "stickyFocusTitle", "stickyFocusChevron", "stickyFocusBody",
     "stickyFocusDetails", "stickyFocusDue", "stickyFocusSizeDown",
     "stickyFocusSizeLabel", "stickyFocusSizeUp", "stickyFocusResetLayout",
-    "stickyFocusManage", "stickyFocusUnpin", "stickyAdminUnlock", "stickyAdminHint"
+    "stickyFocusManage", "stickyFocusUnpin", "stickyFocusAdminActions", "stickyFocusEdit", "stickyFocusComplete", "stickyFocusDelete", "stickyAdminUnlock", "stickyAdminHint"
   ].forEach((id) => { refs[id] = document.getElementById(id); });
 
   refs.stickyNotesButton.addEventListener("click", openStickyNotes);
@@ -68,6 +68,23 @@ function initExactHrSticky() {
   refs.stickyFocusResetLayout.addEventListener("click", resetStickyFocusLayout);
   refs.stickyFocusManage.addEventListener("click", openStickyNotes);
   refs.stickyFocusUnpin.addEventListener("click", unpinStickyFocus);
+
+  refs.stickyFocusEdit.addEventListener("click", () => {
+    if (!state.adminUnlocked || !state.stickyFocusId) return;
+    openStickyNotes();
+    editStickyNote(state.stickyFocusId);
+  });
+
+  refs.stickyFocusComplete.addEventListener("click", () => {
+    if (!state.adminUnlocked || !state.stickyFocusId) return;
+    completeStickyNote(state.stickyFocusId);
+  });
+
+  refs.stickyFocusDelete.addEventListener("click", () => {
+    if (!state.adminUnlocked || !state.stickyFocusId) return;
+    deleteStickyNote(state.stickyFocusId);
+  });
+
   refs.stickyAdminUnlock.addEventListener("click", toggleStickyAdmin);
 
   document.querySelectorAll('[data-close-sticky-dialog]').forEach((button) => {
@@ -127,6 +144,75 @@ function injectExactHrStickyStyles() {
 }
 `;
 
+  style.textContent += `
+.sticky-card-actions {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(64,72,78,.16);
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+}
+.sticky-card-actions .sticky-mini-btn,
+.sticky-card-actions .sticky-complete-btn {
+  min-height: 29px;
+  padding: 0 9px !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  border-radius: 7px;
+}
+.sticky-card-actions .sticky-complete-btn {
+  color: #075c45 !important;
+  border: 1px solid #55a37e !important;
+  background: #effcf5 !important;
+}
+.sticky-card-actions .sticky-mini-btn.delete {
+  color: #a41414 !important;
+  border: 1px solid #dc7777 !important;
+  background: #fff1f1 !important;
+}
+.sticky-card-actions .sticky-mini-btn.edit {
+  color: #4338a8 !important;
+  border: 1px solid #8b7ed8 !important;
+  background: #f7f5ff !important;
+}
+.sticky-focus-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(56,70,72,.16);
+}
+.sticky-focus-admin-actions[hidden] { display: none !important; }
+.sticky-focus-admin-actions button {
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 8.5px;
+  font-weight: 950;
+  cursor: pointer;
+}
+.sticky-focus-admin-actions .focus-edit {
+  color: #4338a8;
+  border: 1px solid #8b7ed8;
+  background: rgba(248,246,255,.95);
+}
+.sticky-focus-admin-actions .focus-complete {
+  color: #075c45;
+  border: 1px solid #55a37e;
+  background: rgba(239,252,245,.96);
+}
+.sticky-focus-admin-actions .focus-delete {
+  color: #a41414;
+  border: 1px solid #dc7777;
+  background: rgba(255,241,241,.96);
+}
+`;
   document.head.appendChild(style);
 }
 
@@ -167,6 +253,11 @@ function injectExactHrStickyMarkup() {
             <button id="stickyFocusResetLayout" type="button" title="Restore original size and position">Reset</button>
             <button id="stickyFocusManage" type="button">Open all</button>
             <button id="stickyFocusUnpin" type="button">Unpin</button>
+          </div>
+          <div id="stickyFocusAdminActions" class="sticky-focus-admin-actions" hidden>
+            <button id="stickyFocusEdit" class="focus-edit" type="button">✎ Edit</button>
+            <button id="stickyFocusComplete" class="focus-complete" type="button">✓ Completed</button>
+            <button id="stickyFocusDelete" class="focus-delete" type="button">🗑 Delete</button>
           </div>
         </div>
       </div>
@@ -234,7 +325,7 @@ function injectExactHrStickyMarkup() {
           <p id="stickyActiveEmpty" class="sticky-empty">No active targets or reminders.</p>
         </section>
 
-        <details class="sticky-completed-section">
+        <details id="stickyCompletedSection" class="sticky-completed-section">
           <summary><span>Completed history</span><b id="stickyCompletedCount">0</b></summary>
           <div id="stickyCompletedList" class="sticky-note-grid completed"></div>
           <p id="stickyCompletedEmpty" class="sticky-empty">No completed notes yet.</p>
@@ -304,9 +395,9 @@ function stickyNoteMarkup(note, completed) {
 
   const adminActions = state.adminUnlocked
     ? `${completed
-        ? `<button class="sticky-mini-btn edit" type="button" data-restore-sticky-note="${escapeAttribute(note.id)}">Restore</button>`
-        : `<button class="sticky-mini-btn edit" type="button" data-edit-sticky-note="${escapeAttribute(note.id)}">Edit</button><button class="sticky-complete-btn" type="button" data-complete-sticky-note="${escapeAttribute(note.id)}">✓ Completed</button>`}
-       <button class="sticky-mini-btn delete" type="button" data-delete-sticky-note="${escapeAttribute(note.id)}">Delete</button>`
+        ? `<button class="sticky-mini-btn edit" type="button" data-restore-sticky-note="${escapeAttribute(note.id)}">↩ Restore</button>`
+        : `<button class="sticky-mini-btn edit" type="button" data-edit-sticky-note="${escapeAttribute(note.id)}">✎ Edit</button><button class="sticky-complete-btn" type="button" data-complete-sticky-note="${escapeAttribute(note.id)}">✓ Completed</button>`}
+       <button class="sticky-mini-btn delete" type="button" data-delete-sticky-note="${escapeAttribute(note.id)}">🗑 Delete</button>`
     : "";
 
   const actions =
@@ -478,7 +569,10 @@ function updateStickyFormMode() {
 }
 
 async function completeStickyNote(id) {
-  if (!confirm("Move this target or reminder to Completed history?")) return;
+  if (!confirm(
+    "Mark this Target / Reminder Completed?\n\n" +
+    "It will be removed from Active but saved permanently in Completed history."
+  )) return;
 
   try {
     const response = await apiPost("adminCompleteStickyNote", {
@@ -487,9 +581,19 @@ async function completeStickyNote(id) {
     });
 
     state.stickyNotes = response.notes || [];
-    if (state.stickyFocusId === id) unpinStickyFocus(false);
+
+    if (state.stickyFocusId === id) {
+      unpinStickyFocus(false);
+    }
+
     renderStickyNotes();
-    showToast("Target / Reminder completed.");
+
+    // Open Completed history immediately so the saved note is visible.
+    if (refs.stickyCompletedSection) {
+      refs.stickyCompletedSection.open = true;
+    }
+
+    showToast("✓ Completed and saved in history.");
   } catch (error) {
     showToast(friendlyError(error), true);
   }
@@ -758,6 +862,10 @@ function renderStickyFocusNote() {
   refs.stickyFocusSizeUp.disabled =
     size === STICKY_FOCUS_SIZES.length - 1;
 
+  if (refs.stickyFocusAdminActions) {
+    refs.stickyFocusAdminActions.hidden = !state.adminUnlocked;
+  }
+
   refs.stickyFocusNote.hidden = false;
 
   requestAnimationFrame(() => {
@@ -885,6 +993,10 @@ function applyAdminState() {
     state.adminUnlocked ? "🔓 Lock" : "🔒 Admin";
 
   refs.stickyNoteForm.hidden = !state.adminUnlocked;
+
+  if (refs.stickyFocusAdminActions) {
+    refs.stickyFocusAdminActions.hidden = !state.adminUnlocked;
+  }
 
   if (refs.stickyAdminHint) {
     refs.stickyAdminHint.classList.toggle("unlocked", state.adminUnlocked);

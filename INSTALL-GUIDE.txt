@@ -1,33 +1,36 @@
-ADG(B) REPORT PORTAL V15.10 — FINAL NEW DEPLOYMENT URL
+ADG(B) REPORT PORTAL V15.11 — COMPLETED + DELETE STICKY FIX
 
-NEW APPS SCRIPT URL ALREADY INSERTED INTO BOTH FRONTEND FILES:
-https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec
+ACTIVE STICKY NOTES NOW CLEARLY SHOW
+- 📌 Keep open / Pinned
+- ✎ Edit
+- ✓ Completed
+- 🗑 Delete
 
-BACKEND
-- Code.gs remains V15.10 with the sticky-sheet recursion/timeout fix.
-- If this new deployment already contains the V15.10 Code.gs, do not run setupPortal().
-- Do not run setPortalSecurityCodes().
+FLOATING PINNED NOTE IN ADMIN MODE ALSO SHOWS
+- ✎ Edit
+- ✓ Completed
+- 🗑 Delete
+
+WHEN ✓ COMPLETED IS CLICKED
+1. The note is NOT deleted.
+2. Status is changed to Completed in Sticky_Notes.
+3. Completed date/time is saved.
+4. Completed By is saved as Head Office.
+5. SpreadsheetApp.flush() commits the history before the backend replies.
+6. The note disappears from Active.
+7. Completed history automatically opens so the saved note can be seen.
+8. Completed history provides ↩ Restore and 🗑 Delete.
+
+APPS SCRIPT
+1. Replace complete Code.gs with V15.11.
+2. Save.
+3. Do NOT run setupPortal() or setPortalSecurityCodes().
+4. Deploy > Manage deployments > Edit > New version > Deploy.
 
 GITHUB
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
-3. In index.html use:
-   <script src="raw-data.js?v=15.10-final"></script>
-   <script src="sticky-notes.js?v=15.10-final"></script>
-4. Commit.
-5. Hard refresh with Command + Shift + R.
-
-TEST
-Open:
-https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec?action=ping&callback=test
-
-Expected:
-"backendVersion":"15.10"
-
-Then open:
-https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec?action=stickyHealth&callback=test
-
-Expected:
-"ok":true
-"sheetName":"Sticky_Notes"
-"backendVersion":"15.10"
+3. Use:
+   <script src="raw-data.js?v=15.11"></script>
+   <script src="sticky-notes.js?v=15.11"></script>
+4. Commit and hard refresh.

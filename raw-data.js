@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.10';
+  const RAW_FRONTEND_VERSION = '15.11';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -540,7 +540,7 @@
         throw new Error(
           'Backend currently deployed is version ' +
           deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.10 as a New version.'
+          '. It does not contain Raw Data support. Deploy Code.gs V15.11 as a New version.'
         );
       }
 
@@ -872,7 +872,7 @@
 
       window.alert(
         /Unsupported operation/i.test(text)
-          ? 'The deployed Apps Script does not support subrow deletion. Deploy Code.gs V15.10 as a New version.'
+          ? 'The deployed Apps Script does not support subrow deletion. Deploy Code.gs V15.11 as a New version.'
           : text
       );
     }
@@ -963,7 +963,7 @@
     } catch (error) {
       const text = error.message || 'The Raw Data value could not be saved.';
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.10 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.11 as a New version.'
         : text;
 
     } finally {
@@ -1041,7 +1041,7 @@
               : 'The Raw Data row could not be added.'));
 
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.10 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.11 as a New version.'
         : text;
 
     } finally {

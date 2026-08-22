@@ -1,6 +1,6 @@
-In the CURRENT index.html, immediately before </body>, use exactly:
+Immediately before </body> in the CURRENT index.html, use:
 
-<script src="raw-data.js?v=15.10-final"></script>
-<script src="sticky-notes.js?v=15.10-final"></script>
+<script src="raw-data.js?v=15.11"></script>
+<script src="sticky-notes.js?v=15.11"></script>
 
-Remove older duplicate raw-data.js or sticky-notes.js script lines.
+Remove older duplicate raw-data.js / sticky-notes.js script lines.
