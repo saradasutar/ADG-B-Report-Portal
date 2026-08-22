@@ -2,7 +2,7 @@
   'use strict';
 
   const RAW_SCRIPT_URL =
-    'https://script.google.com/macros/s/AKfycbzISOK2fBIVGOo48IYbbylpy_3hR8_DKibENOgGbaX-BdCNINK3bAGoUuSLvilRnwTP0w/exec';
+    'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
   const RAW_FRONTEND_VERSION = '15.10';
 
