@@ -1,7 +1,3 @@
-In the CURRENT index.html, immediately before </body>, use exactly:
-
-<script src="raw-data.js?v=15.14"></script>
-<script src="sticky-notes.js?v=15.14"></script>
-
-Remove older duplicate raw-data.js / sticky-notes.js lines.
-No separate login HTML file is required.
+Use at bottom of index.html:
+<script src="raw-data.js?v=15.29"></script>
+<script src="sticky-notes.js?v=15.29"></script>
