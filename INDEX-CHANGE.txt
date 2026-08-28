@@ -1,3 +1,3 @@
 Use at bottom of index.html:
-<script src="raw-data.js?v=15.30"></script>
-<script src="sticky-notes.js?v=15.30"></script>
+<script src="raw-data.js?v=15.31"></script>
+<script src="sticky-notes.js?v=15.31"></script>

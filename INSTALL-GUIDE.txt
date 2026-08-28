@@ -1,6 +1,25 @@
-V15.30
-1. Summary strip (Total / Submitted / Pending / Completion) now uses stronger eye-catching contrast card colours.
-2. Stat labels and values are larger and bolder for easy reading.
-3. Report upload matrix heading and table text are slightly bolder/larger while staying compact.
-4. Replace raw-data.js and sticky-notes.js, and update index.html to v=15.30.
-5. Code.gs included only to match BE v15.30 if you deploy a new backend version.
+ADG(B) REPORT PORTAL V15.31 — DISTINCT COLOUR TABS
+
+COLOUR IDENTITY
+- FE: blue
+- BE: green
+- Current files: amber/gold
+- Users: purple
+- Sign out: red
+- Reports: indigo
+- Raw Data: cyan/teal
+- Subjects: gold
+- Refresh: blue
+- All filter: indigo
+- Pending filter: rose/red
+- Submitted filter: green
+- Target / Reminder: purple-to-blue gradient
+
+Login FE/BE badges use the same blue/green identity as inside the dashboard.
+Search/dropdowns and Raw Data buttons also receive coordinated highlights.
+
+INSTALL
+1. Replace raw-data.js and sticky-notes.js.
+2. Use v=15.31 in index.html.
+3. Code.gs is included only to match BE v15.31 if deployed.
+4. Do NOT run setupPortal() or setPortalSecurityCodes().

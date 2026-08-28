@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "15.30",
+  FRONTEND_VERSION: "15.31",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -492,6 +492,23 @@ function injectExactHrStickyStyles() {
   }
 }
 `;
+  style.textContent += `
+    /* V15.31 special Target / Reminder identity */
+    .hr-sticky-launch .sticky-launch-btn{
+      background:linear-gradient(180deg,#7448e8,#5a49c8 55%,#2e7ac4)!important;
+      border-color:#7457df!important;
+      box-shadow:0 12px 30px rgba(83,61,190,.28)!important;
+    }
+    .hr-sticky-launch .sticky-launch-btn:hover{
+      filter:brightness(1.06)!important;
+      box-shadow:0 14px 34px rgba(83,61,190,.34)!important;
+    }
+    .hr-sticky-dialog .sticky-notes-header{
+      border-top:4px solid #6950d6!important;
+      background:linear-gradient(100deg,#faf8ff,#f1f7ff 55%,#ecfbf5)!important;
+    }
+    .hr-sticky-dialog .sticky-notes-header .eyebrow{color:#6048bc!important}
+  `;
   document.head.appendChild(style);
 }
 

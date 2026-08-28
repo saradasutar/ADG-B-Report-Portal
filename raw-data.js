@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.30';
+  const RAW_FRONTEND_VERSION = '15.31';
 
 
   /* =====================================================================
@@ -845,6 +845,156 @@
       @media(max-width:1249px){.header-inner{flex-wrap:wrap!important}.adgb-compact-second-row{flex-wrap:wrap!important}.adgb-compact-mainbar{flex:1 1 100%!important;overflow-x:auto!important}.adgb-compact-second-row>.stats-grid{flex:1 1 100%!important;min-width:0!important}}
       @media(max-width:760px){.brand-copy small{display:none!important}.adgb-user-copy{display:none!important}.adgb-inside-version{display:none!important}.adgb-compact-second-row{padding:4px!important}.adgb-compact-second-row>.stats-grid{overflow-x:auto!important}.adgb-compact-second-row>.stats-grid .stat-card{min-width:104px!important}tbody th,tbody td{height:auto!important}}
     `;
+    style.textContent += `
+      /* =========================================================
+         V15.31 — distinct colour identity for important controls
+         ========================================================= */
+
+      /* Login FE / BE badges */
+      .adgb-login-version .adgb-version-chip:nth-child(1){
+        border-color:#8ab9ff!important;
+        background:linear-gradient(135deg,#e9f3ff,#dbeaff)!important;
+        color:#214a86!important;
+        box-shadow:0 3px 9px rgba(45,105,190,.12)!important;
+      }
+      .adgb-login-version .adgb-version-chip:nth-child(1) strong{color:#0b5cad!important}
+      .adgb-login-version .adgb-version-chip:nth-child(2){
+        border-color:#8fd5b8!important;
+        background:linear-gradient(135deg,#eafff4,#d8f8e8)!important;
+        color:#176b50!important;
+        box-shadow:0 3px 9px rgba(22,128,88,.12)!important;
+      }
+      .adgb-login-version .adgb-version-chip:nth-child(2) strong{color:#08795c!important}
+      .adgb-cache-clear{
+        border-color:#c4b4ef!important;
+        background:linear-gradient(135deg,#fbf8ff,#efe9ff)!important;
+        color:#564397!important;
+      }
+      .adgb-cache-clear:hover{background:#e9e1ff!important;border-color:#9d87db!important}
+
+      /* Dashboard FE / BE badges */
+      .adgb-inside-version .adgb-version-chip:nth-child(1){
+        border-color:#86b8ff!important;
+        background:#e9f3ff!important;
+        color:#20538f!important;
+      }
+      .adgb-inside-version .adgb-version-chip:nth-child(1) strong{color:#0b5cad!important}
+      .adgb-inside-version .adgb-version-chip:nth-child(2){
+        border-color:#86d5b4!important;
+        background:#e8fff3!important;
+        color:#16684e!important;
+      }
+      .adgb-inside-version .adgb-version-chip:nth-child(2) strong{color:#08795c!important}
+
+      /* Current files / Users / Sign out */
+      .adgb-drive-link{
+        border-color:#e6b84f!important;
+        background:linear-gradient(135deg,#fff8d9,#ffe9a2)!important;
+        color:#805400!important;
+        box-shadow:0 3px 10px rgba(169,112,0,.12)!important;
+      }
+      .adgb-drive-link:hover{background:#ffe69a!important;border-color:#d99a12!important;transform:translateY(-1px)}
+      .adgb-user-action.manage{
+        border-color:#b19ce8!important;
+        background:linear-gradient(135deg,#f5f0ff,#e8ddff)!important;
+        color:#5b3ea0!important;
+        box-shadow:0 3px 10px rgba(92,62,160,.11)!important;
+      }
+      .adgb-user-action.manage:hover{background:#dfd0ff!important;border-color:#9275d6!important;transform:translateY(-1px)}
+      .adgb-user-action.logout{
+        border-color:#e89aa6!important;
+        background:linear-gradient(135deg,#fff3f5,#ffdfe4)!important;
+        color:#a32134!important;
+        box-shadow:0 3px 10px rgba(165,33,52,.10)!important;
+      }
+      .adgb-user-action.logout:hover{background:#ffd7de!important;border-color:#d96b7b!important;transform:translateY(-1px)}
+
+      /* Main navigation tabs — each has its own identity */
+      #reportsTabButton{
+        border-color:#6c72d9!important;
+        background:linear-gradient(135deg,#5963d8,#5145b0)!important;
+        color:#fff!important;
+        box-shadow:0 4px 11px rgba(77,72,175,.17)!important;
+      }
+      #reportsTabButton:not(.active){
+        background:linear-gradient(135deg,#eef0ff,#dde1ff)!important;
+        color:#403f93!important;
+      }
+      #rawDataTabButton{
+        border-color:#4bb8c1!important;
+        background:linear-gradient(135deg,#e8fbff,#d3f5f2)!important;
+        color:#096d76!important;
+        box-shadow:0 4px 11px rgba(20,126,137,.12)!important;
+      }
+      #rawDataTabButton.active{
+        background:linear-gradient(135deg,#168fa4,#0b8072)!important;
+        color:#fff!important;
+      }
+      #adminButton{
+        border-color:#e1b64c!important;
+        background:linear-gradient(135deg,#fff6ce,#ffe598)!important;
+        color:#795000!important;
+        box-shadow:0 4px 11px rgba(164,109,0,.12)!important;
+      }
+      #adminButton:hover{background:#ffdf73!important;border-color:#cb9414!important;transform:translateY(-1px)}
+      #refreshButton,.adgb-compact-mainbar .refresh-button{
+        border-color:#89b6ea!important;
+        background:linear-gradient(135deg,#edf6ff,#dcecff)!important;
+        color:#155a99!important;
+        box-shadow:0 3px 9px rgba(31,92,151,.11)!important;
+      }
+      #refreshButton:hover,.adgb-compact-mainbar .refresh-button:hover{background:#cfe5ff!important;border-color:#649bd5!important}
+
+      /* Filter tabs: All / Pending / Submitted */
+      .filter-buttons .filter-button:nth-child(1){
+        border-color:#7e86df!important;background:#edf0ff!important;color:#454b9e!important
+      }
+      .filter-buttons .filter-button:nth-child(1).active{
+        background:linear-gradient(135deg,#5864d7,#4c48ae)!important;color:#fff!important
+      }
+      .filter-buttons .filter-button:nth-child(2){
+        border-color:#e39aa7!important;background:#fff0f2!important;color:#a72b3e!important
+      }
+      .filter-buttons .filter-button:nth-child(2).active{
+        background:linear-gradient(135deg,#d94c61,#b92e43)!important;color:#fff!important
+      }
+      .filter-buttons .filter-button:nth-child(3){
+        border-color:#83ceb0!important;background:#ebfff5!important;color:#087055!important
+      }
+      .filter-buttons .filter-button:nth-child(3).active{
+        background:linear-gradient(135deg,#15936e,#08795c)!important;color:#fff!important
+      }
+      .filter-button{font-weight:950!important;box-shadow:0 2px 6px rgba(45,60,95,.07)!important}
+
+      /* Search/filter fields get subtle but distinct focus highlights */
+      .tool-field select{border-color:#9bbbe0!important;background:#f6faff!important}
+      .tool-field input{border-color:#c0a9e7!important;background:#fbf9ff!important}
+      .tool-field select:focus{border-color:#4c8ed1!important;box-shadow:0 0 0 3px rgba(76,142,209,.12)!important}
+      .tool-field input:focus{border-color:#8f69ca!important;box-shadow:0 0 0 3px rgba(143,105,202,.12)!important}
+
+      /* Raw Data controls */
+      .raw-action-btn.primary{
+        background:linear-gradient(135deg,#0e8f7b,#087065)!important;
+        border-color:#087065!important;color:#fff!important;
+        box-shadow:0 4px 11px rgba(8,112,101,.15)!important
+      }
+      .raw-action-btn:not(.primary){
+        border-color:#91b8d7!important;background:#f0f7ff!important;color:#235f8d!important
+      }
+      .raw-action-btn:hover{transform:translateY(-1px)!important}
+
+      /* General modal/action buttons gain a small special highlight */
+      .modal .primary-btn,.sticky-note-form .primary-btn{
+        background:linear-gradient(135deg,#0f7ca5,#0c8173)!important;
+        color:#fff!important;
+        box-shadow:0 4px 12px rgba(12,124,150,.14)!important
+      }
+
+      /* Active clickable items glow subtly, not excessively */
+      .portal-tab,.filter-button,.adgb-drive-link,.adgb-user-action,#adminButton,#refreshButton{
+        transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease!important
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -872,7 +1022,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.30</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.31</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -893,7 +1043,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.30</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.31</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1937,7 +2087,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.30';
+  const RAW_FRONTEND_VERSION = '15.31';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
