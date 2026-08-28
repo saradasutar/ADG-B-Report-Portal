@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.23';
+  const RAW_FRONTEND_VERSION = '15.24';
 
 
   /* =====================================================================
@@ -422,6 +422,123 @@
         .adgb-drive-link{padding:0 8px;font-size:8px}
       }
     `;
+    style.textContent += `
+      /* V15.24 — compact summary row */
+      .stats-grid{
+        gap:8px!important;
+        margin-bottom:8px!important;
+      }
+      .stat-card{
+        min-height:58px!important;
+        padding:7px 12px 6px!important;
+        border-radius:8px!important;
+      }
+      .stat-label{
+        font-size:10px!important;
+        line-height:1.05!important;
+        letter-spacing:.065em!important;
+      }
+      .stat-value{
+        margin-top:1px!important;
+        font-size:25px!important;
+        line-height:1!important;
+      }
+      .stat-note{
+        margin-top:1px!important;
+        font-size:8.5px!important;
+        line-height:1.05!important;
+      }
+      .mini-progress{
+        height:4px!important;
+        margin-top:3px!important;
+      }
+
+      /* Signed-in controls belong to the sticky top header, not the page body. */
+      .header-inner{
+        min-height:66px!important;
+      }
+      .adgb-user-bar{
+        position:static!important;
+        inset:auto!important;
+        right:auto!important;
+        top:auto!important;
+        z-index:auto!important;
+        flex:0 0 auto!important;
+        margin-left:auto!important;
+        box-shadow:0 4px 14px rgba(30,64,90,.10)!important;
+        background:rgba(255,255,255,.96)!important;
+      }
+      .adgb-user-chip{
+        padding:2px 7px 2px 3px!important;
+      }
+      .adgb-user-avatar{
+        width:28px!important;
+        height:28px!important;
+      }
+      .adgb-user-copy strong{
+        max-width:125px!important;
+        font-size:10px!important;
+      }
+      .adgb-user-copy small{
+        font-size:8px!important;
+      }
+      .adgb-inside-version{
+        padding:0 2px!important;
+      }
+      .adgb-inside-version .adgb-version-chip{
+        padding:4px 6px!important;
+        font-size:8px!important;
+      }
+      .adgb-drive-link,
+      .adgb-user-action{
+        height:30px!important;
+      }
+
+      /* Keep the original Head Office Administrator button on the same top row. */
+      .header-inner > .admin-button{
+        flex:0 0 auto!important;
+        margin-left:0!important;
+      }
+
+      /* A static header control strip must never be shifted by the sticky drawer. */
+      body.adgb-sticky-drawer-open .adgb-user-bar{
+        right:auto!important;
+      }
+
+      @media(max-width:1250px){
+        .header-inner{
+          flex-wrap:wrap!important;
+          padding:6px 0!important;
+          gap:7px!important;
+        }
+        .adgb-user-bar{
+          order:3!important;
+          width:100%!important;
+          justify-content:flex-end!important;
+          margin-left:0!important;
+        }
+      }
+
+      @media(max-width:760px){
+        .stats-grid{
+          gap:6px!important;
+        }
+        .stat-card{
+          min-height:54px!important;
+          padding:6px 9px!important;
+        }
+        .stat-value{
+          font-size:22px!important;
+        }
+        .adgb-user-bar{
+          position:static!important;
+          max-width:100%!important;
+          overflow-x:auto!important;
+          border-radius:12px!important;
+          justify-content:flex-start!important;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -449,7 +566,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.23</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.24</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -470,7 +587,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.23</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.24</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -522,6 +639,7 @@
     `;
 
     document.body.append(root, userBar, usersModal);
+    dockUserBarIntoTopHeader();
 
     const remembered = localStorage.getItem(AUTH_USERNAME_KEY) || '';
     document.getElementById('adgbLoginUsername').value = remembered;
@@ -685,8 +803,26 @@
     }
   }
 
+
+  function dockUserBarIntoTopHeader() {
+    const userBar = document.getElementById('adgbUserBar');
+    const headerInner = document.querySelector('header .header-inner');
+
+    if (!userBar || !headerInner) return;
+
+    const adminButton = headerInner.querySelector('.admin-button');
+
+    if (adminButton) {
+      headerInner.insertBefore(userBar, adminButton);
+    } else {
+      headerInner.appendChild(userBar);
+    }
+  }
+
   function setAuthenticatedUser(user) {
     authState.user = user || null;
+
+    dockUserBarIntoTopHeader();
 
     if (!authState.user) {
       showLoginPage();
@@ -1380,7 +1516,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.23';
+  const RAW_FRONTEND_VERSION = '15.24';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
