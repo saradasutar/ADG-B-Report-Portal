@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.27';
+  const RAW_FRONTEND_VERSION = '15.28';
 
 
   /* =====================================================================
@@ -540,6 +540,266 @@
         }
       }
     `;
+    style.textContent += `
+      /* =========================================================
+         V15.28 — ULTRA-COMPACT DESKTOP HEADER
+         Portal name + cycle + tabs + useful metrics + user actions
+         fit in one row on a wide desktop.
+         ========================================================= */
+
+      header{
+        min-height:0!important;
+      }
+
+      .header-inner{
+        width:min(1720px,calc(100% - 24px))!important;
+        min-height:54px!important;
+        height:auto!important;
+        gap:7px!important;
+        flex-wrap:nowrap!important;
+        justify-content:flex-start!important;
+        padding:4px 0!important;
+      }
+
+      .brand{
+        flex:0 1 320px!important;
+        gap:8px!important;
+      }
+      .brand-mark{
+        width:34px!important;
+        height:34px!important;
+      }
+      .brand-copy strong{
+        font-size:17px!important;
+        line-height:1.05!important;
+        white-space:nowrap!important;
+      }
+      .brand-copy small{
+        font-size:8.5px!important;
+      }
+
+      .adgb-compact-mainbar{
+        display:flex;
+        align-items:center;
+        gap:4px;
+        flex:0 0 auto;
+        min-width:0;
+      }
+
+      .adgb-compact-mainbar .cycle-main{
+        min-height:30px!important;
+        display:flex!important;
+        align-items:center!important;
+        gap:4px!important;
+        flex-wrap:nowrap!important;
+        padding:0 8px!important;
+        border:1px solid #d7e3ea!important;
+        border-radius:999px!important;
+        background:#f8fbfd!important;
+      }
+      .adgb-compact-mainbar .cycle-label{
+        display:none!important;
+      }
+      .adgb-compact-mainbar .cycle-main strong{
+        font-size:10px!important;
+        font-weight:950!important;
+        white-space:nowrap!important;
+      }
+      .adgb-compact-mainbar .active-badge{
+        padding:2px 5px!important;
+        font-size:7px!important;
+      }
+
+      .adgb-compact-mainbar .portal-tab,
+      .adgb-compact-mainbar .admin-button,
+      .adgb-compact-mainbar .refresh-button{
+        min-height:30px!important;
+        height:30px!important;
+        padding:0 9px!important;
+        border-radius:8px!important;
+        font-size:9px!important;
+        font-weight:950!important;
+        white-space:nowrap!important;
+        box-shadow:none!important;
+      }
+
+      .adgb-compact-mainbar .admin-button{
+        background:#eef7fb!important;
+        color:#0b3b60!important;
+        border:1px solid #c6dce8!important;
+      }
+
+      .adgb-compact-mainbar .refresh-button{
+        width:30px!important;
+        min-width:30px!important;
+        padding:0!important;
+        font-size:15px!important;
+      }
+
+      /* The four large cards become one very small metrics group. */
+      .header-inner > .stats-grid{
+        display:flex!important;
+        align-items:center!important;
+        gap:2px!important;
+        flex:1 1 290px!important;
+        min-width:250px!important;
+        margin:0!important;
+        padding:2px!important;
+        border:1px solid #d7e3ea!important;
+        border-radius:10px!important;
+        background:rgba(255,255,255,.74)!important;
+        box-shadow:none!important;
+      }
+
+      .header-inner > .stats-grid.hidden{
+        display:none!important;
+      }
+
+      .header-inner > .stats-grid .stat-card{
+        min-height:30px!important;
+        height:30px!important;
+        flex:1 1 0!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        gap:4px!important;
+        padding:0 5px!important;
+        border:0!important;
+        border-right:1px solid #e0e8ed!important;
+        border-radius:6px!important;
+        box-shadow:none!important;
+        overflow:visible!important;
+        background:transparent!important;
+      }
+
+      .header-inner > .stats-grid .stat-card:last-child{
+        border-right:0!important;
+      }
+      .header-inner > .stats-grid .stat-card::before{
+        display:none!important;
+      }
+      .header-inner > .stats-grid .stat-label{
+        display:inline!important;
+        font-size:7.5px!important;
+        line-height:1!important;
+        letter-spacing:.03em!important;
+        white-space:nowrap!important;
+      }
+      .header-inner > .stats-grid .stat-value{
+        display:inline!important;
+        margin:0!important;
+        font-size:17px!important;
+        line-height:1!important;
+        white-space:nowrap!important;
+      }
+      .header-inner > .stats-grid .stat-note,
+      .header-inner > .stats-grid .mini-progress{
+        display:none!important;
+      }
+
+      .adgb-user-bar{
+        flex:0 0 auto!important;
+        margin-left:auto!important;
+        gap:3px!important;
+        padding:3px!important;
+        border-radius:12px!important;
+        box-shadow:none!important;
+      }
+      .adgb-user-chip{
+        gap:5px!important;
+        padding:1px 5px 1px 2px!important;
+      }
+      .adgb-user-avatar{
+        width:27px!important;
+        height:27px!important;
+      }
+      .adgb-user-copy strong{
+        max-width:90px!important;
+        font-size:9px!important;
+      }
+      .adgb-user-copy small{
+        display:none!important;
+      }
+      .adgb-inside-version{
+        gap:2px!important;
+      }
+      .adgb-inside-version .adgb-version-chip{
+        padding:3px 5px!important;
+        font-size:7.5px!important;
+      }
+      .adgb-drive-link,
+      .adgb-user-action{
+        height:28px!important;
+        padding:0 7px!important;
+        font-size:8px!important;
+      }
+
+      /* Old rows are no longer needed after their useful controls are moved. */
+      .cycle-bar.adgb-compacted-away,
+      .portal-tabs.adgb-compacted-away{
+        display:none!important;
+      }
+
+      .page{
+        padding-top:5px!important;
+      }
+
+      /* 1250-1599: keep compact, allow only a small second line if necessary. */
+      @media(min-width:1250px) and (max-width:1599px){
+        .header-inner{
+          flex-wrap:wrap!important;
+          gap:4px!important;
+        }
+        .brand{
+          flex-basis:290px!important;
+        }
+        .header-inner > .stats-grid{
+          flex:1 1 270px!important;
+        }
+        .adgb-user-bar{
+          margin-left:auto!important;
+        }
+      }
+
+      /* Smaller screens remain tidy rather than squeezed. */
+      @media(max-width:1249px){
+        .header-inner{
+          flex-wrap:wrap!important;
+          min-height:0!important;
+          padding:5px 0!important;
+        }
+        .brand{
+          flex:1 1 300px!important;
+        }
+        .adgb-compact-mainbar{
+          order:3!important;
+          flex:1 1 100%!important;
+          overflow-x:auto!important;
+        }
+        .header-inner > .stats-grid{
+          order:4!important;
+          flex:1 1 100%!important;
+          min-width:0!important;
+        }
+        .adgb-user-bar{
+          order:2!important;
+          margin-left:auto!important;
+        }
+      }
+
+      @media(max-width:760px){
+        .brand-copy small{display:none!important}
+        .brand-copy strong{font-size:15px!important}
+        .adgb-user-copy{display:none!important}
+        .adgb-inside-version{display:none!important}
+        .header-inner > .stats-grid{
+          overflow-x:auto!important;
+        }
+        .header-inner > .stats-grid .stat-card{
+          min-width:80px!important;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -567,7 +827,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.27</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.28</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -588,7 +848,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.27</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.28</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1632,7 +1892,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.27';
+  const RAW_FRONTEND_VERSION = '15.28';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -2924,6 +3184,111 @@
     });
   }
 
+
+  function activateUltraCompactDashboardHeader() {
+    const headerInner = document.querySelector('header .header-inner');
+    if (!headerInner) return;
+
+    let compactBar = document.getElementById('adgbCompactMainBar');
+
+    if (!compactBar) {
+      compactBar = document.createElement('div');
+      compactBar.id = 'adgbCompactMainBar';
+      compactBar.className = 'adgb-compact-mainbar';
+
+      const brand = headerInner.querySelector(':scope > .brand');
+
+      if (brand) {
+        brand.insertAdjacentElement('afterend', compactBar);
+      } else {
+        headerInner.prepend(compactBar);
+      }
+    }
+
+    const cycleBar = document.querySelector('.cycle-bar');
+    const cycleMain = cycleBar?.querySelector('.cycle-main');
+
+    if (cycleMain && cycleMain.parentElement !== compactBar) {
+      const cycleText = cycleMain.querySelector('strong');
+
+      if (cycleText) {
+        cycleText.textContent = cycleText.textContent
+          .replace(/\s+submission\s+cycle\s*$/i, '')
+          .trim();
+      }
+
+      compactBar.appendChild(cycleMain);
+    }
+
+    const reportsButton = document.getElementById('reportsTabButton');
+    const rawButton = document.getElementById('rawDataTabButton');
+
+    if (reportsButton) {
+      reportsButton.textContent = 'Reports';
+      compactBar.appendChild(reportsButton);
+    }
+
+    if (rawButton) {
+      rawButton.textContent = 'Raw Data';
+      compactBar.appendChild(rawButton);
+    }
+
+    const adminButton = document.getElementById('adminButton');
+
+    if (adminButton) {
+      adminButton.textContent = 'Subjects';
+      adminButton.title = 'Manage report subjects';
+      compactBar.appendChild(adminButton);
+    }
+
+    const refreshButton = document.getElementById('refreshButton') ||
+      document.querySelector('.cycle-bar .refresh-button');
+
+    if (refreshButton) {
+      refreshButton.textContent = '↻';
+      refreshButton.title = 'Refresh dashboard';
+      compactBar.appendChild(refreshButton);
+    }
+
+    /*
+     * Move the live report totals into the header.
+     * Their existing IDs/elements are preserved, so all existing dashboard
+     * update code continues to update the same values.
+     */
+    const stats = document.querySelector('.stats-grid');
+    const userBar = document.getElementById('adgbUserBar');
+
+    if (stats && stats.parentElement !== headerInner) {
+      if (userBar?.parentElement === headerInner) {
+        headerInner.insertBefore(stats, userBar);
+      } else {
+        headerInner.appendChild(stats);
+      }
+    }
+
+    if (userBar && userBar.parentElement === headerInner) {
+      headerInner.appendChild(userBar);
+    }
+
+    if (cycleBar) {
+      cycleBar.classList.add('adgb-compacted-away');
+    }
+
+    const portalTabs = document.querySelector('.portal-tabs');
+    if (portalTabs) {
+      portalTabs.classList.add('adgb-compacted-away');
+    }
+
+    /*
+     * The old top nav normally contains only the subject Administrator button.
+     * Once that button is moved to the compact bar, remove the empty space.
+     */
+    const topNav = headerInner.querySelector(':scope > nav');
+    if (topNav && !topNav.querySelector('button')) {
+      topNav.style.display = 'none';
+    }
+  }
+
   function initialiseRawDataFeature() {
     if (document.getElementById('rawDataFeatureStyles')) return;
 
@@ -2932,11 +3297,15 @@
     if (!injectRawMarkup()) return;
 
     markReportSections();
+    activateUltraCompactDashboardHeader();
     bindRawEvents();
     applyRawAuthPermissions();
 
     window.addEventListener('adgb-auth-changed', () => {
-      setTimeout(applyRawAuthPermissions, 0);
+      setTimeout(() => {
+        activateUltraCompactDashboardHeader();
+        applyRawAuthPermissions();
+      }, 0);
     });
   }
 
