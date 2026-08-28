@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.24';
+  const RAW_FRONTEND_VERSION = '15.25';
 
 
   /* =====================================================================
@@ -12,6 +12,7 @@
    * ===================================================================== */
   const AUTH_TOKEN_KEY = 'adgbPortalSessionTokenV1512';
   const AUTH_USERNAME_KEY = 'adgbPortalRememberedUsernameV1512';
+  const AUTH_PASSWORD_SESSION_KEY = 'adgbPortalSessionPasswordV1525';
   const AUTH_IDLE_MS = 10 * 60 * 1000;
 
   const authState = {
@@ -562,11 +563,11 @@
             <p>Enter the username and password assigned by the Administrator.</p>
             <label class="adgb-auth-field"><span>Username</span><input id="adgbLoginUsername" type="text" autocomplete="username" required placeholder="Enter username"></label>
             <label class="adgb-auth-field"><span>Password</span><div class="adgb-password-wrap"><input id="adgbLoginPassword" type="password" autocomplete="current-password" required placeholder="Enter password"><button id="adgbShowPassword" type="button">Show</button></div></label>
-            <label class="adgb-remember"><input id="adgbRememberUsername" type="checkbox"> Remember username on this device</label>
+            <label class="adgb-remember"><input id="adgbRememberUsername" type="checkbox"> Remember username and keep password in this tab</label>
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.24</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.25</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -587,7 +588,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.24</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.25</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -642,8 +643,12 @@
     dockUserBarIntoTopHeader();
 
     const remembered = localStorage.getItem(AUTH_USERNAME_KEY) || '';
+    const sessionPassword = sessionStorage.getItem(AUTH_PASSWORD_SESSION_KEY) || '';
+
     document.getElementById('adgbLoginUsername').value = remembered;
-    document.getElementById('adgbRememberUsername').checked = Boolean(remembered);
+    document.getElementById('adgbLoginPassword').value = sessionPassword;
+    document.getElementById('adgbRememberUsername').checked =
+      Boolean(remembered || sessionPassword);
 
     document.getElementById('adgbLoginForm').addEventListener('submit', handlePortalLogin);
     document.getElementById('adgbShowPassword').addEventListener('click', toggleLoginPassword);
@@ -788,11 +793,12 @@
 
       if (document.getElementById('adgbRememberUsername').checked) {
         localStorage.setItem(AUTH_USERNAME_KEY, username);
+        sessionStorage.setItem(AUTH_PASSWORD_SESSION_KEY, password);
       } else {
         localStorage.removeItem(AUTH_USERNAME_KEY);
+        sessionStorage.removeItem(AUTH_PASSWORD_SESSION_KEY);
       }
 
-      document.getElementById('adgbLoginPassword').value = '';
       setAuthenticatedUser(result.user);
 
     } catch (error) {
@@ -870,6 +876,19 @@
     document.documentElement.classList.add('adgb-auth-locking');
     document.getElementById('adgbAuthRoot').hidden = false;
     document.getElementById('adgbUserBar').hidden = true;
+
+    const rememberedUsername =
+      localStorage.getItem(AUTH_USERNAME_KEY) || '';
+    const rememberedPassword =
+      sessionStorage.getItem(AUTH_PASSWORD_SESSION_KEY) || '';
+
+    document.getElementById('adgbLoginUsername').value =
+      rememberedUsername;
+    document.getElementById('adgbLoginPassword').value =
+      rememberedPassword;
+    document.getElementById('adgbRememberUsername').checked =
+      Boolean(rememberedUsername || rememberedPassword);
+
     document.getElementById('adgbLoginError').textContent = message;
 
     setTimeout(() => {
@@ -1516,7 +1535,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.24';
+  const RAW_FRONTEND_VERSION = '15.25';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
