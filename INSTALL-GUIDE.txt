@@ -1,20 +1,24 @@
-ADG(B) REPORT PORTAL V15.33 — AUTO-UPDATING DATE
+ADG(B) REPORT PORTAL V15.35 — TOP DATE+TIME + SINGLE VERSION DISPLAY
 
-NEW
-- Adds today's date to the top header row.
-- Format example: 28th-Aug-2026 (Friday)
-- Uses browser local date.
-- Automatically rechecks every minute, so it changes after midnight without refresh.
-- Unique pink/magenta/lilac highlight so the date is easy to spot.
-- Compact pill design to preserve header height.
+CHANGES
+1. Dashboard now keeps FE / BE version ONLY in the top row.
+2. Duplicate Frontend/Backend version badge beside Report Submission / Raw Data is removed.
+3. Raw Data subtitle no longer repeats Raw UI / Backend version.
+4. Top live badge now shows:
+   ◆ 28th-Aug-2026 (Friday) │ 08:54 PM
+5. Time is 12-hour AM/PM and updates automatically.
+6. Date/time badge made larger, wider and bolder.
+7. FE / BE top badges made larger and wider.
+8. Current files / Users / Sign out made larger, wider and bolder.
+9. Logged-in user text made slightly larger/bolder.
 
 INSTALL
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
 3. Use:
-   <script src="raw-data.js?v=15.33"></script>
-   <script src="sticky-notes.js?v=15.33"></script>
+   <script src="raw-data.js?v=15.35"></script>
+   <script src="sticky-notes.js?v=15.35"></script>
 4. Commit and hard refresh.
 
-Code.gs V15.33 is included only for matching BE v15.33.
+Code.gs V15.35 is included only if matching BE v15.35 is desired.
 Do NOT run setupPortal() or setPortalSecurityCodes().

@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.33';
+  const RAW_FRONTEND_VERSION = '15.35';
 
 
   /* =====================================================================
@@ -1162,32 +1162,140 @@
       /* V15.33 — live auto-updating date in the top row */
       .adgb-live-date{
         flex:0 0 auto;
-        min-height:29px;
+        min-height:32px;
         display:inline-flex;
         align-items:center;
         justify-content:center;
-        gap:5px;
-        padding:0 11px;
-        border:1px solid #f2b5d0;
+        gap:6px;
+        padding:0 14px;
+        border:2px solid #ea9bc1;
         border-radius:999px;
-        background:linear-gradient(135deg,#fff0f6 0%,#ffe2ee 52%,#eee5ff 100%);
-        color:#861952;
-        box-shadow:0 3px 10px rgba(155,35,96,.13);
-        font-size:10px;
+        background:linear-gradient(135deg,#fff0f7 0%,#ffdce9 50%,#eadfff 100%);
+        color:#7f174f;
+        box-shadow:0 4px 12px rgba(155,35,96,.18);
+        font-size:12px;
         font-weight:1000;
-        letter-spacing:.01em;
+        letter-spacing:.015em;
         white-space:nowrap;
+        text-shadow:0 1px 0 rgba(255,255,255,.8);
       }
       .adgb-live-date::before{
         content:"◆";
         color:#df3c80;
-        font-size:8px;
+        font-size:10px;
+        filter:drop-shadow(0 1px 2px rgba(223,60,128,.25));
       }
       @media(max-width:760px){
         .adgb-live-date{
-          min-height:27px;
-          padding:0 8px;
-          font-size:9px;
+          min-height:29px;
+          padding:0 10px;
+          font-size:10.5px;
+        }
+      }
+    `;
+    style.textContent += `
+      /* =========================================================
+         V15.35 — single dashboard FE/BE display + larger top row
+         ========================================================= */
+
+      /* Never show the old Report/Raw Data version badge. */
+      #portalVersionBadge,
+      .portal-version-badge{
+        display:none!important;
+      }
+
+      /* Date + time combined in one premium pill. */
+      .adgb-live-date{
+        min-width:275px!important;
+        min-height:34px!important;
+        padding:0 16px!important;
+        font-size:13.5px!important;
+        font-weight:1000!important;
+        letter-spacing:.012em!important;
+        border-width:2px!important;
+        background:linear-gradient(135deg,#fff0f7 0%,#ffdce9 45%,#eee2ff 100%)!important;
+        color:#771447!important;
+        box-shadow:0 4px 13px rgba(155,35,96,.20)!important;
+      }
+      .adgb-live-date::before{
+        font-size:10px!important;
+      }
+
+      /* FE / BE top-row badges: larger and wider. */
+      .adgb-inside-version{
+        gap:5px!important;
+      }
+      .adgb-inside-version .adgb-version-chip{
+        min-width:64px!important;
+        min-height:30px!important;
+        padding:0 9px!important;
+        display:inline-flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        gap:4px!important;
+        font-size:10.5px!important;
+        font-weight:1000!important;
+        letter-spacing:.01em!important;
+      }
+      .adgb-inside-version .adgb-version-chip strong{
+        font-size:10.5px!important;
+        font-weight:1000!important;
+      }
+
+      /* Top-row user/action buttons: wider + easier to read. */
+      .adgb-drive-link,
+      .adgb-user-action{
+        min-height:31px!important;
+        height:31px!important;
+        padding:0 12px!important;
+        font-size:10.5px!important;
+        font-weight:1000!important;
+        letter-spacing:.008em!important;
+      }
+      #adgbDriveFolderLink{
+        min-width:112px!important;
+      }
+      #adgbManageUsers{
+        min-width:72px!important;
+      }
+      #adgbLogout{
+        min-width:78px!important;
+      }
+
+      .adgb-user-chip{
+        padding-right:8px!important;
+      }
+      .adgb-user-copy strong{
+        font-size:10.5px!important;
+        font-weight:1000!important;
+      }
+      .adgb-user-copy small{
+        font-size:8.5px!important;
+        font-weight:850!important;
+      }
+
+      @media(max-width:1350px){
+        .adgb-live-date{
+          min-width:245px!important;
+          padding:0 12px!important;
+          font-size:12px!important;
+        }
+        .adgb-drive-link,
+        .adgb-user-action{
+          padding:0 9px!important;
+          font-size:9.5px!important;
+        }
+        #adgbDriveFolderLink{min-width:100px!important}
+        #adgbManageUsers{min-width:65px!important}
+        #adgbLogout{min-width:72px!important}
+      }
+
+      @media(max-width:760px){
+        .adgb-live-date{
+          min-width:auto!important;
+          min-height:30px!important;
+          padding:0 10px!important;
+          font-size:10.5px!important;
         }
       }
     `;
@@ -1218,7 +1326,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.33</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.35</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1239,7 +1347,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.33</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.35</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1563,11 +1671,27 @@
       'Thursday','Friday','Saturday'
     ];
 
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const meridiem = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+
+    const timeText =
+      String(hours).padStart(2, '0') +
+      ':' +
+      minutes +
+      ' ' +
+      meridiem;
+
     return (
       ordinalDay(date.getDate()) + '-' +
       months[date.getMonth()] + '-' +
       date.getFullYear() +
-      ' (' + weekdays[date.getDay()] + ')'
+      ' (' + weekdays[date.getDay()] + ')' +
+      '  │  ' +
+      timeText
     );
   }
 
@@ -1586,7 +1710,7 @@
       badge = document.createElement('div');
       badge.id = 'adgbLiveDate';
       badge.className = 'adgb-live-date';
-      badge.title = 'Today';
+      badge.title = 'Current date and time';
 
       const userBar = document.getElementById('adgbUserBar');
 
@@ -1602,7 +1726,7 @@
     if (!adgbDateTimer) {
       adgbDateTimer = window.setInterval(
         updatePortalLiveDate,
-        60 * 1000
+        15 * 1000
       );
     }
   }
@@ -2354,7 +2478,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.33';
+  const RAW_FRONTEND_VERSION = '15.35';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -2706,12 +2830,6 @@
     tabs.innerHTML = `
       <button class="portal-tab active" id="reportsTabButton" type="button">Report Submission</button>
       <button class="portal-tab" id="rawDataTabButton" type="button">Raw Data</button>
-      <div class="portal-version-badge" id="portalVersionBadge" title="Portal software versions">
-        <span class="portal-version-dot" id="portalVersionDot"></span>
-        <span>Frontend v${RAW_FRONTEND_VERSION}</span>
-        <span class="portal-version-sep">|</span>
-        <span id="portalBackendVersion">Backend checking…</span>
-      </div>
     `;
 
     cycleBar.insertAdjacentElement('afterend', tabs);
@@ -3037,9 +3155,7 @@
   function renderRawData() {
     document.getElementById('rawCycleText').textContent =
       (rawState.cycleName || 'Current month') +
-      ' · O/o ADG(B) + CE(B) + CE(HAL) + SE&PD + SE(Mysore) + SE(Hubli)' +
-      ' · Raw UI ' + RAW_FRONTEND_VERSION +
-      (rawState.backendVersion ? ' / Backend ' + rawState.backendVersion : '');
+      ' · O/o ADG(B) + CE(B) + CE(HAL) + SE&PD + SE(Mysore) + SE(Hubli)';
 
     document.getElementById('rawItemCount').textContent =
       rawState.items.length;
