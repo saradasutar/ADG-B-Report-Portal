@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.28';
+  const RAW_FRONTEND_VERSION = '15.29';
 
 
   /* =====================================================================
@@ -800,6 +800,51 @@
         }
       }
     `;
+    style.textContent += `
+      /* V15.29 two-row contrasting compact header */
+      header{background:linear-gradient(100deg,#123b63 0%,#5149a8 48%,#0f7d72 100%)!important;border-bottom:0!important;box-shadow:0 5px 18px rgba(22,45,80,.16)!important}
+      .header-inner{width:min(1780px,calc(100% - 18px))!important;min-height:54px!important;padding:5px 0!important;gap:8px!important;flex-wrap:nowrap!important}
+      .brand{flex:1 1 380px!important;min-width:290px!important;color:#fff!important}
+      .brand-mark{width:38px!important;height:38px!important;border-color:#fff!important;color:#fff!important;background:rgba(255,255,255,.10)!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.18)!important}
+      .brand-copy strong{color:#fff!important;font-size:19px!important;font-weight:900!important}
+      .brand-copy small{color:rgba(255,255,255,.82)!important;font-size:9px!important;font-weight:700!important}
+      .adgb-user-bar{position:static!important;margin-left:auto!important;flex:0 0 auto!important;padding:4px!important;gap:3px!important;border:1px solid rgba(255,255,255,.34)!important;border-radius:12px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 4px 12px rgba(0,0,0,.10)!important}
+      .adgb-user-avatar{width:28px!important;height:28px!important}.adgb-user-copy strong{font-size:9px!important}.adgb-user-copy small{font-size:7.5px!important}
+      .adgb-inside-version .adgb-version-chip{padding:3px 5px!important;font-size:7.5px!important}
+      .adgb-drive-link,.adgb-user-action{height:28px!important;padding:0 8px!important;font-size:8px!important}
+
+      .adgb-compact-second-row{width:min(1780px,calc(100% - 18px));margin:0 auto 5px;min-height:43px;display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid #d7d9ef;border-radius:11px;background:linear-gradient(90deg,#f7f0ff 0%,#eef7ff 48%,#e7f9f3 100%);box-shadow:0 4px 14px rgba(48,55,110,.10)}
+      .adgb-compact-mainbar{display:flex!important;align-items:center!important;gap:4px!important;flex:0 0 auto!important}
+      .adgb-compact-mainbar .cycle-main{min-height:30px!important;padding:0 9px!important;border:1px solid #d4c8ef!important;border-radius:999px!important;background:#fff!important;box-shadow:0 2px 6px rgba(77,66,135,.07)!important}
+      .adgb-compact-mainbar .cycle-main strong{color:#26395a!important;font-size:10px!important;font-weight:950!important}.adgb-compact-mainbar .active-badge{background:#fff0b9!important;color:#744f00!important}
+      .adgb-compact-mainbar .portal-tab{min-height:30px!important;height:30px!important;padding:0 10px!important;border:1px solid #cfc8ea!important;border-radius:8px!important;background:#fff!important;color:#354267!important;font-size:9px!important;font-weight:950!important}
+      .adgb-compact-mainbar .portal-tab.active{border-color:#5149a8!important;background:linear-gradient(135deg,#4c56b8,#0f8a78)!important;color:#fff!important}
+      .adgb-compact-mainbar .admin-button{min-height:30px!important;height:30px!important;padding:0 10px!important;border:1px solid #b9d7ca!important;border-radius:8px!important;background:#eefaf5!important;color:#0b6e55!important;font-size:9px!important;font-weight:950!important}
+      .adgb-compact-mainbar .refresh-button{width:30px!important;min-width:30px!important;height:30px!important;padding:0!important;border:1px solid #d3c9e8!important;border-radius:8px!important;background:#fff!important;color:#56499a!important;font-size:15px!important}
+
+      .adgb-compact-second-row>.stats-grid{display:flex!important;align-items:center!important;gap:2px!important;flex:1 1 auto!important;min-width:330px!important;margin:0!important;padding:2px!important;border:1px solid #d6e0e7!important;border-radius:9px!important;background:rgba(255,255,255,.78)!important}
+      .adgb-compact-second-row>.stats-grid .stat-card{flex:1 1 0!important;min-height:28px!important;height:28px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;padding:0 6px!important;border:0!important;border-right:1px solid #dfe6eb!important;border-radius:5px!important;background:transparent!important;box-shadow:none!important}
+      .adgb-compact-second-row>.stats-grid .stat-card:last-child{border-right:0!important}.adgb-compact-second-row>.stats-grid .stat-card::before{display:none!important}
+      .adgb-compact-second-row>.stats-grid .stat-label{display:inline!important;color:#5e6e82!important;font-size:7.5px!important;font-weight:900!important;white-space:nowrap!important}
+      .adgb-compact-second-row>.stats-grid .stat-value{display:inline!important;margin:0!important;font-size:16px!important;line-height:1!important;font-weight:950!important}
+      .adgb-compact-second-row>.stats-grid .submitted .stat-value{color:#08795c!important}.adgb-compact-second-row>.stats-grid .pending .stat-value{color:#c63849!important}.adgb-compact-second-row>.stats-grid .completion .stat-value{color:#a06800!important}
+      .adgb-compact-second-row>.stats-grid .stat-note,.adgb-compact-second-row>.stats-grid .mini-progress{display:none!important}
+      .cycle-bar.adgb-compacted-away,.portal-tabs.adgb-compacted-away{display:none!important}
+
+      /* Compact matrix */
+      .matrix-section .panel-head{min-height:44px!important;padding:6px 10px!important;border-top-width:3px!important}
+      .matrix-section .panel-head h2{margin:0!important;font-size:18px!important;line-height:1.05!important}.matrix-section .panel-kicker{font-size:7.5px!important}
+      .matrix-heading-copy p{margin:1px 0 0!important;font-size:9px!important;line-height:1.1!important}.legend{gap:8px!important;font-size:8px!important}
+      .matrix-tools{padding:4px 8px!important;gap:5px!important}.filter-button{min-height:27px!important;height:27px!important;padding:0 8px!important;font-size:9px!important}
+      .tool-field{gap:2px!important;font-size:7px!important}.tool-field input,.tool-field select{height:27px!important;min-width:125px!important;padding:0 7px!important;font-size:9px!important}.tool-field input{min-width:165px!important}
+      .result-count{padding:3px 10px!important;font-size:8px!important}
+      thead th{padding:7px 6px!important;font-size:10px!important}tbody th,tbody td{height:46px!important}tbody th{padding:5px 10px!important;font-size:13px!important;line-height:1.08!important}tbody td{padding:3px!important}
+      .upload-button{min-width:80px!important;height:27px!important;font-size:8.5px!important}.submitted-time,.replace-hint{font-size:6.5px!important}
+      .office-panel .panel-head{min-height:48px!important;padding:7px 10px!important}.office-panel .panel-head h2{font-size:18px!important}.office-cycle-list{padding:6px!important;gap:3px!important}.office-cycle-row{padding:6px!important}
+
+      @media(max-width:1249px){.header-inner{flex-wrap:wrap!important}.adgb-compact-second-row{flex-wrap:wrap!important}.adgb-compact-mainbar{flex:1 1 100%!important;overflow-x:auto!important}.adgb-compact-second-row>.stats-grid{flex:1 1 100%!important;min-width:0!important}}
+      @media(max-width:760px){.brand-copy small{display:none!important}.adgb-user-copy{display:none!important}.adgb-inside-version{display:none!important}.adgb-compact-second-row{padding:4px!important}.adgb-compact-second-row>.stats-grid{overflow-x:auto!important}.adgb-compact-second-row>.stats-grid .stat-card{min-width:82px!important}tbody th,tbody td{height:auto!important}}
+    `;
     document.head.appendChild(style);
   }
 
@@ -827,7 +872,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.28</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.29</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -848,7 +893,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.28</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.29</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1892,7 +1937,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.28';
+  const RAW_FRONTEND_VERSION = '15.29';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -3189,104 +3234,60 @@
     const headerInner = document.querySelector('header .header-inner');
     if (!headerInner) return;
 
-    let compactBar = document.getElementById('adgbCompactMainBar');
+    const userBar = document.getElementById('adgbUserBar');
+    if (userBar && userBar.parentElement !== headerInner) headerInner.appendChild(userBar);
 
+    let secondRow = document.getElementById('adgbCompactSecondRow');
+    if (!secondRow) {
+      secondRow = document.createElement('div');
+      secondRow.id = 'adgbCompactSecondRow';
+      secondRow.className = 'adgb-compact-second-row';
+      document.querySelector('header')?.insertAdjacentElement('afterend', secondRow);
+    }
+
+    let compactBar = document.getElementById('adgbCompactMainBar');
     if (!compactBar) {
       compactBar = document.createElement('div');
       compactBar.id = 'adgbCompactMainBar';
       compactBar.className = 'adgb-compact-mainbar';
-
-      const brand = headerInner.querySelector(':scope > .brand');
-
-      if (brand) {
-        brand.insertAdjacentElement('afterend', compactBar);
-      } else {
-        headerInner.prepend(compactBar);
-      }
     }
+    if (compactBar.parentElement !== secondRow) secondRow.prepend(compactBar);
 
     const cycleBar = document.querySelector('.cycle-bar');
     const cycleMain = cycleBar?.querySelector('.cycle-main');
-
     if (cycleMain && cycleMain.parentElement !== compactBar) {
-      const cycleText = cycleMain.querySelector('strong');
-
-      if (cycleText) {
-        cycleText.textContent = cycleText.textContent
-          .replace(/\s+submission\s+cycle\s*$/i, '')
-          .trim();
-      }
-
+      const text = cycleMain.querySelector('strong');
+      if (text) text.textContent = text.textContent.replace(/\s+submission\s+cycle\s*$/i,'').trim();
       compactBar.appendChild(cycleMain);
     }
 
     const reportsButton = document.getElementById('reportsTabButton');
     const rawButton = document.getElementById('rawDataTabButton');
-
-    if (reportsButton) {
-      reportsButton.textContent = 'Reports';
-      compactBar.appendChild(reportsButton);
-    }
-
-    if (rawButton) {
-      rawButton.textContent = 'Raw Data';
-      compactBar.appendChild(rawButton);
-    }
+    if (reportsButton) { reportsButton.textContent = 'Reports'; compactBar.appendChild(reportsButton); }
+    if (rawButton) { rawButton.textContent = 'Raw Data'; compactBar.appendChild(rawButton); }
 
     const adminButton = document.getElementById('adminButton');
-
     if (adminButton) {
       adminButton.textContent = 'Subjects';
       adminButton.title = 'Manage report subjects';
       compactBar.appendChild(adminButton);
     }
 
-    const refreshButton = document.getElementById('refreshButton') ||
-      document.querySelector('.cycle-bar .refresh-button');
-
+    const refreshButton = document.getElementById('refreshButton') || document.querySelector('.cycle-bar .refresh-button');
     if (refreshButton) {
       refreshButton.textContent = '↻';
       refreshButton.title = 'Refresh dashboard';
       compactBar.appendChild(refreshButton);
     }
 
-    /*
-     * Move the live report totals into the header.
-     * Their existing IDs/elements are preserved, so all existing dashboard
-     * update code continues to update the same values.
-     */
     const stats = document.querySelector('.stats-grid');
-    const userBar = document.getElementById('adgbUserBar');
+    if (stats && stats.parentElement !== secondRow) secondRow.appendChild(stats);
 
-    if (stats && stats.parentElement !== headerInner) {
-      if (userBar?.parentElement === headerInner) {
-        headerInner.insertBefore(stats, userBar);
-      } else {
-        headerInner.appendChild(stats);
-      }
-    }
+    cycleBar?.classList.add('adgb-compacted-away');
+    document.querySelector('.portal-tabs')?.classList.add('adgb-compacted-away');
 
-    if (userBar && userBar.parentElement === headerInner) {
-      headerInner.appendChild(userBar);
-    }
-
-    if (cycleBar) {
-      cycleBar.classList.add('adgb-compacted-away');
-    }
-
-    const portalTabs = document.querySelector('.portal-tabs');
-    if (portalTabs) {
-      portalTabs.classList.add('adgb-compacted-away');
-    }
-
-    /*
-     * The old top nav normally contains only the subject Administrator button.
-     * Once that button is moved to the compact bar, remove the empty space.
-     */
-    const topNav = headerInner.querySelector(':scope > nav');
-    if (topNav && !topNav.querySelector('button')) {
-      topNav.style.display = 'none';
-    }
+    const nav = headerInner.querySelector(':scope > nav');
+    if (nav && !nav.querySelector('button')) nav.style.display = 'none';
   }
 
   function initialiseRawDataFeature() {
