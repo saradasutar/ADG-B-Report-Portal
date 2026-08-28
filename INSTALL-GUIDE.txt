@@ -1,7 +1,6 @@
-V15.29
-Top 4 rows reduced to 2 contrasting rows.
-Row 1: portal identity + user/actions.
-Row 2: cycle + Reports/Raw Data/Subjects/Refresh + compact metrics.
-Report Upload Matrix header, filters and desktop rows are reduced in height.
-Replace raw-data.js and sticky-notes.js; use v=15.29.
-Code.gs is included only to match BE v15.29. Do not run setupPortal() or setPortalSecurityCodes().
+V15.30
+1. Summary strip (Total / Submitted / Pending / Completion) now uses stronger eye-catching contrast card colours.
+2. Stat labels and values are larger and bolder for easy reading.
+3. Report upload matrix heading and table text are slightly bolder/larger while staying compact.
+4. Replace raw-data.js and sticky-notes.js, and update index.html to v=15.30.
+5. Code.gs included only to match BE v15.30 if you deploy a new backend version.
