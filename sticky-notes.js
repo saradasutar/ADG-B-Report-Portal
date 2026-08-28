@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "15.31",
+  FRONTEND_VERSION: "15.33",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -508,6 +508,54 @@ function injectExactHrStickyStyles() {
       background:linear-gradient(100deg,#faf8ff,#f1f7ff 55%,#ecfbf5)!important;
     }
     .hr-sticky-dialog .sticky-notes-header .eyebrow{color:#6048bc!important}
+
+    /* V15.32 — Target / Reminder readability */
+    .hr-sticky-launch .sticky-side-label{
+      font-size:10px!important;
+      font-weight:1000!important;
+    }
+    .hr-sticky-dialog .sticky-notes-header h2{
+      font-size:26px!important;
+      font-weight:950!important;
+    }
+    .sticky-section-heading h3{
+      font-size:17px!important;
+      font-weight:950!important;
+    }
+    .sticky-note-card h4{
+      font-size:16px!important;
+      font-weight:1000!important;
+    }
+    .sticky-note-card p{
+      font-size:12.5px!important;
+      font-weight:800!important;
+    }
+    .sticky-note-card footer small{
+      font-size:9px!important;
+      font-weight:800!important;
+    }
+    .sticky-complete-btn,
+    .sticky-mini-btn{
+      padding:6px 8px!important;
+      font-size:9.5px!important;
+      font-weight:1000!important;
+    }
+    .sticky-note-form label,
+    .sticky-note-form .form-label{
+      font-size:10.5px!important;
+      font-weight:950!important;
+    }
+    .sticky-note-form input,
+    .sticky-note-form select,
+    .sticky-note-form textarea{
+      font-size:12px!important;
+      font-weight:700!important;
+    }
+    .sticky-note-form .primary-btn,
+    .sticky-cancel-edit{
+      font-size:10.5px!important;
+      font-weight:950!important;
+    }
   `;
   document.head.appendChild(style);
 }

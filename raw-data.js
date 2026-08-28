@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.31';
+  const RAW_FRONTEND_VERSION = '15.33';
 
 
   /* =====================================================================
@@ -994,6 +994,202 @@
       .portal-tab,.filter-button,.adgb-drive-link,.adgb-user-action,#adminButton,#refreshButton{
         transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease!important
       }
+
+      /* =========================================================
+         V15.32 — slightly larger, bolder text without losing compactness
+         ========================================================= */
+
+      /* Main compact navigation / utility controls */
+      #reportsTabButton,
+      #rawDataTabButton,
+      #adminButton,
+      .adgb-compact-mainbar .portal-tab,
+      .adgb-compact-mainbar .admin-button{
+        font-size:10.5px!important;
+        font-weight:950!important;
+        letter-spacing:.005em!important;
+      }
+
+      #refreshButton,
+      .adgb-compact-mainbar .refresh-button{
+        font-weight:950!important;
+      }
+
+      /* Signed-in utility buttons */
+      .adgb-drive-link,
+      .adgb-user-action{
+        font-size:9.5px!important;
+        font-weight:950!important;
+        letter-spacing:.005em!important;
+      }
+
+      .adgb-user-copy strong{
+        font-size:10px!important;
+        font-weight:950!important;
+      }
+      .adgb-user-copy small{
+        font-size:8px!important;
+        font-weight:800!important;
+      }
+
+      /* FE / BE version badges on Login and inside Dashboard */
+      .adgb-version-chip{
+        font-size:9.5px!important;
+        font-weight:950!important;
+      }
+      .adgb-version-chip strong{
+        font-size:9.5px!important;
+        font-weight:1000!important;
+      }
+      .adgb-inside-version .adgb-version-chip{
+        font-size:8.5px!important;
+        font-weight:950!important;
+      }
+      .adgb-inside-version .adgb-version-chip strong{
+        font-size:8.5px!important;
+      }
+
+      /* Report matrix heading / filters */
+      .matrix-section .panel-head h2{
+        font-size:21px!important;
+        font-weight:950!important;
+      }
+      .matrix-heading-copy p{
+        font-size:10.5px!important;
+        font-weight:750!important;
+      }
+      .filter-button{
+        font-size:10.5px!important;
+        font-weight:950!important;
+      }
+      .tool-field{
+        font-size:8px!important;
+        font-weight:950!important;
+      }
+      .tool-field input,
+      .tool-field select{
+        font-size:10.5px!important;
+        font-weight:750!important;
+      }
+      .result-count{
+        font-size:9px!important;
+        font-weight:700!important;
+      }
+
+      /* Matrix table */
+      thead th{
+        font-size:12px!important;
+        font-weight:950!important;
+      }
+      tbody th{
+        font-size:15px!important;
+        font-weight:950!important;
+        line-height:1.10!important;
+      }
+      .subject-number{
+        font-size:8.5px!important;
+        font-weight:900!important;
+      }
+
+      /* Upload / Submitted controls */
+      .upload-button{
+        min-width:86px!important;
+        height:29px!important;
+        font-size:10.5px!important;
+        font-weight:950!important;
+        letter-spacing:.005em!important;
+      }
+      .upload-button.submitted{
+        font-size:10.5px!important;
+        font-weight:950!important;
+      }
+      .submitted-time,
+      .replace-hint{
+        font-size:7.5px!important;
+        font-weight:700!important;
+      }
+
+      /* Office status panel */
+      .office-panel .panel-head h2{
+        font-size:20px!important;
+        font-weight:950!important;
+      }
+      .office-cycle-row>span:first-child{
+        font-size:14.5px!important;
+        font-weight:950!important;
+      }
+      .office-cycle-status{
+        font-size:10px!important;
+        font-weight:900!important;
+      }
+      .office-cycle-count{
+        font-size:10.5px!important;
+        font-weight:950!important;
+      }
+
+      /* Raw Data controls */
+      .raw-action-btn,
+      .raw-cell-btn,
+      .raw-mini-btn{
+        font-size:10px!important;
+        font-weight:950!important;
+      }
+
+      /* Modal controls */
+      .modal button,
+      .primary-btn,
+      .secondary-btn{
+        font-weight:950!important;
+      }
+
+      @media(max-width:760px){
+        #reportsTabButton,
+        #rawDataTabButton,
+        #adminButton,
+        .adgb-compact-mainbar .portal-tab,
+        .adgb-compact-mainbar .admin-button{
+          font-size:10px!important;
+        }
+        tbody th{
+          font-size:14.5px!important;
+        }
+        .upload-button{
+          font-size:10px!important;
+        }
+      }
+    `;
+    style.textContent += `
+      /* V15.33 — live auto-updating date in the top row */
+      .adgb-live-date{
+        flex:0 0 auto;
+        min-height:29px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:5px;
+        padding:0 11px;
+        border:1px solid #f2b5d0;
+        border-radius:999px;
+        background:linear-gradient(135deg,#fff0f6 0%,#ffe2ee 52%,#eee5ff 100%);
+        color:#861952;
+        box-shadow:0 3px 10px rgba(155,35,96,.13);
+        font-size:10px;
+        font-weight:1000;
+        letter-spacing:.01em;
+        white-space:nowrap;
+      }
+      .adgb-live-date::before{
+        content:"◆";
+        color:#df3c80;
+        font-size:8px;
+      }
+      @media(max-width:760px){
+        .adgb-live-date{
+          min-height:27px;
+          padding:0 8px;
+          font-size:9px;
+        }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -1022,7 +1218,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.31</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.33</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1043,7 +1239,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.31</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.33</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1121,6 +1317,7 @@
 
     // Dock only after Login/Sign-in handlers are safely attached.
     dockUserBarIntoTopHeader();
+    ensurePortalLiveDate();
 
     // Capture the office before the existing portal handler opens its modal.
     document.addEventListener('click', event => {
@@ -1341,6 +1538,75 @@
     }
   }
 
+
+  let adgbDateTimer = null;
+
+  function ordinalDay(day) {
+    const mod100 = day % 100;
+    if (mod100 >= 11 && mod100 <= 13) return day + 'th';
+
+    switch (day % 10) {
+      case 1: return day + 'st';
+      case 2: return day + 'nd';
+      case 3: return day + 'rd';
+      default: return day + 'th';
+    }
+  }
+
+  function formatPortalLiveDate(date) {
+    const months = [
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
+    ];
+    const weekdays = [
+      'Sunday','Monday','Tuesday','Wednesday',
+      'Thursday','Friday','Saturday'
+    ];
+
+    return (
+      ordinalDay(date.getDate()) + '-' +
+      months[date.getMonth()] + '-' +
+      date.getFullYear() +
+      ' (' + weekdays[date.getDay()] + ')'
+    );
+  }
+
+  function updatePortalLiveDate() {
+    const badge = document.getElementById('adgbLiveDate');
+    if (badge) badge.textContent = formatPortalLiveDate(new Date());
+  }
+
+  function ensurePortalLiveDate() {
+    const headerInner = document.querySelector('header .header-inner');
+    if (!headerInner) return;
+
+    let badge = document.getElementById('adgbLiveDate');
+
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'adgbLiveDate';
+      badge.className = 'adgb-live-date';
+      badge.title = 'Today';
+
+      const userBar = document.getElementById('adgbUserBar');
+
+      if (userBar?.parentElement === headerInner) {
+        headerInner.insertBefore(badge, userBar);
+      } else {
+        headerInner.appendChild(badge);
+      }
+    }
+
+    updatePortalLiveDate();
+
+    if (!adgbDateTimer) {
+      adgbDateTimer = window.setInterval(
+        updatePortalLiveDate,
+        60 * 1000
+      );
+    }
+  }
+
   function dockUserBarIntoTopHeader() {
     const userBar = document.getElementById('adgbUserBar');
     const headerInner = document.querySelector('header .header-inner');
@@ -1372,6 +1638,7 @@
     authState.user = user || null;
 
     dockUserBarIntoTopHeader();
+    ensurePortalLiveDate();
 
     if (!authState.user || !authState.user.username) {
       const loginRoot = document.getElementById('adgbAuthRoot');
@@ -2087,7 +2354,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.31';
+  const RAW_FRONTEND_VERSION = '15.33';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -3386,6 +3653,18 @@
 
     const userBar = document.getElementById('adgbUserBar');
     if (userBar && userBar.parentElement !== headerInner) headerInner.appendChild(userBar);
+
+    ensurePortalLiveDate();
+
+    const dateBadge = document.getElementById('adgbLiveDate');
+    if (
+      dateBadge &&
+      userBar &&
+      dateBadge.parentElement === headerInner &&
+      userBar.parentElement === headerInner
+    ) {
+      headerInner.insertBefore(dateBadge, userBar);
+    }
 
     let secondRow = document.getElementById('adgbCompactSecondRow');
     if (!secondRow) {

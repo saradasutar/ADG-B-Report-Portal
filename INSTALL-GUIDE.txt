@@ -1,25 +1,20 @@
-ADG(B) REPORT PORTAL V15.31 — DISTINCT COLOUR TABS
+ADG(B) REPORT PORTAL V15.33 — AUTO-UPDATING DATE
 
-COLOUR IDENTITY
-- FE: blue
-- BE: green
-- Current files: amber/gold
-- Users: purple
-- Sign out: red
-- Reports: indigo
-- Raw Data: cyan/teal
-- Subjects: gold
-- Refresh: blue
-- All filter: indigo
-- Pending filter: rose/red
-- Submitted filter: green
-- Target / Reminder: purple-to-blue gradient
-
-Login FE/BE badges use the same blue/green identity as inside the dashboard.
-Search/dropdowns and Raw Data buttons also receive coordinated highlights.
+NEW
+- Adds today's date to the top header row.
+- Format example: 28th-Aug-2026 (Friday)
+- Uses browser local date.
+- Automatically rechecks every minute, so it changes after midnight without refresh.
+- Unique pink/magenta/lilac highlight so the date is easy to spot.
+- Compact pill design to preserve header height.
 
 INSTALL
-1. Replace raw-data.js and sticky-notes.js.
-2. Use v=15.31 in index.html.
-3. Code.gs is included only to match BE v15.31 if deployed.
-4. Do NOT run setupPortal() or setPortalSecurityCodes().
+1. Replace raw-data.js.
+2. Replace sticky-notes.js.
+3. Use:
+   <script src="raw-data.js?v=15.33"></script>
+   <script src="sticky-notes.js?v=15.33"></script>
+4. Commit and hard refresh.
+
+Code.gs V15.33 is included only for matching BE v15.33.
+Do NOT run setupPortal() or setPortalSecurityCodes().
