@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.25';
+  const RAW_FRONTEND_VERSION = '15.26';
 
 
   /* =====================================================================
@@ -567,7 +567,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.25</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.26</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -588,7 +588,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.25</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.26</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -756,7 +756,15 @@
         const result = await authPost('sessionCheck', {
           sessionToken: authState.token
         });
-        if (result.backendVersion) setAuthBackendVersion(result.backendVersion);
+
+        if (result.backendVersion) {
+          setAuthBackendVersion(result.backendVersion);
+        }
+
+        if (!result.user || !result.user.username) {
+          throw new Error('Saved login session could not be confirmed.');
+        }
+
         setAuthenticatedUser(result.user);
         return;
       } catch (ignore) {
@@ -769,10 +777,14 @@
   async function handlePortalLogin(event) {
     event.preventDefault();
 
-    const username = document.getElementById('adgbLoginUsername').value.trim();
-    const password = document.getElementById('adgbLoginPassword').value;
+    const usernameInput = document.getElementById('adgbLoginUsername');
+    const passwordInput = document.getElementById('adgbLoginPassword');
+    const rememberInput = document.getElementById('adgbRememberUsername');
     const errorBox = document.getElementById('adgbLoginError');
     const button = document.getElementById('adgbLoginSubmit');
+
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
 
     errorBox.textContent = '';
 
@@ -784,14 +796,57 @@
     button.disabled = true;
     button.textContent = 'Signing in…';
 
-    try {
-      const result = await authPost('login', { username, password });
+    let provisionalToken = '';
 
-      if (result.backendVersion) setAuthBackendVersion(result.backendVersion);
-      authState.token = String(result.token || '');
+    try {
+      const loginResult = await authPost('login', {
+        username,
+        password
+      });
+
+      if (loginResult.backendVersion) {
+        setAuthBackendVersion(loginResult.backendVersion);
+      }
+
+      provisionalToken = String(loginResult.token || '').trim();
+
+      if (!provisionalToken) {
+        throw new Error(
+          'Login was accepted but no session was created. Please try once more.'
+        );
+      }
+
+      /*
+       * V15.26:
+       * Do not hide the login page yet. Confirm the session/user profile first.
+       * This prevents a partial iframe/receipt response from sending the UI
+       * back to a blank login form.
+       */
+      let confirmedUser = loginResult.user || null;
+
+      if (!confirmedUser || !confirmedUser.username) {
+        const checked = await authPost('sessionCheck', {
+          sessionToken: provisionalToken
+        });
+
+        if (checked.backendVersion) {
+          setAuthBackendVersion(checked.backendVersion);
+        }
+
+        confirmedUser = checked.user || null;
+      }
+
+      if (!confirmedUser || !confirmedUser.username) {
+        throw new Error(
+          'Login succeeded but the user profile could not be confirmed. Please try again.'
+        );
+      }
+
+      // Save the token only after the user profile has been confirmed.
+      authState.token = provisionalToken;
       sessionStorage.setItem(AUTH_TOKEN_KEY, authState.token);
 
-      if (document.getElementById('adgbRememberUsername').checked) {
+      if (rememberInput.checked) {
         localStorage.setItem(AUTH_USERNAME_KEY, username);
         sessionStorage.setItem(AUTH_PASSWORD_SESSION_KEY, password);
       } else {
@@ -799,16 +854,35 @@
         sessionStorage.removeItem(AUTH_PASSWORD_SESSION_KEY);
       }
 
-      setAuthenticatedUser(result.user);
+      // Keep fields intact; the login panel is simply hidden after success.
+      usernameInput.value = username;
+      passwordInput.value = password;
+
+      setAuthenticatedUser(confirmedUser);
 
     } catch (error) {
-      errorBox.textContent = error.message || 'Sign-in failed.';
+      /*
+       * Never clear the user's entries on a failed/partial login.
+       * Also remove any provisional token so the next click starts cleanly.
+       */
+      if (provisionalToken && authState.token !== provisionalToken) {
+        authPost('logout', {
+          sessionToken: provisionalToken
+        }).catch(() => {});
+      }
+
+      errorBox.textContent =
+        error.message || 'Sign-in failed. Please try again.';
+
+      usernameInput.value = username;
+      passwordInput.value = password;
+      usernameInput.focus();
+
     } finally {
       button.disabled = false;
       button.textContent = 'Sign in';
     }
   }
-
 
   function dockUserBarIntoTopHeader() {
     const userBar = document.getElementById('adgbUserBar');
@@ -830,8 +904,17 @@
 
     dockUserBarIntoTopHeader();
 
-    if (!authState.user) {
-      showLoginPage();
+    if (!authState.user || !authState.user.username) {
+      const loginRoot = document.getElementById('adgbAuthRoot');
+      if (loginRoot) loginRoot.hidden = false;
+
+      document.documentElement.classList.add('adgb-auth-locking');
+
+      const errorBox = document.getElementById('adgbLoginError');
+      if (errorBox) {
+        errorBox.textContent =
+          'The user profile could not be loaded. Please sign in again.';
+      }
       return;
     }
 
@@ -1535,7 +1618,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.25';
+  const RAW_FRONTEND_VERSION = '15.26';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
