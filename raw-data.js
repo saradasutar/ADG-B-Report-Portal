@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.21';
+  const RAW_FRONTEND_VERSION = '15.22';
 
 
   /* =====================================================================
@@ -449,7 +449,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.21</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.22</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -470,7 +470,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.21</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.22</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1129,6 +1129,27 @@
     const button = document.getElementById('adgbDriveFolderLink');
     const original = button.textContent;
 
+    /*
+     * Open the new tab immediately inside the user's click event.
+     * This prevents popup blockers from forcing navigation in the current
+     * dashboard tab while we wait for the backend-authorised folder URL.
+     */
+    const folderTab = window.open('about:blank', '_blank');
+
+    if (!folderTab) {
+      alert(
+        'Your browser blocked the new tab. Please allow pop-ups for this portal and click Current files again.'
+      );
+      return;
+    }
+
+    try {
+      folderTab.opener = null;
+      folderTab.document.title = 'Opening Current Submission Cycle…';
+      folderTab.document.body.innerHTML =
+        '<div style="font-family:Arial,sans-serif;padding:28px;color:#345;">Opening Current Submission Cycle…</div>';
+    } catch (ignore) {}
+
     button.disabled = true;
     button.textContent = 'Opening…';
 
@@ -1138,21 +1159,21 @@
       });
 
       if (!result.folderUrl) {
-        throw new Error('Current folder link was not returned.');
+        throw new Error('Current Submission Cycle folder link was not returned.');
       }
 
-      const opened = window.open(
-        result.folderUrl,
-        '_blank',
-        'noopener,noreferrer'
-      );
-
-      if (!opened) {
-        window.location.href = result.folderUrl;
-      }
+      // Navigate ONLY the newly-created tab.
+      folderTab.location.replace(result.folderUrl);
 
     } catch (error) {
-      alert(error.message || 'The Current folder could not be opened.');
+      try {
+        folderTab.close();
+      } catch (ignore) {}
+
+      alert(
+        error.message ||
+        'The Current Submission Cycle folder could not be opened.'
+      );
     } finally {
       button.disabled = false;
       button.textContent = original;
@@ -1359,7 +1380,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.21';
+  const RAW_FRONTEND_VERSION = '15.22';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
