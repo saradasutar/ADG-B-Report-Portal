@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.18';
+  const RAW_FRONTEND_VERSION = '15.20';
 
 
   /* =====================================================================
@@ -386,6 +386,42 @@
         tbody th{font-size:16px!important}
       }
     `;
+    style.textContent += `
+      /* V15.19: keep signed-in user controls clear of the open sticky drawer */
+      .adgb-user-bar{
+        transition:right .18s ease, box-shadow .18s ease!important;
+      }
+      @media(min-width:1400px){
+        body.adgb-sticky-drawer-open .adgb-user-bar{
+          right:514px!important;
+        }
+      }
+    `;
+    style.textContent += `
+      .adgb-drive-link{
+        height:31px;
+        display:inline-flex;
+        align-items:center;
+        gap:5px;
+        border:1px solid #b9d9c9;
+        border-radius:999px;
+        padding:0 10px;
+        background:#f2fbf6;
+        color:#087153;
+        font-size:9px;
+        font-weight:950;
+        cursor:pointer;
+        white-space:nowrap;
+      }
+      .adgb-drive-link:hover{
+        background:#e7f8ef;
+        border-color:#76bc9a;
+      }
+      .adgb-drive-link[hidden]{display:none!important}
+      @media(max-width:760px){
+        .adgb-drive-link{padding:0 8px;font-size:8px}
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -413,7 +449,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.18</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.20</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -434,9 +470,10 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.18</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.20</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
+      <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open uploaded files folder in Google Drive">📁 Drive files</button>
       <button class="adgb-user-action manage" id="adgbManageUsers" type="button" hidden>Users</button>
       <button class="adgb-user-action logout" id="adgbLogout" type="button">Sign out</button>
     `;
@@ -472,6 +509,7 @@
                 <label><input type="checkbox" data-auth-permission="rawStructureManage"> Manage Raw Data rows</label>
                 <label><input type="checkbox" data-auth-permission="stickyView"> View Target / Reminder</label>
                 <label><input type="checkbox" data-auth-permission="stickyManage"> Manage Target / Reminder</label>
+                <label><input type="checkbox" data-auth-permission="driveFolderView"> View uploaded Drive folder</label>
                 <label><input type="checkbox" data-auth-permission="allOffices"> Allow actions for all offices</label>
               </div>
             </div>
@@ -494,6 +532,7 @@
     document.getElementById('adgbClearPortalCache').addEventListener('click', clearPortalCache);
     document.getElementById('adgbLogout').addEventListener('click', () => logoutPortal(true));
     document.getElementById('adgbManageUsers').addEventListener('click', openUserManager);
+    document.getElementById('adgbDriveFolderLink').addEventListener('click', openUploadedDriveFolder);
     document.getElementById('adgbUsersClose').addEventListener('click', closeUserManager);
     document.getElementById('adgbUserForm').addEventListener('submit', saveManagedUser);
     document.getElementById('adgbUserCancelEdit').addEventListener('click', resetUserEditor);
@@ -676,6 +715,9 @@
     document.getElementById('adgbManageUsers').hidden =
       authState.user.role !== 'ADMIN';
 
+    document.getElementById('adgbDriveFolderLink').hidden =
+      !authCan('driveFolderView');
+
     resetIdleLogout();
     bindIdleEvents();
     applyRolePermissions();
@@ -856,6 +898,7 @@
         rawStructureManage: true,
         stickyView: true,
         stickyManage: true,
+        driveFolderView: true,
         allOffices: true
       };
     }
@@ -870,6 +913,7 @@
         rawStructureManage: false,
         stickyView: false,
         stickyManage: false,
+        driveFolderView: false,
         allOffices: false
       };
     }
@@ -883,6 +927,7 @@
       rawStructureManage: false,
       stickyView: false,
       stickyManage: false,
+      driveFolderView: false,
       allOffices: false
     };
   }
@@ -936,6 +981,7 @@
       rawStructureManage: 'Raw rows',
       stickyView: 'Sticky view',
       stickyManage: 'Sticky manage',
+      driveFolderView: 'Drive folder',
       allOffices: 'All offices'
     };
 
@@ -964,6 +1010,9 @@
     const isAdmin = authState.user.role === 'ADMIN';
     const adminButton = document.getElementById('adminButton');
     if (adminButton) adminButton.hidden = !authCan('subjectManage');
+
+    const driveButton = document.getElementById('adgbDriveFolderLink');
+    if (driveButton) driveButton.hidden = !authCan('driveFolderView');
 
     document.querySelectorAll('[data-upload]').forEach(button => {
       const officeId = String(button.dataset.office || '').toUpperCase();
@@ -1071,6 +1120,43 @@
       if (!document.getElementById('adminPanel')?.classList.contains('hidden')) return;
       form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     }, 20);
+  }
+
+
+  async function openUploadedDriveFolder() {
+    if (!authCan('driveFolderView') || !authState.token) return;
+
+    const button = document.getElementById('adgbDriveFolderLink');
+    const original = button.textContent;
+
+    button.disabled = true;
+    button.textContent = 'Opening…';
+
+    try {
+      const result = await authPost('getDriveFolderLink', {
+        sessionToken: authState.token
+      });
+
+      if (!result.folderUrl) {
+        throw new Error('Drive folder link was not returned.');
+      }
+
+      const opened = window.open(
+        result.folderUrl,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      if (!opened) {
+        window.location.href = result.folderUrl;
+      }
+
+    } catch (error) {
+      alert(error.message || 'The Drive folder could not be opened.');
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
   }
 
   async function openUserManager() {
@@ -1273,7 +1359,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.18';
+  const RAW_FRONTEND_VERSION = '15.20';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },

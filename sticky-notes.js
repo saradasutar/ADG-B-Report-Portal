@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "15.18",
+  FRONTEND_VERSION: "15.20",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -89,6 +89,10 @@ function initExactHrSticky() {
 
   document.querySelectorAll('[data-close-sticky-dialog]').forEach((button) => {
     button.addEventListener("click", () => refs.stickyNotesDialog.close());
+  });
+
+  refs.stickyNotesDialog.addEventListener("close", () => {
+    document.body.classList.remove("adgb-sticky-drawer-open");
   });
 
   applyAdminState();
@@ -360,6 +364,134 @@ function injectExactHrStickyStyles() {
   .hr-sticky-launch{top:58%!important}
 }
 `;
+  style.textContent += `
+/* V15.19 — right drawer without overlap/overflow */
+.hr-sticky-dialog{
+  z-index:120!important;
+  width:min(500px,100vw)!important;
+  max-width:100vw!important;
+  overflow-x:hidden!important;
+}
+.hr-sticky-dialog *,
+.hr-sticky-dialog *::before,
+.hr-sticky-dialog *::after{
+  box-sizing:border-box!important;
+}
+.hr-sticky-dialog .sticky-notes-sheet,
+.hr-sticky-dialog .sticky-notes-body,
+.hr-sticky-dialog .sticky-note-form,
+.hr-sticky-dialog .sticky-note-grid,
+.hr-sticky-dialog .sticky-note-card{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.hr-sticky-dialog .sticky-notes-body{
+  overflow-x:hidden!important;
+}
+.hr-sticky-dialog .sticky-note-form{
+  width:100%!important;
+  grid-template-columns:150px minmax(0,1fr)!important;
+  gap:9px!important;
+}
+.hr-sticky-dialog .sticky-form-heading,
+.hr-sticky-dialog .sticky-colour-field,
+.hr-sticky-dialog .sticky-note-form .form-error{
+  grid-column:1 / -1!important;
+}
+.hr-sticky-dialog .sticky-title-field{
+  grid-column:2!important;
+}
+.hr-sticky-dialog .sticky-details-field{
+  grid-column:2!important;
+}
+.hr-sticky-dialog .sticky-note-form > label:has(#stickyNoteDueDate){
+  grid-column:1!important;
+}
+.hr-sticky-dialog .sticky-note-form input,
+.hr-sticky-dialog .sticky-note-form select,
+.hr-sticky-dialog .sticky-note-form textarea{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.hr-sticky-dialog .sticky-note-form textarea{
+  resize:vertical!important;
+}
+.hr-sticky-dialog .sticky-note-form .primary-btn{
+  justify-self:start!important;
+  grid-column:1!important;
+}
+.hr-sticky-dialog .sticky-cancel-edit{
+  justify-self:start!important;
+  grid-column:2!important;
+}
+.hr-sticky-dialog .sticky-card-actions{
+  width:100%!important;
+  justify-content:flex-start!important;
+}
+.hr-sticky-dialog .sticky-note-card footer{
+  flex-direction:column!important;
+  align-items:flex-start!important;
+}
+.hr-sticky-dialog .sticky-note-card header{
+  flex-wrap:wrap!important;
+}
+.hr-sticky-dialog .sticky-note-card header > *{
+  min-width:0!important;
+}
+
+/* On wide desktop, reserve real space for the drawer instead of covering the report matrix. */
+@media(min-width:1400px){
+  body.adgb-sticky-drawer-open{
+    box-sizing:border-box!important;
+    padding-right:500px!important;
+    transition:padding-right .18s ease!important;
+  }
+  body.adgb-sticky-drawer-open .adgb-user-bar{
+    right:514px!important;
+    transition:right .18s ease!important;
+  }
+}
+
+/* Medium desktop: narrower drawer, still fully contained. */
+@media(min-width:900px) and (max-width:1399px){
+  .hr-sticky-dialog{
+    width:min(440px,42vw)!important;
+  }
+  .hr-sticky-dialog .sticky-note-form{
+    grid-template-columns:1fr!important;
+  }
+  .hr-sticky-dialog .sticky-form-heading,
+  .hr-sticky-dialog .sticky-title-field,
+  .hr-sticky-dialog .sticky-details-field,
+  .hr-sticky-dialog .sticky-colour-field,
+  .hr-sticky-dialog .sticky-note-form .form-error,
+  .hr-sticky-dialog .sticky-note-form > label:has(#stickyNoteDueDate),
+  .hr-sticky-dialog .sticky-note-form .primary-btn,
+  .hr-sticky-dialog .sticky-cancel-edit{
+    grid-column:1!important;
+  }
+}
+
+/* Mobile: full-screen drawer with no horizontal scrolling. */
+@media(max-width:899px){
+  .hr-sticky-dialog{
+    width:100vw!important;
+  }
+  .hr-sticky-dialog .sticky-note-form{
+    grid-template-columns:1fr!important;
+  }
+  .hr-sticky-dialog .sticky-form-heading,
+  .hr-sticky-dialog .sticky-title-field,
+  .hr-sticky-dialog .sticky-details-field,
+  .hr-sticky-dialog .sticky-colour-field,
+  .hr-sticky-dialog .sticky-note-form .form-error,
+  .hr-sticky-dialog .sticky-note-form > label:has(#stickyNoteDueDate),
+  .hr-sticky-dialog .sticky-note-form .primary-btn,
+  .hr-sticky-dialog .sticky-cancel-edit{
+    grid-column:1!important;
+  }
+}
+`;
   document.head.appendChild(style);
 }
 
@@ -491,7 +623,12 @@ function injectExactHrStickyMarkup() {
 
 async function openStickyNotes() {
   refs.stickyNoteError.textContent = "";
-  if (!refs.stickyNotesDialog.open) refs.stickyNotesDialog.show();
+
+  document.body.classList.add("adgb-sticky-drawer-open");
+
+  if (!refs.stickyNotesDialog.open) {
+    refs.stickyNotesDialog.show();
+  }
 
   try {
     await loadStickyNotes();
@@ -1181,6 +1318,10 @@ function applyStickyPermissionState() {
 
   if (!canView && refs.stickyNotesDialog?.open) {
     refs.stickyNotesDialog.close();
+  }
+
+  if (!canView) {
+    document.body.classList.remove("adgb-sticky-drawer-open");
   }
 
   return canView;
