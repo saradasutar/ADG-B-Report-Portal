@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.16';
+  const RAW_FRONTEND_VERSION = '15.18';
 
 
   /* =====================================================================
@@ -198,7 +198,7 @@
     `;
 
     style.textContent += `
-      /* V15.16 — larger, bolder, calmer typography */
+      /* V15.18 — larger, bolder, calmer typography */
       .adgb-login-brand small{
         font-size:12px!important;
         font-weight:900!important;
@@ -413,7 +413,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.16</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.18</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -434,7 +434,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.16</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.18</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-user-action manage" id="adgbManageUsers" type="button" hidden>Users</button>
@@ -1273,7 +1273,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.16';
+  const RAW_FRONTEND_VERSION = '15.18';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -1879,7 +1879,7 @@
         throw new Error(
           'Backend currently deployed is version ' +
           deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.16 as a New version.'
+          '. It does not contain Raw Data support. Deploy Code.gs V15.18 as a New version.'
         );
       }
 
@@ -2236,7 +2236,7 @@
 
       window.alert(
         /Unsupported operation/i.test(text)
-          ? 'The deployed Apps Script does not support subrow deletion. Deploy Code.gs V15.16 as a New version.'
+          ? 'The deployed Apps Script does not support subrow deletion. Deploy Code.gs V15.18 as a New version.'
           : text
       );
     }
@@ -2334,7 +2334,7 @@
     } catch (error) {
       const text = error.message || 'The Raw Data value could not be saved.';
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.16 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.18 as a New version.'
         : text;
 
     } finally {
@@ -2412,7 +2412,7 @@
               : 'The Raw Data row could not be added.'));
 
       message.textContent = /Unsupported operation/i.test(text)
-        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.16 as a New version.'
+        ? 'The deployed Apps Script does not support this Raw Data action. Deploy Code.gs V15.18 as a New version.'
         : text;
 
     } finally {
