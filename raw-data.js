@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.20';
+  const RAW_FRONTEND_VERSION = '15.21';
 
 
   /* =====================================================================
@@ -449,7 +449,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.20</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.21</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -470,10 +470,10 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.20</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.21</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
-      <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open uploaded files folder in Google Drive">📁 Drive files</button>
+      <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
       <button class="adgb-user-action manage" id="adgbManageUsers" type="button" hidden>Users</button>
       <button class="adgb-user-action logout" id="adgbLogout" type="button">Sign out</button>
     `;
@@ -509,7 +509,7 @@
                 <label><input type="checkbox" data-auth-permission="rawStructureManage"> Manage Raw Data rows</label>
                 <label><input type="checkbox" data-auth-permission="stickyView"> View Target / Reminder</label>
                 <label><input type="checkbox" data-auth-permission="stickyManage"> Manage Target / Reminder</label>
-                <label><input type="checkbox" data-auth-permission="driveFolderView"> View uploaded Drive folder</label>
+                <label><input type="checkbox" data-auth-permission="driveFolderView"> View Current Submission Cycle folder</label>
                 <label><input type="checkbox" data-auth-permission="allOffices"> Allow actions for all offices</label>
               </div>
             </div>
@@ -981,7 +981,7 @@
       rawStructureManage: 'Raw rows',
       stickyView: 'Sticky view',
       stickyManage: 'Sticky manage',
-      driveFolderView: 'Drive folder',
+      driveFolderView: 'Current folder',
       allOffices: 'All offices'
     };
 
@@ -1138,7 +1138,7 @@
       });
 
       if (!result.folderUrl) {
-        throw new Error('Drive folder link was not returned.');
+        throw new Error('Current folder link was not returned.');
       }
 
       const opened = window.open(
@@ -1152,7 +1152,7 @@
       }
 
     } catch (error) {
-      alert(error.message || 'The Drive folder could not be opened.');
+      alert(error.message || 'The Current folder could not be opened.');
     } finally {
       button.disabled = false;
       button.textContent = original;
@@ -1359,7 +1359,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.20';
+  const RAW_FRONTEND_VERSION = '15.21';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
