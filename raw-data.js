@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.26';
+  const RAW_FRONTEND_VERSION = '15.27';
 
 
   /* =====================================================================
@@ -557,7 +557,7 @@
           <p>Secure access for Head Office, sub-offices and authorised viewers. Your permissions are applied automatically after sign-in.</p>
         </section>
         <section class="adgb-login-panel">
-          <form class="adgb-login-form" id="adgbLoginForm">
+          <form class="adgb-login-form" id="adgbLoginForm" action="javascript:void(0)">
             <span class="kicker">Secure access</span>
             <h2>Welcome</h2>
             <p>Enter the username and password assigned by the Administrator.</p>
@@ -567,7 +567,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.26</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.27</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -588,7 +588,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.26</strong></span>
+        <span class="adgb-version-chip">FE <strong>v15.27</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -640,7 +640,6 @@
     `;
 
     document.body.append(root, userBar, usersModal);
-    dockUserBarIntoTopHeader();
 
     const remembered = localStorage.getItem(AUTH_USERNAME_KEY) || '';
     const sessionPassword = sessionStorage.getItem(AUTH_PASSWORD_SESSION_KEY) || '';
@@ -664,6 +663,9 @@
     usersModal.addEventListener('mousedown', event => {
       if (event.target === usersModal) closeUserManager();
     });
+
+    // Dock only after Login/Sign-in handlers are safely attached.
+    dockUserBarIntoTopHeader();
 
     // Capture the office before the existing portal handler opens its modal.
     document.addEventListener('click', event => {
@@ -890,11 +892,23 @@
 
     if (!userBar || !headerInner) return;
 
-    const adminButton = headerInner.querySelector('.admin-button');
+    /*
+     * IMPORTANT:
+     * In index.html the Administrator button is inside <nav>.
+     * insertBefore() only accepts a DIRECT child of headerInner.
+     * Therefore insert the signed-in strip before the <nav>, never before
+     * the nested Administrator button.
+     */
+    const nav = headerInner.querySelector(':scope > nav');
 
-    if (adminButton) {
-      headerInner.insertBefore(userBar, adminButton);
-    } else {
+    try {
+      if (nav) {
+        headerInner.insertBefore(userBar, nav);
+      } else {
+        headerInner.appendChild(userBar);
+      }
+    } catch (error) {
+      // Header layout must never be allowed to break Login initialisation.
       headerInner.appendChild(userBar);
     }
   }
@@ -1618,7 +1632,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.26';
+  const RAW_FRONTEND_VERSION = '15.27';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
