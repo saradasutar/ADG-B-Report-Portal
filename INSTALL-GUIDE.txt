@@ -1,36 +1,31 @@
-ADG(B) REPORT PORTAL V15.11 — COMPLETED + DELETE STICKY FIX
-
-ACTIVE STICKY NOTES NOW CLEARLY SHOW
-- 📌 Keep open / Pinned
-- ✎ Edit
-- ✓ Completed
-- 🗑 Delete
-
-FLOATING PINNED NOTE IN ADMIN MODE ALSO SHOWS
-- ✎ Edit
-- ✓ Completed
-- 🗑 Delete
-
-WHEN ✓ COMPLETED IS CLICKED
-1. The note is NOT deleted.
-2. Status is changed to Completed in Sticky_Notes.
-3. Completed date/time is saved.
-4. Completed By is saved as Head Office.
-5. SpreadsheetApp.flush() commits the history before the backend replies.
-6. The note disappears from Active.
-7. Completed history automatically opens so the saved note can be seen.
-8. Completed history provides ↩ Restore and 🗑 Delete.
+ADG(B) REPORT PORTAL V15.14
 
 APPS SCRIPT
-1. Replace complete Code.gs with V15.11.
+1. Replace complete Code.gs with V15.14.
 2. Save.
-3. Do NOT run setupPortal() or setPortalSecurityCodes().
-4. Deploy > Manage deployments > Edit > New version > Deploy.
+3. DO NOT run setupPortal().
+4. DO NOT run setPortalSecurityCodes().
+5. Deploy > Manage deployments > Edit > New version > Deploy.
+6. Execute as: Me.
+7. Who has access: Anyone.
 
 GITHUB
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
-3. Use:
-   <script src="raw-data.js?v=15.11"></script>
-   <script src="sticky-notes.js?v=15.11"></script>
-4. Commit and hard refresh.
+3. In current index.html immediately before </body> use:
+   <script src="raw-data.js?v=15.14"></script>
+   <script src="sticky-notes.js?v=15.14"></script>
+4. Commit.
+5. Hard refresh once.
+
+ADMIN
+- Sign in.
+- Click Users.
+- For each user decide:
+  View Target / Reminder
+  Manage Target / Reminder
+- Office upload / Raw Data permissions remain separately configurable.
+
+Existing reports, Raw Data, users, sticky notes, security codes and Drive files are preserved.
+Existing user permission rows are migrated automatically with sticky viewing OFF unless Admin enables it.
+Administrator always has full access.

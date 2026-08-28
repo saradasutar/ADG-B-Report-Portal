@@ -1,0 +1,28 @@
+V15.14 FEATURES
+
+TARGET / REMINDER SIDE PANEL
+- Collapsible right-side vertical Target / Reminder tab.
+- Opens as a right utility drawer similar to the supplied dashboard reference.
+- Active notes shown as large readable cards.
+- Completed history remains separately saved below.
+- Existing Pin / Completed / Edit / Delete functions remain.
+- Floating pinned note remains available.
+- Admin can control TWO separate permissions for every user:
+  View Target / Reminder
+  Manage Target / Reminder
+- A user without View permission cannot open or retrieve sticky-note content.
+- Manage permission automatically permits viewing.
+
+LOGIN / SESSION
+- Automatic sign-out after 10 minutes of inactivity.
+- Login token remains in sessionStorage, so closing the tab/browser requires login again.
+- Login page has Clear portal cache.
+- Cache clear removes only ADG-B Report Portal login/layout storage, repository cache entries,
+  and service workers scoped to /ADG-B-Report-Portal/.
+
+VERSIONS
+- Login page shows FE v15.14 and live BE version.
+- Dashboard user bar also shows FE v15.14 and live BE version.
+
+OTHER PERMISSIONS
+- Existing per-user office/report/Raw Data permissions from V15.13 remain unchanged.

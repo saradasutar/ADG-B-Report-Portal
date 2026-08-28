@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "15.11",
+  FRONTEND_VERSION: "15.14",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -92,8 +92,12 @@ function initExactHrSticky() {
   });
 
   applyAdminState();
-  loadStickyNotes().catch(() => {});
-  verifyRememberedAdmin().catch(() => {});
+  applyStickyPermissionState();
+
+  if (window.ADGB_AUTH?.user) {
+    loadStickyNotes().catch(() => {});
+    verifyRememberedAdmin().catch(() => {});
+  }
 }
 
 function injectExactHrStickyStyles() {
@@ -213,6 +217,149 @@ function injectExactHrStickyStyles() {
   background: rgba(255,241,241,.96);
 }
 `;
+  style.textContent += `
+/* V15.14 right-side collapsible Target / Reminder panel */
+.hr-sticky-launch{
+  position:fixed!important;
+  right:0!important;
+  bottom:auto!important;
+  top:52%!important;
+  transform:translateY(-50%);
+  z-index:94!important;
+}
+.hr-sticky-launch .sticky-launch-btn{
+  width:48px!important;
+  min-height:168px!important;
+  padding:10px 6px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  border-radius:16px 0 0 16px!important;
+  border-right:0!important;
+  color:#fff!important;
+  border-color:#6950d6!important;
+  background:linear-gradient(180deg,#5d48d4,#7449d9)!important;
+  box-shadow:0 12px 32px rgba(74,57,170,.28)!important;
+}
+.hr-sticky-launch .sticky-side-icon{font-size:16px}
+.hr-sticky-launch .sticky-side-label{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  white-space:nowrap;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.04em;
+}
+.hr-sticky-launch .sticky-launch-btn b{
+  min-width:24px!important;
+  height:24px!important;
+  background:#fff!important;
+  color:#5d48d4!important;
+  font-size:10px!important;
+}
+.hr-sticky-dialog{
+  position:fixed!important;
+  inset:0 0 0 auto!important;
+  width:min(520px,100vw)!important;
+  max-width:100vw!important;
+  height:100vh!important;
+  max-height:100vh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-left:1px solid #d9e1ea!important;
+  border-radius:0!important;
+  background:#f8fbff!important;
+  box-shadow:-24px 0 70px rgba(20,39,70,.22)!important;
+}
+.hr-sticky-dialog::backdrop{background:transparent!important}
+.hr-sticky-dialog .sticky-notes-modal,
+.hr-sticky-dialog.sticky-notes-modal{
+  width:min(520px,100vw)!important;
+  max-height:100vh!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.hr-sticky-dialog .sticky-notes-sheet{
+  height:100vh!important;
+  max-height:100vh!important;
+  background:linear-gradient(180deg,#fbfdff,#f4f7fb)!important;
+}
+.hr-sticky-dialog .sticky-notes-header{
+  position:sticky!important;
+  top:0!important;
+  z-index:4!important;
+  padding:18px 20px!important;
+  border-bottom:1px solid #dce4ec!important;
+  background:rgba(251,253,255,.97)!important;
+  backdrop-filter:blur(12px);
+}
+.hr-sticky-dialog .sticky-notes-header h2{
+  margin-top:4px!important;
+  color:#172944!important;
+  font-size:25px!important;
+}
+.hr-sticky-dialog .sticky-notes-header p:last-child{
+  max-width:390px;
+  color:#718199!important;
+  font-size:11px!important;
+}
+.hr-sticky-dialog .sticky-notes-body{
+  flex:1!important;
+  overflow:auto!important;
+  padding:14px 20px 24px!important;
+}
+.hr-sticky-dialog .sticky-note-grid{
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+}
+.hr-sticky-dialog .sticky-note-card{
+  min-height:0!important;
+  padding:16px!important;
+  border-radius:18px!important;
+  transform:none!important;
+  box-shadow:0 8px 22px rgba(36,51,76,.08)!important;
+}
+.hr-sticky-dialog .sticky-note-card:nth-child(even){transform:none!important}
+.hr-sticky-dialog .sticky-note-card h4{
+  margin:11px 0 7px!important;
+  font-size:17px!important;
+}
+.hr-sticky-dialog .sticky-note-card p{
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+.hr-sticky-dialog .sticky-card-actions{
+  justify-content:flex-start!important;
+  margin-top:11px!important;
+}
+.hr-sticky-dialog .sticky-completed-section{
+  margin-top:22px!important;
+  background:#f8fbff!important;
+}
+.hr-sticky-dialog .sticky-completed-section summary{
+  padding:13px 14px!important;
+  font-size:13px!important;
+}
+.hr-sticky-dialog .modal-footer{
+  position:sticky!important;
+  bottom:0!important;
+  z-index:4!important;
+  padding:10px 18px!important;
+  background:rgba(250,252,255,.96)!important;
+  backdrop-filter:blur(10px);
+}
+@media(max-width:620px){
+  .hr-sticky-dialog,
+  .hr-sticky-dialog .sticky-notes-modal,
+  .hr-sticky-dialog.sticky-notes-modal{width:100vw!important}
+  .hr-sticky-launch{top:58%!important}
+}
+`;
   document.head.appendChild(style);
 }
 
@@ -222,8 +369,10 @@ function injectExactHrStickyMarkup() {
   const launcher = document.createElement("div");
   launcher.className = "hr-sticky-launch";
   launcher.innerHTML = `
-    <button id="stickyNotesButton" class="soft-btn sticky-launch-btn" type="button" aria-haspopup="dialog">
-      <span aria-hidden="true">📌</span> Target / Reminder <b id="stickyActiveCount">0</b>
+    <button id="stickyNotesButton" class="soft-btn sticky-launch-btn" type="button" aria-haspopup="dialog" title="Open Target / Reminder">
+      <span class="sticky-side-icon" aria-hidden="true">✦</span>
+      <span class="sticky-side-label">Target / Reminder</span>
+      <b id="stickyActiveCount">0</b>
     </button>
   `;
 
@@ -271,9 +420,9 @@ function injectExactHrStickyMarkup() {
     <div class="sticky-notes-sheet">
       <header class="modal-header sticky-notes-header">
         <div>
-          <p class="eyebrow accent">Work organiser</p>
-          <h2>Targets &amp; Reminders</h2>
-          <p>Active notes stay visible here; completed notes move safely into history.</p>
+          <p class="eyebrow accent">RIGHT UTILITY PANEL</p>
+          <h2>Target / Reminder</h2>
+          <p>Targets and reminders stay in a collapsible side panel without occupying dashboard space.</p>
         </div>
         <div class="sticky-header-actions">
           <button id="stickyAdminUnlock" class="soft-btn" type="button">🔒 Admin</button>
@@ -282,7 +431,7 @@ function injectExactHrStickyMarkup() {
       </header>
       <div class="sticky-notes-body">
         <p id="stickyAdminHint" class="sticky-admin-hint">
-          View mode · Click 🔒 Admin and enter the Head Office security code to add, edit, complete or delete notes.
+          View mode · Editing is controlled by the permissions assigned by Administrator.
         </p>
         <form id="stickyNoteForm" class="sticky-note-form" hidden>
           <div class="sticky-form-heading">
@@ -342,7 +491,7 @@ function injectExactHrStickyMarkup() {
 
 async function openStickyNotes() {
   refs.stickyNoteError.textContent = "";
-  if (!refs.stickyNotesDialog.open) refs.stickyNotesDialog.showModal();
+  if (!refs.stickyNotesDialog.open) refs.stickyNotesDialog.show();
 
   try {
     await loadStickyNotes();
@@ -352,7 +501,22 @@ async function openStickyNotes() {
 }
 
 async function loadStickyNotes() {
-  const response = await apiGet("stickyBootstrap");
+  if (!window.ADGB_AUTH?.token) return;
+
+  const canView =
+    window.ADGB_AUTH?.can?.("stickyView") ||
+    window.ADGB_AUTH?.can?.("stickyManage");
+
+  if (!canView) {
+    state.stickyNotes = [];
+    renderStickyNotes();
+    return;
+  }
+
+  const response = await apiGet("stickyBootstrap", {
+    sessionToken: window.ADGB_AUTH.token
+  });
+
   state.stickyNotes = Array.isArray(response.notes) ? response.notes : [];
   renderStickyNotes();
 }
@@ -941,18 +1105,32 @@ async function toggleStickyAdmin() {
     return;
   }
 
-  const code = prompt(
-    "Enter the Head Office security code to manage Targets & Reminders:"
-  );
+  let code = "";
 
-  if (code === null) return;
+  if (window.ADGB_AUTH?.can?.('stickyManage') && window.ADGB_AUTH?.token) {
+    code = "SESSION:" + window.ADGB_AUTH.token;
+  } else {
+    const entered = prompt(
+      "Enter the Head Office security code to manage Targets & Reminders:"
+    );
+
+    if (entered === null) return;
+    code = entered.trim();
+  }
 
   try {
-    await apiPost("adminVerify", {
-      securityCode: code.trim()
-    });
+    if (window.ADGB_AUTH?.token && code.startsWith("SESSION:")) {
+      await apiPost("permissionVerify", {
+        sessionToken: window.ADGB_AUTH.token,
+        permission: "stickyManage"
+      });
+    } else {
+      await apiPost("adminVerify", {
+        securityCode: code
+      });
+    }
 
-    state.adminCode = code.trim();
+    state.adminCode = code;
     state.adminUnlocked = true;
     sessionStorage.setItem(
       STICKY_ADMIN_CODE_SESSION_KEY,
@@ -988,9 +1166,33 @@ async function verifyRememberedAdmin() {
   renderStickyNotes();
 }
 
+function applyStickyPermissionState() {
+  const loggedIn = Boolean(window.ADGB_AUTH?.user);
+  const canView =
+    loggedIn &&
+    (
+      window.ADGB_AUTH?.can?.("stickyView") ||
+      window.ADGB_AUTH?.can?.("stickyManage")
+    );
+
+  if (refs.stickyNotesButton) {
+    refs.stickyNotesButton.closest(".hr-sticky-launch").hidden = !canView;
+  }
+
+  if (!canView && refs.stickyNotesDialog?.open) {
+    refs.stickyNotesDialog.close();
+  }
+
+  return canView;
+}
+
 function applyAdminState() {
   refs.stickyAdminUnlock.textContent =
     state.adminUnlocked ? "🔓 Lock" : "🔒 Admin";
+
+  if (window.ADGB_AUTH?.user) {
+    refs.stickyAdminUnlock.hidden = !window.ADGB_AUTH.can?.("stickyManage");
+  }
 
   refs.stickyNoteForm.hidden = !state.adminUnlocked;
 
@@ -1001,8 +1203,8 @@ function applyAdminState() {
   if (refs.stickyAdminHint) {
     refs.stickyAdminHint.classList.toggle("unlocked", state.adminUnlocked);
     refs.stickyAdminHint.textContent = state.adminUnlocked
-      ? "Admin mode unlocked · You can add, edit, complete and delete Targets & Reminders."
-      : "View mode · Click 🔒 Admin and enter the Head Office security code to add, edit, complete or delete notes.";
+      ? "Management enabled · You can add, edit, complete and delete Target / Reminder notes."
+      : "View mode · Editing is controlled by the permissions assigned by Administrator.";
   }
 
   if (!state.adminUnlocked) {
@@ -1211,5 +1413,49 @@ function escapeHtml(value) {
 function escapeAttribute(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
 }
+
+
+window.addEventListener("adgb-auth-changed", async (event) => {
+  const user = event.detail?.user || null;
+  const canView = applyStickyPermissionState();
+
+  if (canView) {
+    try {
+      await loadStickyNotes();
+    } catch {
+      state.stickyNotes = [];
+      renderStickyNotes();
+    }
+  } else {
+    state.stickyNotes = [];
+    renderStickyNotes();
+  }
+
+  if (window.ADGB_AUTH?.can?.("stickyManage") && window.ADGB_AUTH?.token) {
+    try {
+      state.adminCode = "SESSION:" + window.ADGB_AUTH.token;
+      const result = await apiPost("permissionVerify", {
+        sessionToken: window.ADGB_AUTH.token,
+        permission: "stickyManage"
+      });
+      if (result?.ok !== false) {
+        state.adminUnlocked = true;
+        applyAdminState();
+        renderStickyNotes();
+      }
+    } catch {
+      state.adminUnlocked = false;
+      state.adminCode = "";
+      applyAdminState();
+      renderStickyNotes();
+    }
+  } else {
+    state.adminUnlocked = false;
+    state.adminCode = "";
+    applyAdminState();
+    renderStickyNotes();
+  }
+});
+
 
 })();
