@@ -1,29 +1,73 @@
-ADG(B) REPORT PORTAL V16.5 — RAW DATA RUNTIME FIX
+ADG(B) REPORT PORTAL V16.6 — TURBO LOGIN + PREMIUM STABLE UI
 
-EXACT LIVE BUG FOUND
-The Raw Data module called ensurePortalLiveDate(), but that function belongs to
-a different private JavaScript IIFE. The browser threw ReferenceError before
-bindRawEvents() ran. Result: Raw Data button was visible but had no working
-click handler.
+WHY SIGN-IN WAS SLOW
+The previous backend opened the spreadsheet and repeatedly checked/reformatted
+portal sheets during ordinary requests. Login also wrote "Last Login" directly
+to Google Sheets. Those operations can add seconds to Apps Script latency.
 
-FIX
-- Removed the cross-scope ensurePortalLiveDate() call from Raw Data module.
-- Date/time remains managed by the login/header module.
-- Raw Data event binding now completes.
-- All V16.4 speed optimisations remain.
-- No Workflow Details.
-- Lazy Sticky Notes remains.
-- Raw Data still uses one rawBootstrap request.
+V16.6 LOGIN SPEED CHANGES
+1. Established database uses a true hot path:
+   - one SpreadsheetApp.openById()
+   - no Drive search
+   - no repeated ensureSheets()
+   - no repeated header rewriting/formatting
+2. Database schema is checked only once for V16.6 and marked ready.
+3. User authentication records are cached server-side for 10 minutes.
+4. The normal report bootstrap pre-warms that auth cache while the login page
+   is visible, so the Sign in click normally does not need a user-sheet read.
+5. Last-login logging is moved off the blocking Sheet write path and stored
+   in Script Properties instead.
+6. The backend login response already contains token + user, so no second
+   session-check request is normally needed.
+7. Startup BE-version ping is removed. The last known BE version is displayed
+   locally and refreshed by login/session response.
+8. POST receipt fallback polling starts sooner if browser postMessage is slow.
+9. Connection preconnect is added for script.google.com and
+   script.googleusercontent.com.
 
-INSTALL
+DASHBOARD / RAW DATA SPEED
+10. Portal bootstrap cache increased from 180 sec to 600 sec.
+11. Write actions still invalidate the dashboard cache immediately.
+12. Bootstrap opens the database only once and shares that same Spreadsheet
+    object between subject/status reads.
+13. Raw Data opens the database once and reuses it for items + values.
+14. No Workflow Details.
+15. Target / Reminder stays lazy-loaded.
+16. No automatic PDF iframe loading.
+17. Raw Data remains one-request loading and the Raw Data tab paints first.
+
+PREMIUM UI / RESPONSIVENESS
+18. Heavy backdrop-filter blur is removed from sticky header/user bar.
+19. Login card is more compact and balanced.
+20. Login typography, padding and shadow are refined.
+21. Keyboard focus states are clearer.
+22. Buttons have very small tactile press feedback.
+23. Reduced-motion accessibility is respected.
+24. Mobile login spacing is tightened.
+25. Existing colourful two-row dashboard, date/time, FE/BE, Current files,
+    Users, status cards and larger/bolder typography are retained.
+
+INSTALL — GITHUB
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
-3. Replace Code.gs and deploy New version.
-4. In index.html use EXACTLY:
-   <script src="raw-data.js?v=16.5-runtimefix"></script>
-   <script src="sticky-notes.js?v=16.5-runtimefix"></script>
-5. Commit.
-6. Open once with Ctrl+Shift+R.
+3. In index.html use:
+   <script src="raw-data.js?v=16.6-turbo"></script>
+   <script src="sticky-notes.js?v=16.6-turbo"></script>
+4. Commit.
+5. Hard refresh ONCE using Ctrl+Shift+R.
 
-Do NOT run setupPortal() or setPortalSecurityCodes().
-Expected FE v16.5 | BE v16.5.
+INSTALL — APPS SCRIPT
+1. Replace Code.gs.
+2. Save.
+3. Deploy > Manage deployments > Edit > New version > Deploy.
+4. Execute as Me; access Anyone, as already configured.
+5. DO NOT run setupPortal().
+6. DO NOT run setPortalSecurityCodes().
+
+EXPECTED
+FE v16.6 | BE v16.6
+
+IMPORTANT PERFORMANCE NOTE
+Google Apps Script can still occasionally have a Google-side cold start or
+network delay. V16.6 removes the avoidable work inside your code, so this is
+the fastest stable design for the current GitHub Pages + Apps Script stack.

@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.5';
+  const RAW_FRONTEND_VERSION = '16.6';
 
 
   /* =====================================================================
@@ -13,6 +13,7 @@
   const AUTH_TOKEN_KEY = 'adgbPortalSessionTokenV1512';
   const AUTH_USERNAME_KEY = 'adgbPortalRememberedUsernameV1512';
   const AUTH_PASSWORD_SESSION_KEY = 'adgbPortalSessionPasswordV1525';
+  const AUTH_BACKEND_VERSION_CACHE_KEY = 'adgbPortalBackendVersionV166';
   const AUTH_IDLE_MS = 10 * 60 * 1000;
 
   const authState = {
@@ -81,6 +82,21 @@
 
   const rawHtml = authHtml;
   const rawAttr = authHtml;
+
+  function primePortalConnections() {
+    ['https://script.google.com', 'https://script.googleusercontent.com']
+      .forEach(origin => {
+        if (document.querySelector('link[data-adgb-preconnect="' + origin + '"]')) {
+          return;
+        }
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = origin;
+        link.crossOrigin = 'anonymous';
+        link.dataset.adgbPreconnect = origin;
+        document.head.appendChild(link);
+      });
+  }
 
   function rawNonce() {
     return window.crypto?.randomUUID?.() ||
@@ -1299,6 +1315,35 @@
         }
       }
     `;
+    style.textContent += `
+      /* V16.6 — performance-first premium polish */
+      html{scrollbar-gutter:stable}
+      body{ text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
+      header{backdrop-filter:none!important;background:rgba(255,255,255,.985)!important}
+      .adgb-user-bar{backdrop-filter:none!important;background:rgba(255,255,255,.985)!important}
+      .adgb-login-shell{
+        min-height:460px!important;
+        border-radius:22px!important;
+        box-shadow:0 20px 55px rgba(8,47,73,.18)!important;
+      }
+      .adgb-login-brand{padding:46px!important}
+      .adgb-login-panel{padding:44px!important}
+      .adgb-login-brand h1{font-size:38px!important}
+      .adgb-login-form h2{font-size:31px!important}
+      button{transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease,border-color .12s ease}
+      button:active:not(:disabled){transform:translateY(1px)}
+      button:focus-visible,input:focus-visible,select:focus-visible{
+        outline:3px solid rgba(14,165,233,.28)!important;
+        outline-offset:2px!important;
+      }
+      @media(prefers-reduced-motion:reduce){
+        *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+      }
+      @media(max-width:720px){
+        .adgb-login-shell{min-height:auto!important;border-radius:16px!important}
+        .adgb-login-panel{padding:28px 22px!important}
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -1326,7 +1371,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.5</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.6</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1347,7 +1392,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v16.5</strong></span>
+        <span class="adgb-version-chip">FE <strong>v16.6</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1494,24 +1539,27 @@
             return;
           }
         } catch (ignore) {}
-        if (!finished) pollTimer = setTimeout(pollReceipt, 1200);
+        if (!finished) pollTimer = setTimeout(pollReceipt, 550);
       }
 
       window.addEventListener('message', onMessage);
       document.body.append(frame, form);
       form.submit();
-      pollTimer = setTimeout(pollReceipt, 1000);
+      pollTimer = setTimeout(pollReceipt, 400);
     });
   }
 
   async function initialisePortalAuth() {
+    primePortalConnections();
     injectAuthStyles();
     injectAuthMarkup();
 
     // Always show Login first. A stale session or offline backend must never
     // expose the dashboard or leave a blank page.
     showLoginPage();
-    loadAuthBackendVersion().catch(() => {});
+    const cachedBackendVersion =
+      localStorage.getItem(AUTH_BACKEND_VERSION_CACHE_KEY) || '';
+    if (cachedBackendVersion) setAuthBackendVersion(cachedBackendVersion);
 
     if (authState.token) {
       try {
@@ -1538,6 +1586,7 @@
 
   async function handlePortalLogin(event) {
     event.preventDefault();
+    const loginStartedAt = performance.now();
 
     const usernameInput = document.getElementById('adgbLoginUsername');
     const passwordInput = document.getElementById('adgbLoginPassword');
@@ -1621,6 +1670,11 @@
       passwordInput.value = password;
 
       setAuthenticatedUser(confirmedUser);
+
+      console.info(
+        '[ADGB] Sign-in to dashboard: ' +
+        Math.round(performance.now() - loginStartedAt) + ' ms'
+      );
 
     } catch (error) {
       /*
@@ -1883,6 +1937,13 @@
 
   function setAuthBackendVersion(version) {
     authState.backendVersion = String(version || 'checking…');
+
+    try {
+      if (version) localStorage.setItem(
+        AUTH_BACKEND_VERSION_CACHE_KEY,
+        authState.backendVersion
+      );
+    } catch (ignore) {}
 
     const loginBe = document.getElementById('adgbLoginBeVersion');
     const insideBe = document.getElementById('adgbInsideBeVersion');
@@ -2478,7 +2539,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.5';
+  const RAW_FRONTEND_VERSION = '16.6';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -2819,7 +2880,7 @@
       }
     `;
     style.textContent += `
-      /* V16.5 stable/fast Raw Data feedback */
+      /* V16.6 stable/fast Raw Data feedback */
       #rawDataTabButton.active{
         position:relative;
       }
@@ -2970,7 +3031,7 @@
     rawPanel?.classList.toggle('hidden', !showRaw);
 
     /*
-     * V16.5:
+     * V16.6:
      * Paint the Raw Data panel FIRST.
      * Only then start the Apps Script request, so the button always feels
      * immediate even when the backend needs a moment.
@@ -3112,7 +3173,7 @@
 
     try {
       /*
-       * V16.5: rawBootstrap already returns backendVersion and all Raw Data.
+       * V16.6: rawBootstrap already returns backendVersion and all Raw Data.
        * The previous separate ping doubled the number of requests.
        */
       const data = await rawJsonp('rawBootstrap');

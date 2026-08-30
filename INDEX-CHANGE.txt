@@ -1,6 +1,6 @@
-At the bottom of your CURRENT index.html use exactly:
+Use these exact lines at the bottom of your CURRENT index.html:
 
-<script src="raw-data.js?v=16.5-runtimefix"></script>
-<script src="sticky-notes.js?v=16.5-runtimefix"></script>
+<script src="raw-data.js?v=16.6-turbo"></script>
+<script src="sticky-notes.js?v=16.6-turbo"></script>
 
-The extra -runtimefix cache-buster is intentional.
+The "-turbo" cache-buster is intentional.

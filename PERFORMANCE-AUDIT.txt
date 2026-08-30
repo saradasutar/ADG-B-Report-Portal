@@ -1,0 +1,40 @@
+V16.6 PERFORMANCE AUDIT
+
+LOGIN HOT PATH BEFORE
+- Browser startup BE ping
+- Login POST
+- getDatabase()
+- hasMeaningfulPortalData()
+- ensureSheets()
+- repeated header/style writes across multiple sheets
+- ensurePortalUsersSheet() formatting/migration checks
+- read user sheet
+- password verify
+- session cache write
+- direct Google Sheet Last Login write
+
+LOGIN HOT PATH V16.6
+- preconnected login POST
+- cached auth-record lookup (normally pre-warmed)
+- password hash verification
+- session cache write
+- lightweight Script Properties last-login timestamp
+- immediate authenticated UI transition
+
+DATABASE
+- Schema readiness is checked once per V16.6 deployment/database.
+- Normal requests do not rewrite or format spreadsheet headers.
+
+CACHE
+- Dashboard: 600 sec, invalidated by writes.
+- Authentication index: 600 sec, invalidated by user create/edit/delete.
+
+RAW DATA
+- One rawBootstrap request.
+- One database open reused for item and value reads.
+
+EXPECTED USER EXPERIENCE
+- Login page itself: immediate static rendering.
+- Sign in click: commonly about 0.5–2 sec after cache warm-up.
+- Google-side cold start/network conditions may occasionally exceed this.
+- Reports/Raw Data/filter/tab UI switching: local and effectively immediate.
