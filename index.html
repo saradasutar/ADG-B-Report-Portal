@@ -1,804 +1,627 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/svg+xml" href="adgb-v169.svg">
-<link rel="icon" type="image/png" sizes="64x64" href="adgb-v169.png">
-<link rel="shortcut icon" href="adgb-v169.ico">
-<meta name="theme-color" content="#0b3b60">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=16.8">
-<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png?v=16.8">
-<link rel="shortcut icon" href="favicon.ico?v=16.8">
-<meta name="theme-color" content="#0b3b60">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b3b60">
-  <title>ADG(B) Report Submission Portal</title>
-  <style>
-    :root{
-      --navy:#0b3b60;--navy-2:#135b83;--teal:#087f70;--teal-soft:#e7f7f3;
-      --saffron:#f59e0b;--red:#cf3f4f;--red-soft:#fff1f2;--green:#07865f;
-      --green-soft:#eaf8f2;--ink:#172b3a;--muted:#637786;--line:#d9e3ea;
-      --surface:#fff;--page:#f2f6f9;--shadow:0 10px 28px rgba(13,51,75,.09);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--page);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
-    button,input,select{font:inherit}
-    button{cursor:pointer}
-    button:disabled{cursor:not-allowed;opacity:.62}
-    .hidden{display:none!important}
-    .top-stripe{height:4px;background:linear-gradient(90deg,var(--saffron) 0 33.33%,#fff 33.33% 66.66%,var(--teal) 66.66%)}
-    header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
-    .header-inner,.page{width:min(1380px,calc(100% - 32px));margin:auto}
-    .header-inner{min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-    .brand{display:flex;align-items:center;gap:11px;color:inherit;text-decoration:none;min-width:0}
-    .brand-mark{width:40px;height:40px;flex:0 0 auto;border:2px solid var(--navy);border-radius:50%;display:grid;place-items:center;color:var(--navy);background:#fff;font-size:8px;font-weight:800;box-shadow:inset 0 0 0 3px #dce8ef}
-    .brand-copy{display:grid;gap:1px;min-width:0}
-    .brand-copy strong{font-family:Georgia,serif;font-size:19px;color:var(--navy)}
-    .brand-copy small{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .admin-button{min-height:36px;border:0;border-radius:8px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;box-shadow:0 5px 14px rgba(11,59,96,.2)}
-    .admin-button:hover{background:var(--navy-2)}
-    .page{flex:1;padding:10px 0 12px}
-    .notice{margin-bottom:9px;padding:9px 12px;border:1px solid #f2c86f;border-radius:8px;background:#fff8e7;color:#744d00;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
-    .notice button{border:0;border-radius:6px;padding:7px 10px;background:#744d00;color:#fff}
-    .cycle-bar{min-height:44px;margin-bottom:10px;padding:7px 12px;border:1px solid var(--line);border-left:4px solid var(--saffron);border-radius:8px;background:var(--surface);box-shadow:0 4px 14px rgba(13,51,75,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .cycle-main,.cycle-side{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-    .cycle-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
-    .cycle-main strong{font-size:15px;color:var(--navy)}
-    .active-badge{padding:4px 8px;border-radius:999px;background:#fff2cf;color:#6e4900;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-    .system-line{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
-    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(7,134,95,.12)}
-    .status-dot.offline{background:var(--red);box-shadow:0 0 0 3px rgba(207,63,79,.12)}
-    .refresh-button{min-height:30px;border:1px solid var(--line);border-radius:7px;padding:0 10px;background:#fff;color:var(--navy);font-size:11px;font-weight:700}
-    .refresh-button:hover{background:#edf4f8}
-    .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
-    .stat-card{min-height:78px;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:0 5px 16px rgba(13,51,75,.055);position:relative;overflow:hidden}
-    .stat-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--navy)}
-    .stat-card.submitted::before{background:var(--green)}
-    .stat-card.pending::before{background:var(--red)}
-    .stat-card.completion::before{background:var(--saffron)}
-    .stat-label{display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
-    .stat-value{display:block;margin-top:3px;font-size:25px;font-weight:800;color:var(--navy)}
-    .stat-note{display:block;margin-top:1px;color:var(--muted);font-size:9px}
-    .mini-progress{height:5px;margin-top:6px;border-radius:999px;background:#e4edf2;overflow:hidden}
-    .mini-progress span{display:block;height:100%;width:0;border-radius:inherit;background:var(--green);transition:width .25s ease}
-    .workspace{display:grid;grid-template-columns:225px minmax(0,1fr);gap:10px;align-items:start}
-    .office-panel,.matrix-section{border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
-    .panel-head{min-height:57px;padding:9px 13px;border-top:4px solid var(--navy);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(100deg,#fff,#f3f8fa)}
-    .panel-head h2{margin:2px 0 0;font-family:Georgia,serif;font-size:19px;color:var(--navy)}
-    .panel-kicker{font-size:8px;color:var(--teal);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-    .office-cycle-list{padding:8px;display:grid;gap:4px}
-    .office-cycle-row{width:100%;border:1px solid transparent;border-radius:7px;padding:7px;background:transparent;display:grid;grid-template-columns:1fr auto;gap:5px 7px;text-align:left;color:var(--ink)}
-    .office-cycle-row:hover,.office-cycle-row.active{border-color:#b8d2e1;background:#edf5f9}
-    .office-cycle-row>span:first-child{font-size:11px;font-weight:700}
-    .office-cycle-track{grid-column:1/2;height:6px;border-radius:999px;background:#e5edf2;overflow:hidden}
-    .office-cycle-fill{display:block;height:100%;border-radius:inherit;background:var(--teal);transition:width .25s ease}
-    .office-cycle-count{grid-column:2/3;grid-row:1/3;align-self:center;min-width:36px;padding:4px;border-radius:999px;background:var(--navy);color:#fff;text-align:center;font-size:10px}
-    .office-filter-note{padding:0 12px 10px;color:var(--muted);font-size:9px;line-height:1.4}
-    .matrix-top{border-top-color:var(--saffron)}
-    .matrix-heading-copy p{margin:2px 0 0;color:var(--muted);font-size:10px}
-    .legend{display:flex;align-items:center;gap:11px;flex-wrap:wrap;color:var(--muted);font-size:9px}
-    .legend span{display:inline-flex;align-items:center;gap:5px}
-    .legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
-    .legend-await{background:var(--red)}.legend-done{background:var(--green)}
-    .matrix-tools{padding:7px 10px;border-bottom:1px solid var(--line);display:flex;align-items:end;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#fbfdfe}
-    .filter-buttons{display:flex;gap:5px;flex-wrap:wrap}
-    .filter-button{min-height:30px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--navy);font-size:10px;font-weight:700}
-    .filter-button:hover{background:#eef5f8}.filter-button.active{border-color:var(--navy);background:var(--navy);color:#fff}
-    .tool-fields{display:flex;align-items:end;gap:7px;flex-wrap:wrap}
-    .tool-field{display:grid;gap:3px;color:var(--muted);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-    .tool-field input,.tool-field select{height:30px;min-width:140px;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:#fff;color:var(--ink);font-size:10px;text-transform:none;letter-spacing:normal;outline:none}
-    .tool-field input{min-width:190px}
-    .tool-field input:focus,.tool-field select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,59,96,.1)}
-    .result-count{padding:5px 11px;color:var(--muted);font-size:9px;border-bottom:1px solid var(--line)}
-    .table-wrap{overflow:auto;max-height:410px}
-    table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-    thead th{position:sticky;top:0;z-index:4;padding:9px 7px;background:var(--navy);color:#fff;border-right:1px solid rgba(255,255,255,.14);font-size:11px;letter-spacing:.02em;text-align:center}
-    thead th:first-child{width:280px;text-align:left;padding-left:17px;left:0;z-index:6}
-    tbody th,tbody td{height:54px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-    tbody th{position:sticky;left:0;z-index:2;padding:7px 13px;background:#fff;text-align:left;font-family:Georgia,serif;font-size:15px;line-height:1.15;color:var(--ink);box-shadow:2px 0 4px rgba(11,59,96,.04)}
-    tbody tr:nth-child(even) th{background:#f8fbfc}
-    tbody td{text-align:center;padding:4px}
-    .subject-wrap{display:flex;align-items:center;gap:7px}
-    .subject-number{flex:0 0 auto;color:var(--muted);font:700 8px Arial,sans-serif;letter-spacing:.08em}
-    .pending-cell{background:var(--red-soft)}
-    .submitted-cell{background:var(--green-soft)}
-    .closed-cell{background:#f3f0f6}
-    .filtered-cell{background:#f5f7f9;color:#9aabb5}
-    .cell-status{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
-    .upload-button{min-width:86px;height:29px;border:1px solid #d6a8ae;border-radius:7px;background:#fff;color:#9f3040;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:9px;font-weight:800;box-shadow:0 2px 6px rgba(98,35,45,.06)}
-    .upload-button:hover{background:#fff7f8;transform:translateY(-1px)}
-    .upload-button.submitted{border-color:#95cdb8;background:#f7fffb;color:var(--green)}
-    .upload-button.closed{border-color:#b9afc7;background:#f6f3f8;color:#675c76;box-shadow:none}
-    .upload-button svg,.office-list button svg,.drop-zone svg,.modal-icon svg{width:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .submitted-time{color:var(--muted);font-size:7px}
-    .replace-hint{color:var(--green);font-size:7px}
-    .matrix-loading,.empty-result{padding:28px;text-align:center;color:var(--muted);font-size:12px}
-    .mobile-matrix{display:none}
-    .other-report-note{margin-top:10px;padding:12px 16px;border:1px solid #e4c46d;border-left:5px solid var(--saffron);border-radius:9px;background:linear-gradient(105deg,#fff4cf,#f2ecff 55%,#e3f7ef);color:#453d63;font-size:16px;font-weight:600;line-height:1.55;white-space:nowrap;box-shadow:0 5px 16px rgba(74,63,123,.08)}
-    .other-report-note strong{color:#7b5100;font-size:17px}.other-report-note a{color:#075f82;font-size:16px;font-weight:800;text-decoration:none;overflow-wrap:anywhere}.other-report-note a:hover{text-decoration:underline}
-    footer{margin-top:auto;min-height:42px;padding:7px max(16px,calc((100vw - 1380px)/2));display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(100deg,var(--navy),#0d6d67);color:#fff}
-    footer div{display:grid;gap:1px}footer strong{font-size:11px}footer span{font-size:8px;color:rgba(255,255,255,.78)}
-    .modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(4,28,45,.72);display:grid;place-items:center;padding:18px;overflow:auto}
-    .modal{width:min(500px,100%);max-height:calc(100vh - 36px);overflow-y:auto;position:relative;padding:26px;border-radius:12px;background:#fff;box-shadow:0 26px 70px rgba(0,0,0,.25)}
-    .modal.wide{width:min(700px,100%)}
-    .modal-close{position:absolute;right:13px;top:12px;width:32px;height:32px;border:0;border-radius:50%;background:#edf3f6;color:var(--navy);font-size:20px}
-    .modal-icon{width:42px;height:42px;border-radius:9px;display:grid;place-items:center;background:var(--teal-soft);color:var(--teal)}
-    .modal-icon svg{width:22px}
-    .modal-kicker{display:block;margin-top:14px;color:var(--teal);font-size:9px;font-weight:800;letter-spacing:.13em}
-    .modal h2{margin:4px 0 9px;font-family:Georgia,serif;color:var(--navy)}
-    .modal p{color:var(--muted);font-size:12px;line-height:1.55}
-    .modal dl{margin:12px 0;padding:9px 11px;border-radius:8px;background:#f1f6f8;display:grid;gap:6px}
-    .modal dl div{display:grid;grid-template-columns:70px 1fr;gap:8px}.modal dt{font-size:10px;color:var(--muted)}.modal dd{margin:0;font-size:11px;font-weight:700}
-    .drop-zone{min-height:118px;border:2px dashed #b7cbd7;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;background:#f9fcfd;color:var(--navy);text-align:center;cursor:pointer}
-    .drop-zone:hover{border-color:var(--teal);background:var(--teal-soft)}.drop-zone svg{width:26px}.drop-zone strong{font-size:12px}.drop-zone span{font-size:9px;color:var(--muted)}.drop-zone input{position:absolute;opacity:0;pointer-events:none}
-    .field{margin-top:12px;display:grid;gap:5px}.field>span{font-size:10px;font-weight:700;color:var(--ink)}.field input,.admin-field input{height:40px;border:1px solid var(--line);border-radius:8px;padding:0 11px;outline:none}.field input:focus,.admin-field input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,59,96,.1)}.field small{font-size:9px;color:var(--muted)}
-    .modal-actions{margin-top:17px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.modal-actions button,.admin-add button{min-height:38px;border-radius:8px;padding:0 14px;font-size:11px;font-weight:700}.cancel{border:1px solid var(--line);background:#fff;color:var(--ink)}.submit,.admin-add button{border:0;background:var(--navy);color:#fff}.view-report{order:-2;flex:1 0 100%;margin:0 0 4px;border:0;background:linear-gradient(135deg,#087f70,#0b5f68);color:#fff;font-size:13px!important;box-shadow:0 5px 14px rgba(8,127,112,.2)}#viewReportButton:not(.hidden){display:inline-flex!important;align-items:center;justify-content:center}.remove-report{order:-1;flex:1 0 100%;margin:0 0 4px;border:2px solid #c82f45;background:linear-gradient(135deg,#d7354d,#a91f36);color:#fff;font-size:13px!important;box-shadow:0 5px 14px rgba(169,31,54,.22)}#removeReportButton:not(.hidden){display:inline-flex!important;align-items:center;justify-content:center}
-    .privacy-note{text-align:center;font-size:9px!important}
-    .admin-add{display:grid;grid-template-columns:1.35fr 1fr 1.35fr auto;gap:8px;margin:16px 0;align-items:end}.admin-field{display:grid;gap:5px}.admin-field>span{font-size:9px;font-weight:800;color:var(--ink)}.admin-field small{font-size:8px;color:var(--muted)}.admin-field input[type=file]{height:auto;min-height:40px;padding:8px;font-size:9px}.subject-admin-list{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:9px}.subject-admin-row{min-height:51px;padding:8px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px}.subject-admin-row:last-child{border-bottom:0}.subject-admin-info{min-width:0;display:grid;gap:3px}.subject-admin-info strong{font-size:11px}.subject-admin-info small{color:var(--muted);overflow-wrap:anywhere}.subject-admin-info .submission-open{color:var(--green);font-weight:800}.subject-admin-info .submission-closed{color:#a32136;font-weight:900}.subject-admin-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}.subject-admin-row button{border:1px solid #b7cbd7;border-radius:6px;padding:5px 8px;background:#f5fbff;color:var(--navy);font-size:9px;font-weight:800}.subject-admin-row .toggle-submission{border-color:#e4a44b;background:#fff7e7;color:#805000}.subject-admin-row .enable-submission{border-color:#8fcbb3;background:#effbf6;color:#08744f}.subject-admin-row .remove-subject{border-color:#e0a6ae;background:#fff7f8;color:#a02d3e}.admin-link-editor{margin:12px 0;padding:12px;border:1px solid #b8cae5;border-radius:9px;background:linear-gradient(135deg,#eef7ff,#f4efff)}.admin-link-editor h3{margin:0 0 2px;font-size:13px;color:var(--navy)}.admin-link-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}.current-linked-file{margin:4px 0 9px!important;padding:7px 9px;border-radius:7px;background:#e9f6ef;color:#27614d!important;font-size:10px!important}.admin-link-actions{margin-top:10px;display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}.admin-link-actions button{min-height:34px;border-radius:7px;padding:0 11px;font-size:10px;font-weight:800}.clear-link{margin-right:auto;border:1px solid #e0a6ae;background:#fff7f8;color:#a02d3e}.subject-link{color:#075da5;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}.subject-link:hover{color:#0a7b72}.subject-link-mark{font-size:.72em;margin-left:2px}.subject-card-title .subject-link{color:#fff3a6}.subject-card-title .subject-link:hover{color:#fff}.admin-summary{margin-top:11px;padding:10px;border-radius:8px;background:#f0f6f8;color:var(--muted);font-size:10px;line-height:1.5}
-    .toast-wrap{position:fixed;right:16px;bottom:54px;z-index:150;display:grid;gap:8px}.toast{max-width:360px;padding:11px 13px;border-radius:8px;background:var(--navy);color:#fff;font-size:11px;box-shadow:var(--shadow)}.toast.success{background:var(--green)}.toast.error{background:var(--red)}
-    .subject-card{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}.subject-card-title{padding:12px 13px;display:flex;gap:8px;align-items:flex-start;background:var(--navy);color:#fff}.subject-card-title span{font-size:8px;color:#b8d0df}.subject-card-title h3{margin:0;font-family:Georgia,serif;font-size:16px;line-height:1.25}.office-list>div{min-height:53px;padding:7px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}.office-list>div:last-child{border-bottom:0}.pending-office{background:var(--red-soft)}.submitted-office{background:var(--green-soft)}.closed-office{background:#f3f0f6}.office-name{font-size:12px;font-weight:700}.office-action{display:flex;align-items:flex-end;flex-direction:column;gap:2px}.office-list button{min-height:30px;padding:0 10px;border:1px solid #d6a8ae;border-radius:7px;background:#fff;color:#9f3040;display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800}.office-list button.submitted{border-color:#95cdb8;color:var(--green)}.office-list button.closed{border-color:#b9afc7;background:#f6f3f8;color:#675c76}.office-list small{font-size:8px;color:var(--muted)}
-    @media(max-width:980px){.workspace{grid-template-columns:1fr}.office-cycle-list{grid-template-columns:repeat(5,minmax(115px,1fr));overflow:auto}.office-filter-note{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:720px){.header-inner,.page{width:min(100% - 20px,1380px)}.header-inner{min-height:58px}.brand-copy strong{font-size:16px}.brand-copy small{max-width:200px}.admin-button{width:38px;padding:0;justify-content:center;font-size:0}.admin-button span{font-size:15px}.cycle-bar{align-items:flex-start}.cycle-side{width:100%;justify-content:space-between}.stats-grid{grid-template-columns:repeat(2,1fr)}.stat-card{min-height:70px}.stat-value{font-size:22px}.panel-head{align-items:flex-start}.matrix-top{display:block}.legend{margin-top:7px}.matrix-tools{display:block}.filter-buttons{margin-bottom:7px}.tool-fields{display:grid;grid-template-columns:1fr 1fr}.tool-field input,.tool-field select{width:100%;min-width:0}.table-wrap{display:none}.mobile-matrix{display:grid;gap:9px;padding:9px;background:#f2f6f8}.result-count{display:none}.office-cycle-list{grid-template-columns:repeat(5,140px)}.other-report-note{font-size:15px;padding:12px 14px;white-space:normal}.other-report-note strong{font-size:16px}.other-report-note a{font-size:15px}footer{padding:10px 14px;align-items:flex-start;flex-direction:column}.modal{padding:23px 18px}.admin-add,.admin-link-grid{grid-template-columns:1fr}.subject-admin-row{align-items:flex-start;flex-direction:column}.subject-admin-actions{width:100%}.subject-admin-actions button{flex:1}}
-    @media(max-width:480px){.stats-grid{gap:7px}.stat-card{padding:9px 11px}.tool-fields{grid-template-columns:1fr}.cycle-main strong{width:100%}.office-cycle-list{grid-template-columns:1fr;overflow:visible}.workspace{gap:8px}}
-    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-
-    /* Eye-soothing colourful theme */
-    body{
-      background:
-        radial-gradient(circle at 8% 4%,rgba(113,189,255,.28),transparent 28%),
-        radial-gradient(circle at 92% 14%,rgba(149,224,190,.28),transparent 26%),
-        radial-gradient(circle at 74% 86%,rgba(255,181,202,.24),transparent 28%),
-        linear-gradient(135deg,#eaf5ff 0%,#f3efff 38%,#fff0f5 68%,#e8faf2 100%);
-      background-attachment:fixed;
-    }
-    .top-stripe{background:linear-gradient(90deg,#f3a712 0 22%,#e995c5 22% 42%,#8b78d4 42% 62%,#48a9d8 62% 81%,#31a982 81%)}
-    header{background:linear-gradient(105deg,rgba(11,59,96,.98),rgba(85,72,155,.97) 52%,rgba(8,127,112,.96));border-bottom-color:rgba(255,255,255,.22);box-shadow:0 7px 22px rgba(44,49,105,.2)}
-    .brand-mark{border-color:rgba(255,255,255,.92);color:#fff;background:rgba(255,255,255,.13);box-shadow:inset 0 0 0 3px rgba(255,255,255,.15)}
-    .brand-copy strong{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.15)}
-    .brand-copy small{color:rgba(255,255,255,.79)}
-    .admin-button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.14);box-shadow:0 5px 14px rgba(4,30,56,.18)}
-    .admin-button:hover{background:rgba(255,255,255,.24)}
-    .cycle-bar{border-color:#d8cce9;border-left-color:#e69431;background:linear-gradient(105deg,rgba(255,239,205,.94),rgba(238,231,255,.94) 52%,rgba(220,247,237,.94));box-shadow:0 7px 18px rgba(71,65,120,.09)}
-    .active-badge{background:linear-gradient(135deg,#fff1bd,#ffdca0);box-shadow:0 2px 7px rgba(139,91,0,.1)}
-    .refresh-button{border-color:#c7b7e4;background:linear-gradient(135deg,#fff9e9,#eee7ff);color:#423d87}
-    .refresh-button:hover{background:linear-gradient(135deg,#ffefc5,#e0d6ff)}
-    .stat-card{border-color:#c8d9ef;background:linear-gradient(135deg,rgba(222,241,255,.97),rgba(237,229,255,.97));box-shadow:0 8px 20px rgba(62,82,128,.11)}
-    .stat-card.submitted{border-color:#b9e2d1;background:linear-gradient(135deg,rgba(219,248,234,.98),rgba(224,247,250,.98))}
-    .stat-card.pending{border-color:#f0c4d1;background:linear-gradient(135deg,rgba(255,226,235,.98),rgba(255,240,226,.98))}
-    .stat-card.completion{border-color:#ead09e;background:linear-gradient(135deg,rgba(255,242,205,.98),rgba(237,229,255,.98))}
-    .office-panel{border-color:#cfc6e8;background:linear-gradient(165deg,rgba(239,233,255,.97),rgba(225,244,255,.97) 58%,rgba(225,249,239,.97));box-shadow:0 12px 30px rgba(74,63,123,.12)}
-    .matrix-section{border-color:#c8d9e6;background:linear-gradient(155deg,rgba(231,246,255,.98),rgba(249,238,255,.98) 46%,rgba(233,250,242,.98));box-shadow:0 12px 30px rgba(49,76,116,.12)}
-    .office-panel .panel-head{background:linear-gradient(105deg,#dfebff,#eee4ff 58%,#dff8ef);border-bottom-color:#cdc4e5}
-    .matrix-section .panel-head{background:linear-gradient(105deg,#ffe9cf,#f6e3ff 48%,#dff8ef);border-bottom-color:#dbcce4}
-    .office-cycle-row{border-color:rgba(139,120,212,.14);background:rgba(255,255,255,.38)}
-    .office-cycle-row:hover,.office-cycle-row.active{border-color:#9f8ed8;background:linear-gradient(100deg,rgba(216,232,255,.92),rgba(235,222,255,.92),rgba(216,246,235,.92))}
-    .office-cycle-count{background:linear-gradient(135deg,#3d5e91,#6554a7)}
-    .matrix-tools{background:linear-gradient(100deg,rgba(224,240,255,.9),rgba(244,231,255,.9),rgba(224,247,238,.9));border-bottom-color:#d7cee6}
-    .filter-button{border-color:#c8bbe3;background:#f1ebff;color:#4b4388}
-    .filter-button:hover{background:#e4d9ff}.filter-button.active{border-color:#55499a;background:linear-gradient(135deg,#3b5d91,#6553a7);color:#fff}
-    .tool-field input,.tool-field select{border-color:#cbbfe1;background:#f7f4ff}
-    .result-count{background:rgba(220,240,255,.58);border-bottom-color:#d2cbe1}
-    .table-wrap{background:#edf7ff}
-    thead th{background:linear-gradient(135deg,#174b72,#514995 62%,#157a73)}
-    tbody th{background:#fff5e8}
-    tbody tr:nth-child(even) th{background:#eeeaff}
-    .pending-cell{background:linear-gradient(135deg,#ffe8ee,#fff1e8)}
-    .submitted-cell{background:linear-gradient(135deg,#dcf7eb,#def5f6)}
-    .filtered-cell{background:#ece9f5;color:#8d86a0}
-    .upload-button{background:#fff7fa}
-    .upload-button.submitted{background:#edfff7}
-    .mobile-matrix{background:linear-gradient(135deg,#e7f4ff,#f4eaff,#e6f7ef)}
-    .subject-card{border-color:#cfc5e4;background:linear-gradient(145deg,#fff5e6,#f1ecff)}
-    .subject-card-title{background:linear-gradient(105deg,#174b72,#5b4b9f 58%,#147a71)}
-    footer{background:linear-gradient(100deg,#0b3b60,#514895 52%,#087f70)}
-    .modal-backdrop{background:linear-gradient(135deg,rgba(12,43,74,.82),rgba(78,61,132,.78),rgba(8,104,94,.78))}
-    .modal{background:linear-gradient(150deg,#f0f8ff,#f7efff 48%,#edf9f3);border:1px solid rgba(255,255,255,.65)}
-    .modal dl{background:linear-gradient(110deg,#e4f2ff,#eee7ff,#e4f8ef)}
-    .drop-zone{border-color:#ad9ed2;background:linear-gradient(135deg,#edf7ff,#f4edff)}
-    .field input,.admin-field input{border-color:#c6b9df;background:#fbf9ff}
-    .cancel{border-color:#c6b9df;background:#f3edff}
-    .subject-admin-list{border-color:#c8bde0;background:rgba(255,255,255,.34)}
-    .admin-summary{background:linear-gradient(110deg,#e4f2ff,#eee7ff,#e4f8ef)}
-
-    /* Larger modern typography and cooler colour balance */
-    :root{--ink:#1d3151;--muted:#596987;--line:#c9d6e8}
-    body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;font-size:14px;background:radial-gradient(circle at 10% 5%,rgba(85,177,255,.32),transparent 30%),radial-gradient(circle at 94% 12%,rgba(72,211,169,.28),transparent 28%),radial-gradient(circle at 72% 92%,rgba(151,126,221,.23),transparent 32%),linear-gradient(135deg,#e3f3ff 0%,#eee8ff 46%,#e3f8f1 100%)}
-    .brand-copy strong{font-family:"Trebuchet MS","Segoe UI",sans-serif;font-size:22px;letter-spacing:.01em}
-    .brand-copy small{font-size:11px}
-    .admin-button{font-size:13px}
-    .cycle-label{font-size:13px;color:#4f5f7d}
-    .cycle-main strong{font-size:17px;color:#283f72}
-    .active-badge{font-size:10px}
-    .system-line{font-size:11px}
-    .refresh-button{font-size:12px}
-    .stat-card{min-height:84px;padding:12px 16px}
-    .stat-label{font-size:11px;color:#50617f}
-    .stat-value{font-size:29px;color:#294c7b}
-    .stat-note{font-size:10px;color:#5b6984}
-    .workspace{grid-template-columns:240px minmax(0,1fr)}
-    .panel-head h2{font-family:"Trebuchet MS","Segoe UI",sans-serif;font-size:22px;color:#263e70}
-    .panel-kicker{font-size:9px;color:#13736d}
-    .office-cycle-row>span:first-child{font-size:13px;color:#26395c}
-    .office-cycle-count{font-size:11px}
-    .office-filter-note{font-size:10px}
-    .matrix-heading-copy p{font-size:11px;color:#576783}
-    .legend{font-size:10px;color:#56657e}
-    .filter-button{font-size:11px}
-    .tool-field{font-size:9px;color:#52617e}
-    .tool-field input,.tool-field select{font-size:11px}
-    .result-count{font-size:10px;color:#52627f}
-    thead th{font-size:13px}
-    tbody th,tbody td{height:59px}
-    tbody th{font-family:"Trebuchet MS","Segoe UI",sans-serif;font-size:16px;color:#233858}
-    .subject-number{font-size:9px}
-    .upload-button{min-width:94px;height:32px;font-size:10px}
-    .submitted-time,.replace-hint{font-size:8px}
-    footer strong{font-size:12px}footer span{font-size:9px}
-    .modal h2{font-family:"Trebuchet MS","Segoe UI",sans-serif;font-size:24px}
-    .modal p{font-size:13px}.modal-kicker{font-size:10px}.modal dt{font-size:11px}.modal dd{font-size:12px}
-    .field>span{font-size:11px}.field small,.privacy-note{font-size:10px!important}
-    .subject-admin-row{font-size:12px}.admin-summary{font-size:11px}
-    .cycle-bar{background:linear-gradient(105deg,rgba(215,241,255,.97),rgba(235,225,255,.97) 52%,rgba(215,247,236,.97));border-left-color:#6e67c7}
-    .stat-card{background:linear-gradient(135deg,#d9efff,#e7e0ff)}
-    .stat-card.submitted{background:linear-gradient(135deg,#d6f7e9,#d8f3f6)}
-    .stat-card.pending{background:linear-gradient(135deg,#ffe0e9,#ffeadc)}
-    .stat-card.completion{background:linear-gradient(135deg,#e2e7ff,#edddff)}
-    .office-panel .panel-head{background:linear-gradient(105deg,#d7ecff,#e8ddff 58%,#d9f7eb)}
-    .matrix-section .panel-head{background:linear-gradient(105deg,#d8edff,#ebdeff 50%,#d9f6e9)}
-    .matrix-tools{background:linear-gradient(100deg,#dcefff,#eee3ff,#dcf6ec)}
-
-    @media(max-width:980px){.workspace{grid-template-columns:1fr}}
-    @media(max-width:720px){
-      body{font-size:13px}.brand-copy strong{font-size:17px}.brand-copy small{font-size:10px}.admin-button{font-size:0}
-      .cycle-label{font-size:11px}.cycle-main strong{font-size:15px}.system-line{font-size:10px}
-      .stat-card{min-height:74px;padding:10px 12px}.stat-label{font-size:10px}.stat-value{font-size:24px}.stat-note{font-size:9px}
-      .panel-head h2{font-size:20px}.office-cycle-row>span:first-child{font-size:12px}.subject-card-title h3{font-size:17px}
-    }
-
-    /* Larger office names and submission-action text */
-    .office-cycle-row>span:first-child{font-size:15px;font-weight:800}
-    .office-cycle-row{grid-template-columns:1fr;gap:5px}
-    .office-cycle-status{display:flex;align-items:center;justify-content:space-between;gap:5px 9px;flex-wrap:wrap;font-size:11px;font-weight:700;color:#52627a}
-    .office-status-submitted,.office-status-pending{display:inline-flex;align-items:baseline;gap:4px;white-space:nowrap}
-    .office-status-submitted strong{font-size:13px;font-weight:900;color:var(--green)}
-    .office-status-pending{color:#9b3544}
-    .office-status-pending strong{min-width:24px;padding:1px 6px;border:1px solid #f0a7b1;border-radius:999px;background:#fff0f2;color:#c51f38;font-size:15px;font-weight:900;line-height:1.25;text-align:center}
-    .office-cycle-track{grid-column:1/-1}
-    thead th:not(:first-child){font-size:15px;font-weight:800}
-    .upload-button{min-width:106px;height:35px;font-size:12px;font-weight:800}
-    .upload-button svg{width:14px}
-    .submitted-time,.replace-hint{font-size:9px}
-    .office-name{font-size:15px;font-weight:800}
-    .office-list button{min-width:102px;min-height:35px;justify-content:center;font-size:12px;font-weight:800}
-    .office-list button svg{width:14px}
-    .office-list small{font-size:9px}
-
-    @media(max-width:720px){
-      .office-cycle-row>span:first-child{font-size:14px}
-      .office-cycle-status{font-size:10px}
-      .office-status-submitted strong{font-size:12px}
-      .office-status-pending strong{font-size:14px}
-      .office-name{font-size:15px}
-      .office-list button{font-size:12px}
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#5743a8">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Private family dashboard for expenses, goals, important dates and photos.">
+  <title>Our Family Hub</title>
+  <link rel="icon" href="favicon.svg?v=1.0.24" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=1.0.24">
 </head>
 <body>
-  <div class="top-stripe" aria-hidden="true"></div>
-  <header>
-    <div class="header-inner">
-      <a class="brand" href="#top" aria-label="Portal home">
-        <span class="brand-mark">CPWD</span>
-        <span class="brand-copy"><strong>ADG(B) Report Submission Portal</strong><small>O/o Additional Director General (B), CPWD, Bengaluru</small></span>
-      </a>
-      <nav aria-label="Portal navigation"><button class="admin-button" id="adminButton" type="button"><span aria-hidden="true">⚙</span> Administrator</button></nav>
-    </div>
-  </header>
+  <a class="skip-link" href="#mainContent">Skip to dashboard content</a>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
 
-  <main class="page" id="top">
-    <div class="notice hidden" id="connectionNotice"><span id="connectionMessage"></span><button id="retryButton" type="button">Retry connection</button></div>
-
-    <section class="cycle-bar" aria-label="Current reporting cycle">
-      <div class="cycle-main"><span class="cycle-label">Reporting cycle</span><strong id="cycleName">Current month</strong><span class="active-badge">Active</span></div>
-      <div class="cycle-side">
-        <span class="system-line"><i class="status-dot offline" id="statusDot"></i><b id="systemStatus">Connecting…</b><span id="lastChecked"></span></span>
-        <button class="refresh-button" id="refreshButton" type="button" aria-label="Refresh portal data">↻ Refresh</button>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-visual" aria-hidden="true">
+      <div class="family-orbit">
+        <span>👨‍👩‍👧‍👦</span>
+        <i class="orbit-dot dot-one">₹</i>
+        <i class="orbit-dot dot-two">📅</i>
+        <i class="orbit-dot dot-three">📷</i>
       </div>
-    </section>
-
-    <section class="stats-grid" aria-label="Submission overview">
-      <article class="stat-card"><span class="stat-label">Total reports</span><strong class="stat-value" id="totalCount">0</strong><small class="stat-note" id="totalNote">Across all offices</small></article>
-      <article class="stat-card submitted"><span class="stat-label">Submitted</span><strong class="stat-value" id="completeCount">0</strong><small class="stat-note">Reports received</small></article>
-      <article class="stat-card pending"><span class="stat-label">Pending</span><strong class="stat-value" id="awaitingCount">0</strong><small class="stat-note">Awaiting upload</small></article>
-      <article class="stat-card completion"><span class="stat-label">Completion</span><strong class="stat-value" id="progressPercent">0%</strong><div class="mini-progress" role="progressbar" aria-label="Overall completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><span id="progressFill"></span></div><small class="stat-note" id="progressCount">0 of 0</small></article>
-    </section>
-
-    <div class="workspace">
-      <aside class="office-panel" aria-label="Submission status of sub-offices">
-        <div class="panel-head"><div><span class="panel-kicker">OFFICE STATUS</span><h2>Sub-offices</h2></div><span class="active-badge">Live</span></div>
-        <div class="office-cycle-list" id="officeCycleList"></div>
-        <div class="office-filter-note">Select an office to display only its reports. Select it again to return to all offices.</div>
-      </aside>
-
-      <section class="matrix-section" aria-labelledby="matrixTitle">
-        <div class="panel-head matrix-top">
-          <div class="matrix-heading-copy"><span class="panel-kicker">SUBMISSION STATUS</span><h2 id="matrixTitle">Report upload matrix</h2><p>Select an Upload or Submitted button for the required subject and office.</p></div>
-          <div class="legend" aria-label="Status legend"><span><i class="legend-await"></i>Awaiting upload</span><span><i class="legend-done"></i>Submitted</span></div>
-        </div>
-        <div class="matrix-tools">
-          <div class="filter-buttons" role="group" aria-label="Filter by submission status">
-            <button class="filter-button active" type="button" data-status-filter="all" aria-pressed="true">All</button>
-            <button class="filter-button" type="button" data-status-filter="pending" aria-pressed="false">Pending</button>
-            <button class="filter-button" type="button" data-status-filter="submitted" aria-pressed="false">Submitted</button>
-          </div>
-          <div class="tool-fields">
-            <label class="tool-field">Office<select id="officeFilter"><option value="">All offices</option></select></label>
-            <label class="tool-field">Search subject<input id="subjectSearch" type="search" placeholder="Type report name"></label>
-          </div>
-        </div>
-        <div class="result-count" id="resultCount">Loading report subjects…</div>
-        <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
-      </section>
+      <p>One warm, private place for the things your family shares.</p>
     </div>
-    <aside class="other-report-note" aria-label="Important note for reports not listed in the portal"><strong>Note:</strong> Parliament Matters and other reports not included in this portal may please be emailed to <a href="mailto:bngeepcsr2.cpwd@gov.in">bngeepcsr2.cpwd@gov.in</a>.</aside>
-  </main>
-
-  <footer><div><strong>O/o Additional Director General (B)</strong><span>Central Public Works Department · Bengaluru</span></div><span>Secure document submission portal · <b id="footerDate"></b> · Portal v14.0</span></footer>
-
-  <div class="modal-backdrop hidden" id="uploadBackdrop">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
-      <button class="modal-close" data-close="upload" type="button" aria-label="Close">×</button>
-      <span class="modal-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg></span>
-      <span class="modal-kicker">REPORT SUBMISSION</span><h2 id="uploadTitle">Upload report</h2>
-      <dl><div><dt>Subject</dt><dd id="uploadSubject"></dd></div><div><dt>Office</dt><dd id="uploadOffice"></dd></div></dl>
-      <form id="uploadForm">
-        <label class="drop-zone" id="reportDropZone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg><strong id="fileLabel">Choose a PDF file</strong><span id="fileHint">Click to browse · PDF only</span><input id="pdfFile" type="file" accept="application/pdf,.pdf" required></label>
-        <label class="field"><span>Office security code</span><input id="officeCode" type="password" autocomplete="one-time-code" required placeholder="Enter code issued to your office"><small>The code is checked securely by the portal backend.</small></label>
-        <div class="modal-actions"><button class="view-report hidden" id="viewReportButton" type="button">View submitted report</button><button class="remove-report hidden" id="removeReportButton" type="button">Remove uploaded report</button><button class="cancel" data-close="upload" type="button">Cancel</button><button class="submit" id="uploadSubmit" type="submit" disabled>Submit report</button></div>
+    <div class="login-card">
+      <div class="brand-mark">FH</div>
+      <p class="eyebrow">WELCOME HOME</p>
+      <h1 id="loginFamilyName">Our Family Hub</h1>
+      <p class="muted">Sign in with the username and password managed by your family administrator.</p>
+      <form id="loginForm" class="stack-form">
+        <label>Username
+          <input id="loginUsername" name="username" autocomplete="username" required placeholder="e.g. sarada">
+        </label>
+        <label>Password
+          <div class="password-field">
+            <input id="loginPassword" name="password" type="password" maxlength="64" autocomplete="current-password" required placeholder="Enter your password">
+            <button id="togglePassword" type="button" class="icon-button" aria-label="Show or hide password">👁</button>
+          </div>
+        </label>
+        <div class="login-options">
+          <label class="remember-row"><input id="rememberUsername" type="checkbox" checked> Save username on this device</label>
+          <span class="version-pair"><b id="loginFrontendVersion">FE v1.0.24</b><b id="loginBackendVersion">BE checking…</b></span>
+          <span id="loginVersion" class="legacy-version hidden" aria-hidden="true">Version 1.0.24</span>
+        </div>
+        <button class="primary-button wide" type="submit">Sign in securely</button>
+        <button id="repairSessionButton" class="repair-session-button" type="button">↻ Repair browser cache / session</button>
       </form>
-      <p class="privacy-note" id="uploadPrivacyNote">Enter the office security code to view, replace, or remove a submitted report.</p>
+      <p class="session-safety-note">For privacy, the dashboard signs out after 5 inactive minutes and after this page is closed or left.</p>
+      <p id="setupHint" class="setup-hint hidden">Open <strong>config.js</strong> and paste your Apps Script Web App URL first.</p>
+      <p class="login-footnote">Your Google Sheet and Drive folder remain under the dashboard owner's Google account.</p>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">FH</div>
+        <div>
+          <strong id="sidebarFamilyName">Our Family Hub</strong>
+          <span class="sidebar-version-pair"><b id="sidebarFrontendVersion">FE v1.0.24</b><b id="sidebarBackendVersion">BE checking…</b></span>
+          <b id="sidebarVersion" class="legacy-version hidden" aria-hidden="true">v1.0.24</b>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-button active" type="button" data-view="home" aria-current="page"><span>⌂</span> Overview</button>
+        <button class="nav-button" data-view="expenses" data-module="EXPENSES"><span>₹</span> Expenditure</button>
+        <button class="nav-button" data-view="income" data-module="INCOME"><span>↗</span> Income</button>
+        <button class="nav-button" data-view="targets" data-module="TARGETS"><span>◎</span> Targets</button>
+        <button class="nav-button" data-view="dates" data-module="DATES"><span>◫</span> Reminders</button>
+        <button class="nav-button" data-view="calendar" data-module="CALENDAR"><span>▦</span> Calendar</button>
+        <button class="nav-button" data-view="diary" data-module="DIARY"><span>☷</span> Family diary</button>
+        <button class="nav-button" data-view="photos" data-module="PHOTOS"><span>▧</span> Family memories</button>
+        <button class="nav-button" data-view="experiences" data-module="EXPERIENCES"><span>✦</span> Experiences</button>
+        <button id="adminNav" class="nav-button hidden" data-view="admin"><span>⚙</span> Administration</button>
+      </nav>
+      <div class="sidebar-quote">
+        <span>♥</span>
+        <p>Small moments.<br>Shared progress.<br>One family.</p>
+      </div>
+      <button id="logoutButton" class="logout-button">Sign out</button>
+    </aside>
+
+    <div id="sidebarShade" class="sidebar-shade"></div>
+    <main id="mainContent" class="main-panel" tabindex="-1">
+      <header class="topbar">
+        <button id="menuButton" class="menu-button" aria-label="Open menu">☰</button>
+        <div>
+          <p id="todayLabel" class="eyebrow"></p>
+          <h2 id="viewTitle">Family overview</h2>
+        </div>
+        <time id="dashboardDateTime" class="dashboard-date-time" aria-label="Current date and time">◆ Loading date and time…</time>
+        <div class="topbar-actions">
+          <button id="globalSearchButton" class="search-pill">⌕ <span>Search</span></button>
+          <div class="user-chip">
+            <span id="userAvatar" class="avatar">F</span>
+            <div><strong id="userName">Family Member</strong><small id="userRole">Member</small></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <section id="view-home" class="view active">
+          <div class="hero-card">
+            <div>
+              <span class="soft-label">FAMILY AT A GLANCE</span>
+              <h3 id="welcomeHeading">Good to see you.</h3>
+              <p>Track shared spending, celebrate progress and never miss a special day.</p>
+            </div>
+            <button class="light-button" data-open="expenseDialog" data-module="EXPENSES">＋ Add expenditure</button>
+          </div>
+
+          <div class="family-strip">
+            <div><p class="eyebrow">FAMILY MEMBERS</p><strong id="homeMemberCount">0 members</strong></div>
+            <div id="homeMemberList" class="family-chip-list"></div>
+          </div>
+
+          <div class="summary-grid">
+            <article class="summary-card violet" data-module="EXPENSES"><span class="summary-icon">₹</span><div><small>This month's spend</small><strong id="monthSpend">₹0</strong><em id="monthExpenseCount">0 entries</em></div></article>
+            <article class="summary-card green" data-module="INCOME"><span class="summary-icon">↗</span><div><small>This month's income</small><strong id="monthIncome">₹0</strong><em id="monthIncomeCount">0 entries</em></div></article>
+            <article class="summary-card teal" data-module="TARGETS"><span class="summary-icon">◎</span><div><small>Target progress</small><strong id="targetProgress">0%</strong><em id="targetCaption">No active targets</em></div></article>
+            <article class="summary-card coral" data-module="DATES"><span class="summary-icon">◫</span><div><small>Saved reminders</small><strong id="reminderCount">0 reminders</strong><em id="upcomingCount">0 in next 30 days</em></div></article>
+            <article class="summary-card gold" data-module="PHOTOS"><span class="summary-icon">▧</span><div><small>Shared memories</small><strong id="photoCount">0 photos</strong><em>In the family gallery</em></div></article>
+            <article class="summary-card rose" data-module="EXPERIENCES"><span class="summary-icon">✦</span><div><small>Family experiences</small><strong id="experienceCount">0 stories</strong><em>Moments worth remembering</em></div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel spend-panel" data-module="EXPENSES">
+              <div class="panel-heading"><div><p class="eyebrow">THIS MONTH</p><h3>Spending by category</h3></div><button class="text-button" data-go="expenses">View all</button></div>
+              <div id="categoryBars" class="category-bars empty-block">No expenditure added this month.</div>
+            </article>
+            <article class="panel dates-panel" data-module="DATES">
+              <div class="panel-heading"><div><p class="eyebrow">DON'T MISS</p><h3>Upcoming dates</h3></div><button class="text-button" data-go="dates">View all</button></div>
+              <div id="upcomingList" class="mini-list empty-block">No important dates coming up.</div>
+            </article>
+          </div>
+
+          <article class="panel recent-panel">
+            <div class="panel-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h3>Latest family updates</h3></div></div>
+            <div id="activityList" class="activity-list empty-block">Your family's latest additions will appear here.</div>
+          </article>
+        </section>
+
+        <section id="view-income" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Record salary, pension, investment, business and other family income.</p></div>
+            <div class="toolbar-actions"><button id="exportIncome" class="secondary-button">⇩ Export CSV</button><button id="printIncome" class="secondary-button">⌑ Print</button><button class="primary-button" data-open="incomeDialog">＋ Add income</button></div>
+          </div>
+          <div class="filter-bar">
+            <label>Month<input id="incomeMonth" type="month"></label>
+            <label>Category<select id="incomeCategoryFilter"><option value="">All categories</option></select></label>
+            <label>Received by<select id="incomeMemberFilter"><option value="">All members</option></select></label>
+            <label class="search-label">Search<input id="incomeSearch" type="search" placeholder="Source or payment mode"></label>
+          </div>
+          <div id="incomeTotals" class="inline-totals"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Source</th><th>Category</th><th>Received by</th><th>Mode</th><th class="number">Amount</th><th></th></tr></thead>
+              <tbody id="incomeRows"></tbody>
+            </table>
+            <div id="incomeEmpty" class="table-empty hidden">No income matches these filters.</div>
+          </div>
+        </section>
+
+        <section id="view-expenses" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Record paid, preplanned and regular expenditure with category and subcategory.</p></div>
+            <div class="toolbar-actions"><button id="createMajorPlan" class="secondary-button hidden" data-open="majorPlanDialog">▣ New major plan</button><button id="manageExpenseCategoriesQuick" class="secondary-button category-quick-button hidden" data-open="expenseCategoryDialog">⚙ Categories &amp; subcategories</button><button id="exportExpenses" class="secondary-button">⇩ Export CSV</button><button id="printExpenses" class="secondary-button">⌑ Print</button><button class="secondary-button" data-open="bulkExpenseDialog">⇧ Import old records</button><button class="secondary-button" data-open="recurringExpenseDialog">↻ Add regular payment</button><button id="addPreplannedExpense" class="secondary-button">◷ Add preplanned</button><button class="primary-button" data-open="expenseDialog">＋ Add paid expenditure</button></div>
+          </div>
+          <article class="panel major-plans-panel">
+            <div class="panel-heading"><div><p class="eyebrow">LARGE FAMILY PROJECTS</p><h3>Major plans</h3><p class="recurring-intro">Monitor House Building or another large plan by phase. Linked expenditure remains part of normal family expenditure and is never counted twice.</p></div><div class="major-plan-heading-actions"><label>Status<select id="majorPlanStatusFilter"><option value="">Active &amp; completed</option><option value="ACTIVE">Active</option><option value="COMPLETED">Completed</option><option value="ARCHIVED">Archived</option></select></label><span id="majorPlanCount" class="count-badge">0 plans</span></div></div>
+            <div id="majorPlanSummary" class="major-plan-summary"></div>
+            <div id="majorPlanGrid" class="major-plan-grid"></div>
+            <div id="majorPlanEmpty" class="recurring-empty">No major plan yet. An administrator can create House Building or another large family project.</div>
+          </article>
+          <article class="panel recurring-panel">
+            <div class="panel-heading"><div><p class="eyebrow">MONTHLY &amp; YEARLY</p><h3>Regular payments</h3><p class="recurring-intro">Electricity, maintenance, insurance, land/holding tax and any other repeating expenditure.</p></div><span id="recurringExpenseCount" class="count-badge">0 payments</span></div>
+            <div id="recurringExpenseList" class="recurring-grid"></div>
+            <div id="recurringExpenseEmpty" class="recurring-empty">No regular payment added. Choose <strong>Add regular payment</strong> to add one now or later.</div>
+          </article>
+          <div class="filter-bar">
+            <label>Month<input id="expenseMonth" type="month"></label>
+            <label>Status<select id="expenseStatusFilter"><option value="">Paid &amp; planned</option><option value="PAID">Paid only</option><option value="PLANNED">Preplanned only</option></select></label>
+            <label>Category<select id="expenseCategoryFilter"><option value="">All categories</option></select></label>
+            <label>Subcategory<select id="expenseSubcategoryFilter"><option value="">All subcategories</option></select></label>
+            <label>Major plan<select id="expenseMajorPlanFilter"><option value="">All major plans</option></select></label>
+            <label>Send to<select id="expenseSendToFilter"><option value="">All recipients</option></select></label>
+            <label>From account<select id="expenseAccountFilter"><option value="">All accounts</option></select></label>
+            <label class="search-label">Search<input id="expenseSearch" type="search" placeholder="Category, subcategory, recipient, account or reason"></label>
+          </div>
+          <div id="expenseTotals" class="inline-totals"></div>
+          <div class="table-wrap">
+            <table id="expenseTable" class="expense-table">
+              <colgroup><col><col><col><col><col><col><col><col><col><col><col></colgroup>
+              <thead><tr><th class="number">Amt (Rs.)<span class="column-resizer" data-expense-column="0" tabindex="0" role="separator" aria-label="Resize amount column"></span></th><th>Date<span class="column-resizer" data-expense-column="1" tabindex="0" role="separator" aria-label="Resize date column"></span></th><th>Status<span class="column-resizer" data-expense-column="2" tabindex="0" role="separator" aria-label="Resize status column"></span></th><th>Category<span class="column-resizer" data-expense-column="3" tabindex="0" role="separator" aria-label="Resize category column"></span></th><th>Subcategory<span class="column-resizer" data-expense-column="4" tabindex="0" role="separator" aria-label="Resize subcategory column"></span></th><th>Send to<span class="column-resizer" data-expense-column="5" tabindex="0" role="separator" aria-label="Resize recipient column"></span></th><th>From Acct<span class="column-resizer" data-expense-column="6" tabindex="0" role="separator" aria-label="Resize account column"></span></th><th>Reason<span class="column-resizer" data-expense-column="7" tabindex="0" role="separator" aria-label="Resize reason column"></span></th><th>Major plan<span class="column-resizer" data-expense-column="8" tabindex="0" role="separator" aria-label="Resize major plan column"></span></th><th>Other actions<span class="column-resizer" data-expense-column="9" tabindex="0" role="separator" aria-label="Resize actions column"></span></th><th class="row-edit-heading">Edit row<span class="column-resizer" data-expense-column="10" tabindex="0" role="separator" aria-label="Resize row edit column"></span></th></tr></thead>
+              <tbody id="expenseRows"></tbody>
+            </table>
+            <div id="expenseEmpty" class="table-empty hidden">No expenditure matches these filters.</div>
+          </div>
+        </section>
+
+        <section id="view-targets" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Create a family goal and add contributions as you progress.</p></div>
+            <button class="primary-button" data-open="targetDialog">＋ New target</button>
+          </div>
+          <div class="target-summary" id="targetSummary"></div>
+          <div id="targetGrid" class="target-grid"></div>
+          <div id="targetEmpty" class="empty-state hidden"><span>◎</span><h3>No targets yet</h3><p>Create the first savings, purchase or family goal.</p></div>
+        </section>
+
+        <section id="view-dates" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Birthdays, anniversaries, renewals, appointments and other reminders.</p></div>
+            <button class="primary-button" data-open="dateDialog">＋ Add important date</button>
+          </div>
+          <div class="filter-bar dates-filter">
+            <label>Type<select id="dateTypeFilter"><option value="">All types</option><option>Birthday</option><option>Anniversary</option><option>Appointment</option><option>Renewal</option><option>Payment</option><option>Other</option></select></label>
+            <label class="search-label">Search<input id="dateSearch" type="search" placeholder="Title or notes"></label>
+          </div>
+          <div id="dateGrid" class="date-grid"></div>
+          <div id="dateEmpty" class="empty-state hidden"><span>◫</span><h3>No important dates</h3><p>Add a date and choose when the family should receive email reminders.</p></div>
+        </section>
+
+        <section id="view-calendar" class="view">
+          <div class="section-toolbar calendar-toolbar">
+            <div><p class="section-intro">See reminders and family experiences together month by month.</p></div>
+            <div class="calendar-controls"><button id="calendarPrev" class="secondary-button" aria-label="Previous month">‹</button><strong id="calendarMonthLabel"></strong><button id="calendarNext" class="secondary-button" aria-label="Next month">›</button><button id="calendarToday" class="secondary-button">Today</button></div>
+          </div>
+          <div class="calendar-legend"><span><i class="legend-dot reminder-dot"></i>Reminder</span><span><i class="legend-dot recurring-dot"></i>Payment due</span><span><i class="legend-dot experience-dot"></i>Experience</span><span><i class="legend-dot diary-dot"></i>Diary</span></div>
+          <div class="calendar-shell">
+            <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+        </section>
+
+        <section id="view-photos" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">A private collection of selected family memories. Photos stay in the owner's Google Drive.</p><p id="photoUsageText" class="memory-usage">0 of 12 memory photos used</p></div>
+            <div class="memory-toolbar-actions"><button id="printMemories" class="secondary-button" type="button">▧ View &amp; print memories</button><button id="sharePhotoButton" class="primary-button" data-open="photoDialog">＋ Add memory photo</button></div>
+          </div>
+          <div class="filter-bar photo-filter"><label class="search-label">Search photos<input id="photoSearch" type="search" placeholder="Title, caption or member"></label></div>
+          <div id="photoGrid" class="photo-grid"></div>
+          <div id="photoEmpty" class="empty-state hidden"><span>▧</span><h3>No photos shared yet</h3><p>Add the first family memory.</p></div>
+        </section>
+
+        <section id="view-diary" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">A shared day-by-day journal, arranged month-wise and searchable at any time.</p></div>
+            <button class="primary-button" data-open="diaryDialog">＋ Write diary entry</button>
+          </div>
+          <div class="filter-bar diary-filter"><label>Month<input id="diaryMonth" type="month"></label><label>Writer<select id="diaryWriterFilter"><option value="">All family members</option></select></label><label class="search-label">Search diary<input id="diarySearch" type="search" placeholder="Search title, entry, mood or writer"></label></div>
+          <div id="diaryTimeline" class="diary-timeline"></div>
+          <div id="diaryEmpty" class="empty-state hidden"><span>☷</span><h3>No diary entries found</h3><p>Write the first entry or choose a different month.</p></div>
+        </section>
+
+        <section id="view-experiences" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Write down trips, celebrations, lessons and everyday family moments—with the writer's name.</p></div>
+            <button class="primary-button" data-open="experienceDialog">＋ Add experience</button>
+          </div>
+          <div class="filter-bar experience-filter"><label>Year<select id="experienceYear"><option value="">All years</option></select></label><label class="search-label">Search<input id="experienceSearch" type="search" placeholder="Title, place, story or writer"></label></div>
+          <div id="experienceGrid" class="experience-grid"></div>
+          <div id="experienceEmpty" class="empty-state hidden"><span>✦</span><h3>No experiences written yet</h3><p>Preserve the first family story or special moment.</p></div>
+        </section>
+
+        <section id="view-admin" class="view">
+          <div class="section-toolbar">
+            <div><p class="section-intro">Manage the family name, users, roles and access.</p></div>
+            <div class="toolbar-actions">
+              <button id="changeMyPassword" class="secondary-button" type="button">🔑 Change my password</button>
+              <button class="primary-button" data-open="memberDialog">＋ Add family member</button>
+            </div>
+          </div>
+          <div class="admin-grid">
+            <article class="panel settings-panel">
+              <div class="panel-heading"><div><p class="eyebrow">DASHBOARD</p><h3>Family settings</h3></div></div>
+              <form id="settingsForm" class="stack-form compact-form">
+                <label>Family dashboard name<input id="settingFamilyName" required maxlength="60"></label>
+                <div class="two-fields"><label>Currency<select id="settingCurrency"><option value="INR">₹ INR</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option><option value="GBP">£ GBP</option></select></label><label>Time zone<input id="settingTimezone" required placeholder="Asia/Kolkata"></label></div>
+                <div class="clock-highlight-setting">
+                  <label>Date/time highlight colour<input id="settingDashboardClockHighlight" type="color" value="#f0a7cb" aria-describedby="clockHighlightHelp"></label>
+                  <span id="clockHighlightPreview" class="clock-highlight-preview">◆ Date &amp; time preview</span>
+                  <small id="clockHighlightHelp">This administrator colour is used for the live date/time capsule on every member’s dashboard.</small>
+                </div>
+                <fieldset class="memory-admin-settings"><legend>Family Memories control</legend>
+                  <label>Maximum photos<input id="settingMemoryPhotoLimit" type="number" min="1" max="24" step="1" required></label>
+                  <label>Who can add photos<select id="settingMemoryUploadPolicy"><option value="ADMIN_ONLY">Administrators only</option><option value="MEMBERS_WITH_ACCESS">Members having Photos access</option></select></label>
+                  <label>Printable album length<select id="settingMemoryPrintPages"><option value="1">Fit into 1 page</option><option value="2">Fit into 2 pages</option></select></label>
+                  <small>Changing the maximum never deletes existing memories. New uploads stop when the limit is reached.</small>
+                </fieldset>
+                <button class="secondary-button" type="submit">Save settings</button>
+              </form>
+            </article>
+            <article class="panel reminder-panel">
+              <div class="panel-heading"><div><p class="eyebrow">EMAIL REMINDERS</p><h3>Automatic every morning</h3></div></div>
+              <p>Reminder emails are sent at approximately 8 AM from the Google account that owns the Apps Script project. Each date can notify everyone or selected members.</p>
+              <span class="status-badge success">● Daily trigger enabled during setup</span>
+            </article>
+            <article class="panel backup-panel">
+              <div class="panel-heading"><div><p class="eyebrow">DATA SAFETY</p><h3>Monthly dashboard backup</h3></div></div>
+              <p>The complete dashboard Google Sheet is copied to a private Drive backup folder on the first day of every month. The latest 24 copies are retained.</p>
+              <span id="automaticBackupStatus" class="status-badge success">● Monthly backup enabled</span>
+              <p id="lastBackupText" class="backup-last">No backup created yet.</p>
+              <div class="backup-actions"><button id="createBackupNow" class="secondary-button" type="button">Create backup now</button><a id="backupFolderLink" class="text-button hidden" target="_blank" rel="noopener">Open backup folder</a></div>
+            </article>
+            <article class="panel category-admin-panel">
+              <div class="panel-heading"><div><p class="eyebrow">EXPENDITURE</p><h3>Categories &amp; subcategories</h3></div></div>
+              <p>Create, edit, delete, reorder, archive or restore the choices used by paid, preplanned and regular expenditure.</p>
+              <span id="adminExpenseCategorySummary" class="status-badge">12 categories</span>
+              <button class="secondary-button" type="button" data-open="expenseCategoryDialog">Open category controls</button>
+            </article>
+            <article class="panel sticky-access-admin-panel">
+              <div class="panel-heading"><div><p class="eyebrow">STICKY NOTES</p><h3>Writing permission</h3></div></div>
+              <p>Administrators always write sticky notes. For each family member, use <b>Edit → Write sticky notes</b> to allow or stop adding, editing, completing, restoring and deleting notes.</p>
+              <span class="status-badge success">● Controlled member by member</span>
+            </article>
+          </div>
+          <article class="panel members-panel">
+            <div class="panel-heading"><div><p class="eyebrow">ACCESS</p><h3>Family members</h3></div><span id="memberCount" class="count-badge">0 people</span></div>
+            <div id="memberList" class="member-list"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <button id="stickyLauncher" class="sticky-launcher hidden" type="button" aria-controls="stickyBoard" aria-expanded="false" aria-label="Open sticky-note side panel" title="Open sticky notes">
+      <span aria-hidden="true">✦</span><strong>Sticky notes</strong><b id="stickyActiveCount">0</b>
+    </button>
+    <div id="stickyBoardShade" class="sticky-board-shade hidden"></div>
+    <section id="stickyBoard" class="sticky-board hidden" aria-label="Target and reminder sticky notes">
+      <header class="sticky-board-head">
+        <div class="sticky-board-title"><div><span>RIGHT UTILITY PANEL</span><strong>Sticky Notes</strong><small>Targets and reminders without occupying dashboard space. Pinned notes remain above the dashboard.</small></div></div>
+        <div class="sticky-board-controls">
+          <button id="stickyMinimize" class="sticky-minimize" type="button" aria-label="Minimize sticky-note organiser" title="Minimize">—</button>
+          <button id="stickyClose" class="sticky-close" type="button" aria-label="Close sticky-note organiser" title="Close">×</button>
+        </div>
+      </header>
+      <div class="sticky-drawer-tabs" role="tablist" aria-label="Sticky note views">
+        <button id="stickyTabActive" class="sticky-tab active" type="button" role="tab">📌 Active notes</button>
+        <button id="stickyTabCompleted" class="sticky-tab" type="button" role="tab">✓ Sticky Note Diary</button>
+      </div>
+      <div class="sticky-board-scroll">
+        <p id="stickyReadOnlyNotice" class="sticky-readonly-notice hidden">🔒 Read only · Your administrator has not enabled sticky-note writing for your account.</p>
+        <details id="stickyAddPanel" class="sticky-add-panel">
+          <summary><span><b>＋ Add sticky note</b><small>Target or reminder</small></span><i aria-hidden="true">⌄</i></summary>
+          <form id="stickyQuickForm" class="sticky-quick-form">
+            <div class="sticky-quick-heading"><strong>Add a sticky note</strong><small>Saved in the Family Dashboard spreadsheet</small></div>
+            <div class="sticky-quick-fields">
+              <label>Type<select id="quickStickyType" required><option value="REMINDER">Reminder</option><option value="TARGET">Target</option></select></label>
+              <label class="quick-title">Title *<input id="quickStickyTitle" required maxlength="100" placeholder="Enter target or reminder"></label>
+              <label>Due date<input id="quickStickyDueDate" type="date"></label>
+              <label class="quick-details">Details<textarea id="quickStickyBody" rows="3" maxlength="2000" placeholder="Optional details"></textarea></label>
+            </div>
+            <fieldset class="quick-colour-fieldset"><legend>Colour</legend><div class="quick-colour-options">
+              <label class="colour-yellow"><input type="radio" name="quickStickyColor" value="yellow" checked><span>Yellow</span></label>
+              <label class="colour-pink"><input type="radio" name="quickStickyColor" value="pink"><span>Pink</span></label>
+              <label class="colour-blue"><input type="radio" name="quickStickyColor" value="blue"><span>Blue</span></label>
+              <label class="colour-green"><input type="radio" name="quickStickyColor" value="green"><span>Green</span></label>
+              <label class="colour-purple"><input type="radio" name="quickStickyColor" value="purple"><span>Purple</span></label>
+              <label class="colour-orange"><input type="radio" name="quickStickyColor" value="orange"><span>Orange</span></label>
+            </div></fieldset>
+            <button class="sticky-save-button" type="submit">Save note</button>
+          </form>
+        </details>
+        <section class="sticky-workspace">
+          <div class="sticky-section-heading"><h3 id="stickySectionTitle">Active</h3><span id="stickyBoardSummary">0 active notes</span></div>
+          <div id="stickyCanvas" class="sticky-canvas"></div>
+          <div id="stickyCompletedList" class="sticky-completed-list hidden"></div>
+          <div id="stickyEmpty" class="sticky-empty hidden"><span>📝</span><strong>No notes here</strong><p>Add a target or reminder sticky note.</p></div>
+        </section>
+      </div>
+      <footer class="sticky-board-footer"><button type="button" class="secondary-button" data-sticky-close>Close</button></footer>
     </section>
+    <div id="stickyPinnedLayer" class="sticky-pinned-layer hidden" aria-label="Pinned notes kept open over the dashboard">
+      <div id="stickyPinnedCanvas" class="sticky-pinned-canvas"></div>
+    </div>
   </div>
 
-  <div class="modal-backdrop hidden" id="adminBackdrop">
-    <section class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
-      <button class="modal-close" data-close="admin" type="button" aria-label="Close">×</button>
-      <div id="adminLogin">
-        <span class="modal-kicker">RESTRICTED ACCESS</span><h2 id="adminTitle">Administrator sign-in</h2><p>Enter the Head Office security code. It will be verified securely when a report subject is added, renamed, removed, or its hyperlink is changed.</p>
-        <form id="adminLoginForm"><label class="field"><span>Head Office security code</span><input id="adminCode" type="password" autocomplete="one-time-code" required placeholder="Enter administrator code"></label><div class="modal-actions"><button class="cancel" data-close="admin" type="button">Cancel</button><button class="submit" id="adminLoginSubmit" type="submit">Continue</button></div></form>
+  <dialog id="expenseDialog" class="modal">
+    <form id="expenseForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">EXPENDITURE</p><h3 id="expenseDialogTitle">Add expenditure</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="expenseId" type="hidden">
+      <input id="expenseRecurringId" type="hidden">
+      <input id="expenseMarkPaidId" type="hidden">
+      <p id="expenseRecurringNote" class="recurring-pay-note hidden"></p>
+      <div class="two-fields"><label>Entry type<select id="expenseEntryType" required><option value="REGULAR">Paid expenditure</option><option value="PREPLANNED">Preplanned expenditure</option></select></label><label id="expenseDateLabel">Date Paid<input id="expenseDate" type="date" required></label></div>
+      <div class="two-fields"><label>Amt (Rs.)<input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="12000"></label><label>Category<select id="expenseCategory" required></select></label></div>
+      <div class="two-fields"><label>Subcategory<select id="expenseSubcategory" required></select></label><span class="category-help">Subcategories change with the selected category. Administrators manage these choices.</span></div>
+      <div class="two-fields"><label>Major plan (optional)<select id="expenseMajorPlan"><option value="">Not linked to a major plan</option></select></label><label>Project phase (optional)<select id="expenseMajorPlanPhase"><option value="">No phase</option></select></label></div>
+      <div class="two-fields"><label>Send to<input id="expenseSendTo" required maxlength="100" placeholder="e.g. Mani SBI"></label><label>From Acct<input id="expenseFromAccount" required maxlength="100" placeholder="e.g. Family SBI"></label></div>
+      <label>Reason<textarea id="expenseReason" rows="3" required maxlength="500" placeholder="e.g. Monthly 12k sent to Mani SBI on 05th &amp; 20th of each month"></textarea></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save expenditure</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="recurringExpenseDialog" class="modal">
+    <form id="recurringExpenseForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">REGULAR EXPENDITURE</p><h3 id="recurringExpenseDialogTitle">Add regular payment</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="recurringExpenseId" type="hidden">
+      <div class="two-fields"><label>Payment name<input id="recurringExpenseTitle" required maxlength="100" placeholder="e.g. Electricity bill"></label><label>Estimated amount (optional)<input id="recurringExpenseAmount" type="number" min="0" step="0.01" placeholder="Amount can be changed when paid"></label></div>
+      <div class="two-fields"><label>Repeat<select id="recurringExpenseFrequency" required><option value="MONTHLY">Every month</option><option value="YEARLY">Every year</option></select></label><label>Next due date<input id="recurringExpenseDueDate" type="date" required></label></div>
+      <div class="two-fields"><label>Category<select id="recurringExpenseCategory" required></select></label><label>Subcategory<select id="recurringExpenseSubcategory" required></select></label></div>
+      <div class="two-fields"><label>Major plan (optional)<select id="recurringExpenseMajorPlan"><option value="">Not linked to a major plan</option></select></label><label>Project phase (optional)<select id="recurringExpenseMajorPlanPhase"><option value="">No phase</option></select></label></div>
+      <div class="two-fields"><label>Send to<input id="recurringExpenseSendTo" required maxlength="100" placeholder="e.g. BESCOM"></label><label>From Acct<input id="recurringExpenseFromAccount" required maxlength="100" placeholder="e.g. Family SBI"></label></div>
+      <label>Reason<textarea id="recurringExpenseReason" rows="3" required maxlength="500" placeholder="e.g. Monthly home electricity bill"></textarea></label>
+      <label>Send email reminder<select id="recurringExpenseRemind"><option value="7,1,0">7 days, 1 day and same day</option><option value="3,1,0">3 days, 1 day and same day</option><option value="1,0">1 day and same day</option><option value="0">Same day only</option><option value="14,7,1,0">14 days, 7 days, 1 day and same day</option></select></label>
+      <fieldset><legend>Email recipients</legend><div class="check-row"><label><input id="recurringNotifyEveryone" type="checkbox" checked> All active family members with email</label></div><div id="recurringRecipientChecks" class="recipient-checks hidden"></div></fieldset>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save regular payment</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="bulkExpenseDialog" class="modal bulk-modal">
+    <form id="bulkExpenseForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">OLD EXPENDITURE</p><h3>Import old records</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <p class="bulk-note">Copy five columns from Excel or Google Sheets and paste them below in this exact order. A heading row is optional.</p>
+      <div class="bulk-example"><strong>Amt (Rs.)</strong><span>Date Paid</span><span>Send to</span><span>From Acct</span><span>Reason</span></div>
+      <label>Paste rows<textarea id="bulkExpenseText" rows="11" required spellcheck="false" placeholder="12000&#9;05/01/2024&#9;Mani SBI&#9;Family SBI&#9;Monthly transfer"></textarea></label>
+      <small id="bulkExpenseHelp" class="muted">Accepts extra or missing pasted cells. Dates: DD/MM/YYYY, DD-MMM-YYYY, YYYY-MM-DD, or Excel date numbers. Up to 500 records.</small>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Import records</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="expensePrintDialog" class="modal small-modal">
+    <form id="expensePrintForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">PRINT EXPENDITURE</p><h3>Select payment period</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <p class="bulk-note">Filter the expenditure, choose the column width, then view or print the same report.</p>
+      <div class="report-filter-grid">
+        <label>From date<input id="expensePrintFrom" type="date" required></label>
+        <label>To date<input id="expensePrintTo" type="date" required></label>
+        <label>Status<select id="expensePrintStatus"><option value="">Paid &amp; planned</option><option value="PAID">Paid only</option><option value="PLANNED">Preplanned only</option></select></label>
+        <label>Category<select id="expensePrintCategory"><option value="">All categories</option></select></label>
+        <label>Subcategory<select id="expensePrintSubcategory"><option value="">All subcategories</option></select></label>
+        <label>Major plan<select id="expensePrintMajorPlan"><option value="">All major plans</option></select></label>
+        <label>Send to<select id="expensePrintSendTo"><option value="">All recipients</option></select></label>
+        <label>From account<select id="expensePrintAccount"><option value="">All accounts</option></select></label>
+        <label>Search<input id="expensePrintSearch" type="search" placeholder="Category, recipient, account or reason"></label>
+        <label>Column width<select id="expensePrintDensity"><option value="comfortable">Comfortable</option><option value="compact">Compact</option><option value="minimum">Minimum width</option></select></label>
       </div>
-      <div class="admin-panel hidden" id="adminPanel">
-        <span class="modal-kicker">HEAD OFFICE</span><h2>Manage report subjects</h2><p>Add, rename, remove, attach a PDF hyperlink, or disable submissions for a report subject.</p>
-        <form class="admin-add" id="addSubjectForm">
-          <label class="admin-field"><span>Subject name</span><input id="newSubject" type="text" maxlength="100" required placeholder="Enter report subject"></label>
-          <label class="admin-field"><span>Text to hyperlink (optional)</span><input id="newSubjectLinkText" type="text" maxlength="80" placeholder="Exact words in subject"><small>Example: July 2026</small></label>
-          <label class="admin-field"><span>PDF to open (optional)</span><input id="newSubjectLinkPdf" type="file" accept="application/pdf,.pdf"><small>PDF only · maximum 8 MB</small></label>
-          <button id="addSubjectButton" type="submit">Add subject</button>
-        </form>
-        <form class="admin-link-editor hidden" id="editSubjectLinkForm">
-          <h3>Edit subject PDF hyperlink</h3><p id="editSubjectName"></p><p class="current-linked-file" id="currentLinkedPdf"></p><input id="editSubjectId" type="hidden">
-          <div class="admin-link-grid">
-            <label class="admin-field"><span>Text to hyperlink</span><input id="editSubjectLinkText" type="text" maxlength="80" required placeholder="Exact words in subject"></label>
-            <label class="admin-field"><span>Upload PDF</span><input id="editSubjectLinkPdf" type="file" accept="application/pdf,.pdf"><small>Select a PDF to add or replace it. Leave blank to keep the current PDF.</small></label>
-          </div>
-          <div class="admin-link-actions"><button class="clear-link" id="clearSubjectLinkButton" type="button">Remove PDF hyperlink</button><button class="cancel" id="cancelSubjectLinkButton" type="button">Cancel</button><button class="submit" id="saveSubjectLinkButton" type="submit">Save PDF hyperlink</button></div>
-        </form>
-        <form class="admin-link-editor hidden" id="renameSubjectForm">
-          <h3>Rename report subject</h3><p id="renameCurrentSubjectName"></p><input id="renameSubjectId" type="hidden">
-          <div class="admin-link-grid">
-            <label class="admin-field"><span>New subject name</span><input id="renameSubjectName" type="text" maxlength="100" required placeholder="Enter the new subject name"></label>
-            <label class="admin-field hidden" id="renameLinkTextField"><span>Text to hyperlink after renaming</span><input id="renameSubjectLinkText" type="text" maxlength="80" placeholder="Exact words in the new subject name"><small>The existing linked PDF will be preserved.</small></label>
-          </div>
-          <div class="admin-link-actions"><button class="cancel" id="cancelRenameSubjectButton" type="button">Cancel</button><button class="submit" id="saveRenameSubjectButton" type="submit">Save new name</button></div>
-        </form>
-        <div class="subject-admin-list" id="subjectAdminList"></div>
-        <div class="admin-summary">Disabled subjects remain visible and existing reports can still be viewed, but new and replacement uploads are blocked. Renaming preserves the Subject ID, office status, uploaded reports, and linked PDF.</div>
-      </div>
-    </section>
-  </div>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button id="viewExpenseReport" type="button" class="secondary-button">◉ View selected period</button><button type="submit" class="primary-button">⌑ Print selected period</button></div>
+    </form>
+  </dialog>
 
-  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+  <dialog id="majorPlanDialog" class="modal major-plan-dialog">
+    <form id="majorPlanForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">MAJOR EXPENDITURE PLAN</p><h3 id="majorPlanDialogTitle">Create major plan</h3><small>Example: House Building, renovation, wedding or higher education.</small></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="majorPlanId" type="hidden">
+      <div class="two-fields"><label>Plan name<input id="majorPlanName" required maxlength="100" placeholder="e.g. House Building"></label><label>Proposed budget<input id="majorPlanAmount" type="number" min="1" step="0.01" required placeholder="5000000"></label></div>
+      <div class="two-fields"><label>Start date<input id="majorPlanStartDate" type="date" required></label><label>Target completion<input id="majorPlanTargetDate" type="date" required></label></div>
+      <label>Owner<select id="majorPlanOwner" required></select></label>
+      <label>Notes<textarea id="majorPlanNotes" rows="3" maxlength="1000" placeholder="Scope, contractor, approvals or other planning details"></textarea></label>
+      <fieldset class="major-plan-phases-fieldset"><legend>Budget phases</legend><div class="major-plan-phase-head"><small>Break the plan into phases such as Land, Foundation, Structure, Electrical and Interiors.</small><button id="addMajorPlanPhase" class="secondary-button" type="button">＋ Add phase</button></div><div id="majorPlanPhaseList" class="major-plan-phase-editor"></div><p id="majorPlanPhaseBudgetSummary" class="major-plan-phase-budget-summary"></p></fieldset>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save major plan</button></div>
+    </form>
+  </dialog>
 
-  <script>
-    'use strict';
+  <dialog id="incomeDialog" class="modal">
+    <form id="incomeForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">INCOME</p><h3 id="incomeDialogTitle">Add income</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="incomeId" type="hidden">
+      <div class="two-fields"><label>Date<input id="incomeDate" type="date" required></label><label>Amount<input id="incomeAmount" type="number" min="0.01" step="0.01" required placeholder="0.00"></label></div>
+      <label>Income source<input id="incomeSource" required maxlength="100" placeholder="e.g. Salary for August"></label>
+      <div class="two-fields"><label>Category<select id="incomeCategory" required><option>Salary</option><option>Pension</option><option>Business</option><option>Investment</option><option>Rent</option><option>Interest</option><option>Gift</option><option>Refund</option><option>Other</option></select></label><label>Received by<select id="incomeReceivedBy" required></select></label></div>
+      <label>Receiving mode<select id="incomeMode"><option>Bank transfer</option><option>UPI</option><option>Cash</option><option>Cheque</option><option>Other</option></select></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save income</button></div>
+    </form>
+  </dialog>
 
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
-    const FALLBACK_OFFICES = [
-      {id:'CEB',name:'CE(B)'},{id:'CEHAL',name:'CE(HAL)'},{id:'SEPD',name:'SE&PD'},
-      {id:'SEMYSORE',name:'SE(Mysore)'},{id:'SEHUBLI',name:'SE(Hubli)'}
-    ];
-    const FALLBACK_SUBJECTS = ['Monthly Progress Report','Financial Report','Tender Status Report','Pension','Law'].map((name,index)=>({id:'SETUP_'+(index+1),name}));
-    const UPLOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>';
-    const CHECK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
-    const state = {offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,status:{},maxFileMb:8,selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''};
-    const $ = (selector)=>document.querySelector(selector);
-    const endpointReady = ()=>/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(APPS_SCRIPT_URL.trim());
-    const escapeHtml = (value)=>String(value??'').replace(/[&<>'"]/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-    const escapeAttr = escapeHtml;
-    const nonce = ()=>window.crypto?.randomUUID?.() || (Date.now().toString(36)+Math.random().toString(36).slice(2));
-    const versionAtLeast=(value,requiredMajor,requiredMinor)=>{const parts=String(value||'').split('.').map(part=>Number(part)||0);return parts[0]>requiredMajor||(parts[0]===requiredMajor&&parts[1]>=requiredMinor)};
+  <dialog id="targetDialog" class="modal">
+    <form id="targetForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">FAMILY GOAL</p><h3>New target</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <label>Target title<input id="targetTitle" required maxlength="80" placeholder="e.g. Kerala family trip"></label>
+      <div class="two-fields"><label>Target amount<input id="targetAmount" type="number" min="1" step="0.01" required></label><label>Due date<input id="targetDueDate" type="date" required></label></div>
+      <div class="two-fields"><label>Category<select id="targetCategory"><option>Savings</option><option>Travel</option><option>Home</option><option>Education</option><option>Health</option><option>Purchase</option><option>Celebration</option><option>Other</option></select></label><label>Owner<select id="targetOwner"></select></label></div>
+      <label>Notes<textarea id="targetNotes" rows="3" maxlength="300" placeholder="What are we working towards?"></textarea></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Create target</button></div>
+    </form>
+  </dialog>
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      bindEvents();
-      const now=new Date();
-      $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
-      $('#cycleName').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(now)+' submission cycle';
-      loadPortal();
-    });
+  <dialog id="contributionDialog" class="modal small-modal">
+    <form id="contributionForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">PROGRESS</p><h3 id="contributionTitle">Add contribution</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="contributionTargetId" type="hidden">
+      <div class="two-fields"><label>Date<input id="contributionDate" type="date" required></label><label>Amount<input id="contributionAmount" type="number" min="0.01" step="0.01" required></label></div>
+      <label>Note<input id="contributionNote" maxlength="120" placeholder="Optional note"></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Add progress</button></div>
+    </form>
+  </dialog>
 
-    function bindEvents(){
-      $('#retryButton').addEventListener('click',loadPortal);
-      $('#refreshButton').addEventListener('click',loadPortal);
-      $('#adminButton').addEventListener('click',openAdmin);
-      $('#pdfFile').addEventListener('change',handleFileSelection);
-      $('#uploadForm').addEventListener('submit',submitUpload);
-      $('#viewReportButton').addEventListener('click',viewSubmittedReport);
-      $('#removeReportButton').addEventListener('click',removeSubmittedReport);
-      $('#adminLoginForm').addEventListener('submit',verifyAdministrator);
-      $('#addSubjectForm').addEventListener('submit',addSubject);
-      $('#editSubjectLinkForm').addEventListener('submit',saveSubjectLink);
-      $('#clearSubjectLinkButton').addEventListener('click',clearSubjectLink);
-      $('#cancelSubjectLinkButton').addEventListener('click',closeSubjectLinkEditor);
-      $('#renameSubjectForm').addEventListener('submit',renameSubject);
-      $('#cancelRenameSubjectButton').addEventListener('click',closeRenameSubjectEditor);
-      $('#officeFilter').addEventListener('change',(event)=>{state.officeFilter=event.target.value;renderMatrix();updateSummary()});
-      $('#subjectSearch').addEventListener('input',(event)=>{state.search=event.target.value.trim().toLowerCase();renderMatrix()});
-      document.addEventListener('click',(event)=>{
-        const uploadButton=event.target.closest('[data-upload]');
-        if(uploadButton)openUpload(uploadButton.dataset.subject,uploadButton.dataset.office);
-        const archiveButton=event.target.closest('[data-archive]');
-        if(archiveButton)archiveSubject(archiveButton.dataset.archive);
-        const editLinkButton=event.target.closest('[data-edit-link]');
-        if(editLinkButton)openSubjectLinkEditor(editLinkButton.dataset.editLink);
-        const renameButton=event.target.closest('[data-rename]');
-        if(renameButton)openRenameSubjectEditor(renameButton.dataset.rename);
-        const toggleSubmissionButton=event.target.closest('[data-toggle-submission]');
-        if(toggleSubmissionButton)toggleSubjectSubmission(toggleSubmissionButton.dataset.toggleSubmission);
-        const closeButton=event.target.closest('[data-close]');
-        if(closeButton)closeModal(closeButton.dataset.close);
-        const filterButton=event.target.closest('[data-status-filter]');
-        if(filterButton)setStatusFilter(filterButton.dataset.statusFilter);
-        const officeButton=event.target.closest('[data-office-filter]');
-        if(officeButton){state.officeFilter=state.officeFilter===officeButton.dataset.officeFilter?'':officeButton.dataset.officeFilter;$('#officeFilter').value=state.officeFilter;renderMatrix();updateSummary()}
-      });
-      $('#uploadBackdrop').addEventListener('mousedown',(event)=>{if(event.target===event.currentTarget)closeModal('upload')});
-      $('#adminBackdrop').addEventListener('mousedown',(event)=>{if(event.target===event.currentTarget)closeModal('admin')});
-      document.addEventListener('keydown',(event)=>{if(event.key==='Escape'){closeModal('upload');closeModal('admin')}});
-    }
+  <dialog id="dateDialog" class="modal">
+    <form id="dateForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">REMINDER</p><h3 id="dateDialogTitle">Add important date</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="importantDateId" type="hidden">
+      <label>Title<input id="importantDateTitle" required maxlength="100" placeholder="e.g. Maa's birthday"></label>
+      <div class="two-fields"><label>Date<input id="importantDateValue" type="date" required></label><label>Type<select id="importantDateType"><option>Birthday</option><option>Anniversary</option><option>Appointment</option><option>Renewal</option><option>Payment</option><option>Other</option></select></label></div>
+      <div class="check-row"><label><input id="importantDateRepeat" type="checkbox"> Repeat every year</label></div>
+      <label>Send email reminder<select id="importantDateRemind"><option value="7,1,0">7 days, 1 day and same day</option><option value="3,1,0">3 days, 1 day and same day</option><option value="1,0">1 day and same day</option><option value="0">Same day only</option><option value="14,7,1,0">14 days, 7 days, 1 day and same day</option></select></label>
+      <fieldset><legend>Email recipients</legend><div class="check-row"><label><input id="notifyEveryone" type="checkbox" checked> All active family members with email</label></div><div id="recipientChecks" class="recipient-checks hidden"></div></fieldset>
+      <label>Notes<textarea id="importantDateNotes" rows="3" maxlength="300"></textarea></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save important date</button></div>
+    </form>
+  </dialog>
 
-    function setStatusFilter(filter){
-      state.statusFilter=filter;
-      document.querySelectorAll('[data-status-filter]').forEach(button=>{const active=button.dataset.statusFilter===filter;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
-      renderMatrix();
-    }
+  <dialog id="photoDialog" class="modal">
+    <form id="photoForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">MEMORY</p><h3>Add a family memory</h3><small id="photoDialogLimitText">Selected memories are controlled by the administrator.</small></div><button class="modal-close" type="button" data-close>×</button></div>
+      <label class="upload-drop"><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" required><span>▧</span><strong>Choose a photo</strong><small>JPG, PNG or WebP · automatically resized for faster sharing</small></label>
+      <img id="photoPreview" class="photo-preview hidden" alt="Selected photo preview">
+      <label>Title<input id="photoTitle" required maxlength="80" placeholder="e.g. Sunday lunch together"></label>
+      <div class="two-fields"><label>Photo date<input id="photoTakenDate" type="date"></label><label>Caption<input id="photoCaption" maxlength="180" placeholder="A short memory"></label></div>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save as memory</button></div>
+    </form>
+  </dialog>
 
-    async function loadPortal(){
-      setNotice('',false);
-      setBusy($('#refreshButton'),true,'Refreshing…');
-      if(!endpointReady()){
-        state.connected=false;state.offices=FALLBACK_OFFICES;state.subjects=FALLBACK_SUBJECTS;state.status={};
-        renderAll();setNotice('Portal setup is incomplete: paste the deployed Apps Script /exec URL into index.html.',true);setBusy($('#refreshButton'),false,'↻ Refresh');return;
-      }
-      setSystemState('Connecting…',false);
-      try{
-        const data=await jsonpRequest('bootstrap');
-        if(!data?.ok)throw new Error(data?.message||'The portal backend returned an error.');
-        state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
-        state.subjects=Array.isArray(data.subjects)?data.subjects:[];
-        state.status=data.status||{};state.maxFileMb=Number(data.maxFileMb)||8;state.connected=true;state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
-        if(data.cycleName)$('#cycleName').textContent=String(data.cycleName);
-        renderAll(data.lastUpdated);
-      }catch(error){
-        state.connected=false;state.supportsReceipts=false;state.offices=FALLBACK_OFFICES;state.subjects=FALLBACK_SUBJECTS;state.status={};renderAll();
-        setNotice('Could not connect to the report database. Check the deployment URL and Apps Script access setting.',true);showToast(error.message||'Connection failed.','error');
-      }finally{setBusy($('#refreshButton'),false,'↻ Refresh')}
-    }
+  <dialog id="expenseCategoryDialog" class="modal category-manager-dialog">
+    <div class="modal-head"><div><p class="eyebrow">ADMINISTRATION</p><h3>Expenditure categories</h3><small>Changes apply to paid, preplanned and regular expenditure.</small></div><button class="modal-close" type="button" data-close>×</button></div>
+    <p class="category-manager-explanation"><strong>Create</strong> adds a new choice. <strong>Edit</strong> renames it. <strong>Archive</strong> hides it temporarily. <strong>Delete</strong> removes it from future choices while preserving old expenditure records.</p>
+    <form id="expenseCategoryAddForm" class="category-add-form">
+      <label>New category<input id="newExpenseCategoryName" maxlength="60" placeholder="e.g. Property" required></label>
+      <button class="primary-button" type="submit">＋ Create category</button>
+    </form>
+    <div class="category-manager-heading"><strong id="expenseCategoryManagerSummary">0 categories</strong><small>Use ↑ ↓ to change order. Archive hides a choice from new entries without changing historical records.</small></div>
+    <div id="expenseCategoryManagerList" class="expense-category-manager-list"></div>
+    <div class="category-manager-footer"><small>Renaming a category or subcategory also updates matching old expenditure and regular-payment records.</small><div><button type="button" class="secondary-button" data-close>Cancel</button><button id="saveExpenseCategories" type="button" class="primary-button">Save category changes</button></div></div>
+  </dialog>
 
-    function jsonpRequest(action,parameters={}){
-      return new Promise((resolve,reject)=>{
-        const callback='adgbCallback_'+nonce().replace(/[^A-Za-z0-9_$]/g,'');
-        const script=document.createElement('script');
-        const timer=setTimeout(()=>cleanup(new Error('The connection timed out.')),20000);
-        function cleanup(error,data){clearTimeout(timer);delete window[callback];script.remove();error?reject(error):resolve(data)}
-        window[callback]=(data)=>cleanup(null,data);
-        script.onerror=()=>cleanup(new Error('The portal backend could not be reached.'));
-        const query=new URLSearchParams({...parameters,action,callback,_:Date.now()});
-        script.src=APPS_SCRIPT_URL+'?'+query.toString();document.head.appendChild(script);
-      });
-    }
+  <dialog id="memberDialog" class="modal">
+    <form id="memberForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">ACCESS</p><h3 id="memberDialogTitle">Add family member</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="memberId" type="hidden">
+      <label>Full name<input id="memberName" required maxlength="70"></label>
+      <div class="two-fields"><label>Username<input id="memberUsername" required maxlength="30" pattern="[A-Za-z0-9._-]+"></label><label>Email<input id="memberEmail" type="email" placeholder="For reminders"></label></div>
+      <div class="two-fields"><label>Role<select id="memberRole"><option value="MEMBER">Member</option><option value="ADMIN">Administrator</option></select></label><label>Password<input id="memberPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" placeholder="Required for a new member"><small>Required for a new member. For an existing member, use the dedicated Set/change password button.</small></label></div>
+      <fieldset id="memberAccessFieldset"><legend>Can view and use</legend><div class="permission-grid">
+        <label><input type="checkbox" name="memberPermission" value="EXPENSES" checked> Expenditure</label>
+        <label><input type="checkbox" name="memberPermission" value="INCOME" checked> Income</label>
+        <label><input type="checkbox" name="memberPermission" value="TARGETS" checked> Targets</label>
+        <label><input type="checkbox" name="memberPermission" value="DATES" checked> Reminders</label>
+        <label><input type="checkbox" name="memberPermission" value="CALENDAR" checked> Calendar</label>
+        <label><input type="checkbox" name="memberPermission" value="PHOTOS" checked> Photos</label>
+        <label><input type="checkbox" name="memberPermission" value="EXPERIENCES" checked> Experiences</label>
+        <label><input type="checkbox" name="memberPermission" value="DIARY" checked> Diary</label>
+        <label class="permission-special"><input type="checkbox" name="memberPermission" value="STICKY_WRITE"> Write sticky notes</label>
+      </div><small>“Write sticky notes” separately controls Add, Edit, Complete, Restore and Delete. Administrators always have this permission.</small></fieldset>
+      <label class="check-row"><input id="memberActive" type="checkbox" checked> Active account</label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save member</button></div>
+    </form>
+  </dialog>
 
-    function postToBackend(payload){
-      return new Promise((resolve,reject)=>{
-        if(!endpointReady())return reject(new Error('Apps Script URL is not configured.'));
-        const requestNonce=nonce();payload.nonce=requestNonce;
-        const uploadKey=payload.action==='upload'?payload.subjectId+'__'+payload.officeId:'';
-        const removalKey=payload.action==='removeSubmission'?payload.subjectId+'__'+payload.officeId:'';
-        const previousSubmittedAt=uploadKey?String(state.status[uploadKey]?.submittedAt||''):'';
-        const addedSubjectName=payload.action==='adminAddSubject'?String(payload.subjectName||'').trim():'';
-        const linkedPdfIncluded=!!String(payload.linkedPdfBase64||'');
-        const addedSubjectLinkText=addedSubjectName?String(payload.linkText||'').trim():'';
-        const subjectWasPresent=addedSubjectName?state.subjects.some(subject=>subject.name.toLowerCase()===addedSubjectName.toLowerCase()):false;
-        const archivedSubjectId=payload.action==='adminArchiveSubject'?String(payload.subjectId||''):'';
-        const archiveWasPresent=archivedSubjectId?state.subjects.some(subject=>subject.id===archivedSubjectId):false;
-        const updatedLinkSubjectId=payload.action==='adminUpdateSubjectLink'?String(payload.subjectId||''):'';
-        const expectedLinkText=updatedLinkSubjectId?String(payload.linkText||'').trim():'';
-        const previousLinkUrl=updatedLinkSubjectId?String(state.subjects.find(subject=>subject.id===updatedLinkSubjectId)?.linkUrl||''):'';
-        const renamedSubjectId=payload.action==='adminRenameSubject'?String(payload.subjectId||''):'';
-        const expectedSubjectName=renamedSubjectId?String(payload.subjectName||'').trim():'';
-        const expectedRenamedLinkText=renamedSubjectId?String(payload.linkText||'').trim():'';
-        const viewingSubmission=payload.action==='viewSubmission';
-        const toggledSubjectId=payload.action==='adminSetSubjectSubmission'?String(payload.subjectId||''):'';
-        const expectedSubmissionEnabled=toggledSubjectId?(payload.enabled===true||String(payload.enabled||'').toLowerCase()==='true'):null;
-        const frame=document.createElement('iframe'),form=document.createElement('form'),field=document.createElement('textarea');
-        frame.name='adgbFrame_'+requestNonce.replace(/[^A-Za-z0-9]/g,'');frame.style.display='none';
-        form.method='POST';form.action=APPS_SCRIPT_URL;form.target=frame.name;form.style.display='none';
-        field.name='payload';field.value=JSON.stringify(payload);form.appendChild(field);
-        let finished=false,statusTimer=null;
-        const timeoutMessage=payload.action==='upload'
-          ?'The upload could not be confirmed. Refresh the page and check the submission matrix.'
-          :payload.action==='removeSubmission'
-            ?'The PDF may already have been removed. Refresh the dashboard and check the submission status.'
-            :payload.action==='viewSubmission'
-              ?'The submitted report could not be opened. Please enter the office code and try again.'
-              :'The action could not be confirmed. Refresh the dashboard and try again.';
-        const timer=setTimeout(()=>finish(new Error(timeoutMessage)),payload.action==='upload'||linkedPdfIncluded?120000:45000);
-        function onMessage(event){const packet=event.data;if(packet?.source!=='ADGB_PORTAL'||packet?.data?.nonce!==requestNonce)return;const data=packet.data;data.ok?finish(null,data):finish(new Error(data.message||'Request failed.'))}
-        async function pollBackendStatus(){
-          if(finished)return;
-          if(state.supportsReceipts){
-            try{
-              const receipt=await jsonpRequest('receipt',{nonce:requestNonce});
-              if(receipt&&!receipt.pending){
-                receipt.ok?finish(null,receipt):finish(new Error(receipt.message||'Request failed.'));
-                return;
-              }
-            }catch(error){}
-          }
-          try{
-            const data=await jsonpRequest('bootstrap');
-            if(uploadKey){const item=data?.status?.[uploadKey],submittedAt=String(item?.submittedAt||'');if(item?.submitted&&submittedAt&&submittedAt!==previousSubmittedAt){finish(null,{ok:true,message:'Report submitted successfully.'});return}}
-            if(removalKey){const item=data?.status?.[removalKey];if(!item?.submitted){finish(null,{ok:true,message:'Report removed successfully.'});return}}
-            if(addedSubjectName&&!subjectWasPresent&&Array.isArray(data?.subjects)){const subject=data.subjects.find(item=>String(item.name||'').toLowerCase()===addedSubjectName.toLowerCase());if(subject&&(!linkedPdfIncluded||(String(subject.linkText||'').trim()===addedSubjectLinkText&&!!subject.linkUrl))){finish(null,{ok:true,message:linkedPdfIncluded?'Subject created and PDF hyperlink added successfully.':'Subject and Drive folder created successfully.'});return}}
-            if(archivedSubjectId&&archiveWasPresent&&Array.isArray(data?.subjects)&&!data.subjects.some(subject=>String(subject.id||'')===archivedSubjectId)){finish(null,{ok:true,message:'Subject removed successfully. Existing files were preserved.'});return}
-            if(updatedLinkSubjectId&&Array.isArray(data?.subjects)){const subject=data.subjects.find(item=>String(item.id||'')===updatedLinkSubjectId);if(subject){const textMatches=String(subject.linkText||'').trim()===expectedLinkText,url=String(subject.linkUrl||'');if(!expectedLinkText&&!url){finish(null,{ok:true,message:'Subject PDF hyperlink removed successfully.'});return}if(textMatches&&linkedPdfIncluded&&url&&url!==previousLinkUrl){finish(null,{ok:true,message:'Subject PDF hyperlink updated successfully.'});return}if(textMatches&&payload.keepExistingLink&&url===previousLinkUrl){finish(null,{ok:true,message:'Subject PDF hyperlink updated successfully.'});return}}}
-            if(renamedSubjectId&&Array.isArray(data?.subjects)){const subject=data.subjects.find(item=>String(item.id||'')===renamedSubjectId);if(subject&&String(subject.name||'').trim()===expectedSubjectName&&(!subject.linkUrl||String(subject.linkText||'').trim()===expectedRenamedLinkText)){finish(null,{ok:true,message:'Subject and its Google Drive folder were renamed successfully.'});return}}
-            if(toggledSubjectId&&Array.isArray(data?.subjects)){const subject=data.subjects.find(item=>String(item.id||'')===toggledSubjectId);if(subject&&((subject.submissionEnabled!==false)===expectedSubmissionEnabled)){finish(null,{ok:true,message:expectedSubmissionEnabled?'Sub-office submissions enabled successfully.':'Sub-office submissions disabled successfully.'});return}}
-          }catch(error){}
-          if(!finished)statusTimer=setTimeout(pollBackendStatus,2000);
-        }
-        function finish(error,data){if(finished)return;finished=true;clearTimeout(timer);if(statusTimer)clearTimeout(statusTimer);window.removeEventListener('message',onMessage);setTimeout(()=>{form.remove();frame.remove()},0);error?reject(error):resolve(data)}
-        window.addEventListener('message',onMessage);document.body.append(frame,form);form.submit();
-        if(uploadKey||removalKey||addedSubjectName||archivedSubjectId||updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId)statusTimer=setTimeout(pollBackendStatus,2500);
-      });
-    }
+  <dialog id="memberPasswordDialog" class="modal">
+    <form id="memberPasswordForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">ADMINISTRATOR CONTROL</p><h3>Set or change password</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="passwordMemberId" type="hidden">
+      <p class="setup-hint">Member: <strong id="passwordMemberName"></strong></p>
+      <label>New password<input id="adminMemberPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" required placeholder="Enter a password chosen by the administrator"><small>Use 8–64 characters with at least one letter and one number.</small></label>
+      <label>Confirm new password<input id="confirmAdminMemberPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" required placeholder="Enter the same password again"></label>
+      <div class="modal-actions"><button id="generateAdminMemberPassword" type="button" class="secondary-button">Generate secure password</button><button id="toggleAdminMemberPassword" type="button" class="secondary-button">Show password</button></div>
+      <p class="session-safety-note">After saving, the old password stops working and all existing sessions for this member are signed out.</p>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save new password</button></div>
+    </form>
+  </dialog>
 
-    function renderAll(lastUpdated){populateOfficeFilter();renderMatrix();updateSummary();renderAdminSubjects();setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated)}
+  <dialog id="diaryDialog" class="modal">
+    <form id="diaryForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">FAMILY DIARY</p><h3 id="diaryDialogTitle">Write diary entry</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="diaryId" type="hidden">
+      <div class="two-fields"><label>Date<input id="diaryDate" type="date" required></label><label>Mood<select id="diaryMood"><option>😊 Happy</option><option>🙏 Grateful</option><option>🎉 Celebrating</option><option>😌 Calm</option><option>💭 Thoughtful</option><option>😟 Worried</option><option>😴 Tired</option><option>🌤 Mixed</option></select></label></div>
+      <label>Title<input id="diaryTitle" required maxlength="100" placeholder="A short title for today"></label>
+      <label>Diary entry<textarea id="diaryBody" rows="8" maxlength="5000" required placeholder="What happened today? What would the family like to remember?"></textarea></label>
+      <label>Tags<input id="diaryTags" maxlength="120" placeholder="home, health, celebration"></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save diary entry</button></div>
+    </form>
+  </dialog>
 
-    function populateOfficeFilter(){
-      const select=$('#officeFilter'),current=state.officeFilter;
-      select.innerHTML='<option value="">All offices</option>'+state.offices.map(office=>'<option value="'+escapeAttr(office.id)+'">'+escapeHtml(office.name)+'</option>').join('');
-      if(state.offices.some(office=>office.id===current))select.value=current;else state.officeFilter='';
-    }
+  <dialog id="experienceDialog" class="modal">
+    <form id="experienceForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">FAMILY STORY</p><h3 id="experienceDialogTitle">Add experience</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="experienceId" type="hidden">
+      <label>Experience title<input id="experienceTitle" required maxlength="100" placeholder="e.g. Our first day in Kanyakumari"></label>
+      <div class="two-fields"><label>Date<input id="experienceDate" type="date" required></label><label>Place<input id="experiencePlace" maxlength="100" placeholder="City or place"></label></div>
+      <label>What happened?<textarea id="experienceStory" rows="6" maxlength="3000" required placeholder="Write the memory, lesson or experience here…"></textarea></label>
+      <label>Tags<input id="experienceTags" maxlength="120" placeholder="trip, celebration, lesson"></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save experience</button></div>
+    </form>
+  </dialog>
 
-    function getVisibleSubjects(){
-      const relevantOffices=state.officeFilter?state.offices.filter(office=>office.id===state.officeFilter):state.offices;
-      return state.subjects.filter(subject=>{
-        if(state.search&&!subject.name.toLowerCase().includes(state.search))return false;
-        if(state.statusFilter==='all')return true;
-        return relevantOffices.some(office=>{const submitted=!!state.status[subject.id+'__'+office.id]?.submitted;return state.statusFilter==='submitted'?submitted:!submitted});
-      });
-    }
+  <dialog id="searchDialog" class="modal search-modal">
+    <div class="modal-head"><div><p class="eyebrow">FIND ANYTHING</p><h3>Search family dashboard</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+    <label><input id="globalSearch" type="search" placeholder="Search expenses, sticky notes, dates, photos or diary…"></label>
+    <div id="globalSearchResults" class="search-results"><p class="muted">Start typing to search all family records.</p></div>
+  </dialog>
 
-    function renderMatrix(){
-      const subjects=getVisibleSubjects(),offices=state.officeFilter?state.offices.filter(office=>office.id===state.officeFilter):state.offices;
-      $('#resultCount').textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
-      if(!state.subjects.length){$('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';return}
-      if(!subjects.length){$('#matrixContent').innerHTML='<div class="empty-result">No report subjects match the selected filters.</div>';return}
-      const officeHeaders=offices.map(office=>'<th scope="col">'+escapeHtml(office.name)+'</th>').join('');
-      const rows=subjects.map((subject,index)=>'<tr><th scope="row"><span class="subject-wrap"><span class="subject-number">'+String(index+1).padStart(2,'0')+'</span><span>'+renderSubjectTitle(subject)+'</span></span></th>'+offices.map(office=>renderDesktopCell(subject,office)).join('')+'</tr>').join('');
-      const cards=subjects.map((subject,index)=>'<article class="subject-card"><div class="subject-card-title"><span>'+String(index+1).padStart(2,'0')+'</span><h3>'+renderSubjectTitle(subject)+'</h3></div><div class="office-list">'+offices.map(office=>renderMobileCell(subject,office)).join('')+'</div></article>').join('');
-      $('#matrixContent').innerHTML='<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+officeHeaders+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="mobile-matrix">'+cards+'</div>';
-    }
+  <dialog id="stickyNoteDialog" class="modal sticky-note-dialog">
+    <form id="stickyNoteForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">STICKY NOTE</p><h3 id="stickyNoteDialogTitle">Add target note</h3></div><button class="modal-close" type="button" data-close>×</button></div>
+      <input id="stickyNoteId" type="hidden">
+      <div class="two-fields"><label>Type<select id="stickyNoteType" required><option value="TARGET">Target</option><option value="REMINDER">Reminder</option></select></label><label>Due date (optional)<input id="stickyNoteDueDate" type="date"></label></div>
+      <label>Title<input id="stickyNoteTitle" required maxlength="100" placeholder="e.g. Renew home insurance"></label>
+      <label>Note<textarea id="stickyNoteBody" rows="5" required maxlength="2000" placeholder="Write the target or reminder details…"></textarea></label>
+      <fieldset class="sticky-colour-fieldset"><legend>Note colour</legend><div class="sticky-colour-options">
+        <label class="colour-yellow" title="Yellow"><input type="radio" name="stickyColor" value="yellow" checked><span>✓</span></label>
+        <label class="colour-pink" title="Pink"><input type="radio" name="stickyColor" value="pink"><span>✓</span></label>
+        <label class="colour-blue" title="Blue"><input type="radio" name="stickyColor" value="blue"><span>✓</span></label>
+        <label class="colour-green" title="Green"><input type="radio" name="stickyColor" value="green"><span>✓</span></label>
+        <label class="colour-purple" title="Purple"><input type="radio" name="stickyColor" value="purple"><span>✓</span></label>
+        <label class="colour-orange" title="Orange"><input type="radio" name="stickyColor" value="orange"><span>✓</span></label>
+      </div></fieldset>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save sticky note</button></div>
+    </form>
+  </dialog>
 
-    function renderSubjectTitle(subject){
-      const name=String(subject?.name||''),linkText=String(subject?.linkText||'').trim(),linkUrl=validSubjectUrl(subject?.linkUrl);
-      if(!linkText||!linkUrl)return escapeHtml(name);
-      const start=name.toLowerCase().indexOf(linkText.toLowerCase());
-      if(start<0)return escapeHtml(name);
-      const end=start+linkText.length;
-      return escapeHtml(name.slice(0,start))+'<a class="subject-link" href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer" title="Open linked information">'+escapeHtml(name.slice(start,end))+'<span class="subject-link-mark" aria-hidden="true">↗</span></a>'+escapeHtml(name.slice(end));
-    }
+  <dialog id="photoViewer" class="photo-viewer">
+    <button class="viewer-close" type="button" data-close>×</button>
+    <div id="viewerLoading" class="viewer-loading">Loading photo…</div>
+    <img id="viewerImage" class="hidden" alt="Family photo">
+    <div class="viewer-caption"><strong id="viewerTitle"></strong><span id="viewerMeta"></span><p id="viewerText"></p></div>
+  </dialog>
 
-    function validSubjectUrl(value){const url=String(value||'').trim();return /^https:\/\/[^\s]+$/i.test(url)?url:''}
+  <div id="loadingOverlay" class="loading-overlay hidden" role="status" aria-live="polite" aria-atomic="true"><div class="spinner" aria-hidden="true"></div><p id="loadingText">Working…</p></div>
+  <div id="toastRegion" class="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
 
-    function cellMatchesFilter(submitted){return state.statusFilter==='all'||(state.statusFilter==='submitted'?submitted:!submitted)}
-
-    function renderDesktopCell(subject,office){
-      const item=state.status[subject.id+'__'+office.id],submitted=!!item?.submitted,submissionEnabled=subject.submissionEnabled!==false;
-      if(!cellMatchesFilter(submitted))return '<td class="filtered-cell">—</td>';
-      if(!submissionEnabled&&!submitted)return '<td class="closed-cell"><div class="cell-status"><button type="button" class="upload-button closed" aria-label="'+escapeAttr('Submissions closed for '+subject.name+' for '+office.name)+'" disabled>Closed</button><small class="submitted-time">By Head Office</small></div></td>';
-      const icon=submitted?CHECK_ICON:UPLOAD_ICON,label=submitted?'Submitted':'Upload',className=submitted?'upload-button submitted':'upload-button';
-      return '<td class="'+(submitted?'submitted-cell':'pending-cell')+'"><div class="cell-status"><button type="button" class="'+className+'" aria-label="'+escapeAttr(label+' '+subject.name+' for '+office.name)+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+icon+label+'</button>'+(submitted?'<small class="submitted-time">'+formatDate(item.submittedAt)+'</small><small class="replace-hint">'+(submissionEnabled?'Select to view or replace':'Viewing only · submissions closed')+'</small>':'')+'</div></td>';
-    }
-
-    function renderMobileCell(subject,office){
-      const item=state.status[subject.id+'__'+office.id],submitted=!!item?.submitted,submissionEnabled=subject.submissionEnabled!==false;
-      if(!cellMatchesFilter(submitted))return '';
-      if(!submissionEnabled&&!submitted)return '<div class="closed-office"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="closed" disabled>Closed</button><small>By Head Office</small></span></div>';
-      const label=submitted?'Submitted':'Upload';
-      return '<div class="'+(submitted?'submitted-office':'pending-office')+'"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="'+(submitted?'submitted':'')+'" aria-label="'+escapeAttr(label+' '+subject.name+' for '+office.name)+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+(submitted?CHECK_ICON:UPLOAD_ICON)+label+'</button>'+(submitted?'<small>'+formatDate(item.submittedAt)+' · '+(submissionEnabled?'view or replace':'view only · submissions closed')+'</small>':'')+'</span></div>';
-    }
-
-    function updateSummary(){
-      const relevantOffices=state.officeFilter?state.offices.filter(office=>office.id===state.officeFilter):state.offices;
-      const total=state.subjects.length*relevantOffices.length;let complete=0;
-      state.subjects.forEach(subject=>relevantOffices.forEach(office=>{if(state.status[subject.id+'__'+office.id]?.submitted)complete++}));
-      const percent=total?Math.round(complete*100/total):0;
-      $('#totalCount').textContent=total;$('#completeCount').textContent=complete;$('#awaitingCount').textContent=Math.max(total-complete,0);$('#progressPercent').textContent=percent+'%';$('#progressCount').textContent=complete+' of '+total;$('#progressFill').style.width=percent+'%';$('#progressBar').setAttribute('aria-valuenow',String(percent));
-      const selectedOffice=state.offices.find(office=>office.id===state.officeFilter);$('#totalNote').textContent=selectedOffice?'For '+selectedOffice.name:state.subjects.length+' subjects × '+state.offices.length+' offices';
-      const officeTotal=state.subjects.length;
-      $('#officeCycleList').innerHTML=state.offices.map(office=>{const submitted=state.subjects.reduce((count,subject)=>count+(state.status[subject.id+'__'+office.id]?.submitted?1:0),0),pending=Math.max(officeTotal-submitted,0),officePercent=officeTotal?Math.round(submitted*100/officeTotal):0,active=state.officeFilter===office.id;return '<button type="button" class="office-cycle-row'+(active?' active':'')+'" data-office-filter="'+escapeAttr(office.id)+'" aria-label="'+escapeAttr(office.name+': Submitted '+submitted+', Pending '+pending)+'" aria-pressed="'+String(active)+'"><span>'+escapeHtml(office.name)+'</span><span class="office-cycle-status"><span class="office-status-submitted">Submitted <strong>'+submitted+'</strong></span><span class="office-status-pending">Pending <strong>'+pending+'</strong></span></span><span class="office-cycle-track" role="progressbar" aria-label="'+escapeAttr(office.name+' submission progress')+'" aria-valuemin="0" aria-valuemax="'+officeTotal+'" aria-valuenow="'+submitted+'"><span class="office-cycle-fill" style="width:'+officePercent+'%"></span></span></button>'}).join('');
-    }
-
-    function setSystemState(label,online,lastUpdated){
-      $('#systemStatus').textContent=label;$('#statusDot').classList.toggle('offline',!online);
-      const date=lastUpdated?new Date(lastUpdated):new Date();
-      $('#lastChecked').textContent=(online?'· Last refreshed ':'· ')+new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
-    }
-    function setNotice(message,visible){$('#connectionMessage').textContent=message;$('#connectionNotice').classList.toggle('hidden',!visible)}
-
-    function openUpload(subjectId,officeId){
-      if(!state.connected){showToast('Complete the Apps Script connection before uploading.','error');return}
-      const subject=state.subjects.find(item=>item.id===subjectId),office=state.offices.find(item=>item.id===officeId);if(!subject||!office)return;
-      const alreadySubmitted=!!state.status[subjectId+'__'+officeId]?.submitted,submissionEnabled=subject.submissionEnabled!==false,viewOnly=!submissionEnabled;
-      if(viewOnly&&!alreadySubmitted){showToast('Head Office has disabled submissions for this report subject.','error');return}
-      state.selected={subject,office};
-      $('#uploadTitle').textContent=alreadySubmitted?(viewOnly?'View submitted report':'View or replace submitted report'):'Upload report';
-      $('#uploadSubject').textContent=subject.name;$('#uploadOffice').textContent=office.name;$('#uploadForm').reset();
-      $('#fileLabel').textContent='Choose a PDF file';$('#fileHint').textContent='Click to browse · PDF only · Maximum '+state.maxFileMb+' MB';
-      $('#reportDropZone').classList.toggle('hidden',viewOnly);$('#uploadSubmit').classList.toggle('hidden',viewOnly);$('#uploadSubmit').disabled=true;$('#uploadSubmit').textContent=alreadySubmitted?'Replace report':'Submit report';
-      $('#viewReportButton').classList.toggle('hidden',!alreadySubmitted);$('#viewReportButton').disabled=false;$('#viewReportButton').textContent='View submitted report';
-      $('#removeReportButton').classList.toggle('hidden',!alreadySubmitted||viewOnly);$('#removeReportButton').disabled=false;$('#removeReportButton').textContent='Remove uploaded report';
-      $('#uploadPrivacyNote').textContent=viewOnly?'Head Office has closed submissions for this subject. The existing report remains available for secure viewing.':'Enter the office security code to view, replace, or remove a submitted report.';
-      openModal('upload');setTimeout(()=>alreadySubmitted?$('#officeCode').focus():$('#pdfFile').focus(),50);
-    }
-    function handleFileSelection(){
-      const file=$('#pdfFile').files[0];if(!file){$('#fileLabel').textContent='Choose a PDF file';$('#uploadSubmit').disabled=true;return}
-      const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name),tooLarge=file.size>state.maxFileMb*1024*1024;
-      if(!isPdf||tooLarge){showToast(!isPdf?'Only PDF files are permitted.':'PDF must be '+state.maxFileMb+' MB or smaller.','error');$('#pdfFile').value='';$('#fileLabel').textContent='Choose a PDF file';$('#uploadSubmit').disabled=true;return}
-      $('#fileLabel').textContent=file.name;$('#fileHint').textContent=formatBytes(file.size)+' · Click to replace';$('#uploadSubmit').disabled=false;
-    }
-    async function submitUpload(event){
-      event.preventDefault();const file=$('#pdfFile').files[0],code=$('#officeCode').value.trim();if(!file||!code||!state.selected)return;
-      if(state.selected.subject.submissionEnabled===false){showToast('Head Office has disabled submissions for this report subject.','error');return}
-      const defaultLabel=state.status[state.selected.subject.id+'__'+state.selected.office.id]?.submitted?'Replace report':'Submit report';setBusy($('#uploadSubmit'),true,'Uploading…');
-      try{const fileBase64=await readFileBase64(file);const result=await postToBackend({action:'upload',subjectId:state.selected.subject.id,officeId:state.selected.office.id,securityCode:code,fileName:file.name,mimeType:'application/pdf',fileBase64});closeModal('upload');showToast(result.message||'Report submitted successfully.','success');await loadPortal()}
-      catch(error){showToast(error.message||'Upload failed.','error')}finally{setBusy($('#uploadSubmit'),false,defaultLabel)}
-    }
-    function validSecureViewUrl(value){
-      try{const url=new URL(String(value||''));return url.protocol==='https:'&&url.hostname==='script.google.com'&&/^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url.pathname)?url.href:''}catch(error){return''}
-    }
-    async function viewSubmittedReport(){
-      const code=$('#officeCode').value.trim(),selected=state.selected;
-      if(!selected)return;
-      if(!code){showToast('Enter the office security code before viewing the report.','error');$('#officeCode').focus();return}
-      const viewer=window.open('about:blank','_blank');
-      if(!viewer){showToast('Allow pop-ups for this portal, then select View submitted report again.','error');return}
-      try{viewer.document.write('<!doctype html><title>Opening report…</title><style>body{font-family:Arial,sans-serif;display:grid;place-items:center;min-height:90vh;color:#31576d;background:#eef4f6}p{padding:20px;text-align:center}</style><p>Verifying the office security code and preparing the submitted report…</p>');viewer.document.close()}catch(error){}
-      const button=$('#viewReportButton');setBusy(button,true,'Preparing secure view…');
-      try{
-        const result=await postToBackend({action:'viewSubmission',subjectId:selected.subject.id,officeId:selected.office.id,securityCode:code});
-        const viewUrl=validSecureViewUrl(result.viewUrl);if(!viewUrl)throw new Error('The backend did not return a valid secure report link.');
-        viewer.location.replace(viewUrl);showToast(result.message||'Submitted report opened securely.','success');
-      }catch(error){try{viewer.close()}catch(closeError){}showToast(error.message||'The submitted report could not be opened.','error')}
-      finally{setBusy(button,false,'View submitted report')}
-    }
-    async function removeSubmittedReport(){
-      const code=$('#officeCode').value.trim();
-      if(!state.selected)return;
-      if(!state.supportsReceipts){showToast('Apps Script backend v13.4 or later is not deployed. Update Code.gs and publish a new deployment version first.','error');return}
-      if(!code){showToast('Enter the office security code before removing the report.','error');$('#officeCode').focus();return}
-      if(!window.confirm('Remove the submitted report for '+state.selected.office.name+'? The latest PDF will be moved to Google Drive Trash.'))return;
-      const button=$('#removeReportButton');setBusy(button,true,'Removing…');
-      try{
-        const removalKey=state.selected.subject.id+'__'+state.selected.office.id;
-        const result=await postToBackend({action:'removeSubmission',subjectId:state.selected.subject.id,officeId:state.selected.office.id,securityCode:code});
-        delete state.status[removalKey];
-        closeModal('upload');showToast(result.message||'Report removed successfully.','success');await loadPortal();
-      }catch(error){showToast(error.message||'Report could not be removed.','error')}
-      finally{setBusy(button,false,'Remove uploaded report')}
-    }
-    function readFileBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=()=>reject(new Error('The selected PDF could not be read.'));reader.readAsDataURL(file)})}
-
-    function openAdmin(){if(!state.connected){showToast('Complete the Apps Script connection before opening Administrator.','error');return}state.adminCode='';closeSubjectLinkEditor();closeRenameSubjectEditor();$('#adminLogin').classList.remove('hidden');$('#adminPanel').classList.add('hidden');$('#adminLoginForm').reset();openModal('admin');setTimeout(()=>$('#adminCode').focus(),50)}
-    function verifyAdministrator(event){event.preventDefault();const code=$('#adminCode').value.trim();if(!code)return;state.adminCode=code;$('#adminLogin').classList.add('hidden');$('#adminPanel').classList.remove('hidden');renderAdminSubjects();showToast('Administrator panel opened. The code will be verified when you make a change.','success');setTimeout(()=>$('#newSubject').focus(),50)}
-    function validateSubjectLinkText(subjectName,linkText){
-      const text=String(linkText||'').replace(/\s+/g,' ').trim();
-      if(!text)throw new Error('Enter the exact words in the subject that should open the PDF.');
-      if(!String(subjectName||'').toLowerCase().includes(text.toLowerCase()))throw new Error('Hyperlink text must exactly match words contained in the subject name.');
-      return text;
-    }
-    function validateLinkedPdf(file){
-      if(!file)throw new Error('Select the PDF that should open from the subject text.');
-      const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
-      if(!isPdf)throw new Error('Only a PDF file can be linked to the subject.');
-      if(file.size>state.maxFileMb*1024*1024)throw new Error('The linked PDF must be '+state.maxFileMb+' MB or smaller.');
-      return file;
-    }
-    async function addSubject(event){
-      event.preventDefault();const name=$('#newSubject').value.trim();if(!name||!state.adminCode)return;
-      const linkTextValue=$('#newSubjectLinkText').value,selectedFile=$('#newSubjectLinkPdf').files[0];let linkText='',file=null;
-      try{if(linkTextValue||selectedFile){linkText=validateSubjectLinkText(name,linkTextValue);file=validateLinkedPdf(selectedFile)}}catch(error){showToast(error.message,'error');return}
-      setBusy($('#addSubjectButton'),true,'Adding…');
-      try{const payload={action:'adminAddSubject',securityCode:state.adminCode,subjectName:name,linkText};if(file){payload.linkedPdfName=file.name;payload.linkedPdfMimeType='application/pdf';payload.linkedPdfBase64=await readFileBase64(file)}const result=await postToBackend(payload);$('#addSubjectForm').reset();showToast(result.message,'success');await loadPortal();renderAdminSubjects()}
-      catch(error){showToast(error.message||'Subject could not be added.','error')}
-      finally{setBusy($('#addSubjectButton'),false,'Add subject')}
-    }
-    function openSubjectLinkEditor(subjectId){
-      const subject=state.subjects.find(item=>item.id===subjectId);if(!subject)return;
-      closeRenameSubjectEditor();
-      state.adminEditingSubjectId=subject.id;$('#editSubjectId').value=subject.id;$('#editSubjectName').textContent=subject.name;$('#editSubjectLinkText').value=subject.linkText||'';$('#currentLinkedPdf').textContent=subject.linkFileName?'Current PDF: '+subject.linkFileName:(subject.linkUrl?'A previous URL hyperlink exists. Upload a PDF to replace it.':'No PDF is currently linked.');$('#clearSubjectLinkButton').classList.toggle('hidden',!subject.linkUrl);$('#editSubjectLinkForm').classList.remove('hidden');setTimeout(()=>$('#editSubjectLinkText').focus(),50);
-    }
-    function closeSubjectLinkEditor(){state.adminEditingSubjectId='';const form=$('#editSubjectLinkForm');if(!form)return;form.reset();form.classList.add('hidden')}
-    async function saveSubjectLink(event){
-      event.preventDefault();const subject=state.subjects.find(item=>item.id===state.adminEditingSubjectId);if(!subject||!state.adminCode)return;
-      const selectedFile=$('#editSubjectLinkPdf').files[0];let linkText,file=null;
-      try{linkText=validateSubjectLinkText(subject.name,$('#editSubjectLinkText').value);if(selectedFile)file=validateLinkedPdf(selectedFile);else if(!subject.linkFileName)throw new Error('Select the PDF that should open from the subject text.')}catch(error){showToast(error.message,'error');return}
-      const button=$('#saveSubjectLinkButton');setBusy(button,true,'Saving…');
-      try{const payload={action:'adminUpdateSubjectLink',securityCode:state.adminCode,subjectId:subject.id,linkText,keepExistingLink:!file};if(file){payload.linkedPdfName=file.name;payload.linkedPdfMimeType='application/pdf';payload.linkedPdfBase64=await readFileBase64(file)}const result=await postToBackend(payload);showToast(result.message,'success');closeSubjectLinkEditor();await loadPortal();renderAdminSubjects()}
-      catch(error){showToast(error.message||'Subject PDF hyperlink could not be updated.','error')}
-      finally{setBusy(button,false,'Save PDF hyperlink')}
-    }
-    async function clearSubjectLink(){
-      const subject=state.subjects.find(item=>item.id===state.adminEditingSubjectId);if(!subject||!state.adminCode||!subject.linkUrl)return;
-      if(!window.confirm('Remove the PDF hyperlink from "'+subject.name+'"? The subject and office reports will remain unchanged.'))return;
-      const button=$('#clearSubjectLinkButton');setBusy(button,true,'Removing…');
-      try{const result=await postToBackend({action:'adminUpdateSubjectLink',securityCode:state.adminCode,subjectId:subject.id,linkText:'',linkUrl:''});showToast(result.message,'success');closeSubjectLinkEditor();await loadPortal();renderAdminSubjects()}
-      catch(error){showToast(error.message||'Subject PDF hyperlink could not be removed.','error')}
-      finally{setBusy(button,false,'Remove PDF hyperlink')}
-    }
-    function openRenameSubjectEditor(subjectId){
-      const subject=state.subjects.find(item=>item.id===subjectId);if(!subject)return;
-      closeSubjectLinkEditor();state.adminRenamingSubjectId=subject.id;$('#renameSubjectId').value=subject.id;$('#renameCurrentSubjectName').textContent='Current name: '+subject.name;$('#renameSubjectName').value=subject.name;$('#renameSubjectLinkText').value=subject.linkText||'';$('#renameLinkTextField').classList.toggle('hidden',!subject.linkUrl);$('#renameSubjectForm').classList.remove('hidden');setTimeout(()=>{$('#renameSubjectName').focus();$('#renameSubjectName').select()},50);
-    }
-    function closeRenameSubjectEditor(){state.adminRenamingSubjectId='';const form=$('#renameSubjectForm');if(!form)return;form.reset();form.classList.add('hidden');$('#renameLinkTextField').classList.add('hidden')}
-    async function renameSubject(event){
-      event.preventDefault();const subject=state.subjects.find(item=>item.id===state.adminRenamingSubjectId);if(!subject||!state.adminCode)return;
-      const subjectName=$('#renameSubjectName').value.replace(/\s+/g,' ').trim();let linkText='';
-      try{if(subjectName.length<2)throw new Error('Enter a valid new subject name.');if(subject.linkUrl)linkText=validateSubjectLinkText(subjectName,$('#renameSubjectLinkText').value)}catch(error){showToast(error.message,'error');return}
-      const button=$('#saveRenameSubjectButton');setBusy(button,true,'Renaming…');
-      try{const result=await postToBackend({action:'adminRenameSubject',securityCode:state.adminCode,subjectId:subject.id,subjectName,linkText});showToast(result.message||'Subject renamed successfully.','success');closeRenameSubjectEditor();await loadPortal();renderAdminSubjects()}
-      catch(error){showToast(error.message||'Subject could not be renamed.','error')}
-      finally{setBusy(button,false,'Save new name')}
-    }
-    async function archiveSubject(subjectId){const subject=state.subjects.find(item=>item.id===subjectId);if(!subject||!state.adminCode)return;if(!window.confirm('Remove "'+subject.name+'" from the portal? Existing files will be preserved.'))return;try{const result=await postToBackend({action:'adminArchiveSubject',securityCode:state.adminCode,subjectId});showToast(result.message,'success');await loadPortal();renderAdminSubjects()}catch(error){showToast(error.message||'Subject could not be removed.','error')}}
-    async function toggleSubjectSubmission(subjectId){
-      const subject=state.subjects.find(item=>item.id===subjectId);if(!subject||!state.adminCode)return;
-      const currentlyEnabled=subject.submissionEnabled!==false,nextEnabled=!currentlyEnabled;
-      if(currentlyEnabled&&!window.confirm('Disable new and replacement uploads for "'+subject.name+'"? Existing submitted reports will remain available for secure viewing.'))return;
-      const button=[...document.querySelectorAll('[data-toggle-submission]')].find(item=>item.dataset.toggleSubmission===subjectId);
-      if(button)setBusy(button,true,nextEnabled?'Enabling…':'Disabling…');
-      try{const result=await postToBackend({action:'adminSetSubjectSubmission',securityCode:state.adminCode,subjectId,enabled:nextEnabled});showToast(result.message||'Submission setting updated.','success');await loadPortal();renderAdminSubjects()}
-      catch(error){showToast(error.message||'The submission setting could not be updated.','error')}
-      finally{if(button&&button.isConnected)setBusy(button,false,nextEnabled?'Enable submissions':'Disable submissions')}
-    }
-    function renderAdminSubjects(){
-      const list=$('#subjectAdminList');if(!list)return;
-      list.innerHTML=state.subjects.length?state.subjects.map(subject=>{
-        const enabled=subject.submissionEnabled!==false;
-        const linkInfo=subject.linkFileName?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName):(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
-        return '<div class="subject-admin-row"><span class="subject-admin-info"><strong>'+escapeHtml(subject.name)+'</strong><small>'+linkInfo+'</small><small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small></span><span class="subject-admin-actions"><button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button><button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button><button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button><button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button></span></div>';
-      }).join(''):'<div class="subject-admin-row"><span>No active subjects</span></div>';
-    }
-
-    function openModal(name){$('#'+name+'Backdrop').classList.remove('hidden');document.body.style.overflow='hidden'}
-    function closeModal(name){const element=$('#'+name+'Backdrop');if(!element||element.classList.contains('hidden'))return;element.classList.add('hidden');document.body.style.overflow='';if(name==='upload'){state.selected=null;$('#officeCode').value=''}if(name==='admin'){state.adminCode='';closeSubjectLinkEditor();closeRenameSubjectEditor()}}
-    function setBusy(button,busy,label){button.disabled=busy;button.textContent=label;button.setAttribute('aria-busy',busy?'true':'false')}
-    function formatDate(value){if(!value)return'';const date=new Date(value);return Number.isNaN(date.getTime())?'Submitted':new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date)}
-    function formatBytes(bytes){if(bytes<1024)return bytes+' B';if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB';return(bytes/1048576).toFixed(1)+' MB'}
-    function showToast(message,type=''){const toast=document.createElement('div');toast.className='toast '+type;toast.textContent=message;$('#toastWrap').appendChild(toast);setTimeout(()=>toast.remove(),5200)}
-</script>
-<script src="portal-v169.js"></script>
-<script src="sticky-v169.js"></script>
+  <script src="config.js?v=1.0.24" defer></script>
+  <script src="app.js?v=1.0.24" defer></script>
+</body>
 </html>
