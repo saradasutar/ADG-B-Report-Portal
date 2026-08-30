@@ -1,0 +1,10 @@
+GITHUB ROOT
+index.html
+portal-v170.js
+sticky-v170.js
+adgb-v170.svg
+adgb-v170.png
+adgb-v170.ico
+
+GOOGLE APPS SCRIPT
+Code.gs

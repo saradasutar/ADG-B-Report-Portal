@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
+  <meta name="theme-color" content="#082f63">
+
+  <link rel="icon" type="image/svg+xml" href="adgb-v170.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v170.png">
+  <link rel="shortcut icon" href="adgb-v170.ico">
+
+  <title>ADG(B) Report Submission Portal</title>
+
+  <style>
+    :root{
+      --navy:#082f63;
+      --navy2:#1642a0;
+      --indigo:#4b3da5;
+      --teal:#087f70;
+      --teal2:#10a37f;
+      --gold:#f59e0b;
+      --rose:#d94360;
+      --green:#07865f;
+      --ink:#19324f;
+      --muted:#5e7188;
+      --line:#cfdeeb;
+      --surface:#fff;
+      --shadow:0 9px 25px rgba(28,54,92,.10);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:#edf5fb}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      color:var(--ink);
+      font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%,rgba(83,177,255,.20),transparent 28%),
+        radial-gradient(circle at 94% 12%,rgba(16,185,129,.16),transparent 25%),
+        radial-gradient(circle at 72% 90%,rgba(139,92,246,.13),transparent 30%),
+        linear-gradient(135deg,#eef7ff 0%,#f5f1ff 48%,#eefbf6 100%);
+    }
+
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.58}
+    .hidden{display:none!important}
+
+    .top-stripe{
+      height:4px;
+      background:linear-gradient(90deg,#ffb703 0 18%,#ff6fae 18% 38%,#8b5cf6 38% 58%,#3b82f6 58% 78%,#10b981 78%);
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:linear-gradient(105deg,#082f63 0%,#173fa7 35%,#4b2f9c 68%,#087f70 100%);
+      border-bottom:1px solid rgba(255,255,255,.18);
+      box-shadow:0 6px 20px rgba(17,37,88,.22);
+    }
+
+    .header-inner,.page{
+      width:min(1500px,calc(100% - 28px));
+      margin:auto;
+    }
+
+    .header-inner{
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .brand{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:11px;
+      color:#fff;
+      text-decoration:none;
+    }
+
+    .brand-mark{
+      width:42px;
+      height:42px;
+      flex:0 0 auto;
+      display:grid;
+      place-items:center;
+      border:2px solid rgba(255,255,255,.92);
+      border-radius:13px;
+      color:#fff;
+      background:rgba(255,255,255,.13);
+      font-size:8px;
+      font-weight:950;
+      box-shadow:inset 0 0 0 3px rgba(255,255,255,.11);
+    }
+
+    .brand-copy{display:grid;gap:1px;min-width:0}
+    .brand-copy strong{
+      color:#fff;
+      font-size:22px;
+      font-weight:950;
+      letter-spacing:.01em;
+      text-shadow:0 2px 5px rgba(0,0,0,.23);
+    }
+    .brand-copy small{
+      color:#d8ecff;
+      font-size:10px;
+      font-weight:650;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .admin-button{
+      min-height:34px;
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:10px;
+      padding:0 13px;
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      background:rgba(255,255,255,.14);
+      color:#fff;
+      font-size:11px;
+      font-weight:850;
+    }
+    .admin-button:hover{background:rgba(255,255,255,.24)}
+
+    .page{flex:1;padding:10px 0 12px}
+
+    .notice{
+      margin-bottom:9px;
+      padding:9px 12px;
+      border:1px solid #f0bf5c;
+      border-radius:10px;
+      background:#fff8e5;
+      color:#6f4a00;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:11px;
+    }
+    .notice button{
+      border:0;border-radius:7px;padding:7px 10px;
+      background:#805500;color:#fff;font-weight:800
+    }
+
+    .cycle-bar{
+      min-height:44px;
+      margin-bottom:9px;
+      padding:6px 10px;
+      border:1px solid #d8d7ee;
+      border-left:4px solid var(--gold);
+      border-radius:11px;
+      background:linear-gradient(100deg,#fff7dd,#f2ecff 52%,#e6faf1);
+      box-shadow:0 5px 15px rgba(59,64,111,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .cycle-main,.cycle-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .cycle-label{font-size:10px;color:#5d6b83;text-transform:uppercase;letter-spacing:.08em;font-weight:850}
+    .cycle-main strong{font-size:14px;color:#263d70;font-weight:900}
+    .active-badge{
+      padding:4px 8px;border-radius:999px;
+      background:#fff0b9;color:#755000;
+      font-size:8px;font-weight:950;text-transform:uppercase
+    }
+    .system-line{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted)}
+    .status-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 0 3px rgba(7,134,95,.12)
+    }
+    .status-dot.offline{background:var(--rose);box-shadow:0 0 0 3px rgba(217,67,96,.11)}
+    .refresh-button{
+      min-height:29px;border:1px solid #cfc8e9;border-radius:8px;
+      padding:0 10px;background:#fff;color:#5143a1;font-size:10px;font-weight:900
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+      margin-bottom:9px;
+    }
+    .stat-card{
+      min-height:70px;
+      position:relative;
+      overflow:hidden;
+      padding:10px 13px;
+      border:1px solid #cedced;
+      border-radius:11px;
+      background:linear-gradient(135deg,#eef5ff,#e7e5ff);
+      box-shadow:0 5px 15px rgba(45,66,110,.08);
+    }
+    .stat-card::before{
+      content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#3867c8
+    }
+    .stat-card.submitted{background:linear-gradient(135deg,#e8fff5,#d9f8e8);border-color:#bde7d4}
+    .stat-card.submitted::before{background:var(--green)}
+    .stat-card.pending{background:linear-gradient(135deg,#fff0f3,#ffe3e8);border-color:#f2c2cc}
+    .stat-card.pending::before{background:var(--rose)}
+    .stat-card.completion{background:linear-gradient(135deg,#fff8df,#ffebb0);border-color:#efd38b}
+    .stat-card.completion::before{background:var(--gold)}
+    .stat-label{display:block;color:#536580;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+    .stat-value{display:block;margin-top:2px;font-size:25px;line-height:1;font-weight:950;color:#244a83}
+    .stat-note{display:block;margin-top:3px;color:#66778e;font-size:8px}
+    .mini-progress{height:5px;margin-top:5px;border-radius:999px;background:#e3eaf0;overflow:hidden}
+    .mini-progress span{display:block;height:100%;width:0;border-radius:inherit;background:var(--green)}
+
+    .workspace{
+      display:grid;
+      grid-template-columns:235px minmax(0,1fr);
+      gap:10px;
+      align-items:start;
+    }
+
+    .office-panel,.matrix-section{
+      border:1px solid #cbd9e8;
+      border-radius:11px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .office-panel{
+      background:linear-gradient(165deg,#f1efff,#eaf6ff 56%,#e9faf2);
+    }
+    .matrix-section{
+      background:linear-gradient(155deg,#f4f9ff,#f7f1ff 48%,#eefaf5);
+    }
+
+    .panel-head{
+      min-height:55px;
+      padding:8px 12px;
+      border-top:4px solid var(--navy);
+      border-bottom:1px solid #d5deea;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(105deg,#e5f2ff,#eee6ff 56%,#e4f8ef);
+    }
+    .matrix-top{
+      border-top-color:var(--gold);
+      background:linear-gradient(105deg,#fff0d7,#f0e7ff 48%,#e3f7ef);
+    }
+    .panel-kicker{
+      font-size:8px;color:#08776b;font-weight:950;letter-spacing:.10em;text-transform:uppercase
+    }
+    .panel-head h2{
+      margin:2px 0 0;
+      font-size:20px;
+      line-height:1.05;
+      color:#253f74;
+      font-weight:950;
+    }
+    .matrix-heading-copy p{margin:3px 0 0;color:#5e6e86;font-size:10px}
+
+    .office-cycle-list{padding:7px;display:grid;gap:5px}
+    .office-cycle-row{
+      width:100%;
+      border:1px solid rgba(106,105,170,.15);
+      border-radius:9px;
+      padding:7px;
+      background:rgba(255,255,255,.62);
+      display:grid;
+      grid-template-columns:1fr;
+      gap:5px;
+      text-align:left;
+      color:var(--ink);
+    }
+    .office-cycle-row:hover,.office-cycle-row.active{
+      border-color:#9489d3;
+      background:linear-gradient(100deg,#e5f1ff,#efe5ff,#e5f8ef);
+    }
+    .office-cycle-row>span:first-child{font-size:14px;font-weight:900;color:#26395c}
+    .office-cycle-status{
+      display:flex;justify-content:space-between;gap:7px;flex-wrap:wrap;
+      font-size:10px;font-weight:750;color:#53657d
+    }
+    .office-status-submitted strong{color:var(--green);font-size:12px}
+    .office-status-pending{color:#a13748}
+    .office-status-pending strong{
+      min-width:23px;padding:1px 6px;border:1px solid #f1a9b3;border-radius:999px;
+      background:#fff0f2;color:#c8203b;font-size:13px;text-align:center
+    }
+    .office-cycle-track{height:5px;border-radius:999px;background:#e5ebf1;overflow:hidden}
+    .office-cycle-fill{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#087f70,#13a77e)}
+    .office-filter-note{padding:0 10px 9px;color:#67788d;font-size:9px;line-height:1.4}
+
+    .legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#627188;font-size:8.5px}
+    .legend span{display:inline-flex;align-items:center;gap:5px}
+    .legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+    .legend-await{background:var(--rose)}.legend-done{background:var(--green)}
+
+    .matrix-tools{
+      padding:7px 9px;
+      border-bottom:1px solid #d9dfeb;
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+      background:linear-gradient(100deg,#e7f3ff,#f1e8ff,#e5f7ee);
+    }
+    .filter-buttons{display:flex;gap:5px;flex-wrap:wrap}
+    .filter-button{
+      min-height:29px;padding:0 10px;border:1px solid #c9c1e4;border-radius:8px;
+      background:#fff;color:#514795;font-size:9px;font-weight:900
+    }
+    .filter-button.active{border-color:#5149a8;background:linear-gradient(135deg,#4c56b8,#0f8a78);color:#fff}
+    .tool-fields{display:flex;align-items:end;gap:7px;flex-wrap:wrap}
+    .tool-field{
+      display:grid;gap:3px;color:#596982;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.05em
+    }
+    .tool-field input,.tool-field select{
+      height:29px;min-width:135px;border:1px solid #c7c1df;border-radius:8px;
+      padding:0 8px;background:#fff;color:var(--ink);font-size:9px;text-transform:none;letter-spacing:normal;outline:none
+    }
+    .tool-field input{min-width:180px}
+    .result-count{padding:5px 10px;color:#5b6d84;font-size:9px;border-bottom:1px solid #d8dfeb;background:rgba(255,255,255,.48)}
+
+    .table-wrap{overflow:auto;max-height:410px}
+    table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+    thead th{
+      position:sticky;top:0;z-index:4;
+      padding:8px 7px;
+      background:linear-gradient(120deg,#244879,#433b99 58%,#117c75);
+      color:#fff;border-right:1px solid rgba(255,255,255,.15);
+      font-size:12px;font-weight:900;text-align:center
+    }
+    thead th:first-child{width:280px;text-align:left;padding-left:16px;left:0;z-index:6}
+    tbody th,tbody td{height:58px;border-right:1px solid #d7e0ea;border-bottom:1px solid #d7e0ea}
+    tbody th{
+      position:sticky;left:0;z-index:2;padding:7px 12px;
+      background:#fff5e8;text-align:left;color:#243b60;
+      font-size:15px;line-height:1.15;font-weight:850;
+      box-shadow:2px 0 4px rgba(11,59,96,.04)
+    }
+    tbody tr:nth-child(even) th{background:#f0edff}
+    tbody td{text-align:center;padding:4px}
+    .subject-wrap{display:flex;align-items:center;gap:7px}
+    .subject-number{flex:0 0 auto;color:#6f7f92;font-size:8px;font-weight:850}
+    .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
+    .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
+    .closed-cell{background:#f2eff7}
+    .filtered-cell{background:#f0f1f5;color:#929aaa}
+
+    .cell-status{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+    .upload-button{
+      min-width:102px;height:33px;border:1px solid #e0a6af;border-radius:8px;
+      background:#fff8fa;color:#ad3044;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+      font-size:11px;font-weight:900;box-shadow:0 2px 6px rgba(98,35,45,.05)
+    }
+    .upload-button:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(98,35,45,.09)}
+    .upload-button.submitted{border-color:#93cfb7;background:#f0fff8;color:var(--green)}
+    .upload-button.closed{border-color:#bbb0c7;background:#f6f3f8;color:#675c76;box-shadow:none}
+    .upload-button svg,.office-list button svg,.drop-zone svg,.modal-icon svg{
+      width:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round
+    }
+    .submitted-time,.replace-hint{font-size:8px;color:#66788a}.replace-hint{color:var(--green)}
+    .matrix-loading,.empty-result{padding:28px;text-align:center;color:#66778b;font-size:11px}
+    .mobile-matrix{display:none}
+
+    .other-report-note{
+      margin-top:10px;padding:11px 15px;
+      border:1px solid #ecc560;border-left:5px solid var(--gold);border-radius:10px;
+      background:linear-gradient(105deg,#fff8df,#f4efff 58%,#eaf8f1);
+      color:#463d68;font-size:14px;font-weight:650;line-height:1.5;
+      box-shadow:0 5px 15px rgba(74,63,123,.06)
+    }
+    .other-report-note strong{color:#805400;font-size:15px}
+    .other-report-note a{color:#056987;font-weight:900;text-decoration:none}
+    .other-report-note a:hover{text-decoration:underline}
+
+    footer{
+      margin-top:auto;min-height:43px;
+      padding:7px max(16px,calc((100vw - 1500px)/2));
+      display:flex;align-items:center;justify-content:space-between;gap:18px;
+      background:linear-gradient(100deg,#082f63,#3c439d 52%,#087f70);
+      color:#fff
+    }
+    footer div{display:grid;gap:1px}
+    footer strong{font-size:11px}footer span{font-size:8px;color:rgba(255,255,255,.82)}
+
+    .modal-backdrop{
+      position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;overflow:auto;
+      background:linear-gradient(135deg,rgba(5,34,66,.80),rgba(69,47,126,.76),rgba(7,103,93,.76))
+    }
+    .modal{
+      width:min(500px,100%);max-height:calc(100vh - 36px);overflow-y:auto;position:relative;padding:24px;
+      border:1px solid rgba(255,255,255,.7);border-radius:14px;
+      background:linear-gradient(150deg,#f3f9ff,#f7f0ff 48%,#eefaf4);
+      box-shadow:0 26px 70px rgba(0,0,0,.25)
+    }
+    .modal.wide{width:min(720px,100%)}
+    .modal-close{
+      position:absolute;right:12px;top:11px;width:31px;height:31px;border:0;border-radius:50%;
+      background:#edf3f8;color:var(--navy);font-size:19px
+    }
+    .modal-icon{
+      width:42px;height:42px;border-radius:10px;display:grid;place-items:center;
+      background:#e0f5ef;color:var(--teal)
+    }
+    .modal-icon svg{width:21px}
+    .modal-kicker{display:block;margin-top:13px;color:var(--teal);font-size:9px;font-weight:950;letter-spacing:.12em}
+    .modal h2{margin:4px 0 8px;color:#263f70;font-size:23px}
+    .modal p{color:#64748a;font-size:11px;line-height:1.5}
+    .modal dl{margin:11px 0;padding:9px 10px;border-radius:9px;background:linear-gradient(110deg,#e8f4ff,#efeaff,#e7f8ef);display:grid;gap:6px}
+    .modal dl div{display:grid;grid-template-columns:70px 1fr;gap:8px}
+    .modal dt{font-size:9px;color:#68778d}.modal dd{margin:0;font-size:10px;font-weight:850}
+
+    .drop-zone{
+      min-height:112px;border:2px dashed #ab9fd0;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;
+      background:linear-gradient(135deg,#edf7ff,#f4efff);color:var(--navy);text-align:center;cursor:pointer
+    }
+    .drop-zone:hover{border-color:var(--teal);background:#e9faf3}
+    .drop-zone svg{width:25px}.drop-zone strong{font-size:11px}.drop-zone span{font-size:8px;color:#68798d}
+    .drop-zone input{position:absolute;opacity:0;pointer-events:none}
+
+    .field{margin-top:11px;display:grid;gap:5px}
+    .field>span,.admin-field>span{font-size:9px;font-weight:900;color:#31455f}
+    .field input,.admin-field input{
+      height:38px;border:1px solid #c7bfdd;border-radius:8px;padding:0 10px;background:#fff;outline:none
+    }
+    .field small,.admin-field small{font-size:8px;color:#6a798c}
+    .admin-field{display:grid;gap:5px}
+    .admin-field input[type=file]{height:auto;min-height:38px;padding:7px;font-size:8px}
+
+    .modal-actions{margin-top:15px;display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+    .modal-actions button,.admin-add button{
+      min-height:36px;border-radius:8px;padding:0 13px;font-size:10px;font-weight:900
+    }
+    .cancel{border:1px solid #c6bddc;background:#fff;color:#344b65}
+    .submit,.admin-add button{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff}
+    .view-report,.remove-report{
+      flex:1 0 100%;margin:0 0 3px;border:0;color:#fff;font-size:12px!important
+    }
+    .view-report{background:linear-gradient(135deg,#087f70,#0b5f68)}
+    .remove-report{background:linear-gradient(135deg,#d7354d,#a91f36)}
+    #viewReportButton:not(.hidden),#removeReportButton:not(.hidden){display:inline-flex!important;align-items:center;justify-content:center}
+    .privacy-note{text-align:center;font-size:8px!important}
+
+    .admin-add{display:grid;grid-template-columns:1.35fr 1fr 1.35fr auto;gap:8px;margin:14px 0;align-items:end}
+    .subject-admin-list{max-height:300px;overflow:auto;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
+    .subject-admin-row{min-height:49px;padding:8px 9px;border-bottom:1px solid #d9dfe8;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px}
+    .subject-admin-row:last-child{border-bottom:0}
+    .subject-admin-info{min-width:0;display:grid;gap:3px}
+    .subject-admin-info small{color:#687a8e;overflow-wrap:anywhere}
+    .submission-open{color:var(--green)!important;font-weight:900}.submission-closed{color:#a52438!important;font-weight:900}
+    .subject-admin-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+    .subject-admin-row button{
+      border:1px solid #b9cce0;border-radius:7px;padding:5px 8px;background:#f6fbff;color:#214e77;font-size:8px;font-weight:900
+    }
+    .subject-admin-row .toggle-submission{border-color:#e3b15d;background:#fff7e5;color:#7d5000}
+    .subject-admin-row .enable-submission{border-color:#95ceb7;background:#effbf6;color:#08744f}
+    .subject-admin-row .remove-subject{border-color:#e3a9b2;background:#fff5f7;color:#a22d41}
+
+    .admin-link-editor{
+      margin:11px 0;padding:11px;border:1px solid #baaee0;border-radius:10px;
+      background:linear-gradient(135deg,#edf7ff,#f4efff)
+    }
+    .admin-link-editor h3{margin:0 0 2px;font-size:12px;color:#263f70}
+    .admin-link-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+    .current-linked-file{margin:4px 0 8px!important;padding:7px 8px;border-radius:7px;background:#e9f7ef;color:#27614d!important;font-size:9px!important}
+    .admin-link-actions{margin-top:9px;display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+    .admin-link-actions button{min-height:33px;border-radius:7px;padding:0 10px;font-size:9px;font-weight:900}
+    .clear-link{margin-right:auto;border:1px solid #e0a6ae;background:#fff7f8;color:#a02d3e}
+    .admin-summary{margin-top:10px;padding:9px;border-radius:8px;background:linear-gradient(110deg,#e4f2ff,#eee7ff,#e4f8ef);color:#68798c;font-size:9px;line-height:1.45}
+
+    .subject-link{color:#075da5;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+    .subject-link:hover{color:#087f70}.subject-link-mark{font-size:.72em;margin-left:2px}
+
+    .toast-wrap{position:fixed;right:14px;bottom:52px;z-index:150;display:grid;gap:7px}
+    .toast{max-width:360px;padding:10px 12px;border-radius:9px;background:var(--navy);color:#fff;font-size:10px;box-shadow:var(--shadow)}
+    .toast.success{background:var(--green)}.toast.error{background:var(--rose)}
+
+    .subject-card{border:1px solid #cec4e3;border-radius:9px;overflow:hidden;background:#fff}
+    .subject-card-title{padding:11px 12px;display:flex;gap:7px;align-items:flex-start;background:linear-gradient(105deg,#244879,#493e9d 58%,#117b74);color:#fff}
+    .subject-card-title span{font-size:8px;color:#ccdaea}.subject-card-title h3{margin:0;font-size:15px;line-height:1.25}
+    .subject-card-title .subject-link{color:#fff0a7}
+    .office-list>div{min-height:52px;padding:7px 11px;border-bottom:1px solid #d8e0e9;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .office-list>div:last-child{border-bottom:0}
+    .pending-office{background:#fff0f3}.submitted-office{background:#e7faf1}.closed-office{background:#f3eff7}
+    .office-name{font-size:14px;font-weight:900}
+    .office-list button{
+      min-width:100px;min-height:33px;padding:0 9px;border:1px solid #d8a4ad;border-radius:8px;
+      background:#fff;color:#a32e42;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10px;font-weight:900
+    }
+    .office-list button.submitted{border-color:#91ccb5;color:var(--green)}
+    .office-list button.closed{border-color:#bcb0ca;background:#f6f3f8;color:#675c76}
+    .office-list small{font-size:8px;color:#69798d}
+    .office-action{display:flex;align-items:flex-end;flex-direction:column;gap:2px}
+
+    @media(max-width:980px){
+      .workspace{grid-template-columns:1fr}
+      .office-cycle-list{grid-template-columns:repeat(5,minmax(120px,1fr));overflow:auto}
+      .office-filter-note{display:none}
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media(max-width:720px){
+      .header-inner,.page{width:min(100% - 18px,1500px)}
+      .header-inner{min-height:56px}
+      .brand-copy strong{font-size:16px}.brand-copy small{max-width:200px;font-size:8px}
+      .admin-button{width:36px;padding:0;justify-content:center;font-size:0}.admin-button span{font-size:14px}
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
+      .stat-card{min-height:64px}.stat-value{font-size:22px}
+      .matrix-top{display:block}.legend{margin-top:6px}
+      .matrix-tools{display:block}.filter-buttons{margin-bottom:7px}
+      .tool-fields{display:grid;grid-template-columns:1fr 1fr}
+      .tool-field input,.tool-field select{width:100%;min-width:0}
+      .table-wrap{display:none}.mobile-matrix{display:grid;gap:8px;padding:8px;background:#edf5fb}
+      .result-count{display:none}
+      .office-cycle-list{grid-template-columns:repeat(5,140px)}
+      .other-report-note{font-size:12px;padding:10px 12px}
+      footer{padding:9px 12px;align-items:flex-start;flex-direction:column}
+      .modal{padding:21px 17px}
+      .admin-add,.admin-link-grid{grid-template-columns:1fr}
+      .subject-admin-row{align-items:flex-start;flex-direction:column}.subject-admin-actions{width:100%}.subject-admin-actions button{flex:1}
+    }
+
+    @media(max-width:480px){
+      .stats-grid{gap:6px}
+      .tool-fields{grid-template-columns:1fr}
+      .cycle-main strong{width:100%}
+      .office-cycle-list{grid-template-columns:1fr;overflow:visible}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+    }
+  </style>
+
+  <!-- One-time cleanup of old cache/service-worker assets -->
+  <script>
+    (() => {
+      const KEY='ADGB_FULL_V170_CACHE_RESET';
+      if(localStorage.getItem(KEY)==='done') return;
+      localStorage.setItem(KEY,'done');
+      try{
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations().then(regs=>{
+            regs.forEach(r=>{
+              if(String(r.scope||'').includes('/ADG-B-Report-Portal/')) r.unregister();
+            });
+          });
+        }
+      }catch(e){}
+      try{
+        if('caches' in window){
+          caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k))));
+        }
+      }catch(e){}
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="top-stripe" aria-hidden="true"></div>
+
+  <header>
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Portal home">
+        <span class="brand-mark">CPWD</span>
+        <span class="brand-copy">
+          <strong>ADG(B) Report Submission Portal</strong>
+          <small>O/o Additional Director General (B), CPWD, Bengaluru</small>
+        </span>
+      </a>
+      <nav aria-label="Portal navigation">
+        <button class="admin-button" id="adminButton" type="button">
+          <span aria-hidden="true">⚙</span> Administrator
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="top">
+    <div class="notice hidden" id="connectionNotice">
+      <span id="connectionMessage"></span>
+      <button id="retryButton" type="button">Retry connection</button>
+    </div>
+
+    <section class="cycle-bar" aria-label="Current reporting cycle">
+      <div class="cycle-main">
+        <span class="cycle-label">Reporting cycle</span>
+        <strong id="cycleName">Current month</strong>
+        <span class="active-badge">Active</span>
+      </div>
+      <div class="cycle-side">
+        <span class="system-line">
+          <i class="status-dot offline" id="statusDot"></i>
+          <b id="systemStatus">Connecting…</b>
+          <span id="lastChecked"></span>
+        </span>
+        <button class="refresh-button" id="refreshButton" type="button">↻ Refresh</button>
+      </div>
+    </section>
+
+    <section class="stats-grid" aria-label="Submission overview">
+      <article class="stat-card total">
+        <span class="stat-label">Total reports</span>
+        <strong class="stat-value" id="totalCount">0</strong>
+        <small class="stat-note" id="totalNote">Across all offices</small>
+      </article>
+      <article class="stat-card submitted">
+        <span class="stat-label">Submitted</span>
+        <strong class="stat-value" id="completeCount">0</strong>
+        <small class="stat-note">Reports received</small>
+      </article>
+      <article class="stat-card pending">
+        <span class="stat-label">Pending</span>
+        <strong class="stat-value" id="awaitingCount">0</strong>
+        <small class="stat-note">Awaiting upload</small>
+      </article>
+      <article class="stat-card completion">
+        <span class="stat-label">Completion</span>
+        <strong class="stat-value" id="progressPercent">0%</strong>
+        <div class="mini-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+          <span id="progressFill"></span>
+        </div>
+        <small class="stat-note" id="progressCount">0 of 0</small>
+      </article>
+    </section>
+
+    <div class="workspace">
+      <aside class="office-panel" aria-label="Submission status of sub-offices">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker">OFFICE STATUS</span>
+            <h2>Sub-offices</h2>
+          </div>
+          <span class="active-badge">Live</span>
+        </div>
+        <div class="office-cycle-list" id="officeCycleList"></div>
+        <div class="office-filter-note">
+          Select an office to display only its reports. Select it again to return to all offices.
+        </div>
+      </aside>
+
+      <section class="matrix-section" aria-labelledby="matrixTitle">
+        <div class="panel-head matrix-top">
+          <div class="matrix-heading-copy">
+            <span class="panel-kicker">SUBMISSION STATUS</span>
+            <h2 id="matrixTitle">Report upload matrix</h2>
+            <p>Select an Upload or Submitted button for the required subject and office.</p>
+          </div>
+          <div class="legend">
+            <span><i class="legend-await"></i>Awaiting upload</span>
+            <span><i class="legend-done"></i>Submitted</span>
+          </div>
+        </div>
+
+        <div class="matrix-tools">
+          <div class="filter-buttons">
+            <button class="filter-button active" type="button" data-status-filter="all" aria-pressed="true">All</button>
+            <button class="filter-button" type="button" data-status-filter="pending" aria-pressed="false">Pending</button>
+            <button class="filter-button" type="button" data-status-filter="submitted" aria-pressed="false">Submitted</button>
+          </div>
+          <div class="tool-fields">
+            <label class="tool-field">Office
+              <select id="officeFilter"><option value="">All offices</option></select>
+            </label>
+            <label class="tool-field">Search subject
+              <input id="subjectSearch" type="search" placeholder="Type report name">
+            </label>
+          </div>
+        </div>
+
+        <div class="result-count" id="resultCount">Loading report subjects…</div>
+        <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
+      </section>
+    </div>
+
+    <aside class="other-report-note">
+      <strong>Note:</strong> Parliament Matters and other reports not included in this portal may please be emailed to
+      <a href="mailto:bngeepcsr2.cpwd@gov.in">bngeepcsr2.cpwd@gov.in</a>.
+    </aside>
+  </main>
+
+  <footer>
+    <div>
+      <strong>O/o Additional Director General (B)</strong>
+      <span>Central Public Works Department · Bengaluru</span>
+    </div>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.0</span>
+  </footer>
+
+  <div class="modal-backdrop hidden" id="uploadBackdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+      <button class="modal-close" data-close="upload" type="button">×</button>
+      <span class="modal-icon">
+        <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg>
+      </span>
+      <span class="modal-kicker">REPORT SUBMISSION</span>
+      <h2 id="uploadTitle">Upload report</h2>
+      <dl>
+        <div><dt>Subject</dt><dd id="uploadSubject"></dd></div>
+        <div><dt>Office</dt><dd id="uploadOffice"></dd></div>
+      </dl>
+
+      <form id="uploadForm">
+        <label class="drop-zone" id="reportDropZone">
+          <svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+          <strong id="fileLabel">Choose a PDF file</strong>
+          <span id="fileHint">Click to browse · PDF only</span>
+          <input id="pdfFile" type="file" accept="application/pdf,.pdf" required>
+        </label>
+
+        <label class="field">
+          <span>Office security code</span>
+          <input id="officeCode" type="password" autocomplete="one-time-code" required placeholder="Enter code issued to your office">
+          <small>The code is checked securely by the portal backend.</small>
+        </label>
+
+        <div class="modal-actions">
+          <button class="view-report hidden" id="viewReportButton" type="button">View submitted report</button>
+          <button class="remove-report hidden" id="removeReportButton" type="button">Remove uploaded report</button>
+          <button class="cancel" data-close="upload" type="button">Cancel</button>
+          <button class="submit" id="uploadSubmit" type="submit" disabled>Submit report</button>
+        </div>
+      </form>
+
+      <p class="privacy-note" id="uploadPrivacyNote">Enter the office security code to view, replace, or remove a submitted report.</p>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="adminBackdrop">
+    <section class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <button class="modal-close" data-close="admin" type="button">×</button>
+
+      <div id="adminLogin">
+        <span class="modal-kicker">RESTRICTED ACCESS</span>
+        <h2 id="adminTitle">Administrator sign-in</h2>
+        <p>Enter the Head Office security code. It will be verified securely when a change is made.</p>
+        <form id="adminLoginForm">
+          <label class="field">
+            <span>Head Office security code</span>
+            <input id="adminCode" type="password" autocomplete="one-time-code" required placeholder="Enter administrator code">
+          </label>
+          <div class="modal-actions">
+            <button class="cancel" data-close="admin" type="button">Cancel</button>
+            <button class="submit" id="adminLoginSubmit" type="submit">Continue</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="admin-panel hidden" id="adminPanel">
+        <span class="modal-kicker">HEAD OFFICE</span>
+        <h2>Manage report subjects</h2>
+        <p>Add, rename, remove, attach a PDF hyperlink, or disable submissions.</p>
+
+        <form class="admin-add" id="addSubjectForm">
+          <label class="admin-field">
+            <span>Subject name</span>
+            <input id="newSubject" type="text" maxlength="100" required placeholder="Enter report subject">
+          </label>
+          <label class="admin-field">
+            <span>Text to hyperlink (optional)</span>
+            <input id="newSubjectLinkText" type="text" maxlength="80" placeholder="Exact words in subject">
+            <small>Example: July 2026</small>
+          </label>
+          <label class="admin-field">
+            <span>PDF to open (optional)</span>
+            <input id="newSubjectLinkPdf" type="file" accept="application/pdf,.pdf">
+            <small>PDF only · maximum 8 MB</small>
+          </label>
+          <button id="addSubjectButton" type="submit">Add subject</button>
+        </form>
+
+        <form class="admin-link-editor hidden" id="editSubjectLinkForm">
+          <h3>Edit subject PDF hyperlink</h3>
+          <p id="editSubjectName"></p>
+          <p class="current-linked-file" id="currentLinkedPdf"></p>
+          <input id="editSubjectId" type="hidden">
+          <div class="admin-link-grid">
+            <label class="admin-field">
+              <span>Text to hyperlink</span>
+              <input id="editSubjectLinkText" type="text" maxlength="80" required placeholder="Exact words in subject">
+            </label>
+            <label class="admin-field">
+              <span>Upload PDF</span>
+              <input id="editSubjectLinkPdf" type="file" accept="application/pdf,.pdf">
+              <small>Leave blank to keep current PDF.</small>
+            </label>
+          </div>
+          <div class="admin-link-actions">
+            <button class="clear-link" id="clearSubjectLinkButton" type="button">Remove PDF hyperlink</button>
+            <button class="cancel" id="cancelSubjectLinkButton" type="button">Cancel</button>
+            <button class="submit" id="saveSubjectLinkButton" type="submit">Save PDF hyperlink</button>
+          </div>
+        </form>
+
+        <form class="admin-link-editor hidden" id="renameSubjectForm">
+          <h3>Rename report subject</h3>
+          <p id="renameCurrentSubjectName"></p>
+          <input id="renameSubjectId" type="hidden">
+          <div class="admin-link-grid">
+            <label class="admin-field">
+              <span>New subject name</span>
+              <input id="renameSubjectName" type="text" maxlength="100" required placeholder="Enter the new subject name">
+            </label>
+            <label class="admin-field hidden" id="renameLinkTextField">
+              <span>Text to hyperlink after renaming</span>
+              <input id="renameSubjectLinkText" type="text" maxlength="80" placeholder="Exact words in new name">
+              <small>The existing linked PDF will be preserved.</small>
+            </label>
+          </div>
+          <div class="admin-link-actions">
+            <button class="cancel" id="cancelRenameSubjectButton" type="button">Cancel</button>
+            <button class="submit" id="saveRenameSubjectButton" type="submit">Save new name</button>
+          </div>
+        </form>
+
+        <div class="subject-admin-list" id="subjectAdminList"></div>
+        <div class="admin-summary">
+          Disabled subjects remain visible and existing reports can still be viewed. Renaming preserves IDs, reports and linked PDFs.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
+    const FALLBACK_OFFICES=[
+      {id:'CEB',name:'CE(B)'},{id:'CEHAL',name:'CE(HAL)'},{id:'SEPD',name:'SE&PD'},
+      {id:'SEMYSORE',name:'SE(Mysore)'},{id:'SEHUBLI',name:'SE(Hubli)'}
+    ];
+    const FALLBACK_SUBJECTS=['Monthly Progress Report','Financial Report','Tender Status Report','Pension','Law']
+      .map((name,index)=>({id:'SETUP_'+(index+1),name}));
+    const UPLOAD_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>';
+    const CHECK_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
+
+    const state={
+      offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
+      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',
+      connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
+    };
+
+    const $=selector=>document.querySelector(selector);
+    const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+    }[char]));
+    const escapeAttr=escapeHtml;
+    const nonce=()=>window.crypto?.randomUUID?.()||(Date.now().toString(36)+Math.random().toString(36).slice(2));
+    const endpointReady=()=>/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(APPS_SCRIPT_URL.trim());
+    const versionAtLeast=(value,major,minor)=>{
+      const p=String(value||'').split('.').map(x=>Number(x)||0);
+      return p[0]>major||(p[0]===major&&p[1]>=minor);
+    };
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      bindEvents();
+      const now=new Date();
+      $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
+      $('#cycleName').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(now)+' submission cycle';
+      loadPortal();
+    });
+
+    function bindEvents(){
+      $('#retryButton')?.addEventListener('click',loadPortal);
+      $('#refreshButton')?.addEventListener('click',loadPortal);
+      $('#adminButton')?.addEventListener('click',openAdmin);
+      $('#pdfFile')?.addEventListener('change',handleFileSelection);
+      $('#uploadForm')?.addEventListener('submit',submitUpload);
+      $('#viewReportButton')?.addEventListener('click',viewSubmittedReport);
+      $('#removeReportButton')?.addEventListener('click',removeSubmittedReport);
+      $('#adminLoginForm')?.addEventListener('submit',verifyAdministrator);
+      $('#addSubjectForm')?.addEventListener('submit',addSubject);
+      $('#editSubjectLinkForm')?.addEventListener('submit',saveSubjectLink);
+      $('#clearSubjectLinkButton')?.addEventListener('click',clearSubjectLink);
+      $('#cancelSubjectLinkButton')?.addEventListener('click',closeSubjectLinkEditor);
+      $('#renameSubjectForm')?.addEventListener('submit',renameSubject);
+      $('#cancelRenameSubjectButton')?.addEventListener('click',closeRenameSubjectEditor);
+      $('#officeFilter')?.addEventListener('change',event=>{
+        state.officeFilter=event.target.value;renderMatrix();updateSummary();
+      });
+      $('#subjectSearch')?.addEventListener('input',event=>{
+        state.search=event.target.value.trim().toLowerCase();renderMatrix();
+      });
+
+      document.addEventListener('click',event=>{
+        const uploadButton=event.target.closest('[data-upload]');
+        if(uploadButton)openUpload(uploadButton.dataset.subject,uploadButton.dataset.office);
+
+        const archiveButton=event.target.closest('[data-archive]');
+        if(archiveButton)archiveSubject(archiveButton.dataset.archive);
+
+        const editLinkButton=event.target.closest('[data-edit-link]');
+        if(editLinkButton)openSubjectLinkEditor(editLinkButton.dataset.editLink);
+
+        const renameButton=event.target.closest('[data-rename]');
+        if(renameButton)openRenameSubjectEditor(renameButton.dataset.rename);
+
+        const toggleButton=event.target.closest('[data-toggle-submission]');
+        if(toggleButton)toggleSubjectSubmission(toggleButton.dataset.toggleSubmission);
+
+        const closeButton=event.target.closest('[data-close]');
+        if(closeButton)closeModal(closeButton.dataset.close);
+
+        const filterButton=event.target.closest('[data-status-filter]');
+        if(filterButton)setStatusFilter(filterButton.dataset.statusFilter);
+
+        const officeButton=event.target.closest('[data-office-filter]');
+        if(officeButton){
+          state.officeFilter=state.officeFilter===officeButton.dataset.officeFilter?'':officeButton.dataset.officeFilter;
+          if($('#officeFilter'))$('#officeFilter').value=state.officeFilter;
+          renderMatrix();updateSummary();
+        }
+      });
+
+      $('#uploadBackdrop')?.addEventListener('mousedown',event=>{
+        if(event.target===event.currentTarget)closeModal('upload');
+      });
+      $('#adminBackdrop')?.addEventListener('mousedown',event=>{
+        if(event.target===event.currentTarget)closeModal('admin');
+      });
+      document.addEventListener('keydown',event=>{
+        if(event.key==='Escape'){closeModal('upload');closeModal('admin')}
+      });
+    }
+
+    function setStatusFilter(filter){
+      state.statusFilter=filter;
+      document.querySelectorAll('[data-status-filter]').forEach(button=>{
+        const active=button.dataset.statusFilter===filter;
+        button.classList.toggle('active',active);
+        button.setAttribute('aria-pressed',String(active));
+      });
+      renderMatrix();
+    }
+
+    async function loadPortal(){
+      setNotice('',false);
+      const refresh=$('#refreshButton');
+      if(refresh)setBusy(refresh,true,'Refreshing…');
+
+      if(!endpointReady()){
+        state.connected=false;
+        state.offices=FALLBACK_OFFICES;
+        state.subjects=FALLBACK_SUBJECTS;
+        state.status={};
+        renderAll();
+        setNotice('Portal setup is incomplete: Apps Script URL is not configured.',true);
+        if(refresh)setBusy(refresh,false,'↻ Refresh');
+        return;
+      }
+
+      setSystemState('Connecting…',false);
+
+      try{
+        const data=await jsonpRequest('bootstrap');
+        if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
+
+        state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
+        state.subjects=Array.isArray(data.subjects)?data.subjects:[];
+        state.status=data.status||{};
+        state.maxFileMb=Number(data.maxFileMb)||8;
+        state.connected=true;
+        state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
+
+        if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
+        renderAll(data.lastUpdated);
+      }catch(error){
+        state.connected=false;
+        state.supportsReceipts=false;
+        state.offices=FALLBACK_OFFICES;
+        state.subjects=FALLBACK_SUBJECTS;
+        state.status={};
+        renderAll();
+        setNotice('Could not connect to the report database. Check the Apps Script deployment.',true);
+        showToast(error.message||'Connection failed.','error');
+      }finally{
+        if(refresh)setBusy(refresh,false,'↻ Refresh');
+      }
+    }
+
+    function jsonpRequest(action,parameters={}){
+      return new Promise((resolve,reject)=>{
+        const callback='adgbCallback_'+nonce().replace(/[^A-Za-z0-9_$]/g,'');
+        const script=document.createElement('script');
+        const timer=setTimeout(()=>cleanup(new Error('The connection timed out.')),20000);
+
+        function cleanup(error,data){
+          clearTimeout(timer);
+          try{delete window[callback]}catch(e){window[callback]=undefined}
+          script.remove();
+          error?reject(error):resolve(data);
+        }
+
+        window[callback]=data=>cleanup(null,data);
+        script.onerror=()=>cleanup(new Error('The portal backend could not be reached.'));
+
+        const query=new URLSearchParams({...parameters,action,callback,_:Date.now()});
+        script.src=APPS_SCRIPT_URL+'?'+query.toString();
+        document.head.appendChild(script);
+      });
+    }
+
+    function postToBackend(payload){
+      return new Promise((resolve,reject)=>{
+        if(!endpointReady())return reject(new Error('Apps Script URL is not configured.'));
+
+        const requestNonce=nonce();
+        payload.nonce=requestNonce;
+
+        const uploadKey=payload.action==='upload'?payload.subjectId+'__'+payload.officeId:'';
+        const removalKey=payload.action==='removeSubmission'?payload.subjectId+'__'+payload.officeId:'';
+        const previousSubmittedAt=uploadKey?String(state.status[uploadKey]?.submittedAt||''):'';
+        const addedSubjectName=payload.action==='adminAddSubject'?String(payload.subjectName||'').trim():'';
+        const linkedPdfIncluded=!!String(payload.linkedPdfBase64||'');
+        const addedSubjectLinkText=addedSubjectName?String(payload.linkText||'').trim():'';
+        const subjectWasPresent=addedSubjectName?state.subjects.some(s=>s.name.toLowerCase()===addedSubjectName.toLowerCase()):false;
+        const archivedSubjectId=payload.action==='adminArchiveSubject'?String(payload.subjectId||''):'';
+        const archiveWasPresent=archivedSubjectId?state.subjects.some(s=>s.id===archivedSubjectId):false;
+        const updatedLinkSubjectId=payload.action==='adminUpdateSubjectLink'?String(payload.subjectId||''):'';
+        const expectedLinkText=updatedLinkSubjectId?String(payload.linkText||'').trim():'';
+        const previousLinkUrl=updatedLinkSubjectId?String(state.subjects.find(s=>s.id===updatedLinkSubjectId)?.linkUrl||''):'';
+        const renamedSubjectId=payload.action==='adminRenameSubject'?String(payload.subjectId||''):'';
+        const expectedSubjectName=renamedSubjectId?String(payload.subjectName||'').trim():'';
+        const expectedRenamedLinkText=renamedSubjectId?String(payload.linkText||'').trim():'';
+        const viewingSubmission=payload.action==='viewSubmission';
+        const toggledSubjectId=payload.action==='adminSetSubjectSubmission'?String(payload.subjectId||''):'';
+        const expectedSubmissionEnabled=toggledSubjectId?(payload.enabled===true||String(payload.enabled||'').toLowerCase()==='true'):null;
+
+        const frame=document.createElement('iframe');
+        const form=document.createElement('form');
+        const field=document.createElement('textarea');
+
+        frame.name='adgbFrame_'+requestNonce.replace(/[^A-Za-z0-9]/g,'');
+        frame.style.display='none';
+        form.method='POST';
+        form.action=APPS_SCRIPT_URL;
+        form.target=frame.name;
+        form.style.display='none';
+        field.name='payload';
+        field.value=JSON.stringify(payload);
+        form.appendChild(field);
+
+        let finished=false,statusTimer=null;
+
+        const timeoutMessage=payload.action==='upload'
+          ?'The upload could not be confirmed. Refresh and check the submission matrix.'
+          :payload.action==='removeSubmission'
+            ?'The PDF may already have been removed. Refresh and check the status.'
+            :payload.action==='viewSubmission'
+              ?'The submitted report could not be opened. Please try again.'
+              :'The action could not be confirmed. Refresh and try again.';
+
+        const timer=setTimeout(
+          ()=>finish(new Error(timeoutMessage)),
+          payload.action==='upload'||linkedPdfIncluded?120000:45000
+        );
+
+        function onMessage(event){
+          const packet=event.data;
+          if(packet?.source!=='ADGB_PORTAL'||packet?.data?.nonce!==requestNonce)return;
+          const data=packet.data;
+          data.ok?finish(null,data):finish(new Error(data.message||'Request failed.'));
+        }
+
+        async function pollBackendStatus(){
+          if(finished)return;
+
+          if(state.supportsReceipts){
+            try{
+              const receipt=await jsonpRequest('receipt',{nonce:requestNonce});
+              if(receipt&&!receipt.pending){
+                receipt.ok?finish(null,receipt):finish(new Error(receipt.message||'Request failed.'));
+                return;
+              }
+            }catch(e){}
+          }
+
+          try{
+            const data=await jsonpRequest('bootstrap');
+
+            if(uploadKey){
+              const item=data?.status?.[uploadKey];
+              const submittedAt=String(item?.submittedAt||'');
+              if(item?.submitted&&submittedAt&&submittedAt!==previousSubmittedAt){
+                finish(null,{ok:true,message:'Report submitted successfully.'});return;
+              }
+            }
+
+            if(removalKey){
+              const item=data?.status?.[removalKey];
+              if(!item?.submitted){
+                finish(null,{ok:true,message:'Report removed successfully.'});return;
+              }
+            }
+
+            if(addedSubjectName&&!subjectWasPresent&&Array.isArray(data?.subjects)){
+              const subject=data.subjects.find(x=>String(x.name||'').toLowerCase()===addedSubjectName.toLowerCase());
+              if(subject&&(!linkedPdfIncluded||(String(subject.linkText||'').trim()===addedSubjectLinkText&&!!subject.linkUrl))){
+                finish(null,{ok:true,message:linkedPdfIncluded?'Subject created and PDF hyperlink added successfully.':'Subject and Drive folder created successfully.'});return;
+              }
+            }
+
+            if(archivedSubjectId&&archiveWasPresent&&Array.isArray(data?.subjects)&&
+               !data.subjects.some(s=>String(s.id||'')===archivedSubjectId)){
+              finish(null,{ok:true,message:'Subject removed successfully. Existing files were preserved.'});return;
+            }
+
+            if(updatedLinkSubjectId&&Array.isArray(data?.subjects)){
+              const subject=data.subjects.find(x=>String(x.id||'')===updatedLinkSubjectId);
+              if(subject){
+                const textMatches=String(subject.linkText||'').trim()===expectedLinkText;
+                const url=String(subject.linkUrl||'');
+                if(!expectedLinkText&&!url){
+                  finish(null,{ok:true,message:'Subject PDF hyperlink removed successfully.'});return;
+                }
+                if(textMatches&&linkedPdfIncluded&&url&&url!==previousLinkUrl){
+                  finish(null,{ok:true,message:'Subject PDF hyperlink updated successfully.'});return;
+                }
+                if(textMatches&&payload.keepExistingLink&&url===previousLinkUrl){
+                  finish(null,{ok:true,message:'Subject PDF hyperlink updated successfully.'});return;
+                }
+              }
+            }
+
+            if(renamedSubjectId&&Array.isArray(data?.subjects)){
+              const subject=data.subjects.find(x=>String(x.id||'')===renamedSubjectId);
+              if(subject&&String(subject.name||'').trim()===expectedSubjectName&&
+                 (!subject.linkUrl||String(subject.linkText||'').trim()===expectedRenamedLinkText)){
+                finish(null,{ok:true,message:'Subject and its Google Drive folder were renamed successfully.'});return;
+              }
+            }
+
+            if(toggledSubjectId&&Array.isArray(data?.subjects)){
+              const subject=data.subjects.find(x=>String(x.id||'')===toggledSubjectId);
+              if(subject&&((subject.submissionEnabled!==false)===expectedSubmissionEnabled)){
+                finish(null,{ok:true,message:expectedSubmissionEnabled?'Sub-office submissions enabled successfully.':'Sub-office submissions disabled successfully.'});return;
+              }
+            }
+          }catch(e){}
+
+          if(!finished)statusTimer=setTimeout(pollBackendStatus,1400);
+        }
+
+        function finish(error,data){
+          if(finished)return;
+          finished=true;
+          clearTimeout(timer);
+          if(statusTimer)clearTimeout(statusTimer);
+          window.removeEventListener('message',onMessage);
+          setTimeout(()=>{form.remove();frame.remove()},0);
+          error?reject(error):resolve(data);
+        }
+
+        window.addEventListener('message',onMessage);
+        document.body.append(frame,form);
+        form.submit();
+
+        if(uploadKey||removalKey||addedSubjectName||archivedSubjectId||
+           updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId){
+          statusTimer=setTimeout(pollBackendStatus,900);
+        }
+      });
+    }
+
+    function renderAll(lastUpdated){
+      populateOfficeFilter();
+      renderMatrix();
+      updateSummary();
+      renderAdminSubjects();
+      setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated);
+    }
+
+    function populateOfficeFilter(){
+      const select=$('#officeFilter');
+      if(!select)return;
+      const current=state.officeFilter;
+      select.innerHTML='<option value="">All offices</option>'+
+        state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+'</option>').join('');
+      if(state.offices.some(o=>o.id===current))select.value=current;
+      else state.officeFilter='';
+    }
+
+    function getVisibleSubjects(){
+      const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
+      return state.subjects.filter(subject=>{
+        if(state.search&&!subject.name.toLowerCase().includes(state.search))return false;
+        if(state.statusFilter==='all')return true;
+        return offices.some(office=>{
+          const submitted=!!state.status[subject.id+'__'+office.id]?.submitted;
+          return state.statusFilter==='submitted'?submitted:!submitted;
+        });
+      });
+    }
+
+    function renderMatrix(){
+      const subjects=getVisibleSubjects();
+      const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
+      const count=$('#resultCount');
+      if(count)count.textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
+
+      if(!state.subjects.length){
+        $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
+        return;
+      }
+      if(!subjects.length){
+        $('#matrixContent').innerHTML='<div class="empty-result">No report subjects match the selected filters.</div>';
+        return;
+      }
+
+      const headers=offices.map(o=>'<th scope="col">'+escapeHtml(o.name)+'</th>').join('');
+      const rows=subjects.map((s,index)=>
+        '<tr><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
+        String(index+1).padStart(2,'0')+'</span><span>'+renderSubjectTitle(s)+'</span></span></th>'+
+        offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>'
+      ).join('');
+
+      const cards=subjects.map((s,index)=>
+        '<article class="subject-card"><div class="subject-card-title"><span>'+
+        String(index+1).padStart(2,'0')+'</span><h3>'+renderSubjectTitle(s)+'</h3></div>'+
+        '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>'
+      ).join('');
+
+      $('#matrixContent').innerHTML=
+        '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
+        headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        '<div class="mobile-matrix">'+cards+'</div>';
+    }
+
+    function renderSubjectTitle(subject){
+      const name=String(subject?.name||'');
+      const linkText=String(subject?.linkText||'').trim();
+      const linkUrl=validSubjectUrl(subject?.linkUrl);
+      if(!linkText||!linkUrl)return escapeHtml(name);
+
+      const start=name.toLowerCase().indexOf(linkText.toLowerCase());
+      if(start<0)return escapeHtml(name);
+
+      const end=start+linkText.length;
+      return escapeHtml(name.slice(0,start))+
+        '<a class="subject-link" href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer">'+
+        escapeHtml(name.slice(start,end))+'<span class="subject-link-mark">↗</span></a>'+
+        escapeHtml(name.slice(end));
+    }
+
+    function validSubjectUrl(value){
+      const url=String(value||'').trim();
+      return /^https:\/\/[^\s]+$/i.test(url)?url:'';
+    }
+
+    function cellMatchesFilter(submitted){
+      return state.statusFilter==='all'||(state.statusFilter==='submitted'?submitted:!submitted);
+    }
+
+    function renderDesktopCell(subject,office){
+      const item=state.status[subject.id+'__'+office.id];
+      const submitted=!!item?.submitted;
+      const enabled=subject.submissionEnabled!==false;
+
+      if(!cellMatchesFilter(submitted))return '<td class="filtered-cell">—</td>';
+
+      if(!enabled&&!submitted){
+        return '<td class="closed-cell"><div class="cell-status"><button type="button" class="upload-button closed" disabled>Closed</button><small class="submitted-time">By Head Office</small></div></td>';
+      }
+
+      const icon=submitted?CHECK_ICON:UPLOAD_ICON;
+      const label=submitted?'Submitted':'Upload';
+      const className=submitted?'upload-button submitted':'upload-button';
+
+      return '<td class="'+(submitted?'submitted-cell':'pending-cell')+'"><div class="cell-status">'+
+        '<button type="button" class="'+className+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+icon+label+'</button>'+
+        (submitted?
+          '<small class="submitted-time">'+formatDate(item.submittedAt)+'</small>'+
+          '<small class="replace-hint">'+(enabled?'Select to view or replace':'Viewing only · submissions closed')+'</small>'
+          :'')+
+        '</div></td>';
+    }
+
+    function renderMobileCell(subject,office){
+      const item=state.status[subject.id+'__'+office.id];
+      const submitted=!!item?.submitted;
+      const enabled=subject.submissionEnabled!==false;
+
+      if(!cellMatchesFilter(submitted))return '';
+      if(!enabled&&!submitted){
+        return '<div class="closed-office"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="closed" disabled>Closed</button><small>By Head Office</small></span></div>';
+      }
+
+      const label=submitted?'Submitted':'Upload';
+      return '<div class="'+(submitted?'submitted-office':'pending-office')+'">'+
+        '<span class="office-name">'+escapeHtml(office.name)+'</span>'+
+        '<span class="office-action"><button type="button" class="'+(submitted?'submitted':'')+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+
+        (submitted?CHECK_ICON:UPLOAD_ICON)+label+'</button>'+
+        (submitted?'<small>'+formatDate(item.submittedAt)+' · '+(enabled?'view or replace':'view only · submissions closed')+'</small>':'')+
+        '</span></div>';
+    }
+
+    function updateSummary(){
+      const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
+      const total=state.subjects.length*offices.length;
+      let complete=0;
+
+      state.subjects.forEach(s=>offices.forEach(o=>{
+        if(state.status[s.id+'__'+o.id]?.submitted)complete++;
+      }));
+
+      const percent=total?Math.round(complete*100/total):0;
+
+      $('#totalCount').textContent=total;
+      $('#completeCount').textContent=complete;
+      $('#awaitingCount').textContent=Math.max(total-complete,0);
+      $('#progressPercent').textContent=percent+'%';
+      $('#progressCount').textContent=complete+' of '+total;
+      $('#progressFill').style.width=percent+'%';
+      $('#progressBar').setAttribute('aria-valuenow',String(percent));
+
+      const selected=state.offices.find(o=>o.id===state.officeFilter);
+      $('#totalNote').textContent=selected?'For '+selected.name:state.subjects.length+' subjects × '+state.offices.length+' offices';
+
+      const officeTotal=state.subjects.length;
+      $('#officeCycleList').innerHTML=state.offices.map(office=>{
+        const submitted=state.subjects.reduce((n,s)=>n+(state.status[s.id+'__'+office.id]?.submitted?1:0),0);
+        const pending=Math.max(officeTotal-submitted,0);
+        const pct=officeTotal?Math.round(submitted*100/officeTotal):0;
+        const active=state.officeFilter===office.id;
+
+        return '<button type="button" class="office-cycle-row'+(active?' active':'')+'" data-office-filter="'+escapeAttr(office.id)+'">'+
+          '<span>'+escapeHtml(office.name)+'</span>'+
+          '<span class="office-cycle-status"><span class="office-status-submitted">Submitted <strong>'+submitted+'</strong></span>'+
+          '<span class="office-status-pending">Pending <strong>'+pending+'</strong></span></span>'+
+          '<span class="office-cycle-track"><span class="office-cycle-fill" style="width:'+pct+'%"></span></span>'+
+          '</button>';
+      }).join('');
+    }
+
+    function setSystemState(label,online,lastUpdated){
+      $('#systemStatus').textContent=label;
+      $('#statusDot').classList.toggle('offline',!online);
+      const date=lastUpdated?new Date(lastUpdated):new Date();
+      $('#lastChecked').textContent=(online?'· Last refreshed ':'· ')+
+        new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
+    }
+
+    function setNotice(message,visible){
+      $('#connectionMessage').textContent=message;
+      $('#connectionNotice').classList.toggle('hidden',!visible);
+    }
+
+    function openUpload(subjectId,officeId){
+      if(!state.connected){showToast('Complete the Apps Script connection before uploading.','error');return}
+
+      const subject=state.subjects.find(x=>x.id===subjectId);
+      const office=state.offices.find(x=>x.id===officeId);
+      if(!subject||!office)return;
+
+      const submitted=!!state.status[subjectId+'__'+officeId]?.submitted;
+      const enabled=subject.submissionEnabled!==false;
+      const viewOnly=!enabled;
+
+      if(viewOnly&&!submitted){
+        showToast('Head Office has disabled submissions for this report subject.','error');return;
+      }
+
+      state.selected={subject,office};
+      $('#uploadTitle').textContent=submitted?(viewOnly?'View submitted report':'View or replace submitted report'):'Upload report';
+      $('#uploadSubject').textContent=subject.name;
+      $('#uploadOffice').textContent=office.name;
+      $('#uploadForm').reset();
+      $('#fileLabel').textContent='Choose a PDF file';
+      $('#fileHint').textContent='Click to browse · PDF only · Maximum '+state.maxFileMb+' MB';
+      $('#reportDropZone').classList.toggle('hidden',viewOnly);
+      $('#uploadSubmit').classList.toggle('hidden',viewOnly);
+      $('#uploadSubmit').disabled=true;
+      $('#uploadSubmit').textContent=submitted?'Replace report':'Submit report';
+      $('#viewReportButton').classList.toggle('hidden',!submitted);
+      $('#viewReportButton').disabled=false;
+      $('#viewReportButton').textContent='View submitted report';
+      $('#removeReportButton').classList.toggle('hidden',!submitted||viewOnly);
+      $('#removeReportButton').disabled=false;
+      $('#removeReportButton').textContent='Remove uploaded report';
+      $('#uploadPrivacyNote').textContent=viewOnly
+        ?'Head Office has closed submissions for this subject. Existing report remains available for viewing.'
+        :'Enter the office security code to view, replace, or remove a submitted report.';
+
+      openModal('upload');
+      setTimeout(()=>submitted?$('#officeCode').focus():$('#pdfFile').focus(),40);
+    }
+
+    function handleFileSelection(){
+      const file=$('#pdfFile').files[0];
+      if(!file){
+        $('#fileLabel').textContent='Choose a PDF file';
+        $('#uploadSubmit').disabled=true;
+        return;
+      }
+
+      const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+      const tooLarge=file.size>state.maxFileMb*1024*1024;
+
+      if(!isPdf||tooLarge){
+        showToast(!isPdf?'Only PDF files are permitted.':'PDF must be '+state.maxFileMb+' MB or smaller.','error');
+        $('#pdfFile').value='';
+        $('#fileLabel').textContent='Choose a PDF file';
+        $('#uploadSubmit').disabled=true;
+        return;
+      }
+
+      $('#fileLabel').textContent=file.name;
+      $('#fileHint').textContent=formatBytes(file.size)+' · Click to replace';
+      $('#uploadSubmit').disabled=false;
+    }
+
+    async function submitUpload(event){
+      event.preventDefault();
+      const file=$('#pdfFile').files[0];
+      const securityCode=$('#officeCode').value.trim();
+      if(!file||!securityCode||!state.selected)return;
+
+      if(state.selected.subject.submissionEnabled===false){
+        showToast('Head Office has disabled submissions for this report subject.','error');return;
+      }
+
+      const existing=state.status[state.selected.subject.id+'__'+state.selected.office.id]?.submitted;
+      const defaultLabel=existing?'Replace report':'Submit report';
+      setBusy($('#uploadSubmit'),true,'Uploading…');
+
+      try{
+        const fileBase64=await readFileBase64(file);
+        const result=await postToBackend({
+          action:'upload',
+          subjectId:state.selected.subject.id,
+          officeId:state.selected.office.id,
+          securityCode,
+          fileName:file.name,
+          mimeType:'application/pdf',
+          fileBase64
+        });
+
+        closeModal('upload');
+        showToast(result.message||'Report submitted successfully.','success');
+        await loadPortal();
+      }catch(error){
+        showToast(error.message||'Upload failed.','error');
+      }finally{
+        setBusy($('#uploadSubmit'),false,defaultLabel);
+      }
+    }
+
+    function validSecureViewUrl(value){
+      try{
+        const url=new URL(String(value||''));
+        return url.protocol==='https:'&&url.hostname==='script.google.com'&&
+          /^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url.pathname)?url.href:'';
+      }catch(e){return''}
+    }
+
+    async function viewSubmittedReport(){
+      const securityCode=$('#officeCode').value.trim();
+      const selected=state.selected;
+      if(!selected)return;
+
+      if(!securityCode){
+        showToast('Enter the office security code before viewing the report.','error');
+        $('#officeCode').focus();
+        return;
+      }
+
+      const viewer=window.open('about:blank','_blank');
+      if(!viewer){
+        showToast('Allow pop-ups for this portal, then try again.','error');return;
+      }
+
+      try{
+        viewer.document.write('<!doctype html><title>Opening report…</title><style>body{font-family:Arial;display:grid;place-items:center;min-height:90vh;color:#31576d;background:#eef4f6}</style><p>Preparing secure report…</p>');
+        viewer.document.close();
+      }catch(e){}
+
+      const button=$('#viewReportButton');
+      setBusy(button,true,'Preparing secure view…');
+
+      try{
+        const result=await postToBackend({
+          action:'viewSubmission',
+          subjectId:selected.subject.id,
+          officeId:selected.office.id,
+          securityCode
+        });
+        const viewUrl=validSecureViewUrl(result.viewUrl);
+        if(!viewUrl)throw new Error('Backend did not return a valid secure report link.');
+        viewer.location.replace(viewUrl);
+        showToast(result.message||'Submitted report opened securely.','success');
+      }catch(error){
+        try{viewer.close()}catch(e){}
+        showToast(error.message||'Submitted report could not be opened.','error');
+      }finally{
+        setBusy(button,false,'View submitted report');
+      }
+    }
+
+    async function removeSubmittedReport(){
+      const securityCode=$('#officeCode').value.trim();
+      if(!state.selected)return;
+
+      if(!securityCode){
+        showToast('Enter the office security code before removing the report.','error');
+        $('#officeCode').focus();
+        return;
+      }
+
+      if(!confirm('Remove the submitted report for '+state.selected.office.name+'? The latest PDF will be moved to Google Drive Trash.'))return;
+
+      const button=$('#removeReportButton');
+      setBusy(button,true,'Removing…');
+
+      try{
+        const result=await postToBackend({
+          action:'removeSubmission',
+          subjectId:state.selected.subject.id,
+          officeId:state.selected.office.id,
+          securityCode
+        });
+        closeModal('upload');
+        showToast(result.message||'Report removed successfully.','success');
+        await loadPortal();
+      }catch(error){
+        showToast(error.message||'Report could not be removed.','error');
+      }finally{
+        setBusy(button,false,'Remove uploaded report');
+      }
+    }
+
+    function readFileBase64(file){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');
+        reader.onerror=()=>reject(new Error('Selected PDF could not be read.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function openAdmin(){
+      if(!state.connected){showToast('Complete the Apps Script connection before opening Administrator.','error');return}
+      state.adminCode='';
+      closeSubjectLinkEditor();
+      closeRenameSubjectEditor();
+      $('#adminLogin').classList.remove('hidden');
+      $('#adminPanel').classList.add('hidden');
+      $('#adminLoginForm').reset();
+      openModal('admin');
+      setTimeout(()=>$('#adminCode').focus(),40);
+    }
+
+    function verifyAdministrator(event){
+      event.preventDefault();
+      const securityCode=$('#adminCode').value.trim();
+      if(!securityCode)return;
+      state.adminCode=securityCode;
+      $('#adminLogin').classList.add('hidden');
+      $('#adminPanel').classList.remove('hidden');
+      renderAdminSubjects();
+      setTimeout(()=>$('#newSubject').focus(),40);
+    }
+
+    function validateSubjectLinkText(subjectName,linkText){
+      const text=String(linkText||'').replace(/\s+/g,' ').trim();
+      if(!text)throw new Error('Enter exact words in the subject that should open the PDF.');
+      if(!String(subjectName||'').toLowerCase().includes(text.toLowerCase()))
+        throw new Error('Hyperlink text must exactly match words contained in the subject name.');
+      return text;
+    }
+
+    function validateLinkedPdf(file){
+      if(!file)throw new Error('Select the PDF that should open from the subject text.');
+      const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+      if(!isPdf)throw new Error('Only a PDF file can be linked to the subject.');
+      if(file.size>state.maxFileMb*1024*1024)throw new Error('Linked PDF must be '+state.maxFileMb+' MB or smaller.');
+      return file;
+    }
+
+    async function addSubject(event){
+      event.preventDefault();
+      const name=$('#newSubject').value.trim();
+      if(!name||!state.adminCode)return;
+
+      const linkValue=$('#newSubjectLinkText').value;
+      const selectedFile=$('#newSubjectLinkPdf').files[0];
+      let linkText='',file=null;
+
+      try{
+        if(linkValue||selectedFile){
+          linkText=validateSubjectLinkText(name,linkValue);
+          file=validateLinkedPdf(selectedFile);
+        }
+      }catch(error){
+        showToast(error.message,'error');return;
+      }
+
+      setBusy($('#addSubjectButton'),true,'Adding…');
+
+      try{
+        const payload={action:'adminAddSubject',securityCode:state.adminCode,subjectName:name,linkText};
+        if(file){
+          payload.linkedPdfName=file.name;
+          payload.linkedPdfMimeType='application/pdf';
+          payload.linkedPdfBase64=await readFileBase64(file);
+        }
+        const result=await postToBackend(payload);
+        $('#addSubjectForm').reset();
+        showToast(result.message||'Subject added successfully.','success');
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject could not be added.','error');
+      }finally{
+        setBusy($('#addSubjectButton'),false,'Add subject');
+      }
+    }
+
+    function openSubjectLinkEditor(subjectId){
+      const subject=state.subjects.find(x=>x.id===subjectId);
+      if(!subject)return;
+
+      closeRenameSubjectEditor();
+      state.adminEditingSubjectId=subject.id;
+      $('#editSubjectId').value=subject.id;
+      $('#editSubjectName').textContent=subject.name;
+      $('#editSubjectLinkText').value=subject.linkText||'';
+      $('#currentLinkedPdf').textContent=subject.linkFileName
+        ?'Current PDF: '+subject.linkFileName
+        :(subject.linkUrl?'A previous URL hyperlink exists. Upload a PDF to replace it.':'No PDF is currently linked.');
+      $('#clearSubjectLinkButton').classList.toggle('hidden',!subject.linkUrl);
+      $('#editSubjectLinkForm').classList.remove('hidden');
+      setTimeout(()=>$('#editSubjectLinkText').focus(),40);
+    }
+
+    function closeSubjectLinkEditor(){
+      state.adminEditingSubjectId='';
+      const form=$('#editSubjectLinkForm');
+      if(!form)return;
+      form.reset();
+      form.classList.add('hidden');
+    }
+
+    async function saveSubjectLink(event){
+      event.preventDefault();
+      const subject=state.subjects.find(x=>x.id===state.adminEditingSubjectId);
+      if(!subject||!state.adminCode)return;
+
+      const selectedFile=$('#editSubjectLinkPdf').files[0];
+      let linkText,file=null;
+
+      try{
+        linkText=validateSubjectLinkText(subject.name,$('#editSubjectLinkText').value);
+        if(selectedFile)file=validateLinkedPdf(selectedFile);
+        else if(!subject.linkFileName)throw new Error('Select the PDF that should open from the subject text.');
+      }catch(error){
+        showToast(error.message,'error');return;
+      }
+
+      const button=$('#saveSubjectLinkButton');
+      setBusy(button,true,'Saving…');
+
+      try{
+        const payload={
+          action:'adminUpdateSubjectLink',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          linkText,
+          keepExistingLink:!file
+        };
+        if(file){
+          payload.linkedPdfName=file.name;
+          payload.linkedPdfMimeType='application/pdf';
+          payload.linkedPdfBase64=await readFileBase64(file);
+        }
+        const result=await postToBackend(payload);
+        showToast(result.message||'PDF hyperlink updated.','success');
+        closeSubjectLinkEditor();
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject PDF hyperlink could not be updated.','error');
+      }finally{
+        setBusy(button,false,'Save PDF hyperlink');
+      }
+    }
+
+    async function clearSubjectLink(){
+      const subject=state.subjects.find(x=>x.id===state.adminEditingSubjectId);
+      if(!subject||!state.adminCode||!subject.linkUrl)return;
+
+      if(!confirm('Remove the PDF hyperlink from "'+subject.name+'"?'))return;
+
+      const button=$('#clearSubjectLinkButton');
+      setBusy(button,true,'Removing…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminUpdateSubjectLink',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          linkText:'',
+          linkUrl:''
+        });
+        showToast(result.message||'PDF hyperlink removed.','success');
+        closeSubjectLinkEditor();
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'PDF hyperlink could not be removed.','error');
+      }finally{
+        setBusy(button,false,'Remove PDF hyperlink');
+      }
+    }
+
+    function openRenameSubjectEditor(subjectId){
+      const subject=state.subjects.find(x=>x.id===subjectId);
+      if(!subject)return;
+
+      closeSubjectLinkEditor();
+      state.adminRenamingSubjectId=subject.id;
+      $('#renameSubjectId').value=subject.id;
+      $('#renameCurrentSubjectName').textContent='Current name: '+subject.name;
+      $('#renameSubjectName').value=subject.name;
+      $('#renameSubjectLinkText').value=subject.linkText||'';
+      $('#renameLinkTextField').classList.toggle('hidden',!subject.linkUrl);
+      $('#renameSubjectForm').classList.remove('hidden');
+
+      setTimeout(()=>{
+        $('#renameSubjectName').focus();
+        $('#renameSubjectName').select();
+      },40);
+    }
+
+    function closeRenameSubjectEditor(){
+      state.adminRenamingSubjectId='';
+      const form=$('#renameSubjectForm');
+      if(!form)return;
+      form.reset();
+      form.classList.add('hidden');
+      $('#renameLinkTextField').classList.add('hidden');
+    }
+
+    async function renameSubject(event){
+      event.preventDefault();
+      const subject=state.subjects.find(x=>x.id===state.adminRenamingSubjectId);
+      if(!subject||!state.adminCode)return;
+
+      const subjectName=$('#renameSubjectName').value.replace(/\s+/g,' ').trim();
+      let linkText='';
+
+      try{
+        if(subjectName.length<2)throw new Error('Enter a valid new subject name.');
+        if(subject.linkUrl)linkText=validateSubjectLinkText(subjectName,$('#renameSubjectLinkText').value);
+      }catch(error){
+        showToast(error.message,'error');return;
+      }
+
+      const button=$('#saveRenameSubjectButton');
+      setBusy(button,true,'Renaming…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminRenameSubject',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          subjectName,
+          linkText
+        });
+        showToast(result.message||'Subject renamed successfully.','success');
+        closeRenameSubjectEditor();
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject could not be renamed.','error');
+      }finally{
+        setBusy(button,false,'Save new name');
+      }
+    }
+
+    async function archiveSubject(subjectId){
+      const subject=state.subjects.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+      if(!confirm('Remove "'+subject.name+'" from the portal? Existing files will be preserved.'))return;
+
+      try{
+        const result=await postToBackend({
+          action:'adminArchiveSubject',
+          securityCode:state.adminCode,
+          subjectId
+        });
+        showToast(result.message||'Subject removed.','success');
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject could not be removed.','error');
+      }
+    }
+
+    async function toggleSubjectSubmission(subjectId){
+      const subject=state.subjects.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const enabled=subject.submissionEnabled!==false;
+      const next=!enabled;
+
+      if(enabled&&!confirm('Disable new and replacement uploads for "'+subject.name+'"? Existing submitted reports remain viewable.'))return;
+
+      const button=[...document.querySelectorAll('[data-toggle-submission]')]
+        .find(x=>x.dataset.toggleSubmission===subjectId);
+
+      if(button)setBusy(button,true,next?'Enabling…':'Disabling…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectSubmission',
+          securityCode:state.adminCode,
+          subjectId,
+          enabled:next
+        });
+        showToast(result.message||'Submission setting updated.','success');
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Submission setting could not be updated.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,next?'Enable submissions':'Disable submissions');
+      }
+    }
+
+    function renderAdminSubjects(){
+      const list=$('#subjectAdminList');
+      if(!list)return;
+
+      list.innerHTML=state.subjects.length
+        ?state.subjects.map(subject=>{
+          const enabled=subject.submissionEnabled!==false;
+          const linkInfo=subject.linkFileName
+            ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
+            :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
+
+          return '<div class="subject-admin-row">'+
+            '<span class="subject-admin-info"><strong>'+escapeHtml(subject.name)+'</strong>'+
+            '<small>'+linkInfo+'</small>'+
+            '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+
+            (enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small></span>'+
+            '<span class="subject-admin-actions">'+
+            '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
+            '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
+            '<button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+
+            (enabled?'Disable submissions':'Enable submissions')+'</button>'+
+            '<button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button>'+
+            '</span></div>';
+        }).join('')
+        :'<div class="subject-admin-row"><span>No active subjects</span></div>';
+    }
+
+    function openModal(name){
+      const el=$('#'+name+'Backdrop');
+      if(!el)return;
+      el.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+    }
+
+    function closeModal(name){
+      const el=$('#'+name+'Backdrop');
+      if(!el||el.classList.contains('hidden'))return;
+      el.classList.add('hidden');
+      document.body.style.overflow='';
+      if(name==='upload'){
+        state.selected=null;
+        if($('#officeCode'))$('#officeCode').value='';
+      }
+      if(name==='admin'){
+        state.adminCode='';
+        closeSubjectLinkEditor();
+        closeRenameSubjectEditor();
+      }
+    }
+
+    function setBusy(button,busy,label){
+      if(!button)return;
+      button.disabled=busy;
+      button.textContent=label;
+      button.setAttribute('aria-busy',busy?'true':'false');
+    }
+
+    function formatDate(value){
+      if(!value)return'';
+      const date=new Date(value);
+      return Number.isNaN(date.getTime())
+        ?'Submitted'
+        :new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
+    }
+
+    function formatBytes(bytes){
+      if(bytes<1024)return bytes+' B';
+      if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB';
+      return(bytes/1048576).toFixed(1)+' MB';
+    }
+
+    function showToast(message,type=''){
+      const wrap=$('#toastWrap');
+      if(!wrap)return;
+      const toast=document.createElement('div');
+      toast.className='toast '+type;
+      toast.textContent=message;
+      wrap.appendChild(toast);
+      setTimeout(()=>toast.remove(),5000);
+    }
+  </script>
+
+  <script src="portal-v170.js"></script>
+  <script src="sticky-v170.js"></script>
+</body>
+</html>
