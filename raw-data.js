@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.35';
+  const RAW_FRONTEND_VERSION = '16.0';
 
 
   /* =====================================================================
@@ -1326,7 +1326,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v15.35</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.0</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1347,7 +1347,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v15.35</strong></span>
+        <span class="adgb-version-chip">FE <strong>v16.0</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -2478,7 +2478,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '15.35';
+  const RAW_FRONTEND_VERSION = '16.0';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -3861,3 +3861,464 @@
     initialiseRawDataFeature();
   }
 })();
+
+/* =====================================================================
+   V16.0 SUBMISSION WORKFLOW
+   Review status + secure details drawer + receipts + version history
+   ===================================================================== */
+(() => {
+  'use strict';
+
+  const SCRIPT_URL =
+    (typeof APPS_SCRIPT_URL !== 'undefined' && APPS_SCRIPT_URL)
+      ? APPS_SCRIPT_URL
+      : 'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
+
+  const workflowState = {
+    overview: {},
+    current: null,
+    refreshTimer: null
+  };
+
+  const wfHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[char]));
+
+  function wfNonce() {
+    return window.crypto?.randomUUID?.() ||
+      (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  function wfJsonp(action, parameters = {}) {
+    return new Promise((resolve, reject) => {
+      const callback = 'adgbWfCb_' + wfNonce().replace(/[^A-Za-z0-9_$]/g, '');
+      const script = document.createElement('script');
+      const timer = setTimeout(() => cleanup(new Error('Workflow connection timed out.')), 20000);
+
+      function cleanup(error, data) {
+        clearTimeout(timer);
+        try { delete window[callback]; } catch { window[callback] = undefined; }
+        script.remove();
+        error ? reject(error) : resolve(data);
+      }
+
+      window[callback] = data => cleanup(null, data);
+      script.onerror = () => cleanup(new Error('Workflow backend could not be reached.'));
+      script.src = SCRIPT_URL + '?' + new URLSearchParams({
+        ...parameters,
+        action,
+        callback,
+        _: Date.now()
+      }).toString();
+      document.head.appendChild(script);
+    });
+  }
+
+  function wfPost(action, data = {}) {
+    return new Promise((resolve, reject) => {
+      const token = window.ADGB_AUTH?.token || '';
+      if (!token) {
+        reject(new Error('Please sign in again.'));
+        return;
+      }
+
+      const nonce = wfNonce();
+      const frame = document.createElement('iframe');
+      const form = document.createElement('form');
+      const field = document.createElement('textarea');
+      let finished = false;
+      let pollTimer = null;
+
+      frame.name = 'adgbWfFrame_' + nonce.replace(/[^A-Za-z0-9]/g, '');
+      frame.style.display = 'none';
+      form.method = 'POST';
+      form.action = SCRIPT_URL;
+      form.target = frame.name;
+      form.style.display = 'none';
+      field.name = 'payload';
+      field.value = JSON.stringify({
+        action,
+        nonce,
+        sessionToken: token,
+        ...data
+      });
+      form.appendChild(field);
+
+      const timeout = setTimeout(
+        () => finish(new Error('The workflow action could not be confirmed.')),
+        50000
+      );
+
+      function finish(error, result) {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+        if (pollTimer) clearTimeout(pollTimer);
+        window.removeEventListener('message', onMessage);
+        setTimeout(() => { form.remove(); frame.remove(); }, 0);
+        error ? reject(error) : resolve(result);
+      }
+
+      function onMessage(event) {
+        const packet = event.data;
+        if (packet?.source !== 'ADGB_PORTAL' || packet?.data?.nonce !== nonce) return;
+        const result = packet.data;
+        result.ok ? finish(null, result) : finish(new Error(result.message || 'Workflow request failed.'));
+      }
+
+      async function pollReceipt() {
+        if (finished) return;
+        try {
+          const receipt = await wfJsonp('receipt', { nonce });
+          if (receipt && !receipt.pending) {
+            receipt.ok
+              ? finish(null, receipt)
+              : finish(new Error(receipt.message || 'Workflow request failed.'));
+            return;
+          }
+        } catch {}
+        if (!finished) pollTimer = setTimeout(pollReceipt, 1200);
+      }
+
+      window.addEventListener('message', onMessage);
+      document.body.append(frame, form);
+      form.submit();
+      pollTimer = setTimeout(pollReceipt, 900);
+    });
+  }
+
+  function injectWorkflowUi() {
+    if (document.getElementById('adgbWorkflowStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'adgbWorkflowStyles';
+    style.textContent = `
+      .adgb-review-chip{display:inline-flex;align-items:center;justify-content:center;min-height:19px;padding:2px 7px;border-radius:999px;font-size:8px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;border:1px solid transparent}
+      .adgb-review-chip.under-review{color:#7a5200;background:#fff3c8;border-color:#e9cc70}.adgb-review-chip.accepted{color:#066249;background:#dcf8eb;border-color:#8ad2b6}.adgb-review-chip.returned{color:#a01f38;background:#ffe3e8;border-color:#efa5b2}.adgb-review-chip.submitted{color:#2854a3;background:#e8efff;border-color:#a9c0ef}
+      .adgb-workflow-details-btn{min-height:21px;padding:2px 7px;border:1px solid #c8b9eb;border-radius:6px;background:#f3edff;color:#6542a5;font-size:8.5px;font-weight:950;box-shadow:0 2px 5px rgba(80,54,130,.08)}
+      .adgb-workflow-details-btn:hover{background:#e9ddff;transform:translateY(-1px)}
+      .adgb-workflow-backdrop{position:fixed;inset:0;z-index:30000;background:rgba(11,28,45,.52);backdrop-filter:blur(2px)}
+      .adgb-workflow-backdrop[hidden]{display:none!important}
+      .adgb-workflow-drawer{position:absolute;right:0;top:0;height:100%;width:min(590px,94vw);display:flex;flex-direction:column;background:#f6f8fc;box-shadow:-18px 0 48px rgba(14,35,58,.24);overflow:hidden}
+      .adgb-wf-head{flex:0 0 auto;padding:15px 18px;background:linear-gradient(110deg,#173d67,#5148a6 55%,#0b7d70);color:#fff;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+      .adgb-wf-head small{display:block;font-size:9px;font-weight:900;letter-spacing:.12em;color:#d8e7ff}.adgb-wf-head h2{margin:4px 0 2px;font:900 21px Georgia,serif}.adgb-wf-head p{margin:0;font-size:10px;color:#e6f2f7;font-weight:700}.adgb-wf-close{width:34px;height:34px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:22px}
+      .adgb-wf-body{flex:1;min-height:0;overflow:auto;padding:12px;display:grid;gap:10px}
+      .adgb-wf-summary,.adgb-wf-preview-card,.adgb-wf-review,.adgb-wf-section{border:1px solid #d9e2eb;border-radius:11px;background:#fff;box-shadow:0 4px 12px rgba(25,55,82,.06)}
+      .adgb-wf-summary{padding:11px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adgb-wf-fact{min-width:0;padding:7px 9px;border-radius:8px;background:#f7f9fc}.adgb-wf-fact span{display:block;color:#68798b;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.adgb-wf-fact strong{display:block;margin-top:3px;color:#1b3450;font-size:11px;font-weight:950;overflow-wrap:anywhere}
+      .adgb-wf-status{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em}.adgb-wf-status.under-review{background:#fff0bb;color:#775100}.adgb-wf-status.accepted{background:#d7f7e8;color:#056247}.adgb-wf-status.returned{background:#ffe0e6;color:#a11e38}.adgb-wf-status.submitted{background:#e4edff;color:#2b55a0}
+      .adgb-wf-preview-card{padding:9px}.adgb-wf-preview-card iframe{display:block;width:100%;height:300px;border:1px solid #dbe4eb;border-radius:8px;background:#eef3f6}.adgb-wf-preview-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}.adgb-wf-open{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 11px;border-radius:7px;background:#1e5f8d;color:#fff;text-decoration:none;font-size:9.5px;font-weight:950}.adgb-wf-copy{min-height:30px;border:1px solid #d3dce5;border-radius:7px;background:#fff;color:#425d75;font-size:9px;font-weight:900}
+      .adgb-wf-review{padding:11px;background:linear-gradient(125deg,#fff9e8,#f8f3ff)}.adgb-wf-review h3,.adgb-wf-section h3{margin:0 0 7px;font-size:13px;color:#233f59}.adgb-wf-review textarea{width:100%;min-height:70px;padding:8px;border:1px solid #cdd9e2;border-radius:8px;resize:vertical;font:700 11px Arial;color:#24384b}.adgb-wf-review-actions{display:flex;gap:7px;margin-top:7px}.adgb-wf-review-actions button{flex:1;min-height:32px;border:0;border-radius:8px;font-size:10px;font-weight:1000}.adgb-wf-accept{background:#0b7d5d;color:#fff}.adgb-wf-return{background:#c33b50;color:#fff}
+      .adgb-wf-section{padding:11px}.adgb-wf-list{display:grid;gap:6px}.adgb-wf-row{padding:8px;border:1px solid #e1e7ec;border-radius:8px;background:#fafcfd;display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center}.adgb-wf-row strong{font-size:10.5px;color:#253c53}.adgb-wf-row small{font-size:8.5px;color:#6c7d8d;line-height:1.35}.adgb-wf-row a{grid-row:1/3;grid-column:2;color:#2f5fa7;font-size:9px;font-weight:900;text-decoration:none}.adgb-wf-event{padding:7px 8px;border-left:3px solid #8f7cca;background:#f8f6ff;border-radius:0 7px 7px 0}.adgb-wf-event strong{display:block;font-size:9.5px;color:#453a72}.adgb-wf-event small{display:block;margin-top:2px;font-size:8.5px;color:#687789;line-height:1.4}.adgb-wf-empty{padding:20px;text-align:center;color:#68798a;font-size:11px;font-weight:700}
+      @media(max-width:720px){.adgb-workflow-drawer{width:100vw}.adgb-wf-summary{grid-template-columns:1fr 1fr}.adgb-wf-preview-card iframe{height:250px}}
+    `;
+    document.head.appendChild(style);
+
+    const shell = document.createElement('div');
+    shell.id = 'adgbWorkflowBackdrop';
+    shell.className = 'adgb-workflow-backdrop';
+    shell.hidden = true;
+    shell.innerHTML = `
+      <aside class="adgb-workflow-drawer" role="dialog" aria-modal="true" aria-labelledby="adgbWfTitle">
+        <header class="adgb-wf-head">
+          <div><small>SUBMISSION WORKFLOW</small><h2 id="adgbWfTitle">Report details</h2><p id="adgbWfSubtitle">Loading…</p></div>
+          <button id="adgbWfClose" class="adgb-wf-close" type="button" aria-label="Close">×</button>
+        </header>
+        <div class="adgb-wf-body" id="adgbWfBody"><div class="adgb-wf-empty">Loading submission details…</div></div>
+      </aside>`;
+    document.body.appendChild(shell);
+
+    shell.addEventListener('mousedown', event => {
+      if (event.target === shell) closeWorkflowDrawer();
+    });
+    document.getElementById('adgbWfClose').addEventListener('click', closeWorkflowDrawer);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !shell.hidden) closeWorkflowDrawer();
+    });
+    document.addEventListener('click', handleWorkflowClick, true);
+  }
+
+  function prettyStatus(value) {
+    return ({
+      UNDER_REVIEW: 'Under review',
+      ACCEPTED: 'Accepted',
+      RETURNED: 'Returned',
+      SUBMITTED: 'Submitted'
+    })[String(value || '').toUpperCase()] || 'Submitted';
+  }
+
+  function statusClass(value) {
+    const status = String(value || '').toUpperCase();
+    if (status === 'ACCEPTED') return 'accepted';
+    if (status === 'RETURNED') return 'returned';
+    if (status === 'UNDER_REVIEW') return 'under-review';
+    return 'submitted';
+  }
+
+  function wfDate(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('en-IN', {
+      day:'2-digit', month:'short', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    }).format(date);
+  }
+
+  function wfSize(bytes) {
+    const size = Number(bytes) || 0;
+    if (!size) return '—';
+    if (size < 1024 * 1024) return Math.round(size / 1024) + ' KB';
+    return (size / 1024 / 1024).toFixed(2) + ' MB';
+  }
+
+  function canOpenOffice(officeId) {
+    const auth = window.ADGB_AUTH;
+    if (!auth?.token || !auth.can?.('reportViewFile')) return false;
+    if (auth.isAdmin || auth.can('allOffices')) return true;
+    return String(auth.officeId || '').toUpperCase() === String(officeId || '').toUpperCase();
+  }
+
+  async function refreshWorkflowOverview() {
+    if (!window.ADGB_AUTH?.token) return;
+    try {
+      const result = await wfPost('submissionOverview');
+      workflowState.overview = result.overview || {};
+      decorateSubmissionMatrix();
+    } catch (error) {
+      console.warn('Submission workflow overview:', error);
+    }
+  }
+
+  function decorateSubmissionMatrix() {
+    const matrix = document.getElementById('matrixContent');
+    if (!matrix) return;
+
+    matrix.querySelectorAll('[data-upload]').forEach(button => {
+      const subjectId = String(button.dataset.subject || '');
+      const officeId = String(button.dataset.office || '').toUpperCase();
+      const key = subjectId + '__' + officeId;
+      const item = workflowState.overview[key];
+      if (!item) return;
+
+      const parent = button.parentElement;
+      if (!parent) return;
+
+      let chip = parent.querySelector('[data-adgb-review-chip="' + CSS.escape(key) + '"]');
+      if (!chip) {
+        chip = document.createElement('span');
+        chip.dataset.adgbReviewChip = key;
+        parent.appendChild(chip);
+      }
+      chip.className = 'adgb-review-chip ' + statusClass(item.reviewStatus);
+      chip.textContent = prettyStatus(item.reviewStatus);
+      chip.title = 'Submission workflow status';
+
+      if (canOpenOffice(officeId)) {
+        let details = parent.querySelector('[data-adgb-workflow-details="' + CSS.escape(key) + '"]');
+        if (!details) {
+          details = document.createElement('button');
+          details.type = 'button';
+          details.className = 'adgb-workflow-details-btn';
+          details.textContent = 'Details';
+          details.dataset.adgbWorkflowDetails = key;
+          details.dataset.subject = subjectId;
+          details.dataset.office = officeId;
+          parent.appendChild(details);
+        }
+      }
+    });
+  }
+
+  function handleWorkflowClick(event) {
+    const button = event.target.closest('[data-adgb-workflow-details]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openWorkflowDrawer(button.dataset.subject, button.dataset.office);
+  }
+
+  function openDrawerShell(subjectId, officeId) {
+    const shell = document.getElementById('adgbWorkflowBackdrop');
+    if (!shell) return;
+    workflowState.current = { subjectId, officeId };
+    shell.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('adgbWfTitle').textContent = 'Report details';
+    document.getElementById('adgbWfSubtitle').textContent = 'Loading secure workflow information…';
+    document.getElementById('adgbWfBody').innerHTML = '<div class="adgb-wf-empty">Loading submission details…</div>';
+  }
+
+  function closeWorkflowDrawer() {
+    const shell = document.getElementById('adgbWorkflowBackdrop');
+    if (shell) shell.hidden = true;
+    document.body.style.overflow = '';
+    workflowState.current = null;
+  }
+
+  async function openWorkflowDrawer(subjectId, officeId) {
+    openDrawerShell(subjectId, officeId);
+    try {
+      const details = await wfPost('submissionDetails', { subjectId, officeId });
+      renderWorkflowDetails(details);
+    } catch (error) {
+      document.getElementById('adgbWfBody').innerHTML =
+        '<div class="adgb-wf-empty">' + wfHtml(error.message || 'Submission details could not be loaded.') + '</div>';
+    }
+  }
+
+  function renderWorkflowDetails(data) {
+    const latest = data.latest || {};
+    const status = latest.reviewStatus || 'SUBMITTED';
+    document.getElementById('adgbWfTitle').textContent = data.subject?.name || 'Report details';
+    document.getElementById('adgbWfSubtitle').textContent =
+      (data.office?.name || '') + ' · Version ' + (latest.versionNo || 1);
+
+    const preview = latest.viewUrl
+      ? '<iframe title="Submitted PDF preview" src="' + wfHtml(latest.viewUrl) + '"></iframe>'
+      : '<div class="adgb-wf-empty">Secure preview is unavailable.</div>';
+
+    const review = data.canReview ? `
+      <section class="adgb-wf-review">
+        <h3>Head Office review</h3>
+        <textarea id="adgbWfReviewComment" maxlength="500" placeholder="Comment (required when returning for correction)">${wfHtml(latest.reviewComment || '')}</textarea>
+        <div class="adgb-wf-review-actions">
+          <button class="adgb-wf-accept" type="button" data-adgb-review-action="ACCEPTED">✓ Accept report</button>
+          <button class="adgb-wf-return" type="button" data-adgb-review-action="RETURNED">↩ Return for correction</button>
+        </div>
+      </section>` : '';
+
+    const history = Array.isArray(data.history) && data.history.length
+      ? data.history.map(item => `
+          <div class="adgb-wf-row">
+            <div><strong>Version ${wfHtml(item.versionNo || '')} · ${wfHtml(prettyStatus(item.reviewStatus))}</strong><small>${wfHtml(wfDate(item.submittedAt))} · ${wfHtml(item.fileName || '')}</small></div>
+            ${item.viewUrl ? '<a href="' + wfHtml(item.viewUrl) + '" target="_blank" rel="noopener">Open PDF ↗</a>' : ''}
+          </div>`).join('')
+      : '<div class="adgb-wf-empty">No version history available.</div>';
+
+    const activity = Array.isArray(data.activity) && data.activity.length
+      ? data.activity.map(item => `
+          <div class="adgb-wf-event">
+            <strong>${wfHtml(String(item.event || '').replace(/_/g,' '))}${item.versionNo ? ' · v' + wfHtml(item.versionNo) : ''}</strong>
+            <small>${wfHtml(wfDate(item.at))}${item.actor ? ' · ' + wfHtml(item.actor) : ''}${item.comment ? '<br>' + wfHtml(item.comment) : ''}</small>
+          </div>`).join('')
+      : '<div class="adgb-wf-empty">Activity will appear here after new workflow actions.</div>';
+
+    document.getElementById('adgbWfBody').innerHTML = `
+      <section class="adgb-wf-summary">
+        <div class="adgb-wf-fact"><span>Status</span><strong><span class="adgb-wf-status ${statusClass(status)}">${wfHtml(prettyStatus(status))}</span></strong></div>
+        <div class="adgb-wf-fact"><span>Submitted</span><strong>${wfHtml(wfDate(latest.submittedAt))}</strong></div>
+        <div class="adgb-wf-fact"><span>Receipt ID</span><strong id="adgbWfReceipt">${wfHtml(latest.receiptId || 'Legacy submission')}</strong></div>
+        <div class="adgb-wf-fact"><span>Version</span><strong>v${wfHtml(latest.versionNo || 1)} · ${wfHtml(wfSize(latest.sizeBytes))}</strong></div>
+        <div class="adgb-wf-fact" style="grid-column:1/-1"><span>File</span><strong>${wfHtml(latest.fileName || 'Submitted PDF')}</strong></div>
+        ${latest.reviewedBy ? '<div class="adgb-wf-fact" style="grid-column:1/-1"><span>Last reviewed</span><strong>' + wfHtml(latest.reviewedBy) + ' · ' + wfHtml(wfDate(latest.reviewedAt)) + '</strong></div>' : ''}
+      </section>
+      <section class="adgb-wf-preview-card">
+        ${preview}
+        <div class="adgb-wf-preview-actions">
+          ${latest.viewUrl ? '<a class="adgb-wf-open" href="' + wfHtml(latest.viewUrl) + '" target="_blank" rel="noopener">Open full PDF ↗</a>' : '<span></span>'}
+          <button class="adgb-wf-copy" type="button" id="adgbWfCopyReceipt">Copy receipt</button>
+        </div>
+      </section>
+      ${review}
+      <section class="adgb-wf-section"><h3>Version history</h3><div class="adgb-wf-list">${history}</div></section>
+      <section class="adgb-wf-section"><h3>Activity timeline</h3><div class="adgb-wf-list">${activity}</div></section>`;
+
+    document.getElementById('adgbWfCopyReceipt')?.addEventListener('click', copyReceipt);
+    document.querySelectorAll('[data-adgb-review-action]').forEach(button => {
+      button.addEventListener('click', () => reviewCurrentSubmission(button.dataset.adgbReviewAction));
+    });
+  }
+
+  async function copyReceipt() {
+    const text = document.getElementById('adgbWfReceipt')?.textContent?.trim() || '';
+    if (!text || text === 'Legacy submission') return;
+    try {
+      await navigator.clipboard.writeText(text);
+      workflowNotice('Receipt ID copied.', 'success');
+    } catch {
+      workflowNotice('Could not copy the receipt ID.', 'error');
+    }
+  }
+
+  async function reviewCurrentSubmission(reviewStatus) {
+    const current = workflowState.current;
+    if (!current) return;
+    const comment = document.getElementById('adgbWfReviewComment')?.value?.trim() || '';
+    if (reviewStatus === 'RETURNED' && !comment) {
+      workflowNotice('Enter a correction comment before returning the report.', 'error');
+      document.getElementById('adgbWfReviewComment')?.focus();
+      return;
+    }
+
+    const buttons = [...document.querySelectorAll('[data-adgb-review-action]')];
+    buttons.forEach(button => button.disabled = true);
+    try {
+      const result = await wfPost('reviewSubmission', {
+        subjectId: current.subjectId,
+        officeId: current.officeId,
+        reviewStatus,
+        comment
+      });
+      workflowNotice(result.message || 'Review status updated.', 'success');
+      await refreshWorkflowOverview();
+      await openWorkflowDrawer(current.subjectId, current.officeId);
+    } catch (error) {
+      workflowNotice(error.message || 'Review status could not be updated.', 'error');
+    } finally {
+      buttons.forEach(button => { if (button.isConnected) button.disabled = false; });
+    }
+  }
+
+  function workflowNotice(message, type) {
+    try {
+      if (typeof showToast === 'function') {
+        showToast(message, type);
+        return;
+      }
+    } catch {}
+    if (type === 'error') console.error(message); else console.log(message);
+  }
+
+  function observeMatrixForWorkflow() {
+    const matrix = document.getElementById('matrixContent');
+    if (!matrix) return;
+    let timer = null;
+    new MutationObserver(mutations => {
+      let coreChanged = false;
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (!(node instanceof Element)) return;
+          if (node.matches?.('[data-upload]') || node.querySelector?.('[data-upload]')) {
+            coreChanged = true;
+          }
+        });
+      });
+      decorateSubmissionMatrix();
+      if (coreChanged && window.ADGB_AUTH?.token) {
+        clearTimeout(timer);
+        timer = setTimeout(refreshWorkflowOverview, 450);
+      }
+    }).observe(matrix, { childList:true, subtree:true });
+  }
+
+  function initialiseSubmissionWorkflow() {
+    injectWorkflowUi();
+    observeMatrixForWorkflow();
+    window.addEventListener('adgb-auth-changed', event => {
+      if (event.detail?.user) {
+        setTimeout(refreshWorkflowOverview, 150);
+      } else {
+        workflowState.overview = {};
+        closeWorkflowDrawer();
+      }
+    });
+    if (window.ADGB_AUTH?.token) setTimeout(refreshWorkflowOverview, 250);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialiseSubmissionWorkflow);
+  } else {
+    initialiseSubmissionWorkflow();
+  }
+})();
+
