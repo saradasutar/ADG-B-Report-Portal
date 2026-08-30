@@ -1,52 +1,29 @@
-ADG(B) REPORT PORTAL V16.3 — INSTANT MODE
+ADG(B) REPORT PORTAL V16.5 — RAW DATA RUNTIME FIX
 
-MAIN SPEED CHANGES
-- Last good report dashboard is stored locally and painted immediately.
-- Apps Script refreshes quietly in the background.
-- On a first-ever browser load, the shell appears immediately and the single
-  report bootstrap request starts while the user is entering login details.
-- Startup BE-version ping removed.
-- Raw Data reduced from ping + rawBootstrap to one rawBootstrap request.
-- Last Raw Data view is shown immediately while fresh Raw Data loads.
-- Backend status scan now reads only 12 columns, scans newest-first, and stops
-  as soon as all current report/office cells are resolved.
-- Unused V16 Workflow backend functions removed.
-- Simple Upload -> Submitted -> View / Replace / Remove remains.
-- Bootstrap cache remains 180 seconds.
-- Cache invalidation now explicitly removes V16.2 and V16.3 cache keys.
+EXACT LIVE BUG FOUND
+The Raw Data module called ensurePortalLiveDate(), but that function belongs to
+a different private JavaScript IIFE. The browser threw ReferenceError before
+bindRawEvents() ran. Result: Raw Data button was visible but had no working
+click handler.
 
-KEPT
+FIX
+- Removed the cross-scope ensurePortalLiveDate() call from Raw Data module.
+- Date/time remains managed by the login/header module.
+- Raw Data event binding now completes.
+- All V16.4 speed optimisations remain.
 - No Workflow Details.
-- Lazy Target / Reminder.
-- Compact two-row layout.
-- Date + live time.
-- Larger/bolder typography and distinct colours.
-- Top-row FE / BE only.
-- Current files / Users / Sign out.
-- Login/permissions/security.
-- Raw Data.
+- Lazy Sticky Notes remains.
+- Raw Data still uses one rawBootstrap request.
 
 INSTALL
-
-GITHUB
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
-3. Use:
-   <script src="raw-data.js?v=16.3"></script>
-   <script src="sticky-notes.js?v=16.3"></script>
-4. Commit.
-5. Hard-refresh ONCE: Ctrl+Shift+R.
+3. Replace Code.gs and deploy New version.
+4. In index.html use EXACTLY:
+   <script src="raw-data.js?v=16.5-runtimefix"></script>
+   <script src="sticky-notes.js?v=16.5-runtimefix"></script>
+5. Commit.
+6. Open once with Ctrl+Shift+R.
 
-APPS SCRIPT
-1. Replace Code.gs.
-2. Save.
-3. Deploy > Manage deployments > Edit > New version > Deploy.
-4. Do NOT run setupPortal().
-5. Do NOT run setPortalSecurityCodes().
-
-EXPECTED
-FE v16.3 | BE v16.3
-
-NOTE
-The first successful load creates the local Instant Mode snapshot. The biggest
-speed improvement is visible on the second and later opens/reloads.
+Do NOT run setupPortal() or setPortalSecurityCodes().
+Expected FE v16.5 | BE v16.5.
