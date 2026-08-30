@@ -1326,7 +1326,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.0</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.1</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1347,7 +1347,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v16.0</strong></span>
+        <span class="adgb-version-chip">FE <strong>v16.1</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -3863,7 +3863,7 @@
 })();
 
 /* =====================================================================
-   V16.0 SUBMISSION WORKFLOW
+   V16.1 SUPERFAST SUBMISSION WORKFLOW
    Review status + secure details drawer + receipts + version history
    ===================================================================== */
 (() => {
@@ -3995,7 +3995,7 @@
     style.textContent = `
       .adgb-review-chip{display:inline-flex;align-items:center;justify-content:center;min-height:19px;padding:2px 7px;border-radius:999px;font-size:8px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;border:1px solid transparent}
       .adgb-review-chip.under-review{color:#7a5200;background:#fff3c8;border-color:#e9cc70}.adgb-review-chip.accepted{color:#066249;background:#dcf8eb;border-color:#8ad2b6}.adgb-review-chip.returned{color:#a01f38;background:#ffe3e8;border-color:#efa5b2}.adgb-review-chip.submitted{color:#2854a3;background:#e8efff;border-color:#a9c0ef}
-      .adgb-workflow-details-btn{min-height:21px;padding:2px 7px;border:1px solid #c8b9eb;border-radius:6px;background:#f3edff;color:#6542a5;font-size:8.5px;font-weight:950;box-shadow:0 2px 5px rgba(80,54,130,.08)}
+      .adgb-workflow-details-btn{min-height:20px;padding:1px 6px;border:1px solid #c8b9eb;border-radius:6px;background:#f3edff;color:#6542a5;font-size:8px;font-weight:950;box-shadow:0 2px 5px rgba(80,54,130,.08)}
       .adgb-workflow-details-btn:hover{background:#e9ddff;transform:translateY(-1px)}
       .adgb-workflow-backdrop{position:fixed;inset:0;z-index:30000;background:rgba(11,28,45,.52);backdrop-filter:blur(2px)}
       .adgb-workflow-backdrop[hidden]{display:none!important}
@@ -4034,7 +4034,6 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !shell.hidden) closeWorkflowDrawer();
     });
-    document.addEventListener('click', handleWorkflowClick, true);
   }
 
   function prettyStatus(value) {
@@ -4078,62 +4077,88 @@
     return String(auth.officeId || '').toUpperCase() === String(officeId || '').toUpperCase();
   }
 
+  /*
+   * V16.1 PERFORMANCE:
+   * No workflow overview request runs during dashboard startup.
+   * The normal portal bootstrap already tells us which cells are submitted.
+   * Workflow history/review data is fetched only when Details is opened.
+   */
   async function refreshWorkflowOverview() {
-    if (!window.ADGB_AUTH?.token) return;
-    try {
-      const result = await wfPost('submissionOverview');
-      workflowState.overview = result.overview || {};
-      decorateSubmissionMatrix();
-    } catch (error) {
-      console.warn('Submission workflow overview:', error);
-    }
+    return;
+  }
+
+  function clearWorkflowDecorations() {
+    document.querySelectorAll(
+      '[data-adgb-workflow-details],[data-adgb-review-chip]'
+    ).forEach(element => element.remove());
   }
 
   function decorateSubmissionMatrix() {
     const matrix = document.getElementById('matrixContent');
-    if (!matrix) return;
+    if (!matrix || !window.ADGB_AUTH?.token) return;
 
-    matrix.querySelectorAll('[data-upload]').forEach(button => {
+    /*
+     * Only submitted reports need a Details shortcut.
+     * No status chips are injected here; status is shown inside the drawer.
+     * This keeps the matrix clean and removes continuous DOM mutation.
+     */
+    matrix.querySelectorAll('.upload-button.submitted[data-upload]').forEach(button => {
       const subjectId = String(button.dataset.subject || '');
       const officeId = String(button.dataset.office || '').toUpperCase();
-      const key = subjectId + '__' + officeId;
-      const item = workflowState.overview[key];
-      if (!item) return;
+      if (!subjectId || !officeId || !canOpenOffice(officeId)) return;
 
       const parent = button.parentElement;
       if (!parent) return;
 
-      let chip = parent.querySelector('[data-adgb-review-chip="' + CSS.escape(key) + '"]');
-      if (!chip) {
-        chip = document.createElement('span');
-        chip.dataset.adgbReviewChip = key;
-        parent.appendChild(chip);
-      }
-      chip.className = 'adgb-review-chip ' + statusClass(item.reviewStatus);
-      chip.textContent = prettyStatus(item.reviewStatus);
-      chip.title = 'Submission workflow status';
+      const key = subjectId + '__' + officeId;
 
-      if (canOpenOffice(officeId)) {
-        let details = parent.querySelector('[data-adgb-workflow-details="' + CSS.escape(key) + '"]');
-        if (!details) {
-          details = document.createElement('button');
-          details.type = 'button';
-          details.className = 'adgb-workflow-details-btn';
-          details.textContent = 'Details';
-          details.dataset.adgbWorkflowDetails = key;
-          details.dataset.subject = subjectId;
-          details.dataset.office = officeId;
-          parent.appendChild(details);
-        }
+      if (parent.querySelector('[data-adgb-workflow-details="' + CSS.escape(key) + '"]')) {
+        return;
       }
+
+      const details = document.createElement('button');
+      details.type = 'button';
+      details.className = 'adgb-workflow-details-btn';
+      details.textContent = 'Details';
+      details.title = 'Receipt, review status, versions and activity';
+      details.dataset.adgbWorkflowDetails = key;
+      details.dataset.subject = subjectId;
+      details.dataset.office = officeId;
+      parent.appendChild(details);
     });
+  }
+
+  function hookMatrixRenderForWorkflow() {
+    if (
+      typeof window.renderMatrix !== 'function' ||
+      window.renderMatrix.__adgbWorkflowFastHook
+    ) return;
+
+    const originalRenderMatrix = window.renderMatrix;
+
+    function fastRenderMatrixHook(...args) {
+      const result = originalRenderMatrix.apply(this, args);
+
+      /*
+       * Run after the normal matrix HTML has been committed.
+       * One pass only; no MutationObserver.
+       */
+      queueMicrotask(decorateSubmissionMatrix);
+      return result;
+    }
+
+    fastRenderMatrixHook.__adgbWorkflowFastHook = true;
+    window.renderMatrix = fastRenderMatrixHook;
   }
 
   function handleWorkflowClick(event) {
     const button = event.target.closest('[data-adgb-workflow-details]');
     if (!button) return;
+
     event.preventDefault();
     event.stopPropagation();
+
+    injectWorkflowUi();
     openWorkflowDrawer(button.dataset.subject, button.dataset.office);
   }
 
@@ -4174,8 +4199,8 @@
       (data.office?.name || '') + ' · Version ' + (latest.versionNo || 1);
 
     const preview = latest.viewUrl
-      ? '<iframe title="Submitted PDF preview" src="' + wfHtml(latest.viewUrl) + '"></iframe>'
-      : '<div class="adgb-wf-empty">Secure preview is unavailable.</div>';
+      ? '<div class="adgb-wf-empty">PDF is not loaded automatically. Open it only when required.</div>'
+      : '<div class="adgb-wf-empty">Secure PDF is unavailable.</div>';
 
     const review = data.canReview ? `
       <section class="adgb-wf-review">
@@ -4215,7 +4240,7 @@
       <section class="adgb-wf-preview-card">
         ${preview}
         <div class="adgb-wf-preview-actions">
-          ${latest.viewUrl ? '<a class="adgb-wf-open" href="' + wfHtml(latest.viewUrl) + '" target="_blank" rel="noopener">Open full PDF ↗</a>' : '<span></span>'}
+          ${latest.viewUrl ? '<a class="adgb-wf-open" href="' + wfHtml(latest.viewUrl) + '" target="_blank" rel="noopener">Open secure PDF ↗</a>' : '<span></span>'}
           <button class="adgb-wf-copy" type="button" id="adgbWfCopyReceipt">Copy receipt</button>
         </div>
       </section>
@@ -4260,7 +4285,6 @@
         comment
       });
       workflowNotice(result.message || 'Review status updated.', 'success');
-      await refreshWorkflowOverview();
       await openWorkflowDrawer(current.subjectId, current.officeId);
     } catch (error) {
       workflowNotice(error.message || 'Review status could not be updated.', 'error');
@@ -4279,40 +4303,32 @@
     if (type === 'error') console.error(message); else console.log(message);
   }
 
-  function observeMatrixForWorkflow() {
-    const matrix = document.getElementById('matrixContent');
-    if (!matrix) return;
-    let timer = null;
-    new MutationObserver(mutations => {
-      let coreChanged = false;
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-          if (!(node instanceof Element)) return;
-          if (node.matches?.('[data-upload]') || node.querySelector?.('[data-upload]')) {
-            coreChanged = true;
-          }
-        });
-      });
-      decorateSubmissionMatrix();
-      if (coreChanged && window.ADGB_AUTH?.token) {
-        clearTimeout(timer);
-        timer = setTimeout(refreshWorkflowOverview, 450);
-      }
-    }).observe(matrix, { childList:true, subtree:true });
-  }
-
   function initialiseSubmissionWorkflow() {
+    /*
+     * V16.1: no matrix MutationObserver and no backend workflow request here.
+     * Startup work is entirely local and tiny.
+     */
     injectWorkflowUi();
-    observeMatrixForWorkflow();
+    hookMatrixRenderForWorkflow();
+
+    document.addEventListener('click', handleWorkflowClick, true);
+
     window.addEventListener('adgb-auth-changed', event => {
+      clearWorkflowDecorations();
+
       if (event.detail?.user) {
-        setTimeout(refreshWorkflowOverview, 150);
+        queueMicrotask(() => {
+          hookMatrixRenderForWorkflow();
+          decorateSubmissionMatrix();
+        });
       } else {
-        workflowState.overview = {};
         closeWorkflowDrawer();
       }
     });
-    if (window.ADGB_AUTH?.token) setTimeout(refreshWorkflowOverview, 250);
+
+    if (window.ADGB_AUTH?.token) {
+      queueMicrotask(decorateSubmissionMatrix);
+    }
   }
 
   if (document.readyState === 'loading') {

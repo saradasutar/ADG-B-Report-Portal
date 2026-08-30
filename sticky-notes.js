@@ -3,7 +3,7 @@
 
 const CONFIG = Object.freeze({
   API_URL: "https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec",
-  FRONTEND_VERSION: "16.0",
+  FRONTEND_VERSION: "16.1",
   REQUEST_TIMEOUT_MS: 45000
 });
 
@@ -1621,45 +1621,39 @@ function escapeAttribute(value) {
 }
 
 
-window.addEventListener("adgb-auth-changed", async (event) => {
+window.addEventListener("adgb-auth-changed", (event) => {
+  /*
+   * V16.1 PERFORMANCE:
+   * Do not contact Apps Script merely because the user signed in.
+   * Sticky data loads only when Target / Reminder is opened.
+   * Backend still validates every write action.
+   */
   const user = event.detail?.user || null;
   const canView = applyStickyPermissionState();
+  const canManage =
+    Boolean(
+      user &&
+      window.ADGB_AUTH?.token &&
+      window.ADGB_AUTH?.can?.("stickyManage")
+    );
 
-  if (canView) {
-    try {
-      await loadStickyNotes();
-    } catch {
-      state.stickyNotes = [];
-      renderStickyNotes();
-    }
+  state.stickyNotes = [];
+
+  if (canManage) {
+    state.adminCode = "SESSION:" + window.ADGB_AUTH.token;
+    state.adminUnlocked = true;
+    sessionStorage.setItem(STICKY_ADMIN_CODE_SESSION_KEY, state.adminCode);
   } else {
-    state.stickyNotes = [];
-    renderStickyNotes();
+    state.adminCode = "";
+    state.adminUnlocked = false;
+    sessionStorage.removeItem(STICKY_ADMIN_CODE_SESSION_KEY);
   }
 
-  if (window.ADGB_AUTH?.can?.("stickyManage") && window.ADGB_AUTH?.token) {
-    try {
-      state.adminCode = "SESSION:" + window.ADGB_AUTH.token;
-      const result = await apiPost("permissionVerify", {
-        sessionToken: window.ADGB_AUTH.token,
-        permission: "stickyManage"
-      });
-      if (result?.ok !== false) {
-        state.adminUnlocked = true;
-        applyAdminState();
-        renderStickyNotes();
-      }
-    } catch {
-      state.adminUnlocked = false;
-      state.adminCode = "";
-      applyAdminState();
-      renderStickyNotes();
-    }
-  } else {
-    state.adminUnlocked = false;
-    state.adminCode = "";
-    applyAdminState();
-    renderStickyNotes();
+  applyAdminState();
+  renderStickyNotes();
+
+  if (!canView) {
+    refs.stickyNotesDialog?.close?.();
   }
 });
 
