@@ -1,6 +1,11 @@
-Use these exact lines at the bottom of your CURRENT index.html:
+ADD INSIDE <head> OF YOUR CURRENT index.html:
 
-<script src="raw-data.js?v=16.6-turbo"></script>
-<script src="sticky-notes.js?v=16.6-turbo"></script>
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=16.8">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png?v=16.8">
+<link rel="shortcut icon" href="favicon.ico?v=16.8">
+<meta name="theme-color" content="#0b3b60">
 
-The "-turbo" cache-buster is intentional.
+USE THESE SCRIPT LINES AT THE BOTTOM:
+
+<script src="raw-data.js?v=16.8-favicon"></script>
+<script src="sticky-notes.js?v=16.8-favicon"></script>

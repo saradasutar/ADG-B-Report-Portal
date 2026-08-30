@@ -1,0 +1,42 @@
+V16.7 FAST DATA ENGINE
+
+                  GitHub Pages
+                       |
+                    Login
+                       |
+             Cached user/session
+                       |
+                 Dashboard
+                       |
+          DASHBOARD_SNAPSHOT_V167
+                       |
+         +-------------+-------------+
+         |                           |
+      Subjects                 Current_Status
+                                   ~25 rows
+                                      |
+                              latest state only
+
+Historical audit:
+Submissions
+- append-only
+- all uploads/removals retained
+- NOT scanned during normal dashboard use
+
+Upload:
+PDF -> Drive
+    -> append Submissions history
+    -> upsert Current_Status
+    -> invalidate dashboard snapshot
+
+Remove:
+Current_Status -> identify latest PDF
+               -> Drive Trash
+               -> append removal history
+               -> update Current_Status
+               -> invalidate dashboard snapshot
+
+Raw Data:
+RAW_SNAPSHOT_V167_YYYY-MM
+5-minute cache
+invalidated immediately on Raw Data writes

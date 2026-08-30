@@ -1,19 +1,18 @@
-V16.6 QUALITY CHECKS
+V16.7 QUALITY / PERFORMANCE CHECKS
 
-PASS — Code.gs syntax
-PASS — raw-data.js syntax
-PASS — sticky-notes.js syntax
-PASS — FE version 16.6
-PASS — BE version 16.6
-PASS — no startup loadAuthBackendVersion ping
-PASS — login uses cached auth index
-PASS — login no longer performs blocking Last Login sheet write
-PASS — auth cache invalidated on user update/delete/create
-PASS — Portal_Users read includes Permissions JSON column 12
-PASS — database schema fast-path marker present
-PASS — dashboard cache active key invalidation present
-PASS — bootstrap reuses one Spreadsheet object
-PASS — Raw Data reuses one Spreadsheet object
-PASS — Workflow Details absent
-PASS — lazy Sticky Notes retained
-PASS — Raw Data runtime fix retained
+- Historical Submissions preserved
+- Current_Status auto-created
+- Existing history automatically indexed once
+- Dashboard reads Current_Status, not Submissions history
+- View Report reads Current_Status
+- Remove Report reads Current_Status
+- Upload appends history + upserts Current_Status
+- Remove appends history + upserts Current_Status
+- Dashboard snapshot cache present
+- Dashboard cache invalidated on report/subject writes
+- Raw Data snapshot cache present
+- Raw Data cache invalidated on every Raw Data write action
+- V16.6 turbo login preserved
+- Workflow Details absent
+- Lazy Sticky Notes preserved
+- FE/BE version 16.7

@@ -4,7 +4,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.6';
+  const RAW_FRONTEND_VERSION = '16.8';
 
 
   /* =====================================================================
@@ -1316,7 +1316,7 @@
       }
     `;
     style.textContent += `
-      /* V16.6 — performance-first premium polish */
+      /* V16.8 — performance-first premium polish */
       html{scrollbar-gutter:stable}
       body{ text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
       header{backdrop-filter:none!important;background:rgba(255,255,255,.985)!important}
@@ -1371,7 +1371,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.6</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.8</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1392,7 +1392,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v16.6</strong></span>
+        <span class="adgb-version-chip">FE <strong>v16.8</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -2539,7 +2539,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.6';
+  const RAW_FRONTEND_VERSION = '16.8';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -2880,7 +2880,7 @@
       }
     `;
     style.textContent += `
-      /* V16.6 stable/fast Raw Data feedback */
+      /* V16.8 stable/fast Raw Data feedback */
       #rawDataTabButton.active{
         position:relative;
       }
@@ -3031,7 +3031,7 @@
     rawPanel?.classList.toggle('hidden', !showRaw);
 
     /*
-     * V16.6:
+     * V16.8:
      * Paint the Raw Data panel FIRST.
      * Only then start the Apps Script request, so the button always feels
      * immediate even when the backend needs a moment.
@@ -3173,7 +3173,7 @@
 
     try {
       /*
-       * V16.6: rawBootstrap already returns backendVersion and all Raw Data.
+       * V16.8: rawBootstrap already returns backendVersion and all Raw Data.
        * The previous separate ping doubled the number of requests.
        */
       const data = await rawJsonp('rawBootstrap');
