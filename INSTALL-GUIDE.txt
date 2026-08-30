@@ -1,24 +1,50 @@
-ADG(B) REPORT PORTAL V15.35 — TOP DATE+TIME + SINGLE VERSION DISPLAY
+ADG(B) REPORT PORTAL V16.2 — NO WORKFLOW DETAILS / SUPERFAST
 
-CHANGES
-1. Dashboard now keeps FE / BE version ONLY in the top row.
-2. Duplicate Frontend/Backend version badge beside Report Submission / Raw Data is removed.
-3. Raw Data subtitle no longer repeats Raw UI / Backend version.
-4. Top live badge now shows:
-   ◆ 28th-Aug-2026 (Friday) │ 08:54 PM
-5. Time is 12-hour AM/PM and updates automatically.
-6. Date/time badge made larger, wider and bolder.
-7. FE / BE top badges made larger and wider.
-8. Current files / Users / Sign out made larger, wider and bolder.
-9. Logged-in user text made slightly larger/bolder.
+WHAT WAS REVERTED
+- Workflow Details button removed.
+- Workflow side drawer removed.
+- Review / Accept / Return controls removed.
+- Receipt / version-history / activity-timeline UI removed.
+- No submissionOverview request.
+- No submissionDetails request.
+- No reviewSubmission request.
+- Upload returns to the earlier simple behaviour:
+  Upload -> Submitted -> View / Replace / Remove.
+
+WHAT IS KEPT FROM V16.1
+- 180-second bootstrap cache with automatic write invalidation.
+- Lazy Target / Reminder loading.
+- No Sticky backend request merely because the user signs in.
+- No automatic PDF iframe loading.
+- Compact two-row dashboard.
+- Date + live time in top row.
+- Single FE / BE version display inside dashboard.
+- Distinct colours/highlights.
+- Larger/bolder text.
+- Current files / Users / Sign out.
+- All existing login permissions and security.
+- Raw Data feature.
+
+IMPORTANT
+If V16.0/V16.1 already created extra workflow columns or a
+Submission_Activity sheet, V16.2 leaves them untouched but does NOT use them.
+This protects existing data and avoids unnecessary migration work.
 
 INSTALL
+GITHUB:
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
 3. Use:
-   <script src="raw-data.js?v=15.35"></script>
-   <script src="sticky-notes.js?v=15.35"></script>
-4. Commit and hard refresh.
+   <script src="raw-data.js?v=16.2"></script>
+   <script src="sticky-notes.js?v=16.2"></script>
+4. Commit and hard refresh once.
 
-Code.gs V15.35 is included only if matching BE v15.35 is desired.
-Do NOT run setupPortal() or setPortalSecurityCodes().
+APPS SCRIPT:
+1. Replace Code.gs.
+2. Save.
+3. Deploy > Manage deployments > Edit > New version > Deploy.
+4. Do NOT run setupPortal().
+5. Do NOT run setPortalSecurityCodes().
+
+EXPECTED:
+FE v16.2 | BE v16.2
