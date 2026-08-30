@@ -1,4 +1,6 @@
-Use at bottom of current index.html:
+At the bottom of your CURRENT index.html use:
 
-<script src="raw-data.js?v=16.2"></script>
-<script src="sticky-notes.js?v=16.2"></script>
+<script src="raw-data.js?v=16.3"></script>
+<script src="sticky-notes.js?v=16.3"></script>
+
+No other index.html code change is required.

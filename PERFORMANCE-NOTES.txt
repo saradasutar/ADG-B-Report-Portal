@@ -1,0 +1,17 @@
+V16.3 INSTANT MODE PERFORMANCE TARGETS
+
+Design targets only; actual Google/network latency varies.
+
+- Saved dashboard paint: near-instant.
+- After successful authentication, dashboard should usually already be prepared.
+- Warm-cache dashboard refresh: commonly about 0.5–3 seconds.
+- Reports/Raw Data UI switching and filters: local and effectively instant.
+- Raw Data: saved view immediate; one request refreshes it.
+- Upload speed still depends on PDF size, internet upload speed and Drive.
+
+TEST
+1. Install FE + BE V16.3.
+2. Hard-refresh once.
+3. Allow one successful dashboard load.
+4. Reload/sign in again.
+5. Compare the second load — that is Instant Mode.

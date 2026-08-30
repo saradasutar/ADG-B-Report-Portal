@@ -1,50 +1,52 @@
-ADG(B) REPORT PORTAL V16.2 — NO WORKFLOW DETAILS / SUPERFAST
+ADG(B) REPORT PORTAL V16.3 — INSTANT MODE
 
-WHAT WAS REVERTED
-- Workflow Details button removed.
-- Workflow side drawer removed.
-- Review / Accept / Return controls removed.
-- Receipt / version-history / activity-timeline UI removed.
-- No submissionOverview request.
-- No submissionDetails request.
-- No reviewSubmission request.
-- Upload returns to the earlier simple behaviour:
-  Upload -> Submitted -> View / Replace / Remove.
+MAIN SPEED CHANGES
+- Last good report dashboard is stored locally and painted immediately.
+- Apps Script refreshes quietly in the background.
+- On a first-ever browser load, the shell appears immediately and the single
+  report bootstrap request starts while the user is entering login details.
+- Startup BE-version ping removed.
+- Raw Data reduced from ping + rawBootstrap to one rawBootstrap request.
+- Last Raw Data view is shown immediately while fresh Raw Data loads.
+- Backend status scan now reads only 12 columns, scans newest-first, and stops
+  as soon as all current report/office cells are resolved.
+- Unused V16 Workflow backend functions removed.
+- Simple Upload -> Submitted -> View / Replace / Remove remains.
+- Bootstrap cache remains 180 seconds.
+- Cache invalidation now explicitly removes V16.2 and V16.3 cache keys.
 
-WHAT IS KEPT FROM V16.1
-- 180-second bootstrap cache with automatic write invalidation.
-- Lazy Target / Reminder loading.
-- No Sticky backend request merely because the user signs in.
-- No automatic PDF iframe loading.
-- Compact two-row dashboard.
-- Date + live time in top row.
-- Single FE / BE version display inside dashboard.
-- Distinct colours/highlights.
-- Larger/bolder text.
+KEPT
+- No Workflow Details.
+- Lazy Target / Reminder.
+- Compact two-row layout.
+- Date + live time.
+- Larger/bolder typography and distinct colours.
+- Top-row FE / BE only.
 - Current files / Users / Sign out.
-- All existing login permissions and security.
-- Raw Data feature.
-
-IMPORTANT
-If V16.0/V16.1 already created extra workflow columns or a
-Submission_Activity sheet, V16.2 leaves them untouched but does NOT use them.
-This protects existing data and avoids unnecessary migration work.
+- Login/permissions/security.
+- Raw Data.
 
 INSTALL
-GITHUB:
+
+GITHUB
 1. Replace raw-data.js.
 2. Replace sticky-notes.js.
 3. Use:
-   <script src="raw-data.js?v=16.2"></script>
-   <script src="sticky-notes.js?v=16.2"></script>
-4. Commit and hard refresh once.
+   <script src="raw-data.js?v=16.3"></script>
+   <script src="sticky-notes.js?v=16.3"></script>
+4. Commit.
+5. Hard-refresh ONCE: Ctrl+Shift+R.
 
-APPS SCRIPT:
+APPS SCRIPT
 1. Replace Code.gs.
 2. Save.
 3. Deploy > Manage deployments > Edit > New version > Deploy.
 4. Do NOT run setupPortal().
 5. Do NOT run setPortalSecurityCodes().
 
-EXPECTED:
-FE v16.2 | BE v16.2
+EXPECTED
+FE v16.3 | BE v16.3
+
+NOTE
+The first successful load creates the local Instant Mode snapshot. The biggest
+speed improvement is visible on the second and later opens/reloads.

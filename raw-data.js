@@ -1,10 +1,256 @@
+/* =====================================================================
+ * V16.3 INSTANT MODE
+ * - Show the last good dashboard snapshot immediately.
+ * - Refresh Apps Script quietly in the background.
+ * - Remove the extra startup ping.
+ * ===================================================================== */
+(() => {
+  'use strict';
+
+  const SNAPSHOT_KEY = 'adgbPortalInstantSnapshotV163';
+  const BACKEND_VERSION_KEY = 'adgbPortalBackendVersionV163';
+  const SNAPSHOT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+  let firstPortalLoad = true;
+  let refreshPromise = null;
+  let hasUsableSnapshot = false;
+
+  try {
+    if (!document.querySelector('link[data-adgb-preconnect="script-google"]')) {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = 'https://script.google.com';
+      link.dataset.adgbPreconnect = 'script-google';
+      document.head.appendChild(link);
+    }
+  } catch (ignore) {}
+
+  function expectedCyclePrefix() {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      year: 'numeric'
+    }).format(new Date());
+  }
+
+  function readPortalSnapshot() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || 'null');
+      if (!parsed || !parsed.data || !parsed.savedAt) return null;
+
+      if (Date.now() - Number(parsed.savedAt) > SNAPSHOT_MAX_AGE_MS) {
+        return null;
+      }
+
+      const cycleName = String(parsed.data.cycleName || '');
+      if (
+        cycleName &&
+        !cycleName.toLowerCase().startsWith(
+          expectedCyclePrefix().toLowerCase()
+        )
+      ) {
+        return null;
+      }
+
+      return parsed.data;
+    } catch (ignore) {
+      return null;
+    }
+  }
+
+  function savePortalSnapshot(data) {
+    try {
+      localStorage.setItem(
+        SNAPSHOT_KEY,
+        JSON.stringify({
+          savedAt: Date.now(),
+          data: {
+            ok: true,
+            portalName: data.portalName || '',
+            offices: Array.isArray(data.offices) ? data.offices : [],
+            subjects: Array.isArray(data.subjects) ? data.subjects : [],
+            status: data.status || {},
+            maxFileMb: Number(data.maxFileMb) || 8,
+            cycleName: data.cycleName || '',
+            backendVersion: data.backendVersion || '',
+            supportsReceipts: data.supportsReceipts !== false,
+            lastUpdated: data.lastUpdated || new Date().toISOString()
+          }
+        })
+      );
+
+      if (data.backendVersion) {
+        localStorage.setItem(
+          BACKEND_VERSION_KEY,
+          String(data.backendVersion)
+        );
+      }
+    } catch (ignore) {}
+  }
+
+  function publishBackendVersion(version) {
+    if (!version) return;
+
+    try {
+      localStorage.setItem(BACKEND_VERSION_KEY, String(version));
+    } catch (ignore) {}
+
+    window.dispatchEvent(
+      new CustomEvent('adgb-instant-backend-version', {
+        detail: { backendVersion: String(version) }
+      })
+    );
+  }
+
+  function applyPortalData(data, fromSnapshot) {
+    state.offices =
+      Array.isArray(data.offices) && data.offices.length
+        ? data.offices
+        : FALLBACK_OFFICES;
+
+    state.subjects =
+      Array.isArray(data.subjects)
+        ? data.subjects
+        : [];
+
+    state.status = data.status || {};
+    state.maxFileMb = Number(data.maxFileMb) || 8;
+    state.connected = true;
+    state.supportsReceipts =
+      versionAtLeast(data.backendVersion, 13, 4);
+
+    if (data.cycleName) {
+      const cycle = document.getElementById('cycleName');
+      if (cycle) cycle.textContent = String(data.cycleName);
+    }
+
+    renderAll(data.lastUpdated);
+
+    if (fromSnapshot) {
+      hasUsableSnapshot = true;
+      setSystemState('System ready', true, data.lastUpdated);
+    }
+
+    publishBackendVersion(data.backendVersion);
+  }
+
+  async function fetchFreshPortalData(options = {}) {
+    if (refreshPromise) return refreshPromise;
+
+    const quiet = options.quiet === true;
+    const button = document.getElementById('refreshButton');
+
+    refreshPromise = (async () => {
+      if (!endpointReady()) {
+        state.connected = false;
+
+        if (!hasUsableSnapshot) {
+          state.offices = FALLBACK_OFFICES;
+          state.subjects = FALLBACK_SUBJECTS;
+          state.status = {};
+          renderAll();
+          setNotice(
+            'Portal setup is incomplete: Apps Script URL is not configured.',
+            true
+          );
+        }
+
+        return;
+      }
+
+      if (!quiet) {
+        if (button) setBusy(button, true, 'Refreshing…');
+        if (!hasUsableSnapshot) {
+          setSystemState('Loading data…', false);
+        }
+      }
+
+      try {
+        const data = await jsonpRequest('bootstrap');
+
+        if (!data?.ok) {
+          throw new Error(
+            data?.message || 'The portal backend returned an error.'
+          );
+        }
+
+        hasUsableSnapshot = true;
+        applyPortalData(data, false);
+        savePortalSnapshot(data);
+        setNotice('', false);
+
+      } catch (error) {
+        if (hasUsableSnapshot) {
+          setSystemState('Saved view', false);
+        } else {
+          state.connected = false;
+          state.supportsReceipts = false;
+          state.offices = FALLBACK_OFFICES;
+          state.subjects = FALLBACK_SUBJECTS;
+          state.status = {};
+          renderAll();
+
+          setNotice(
+            'Could not connect to the report database. Retry when the network is available.',
+            true
+          );
+        }
+
+      } finally {
+        if (button) {
+          setBusy(button, false, '↻ Refresh');
+        }
+        refreshPromise = null;
+      }
+    })();
+
+    return refreshPromise;
+  }
+
+  async function instantLoadPortal() {
+    setNotice('', false);
+
+    const isFirst = firstPortalLoad;
+    firstPortalLoad = false;
+
+    if (isFirst) {
+      const snapshot = readPortalSnapshot();
+
+      if (snapshot) {
+        applyPortalData(snapshot, true);
+
+        const button = document.getElementById('refreshButton');
+        if (button) setBusy(button, false, '↻ Refresh');
+
+        return fetchFreshPortalData({ quiet: true });
+      }
+
+      setSystemState('Loading data…', false);
+      return fetchFreshPortalData({ quiet: true });
+    }
+
+    return fetchFreshPortalData({ quiet: false });
+  }
+
+  window.loadPortal = instantLoadPortal;
+
+  try {
+    loadPortal = instantLoadPortal;
+  } catch (ignore) {}
+
+  window.ADGB_INSTANT_MODE = {
+    version: '16.3',
+    snapshotKey: SNAPSHOT_KEY,
+    refresh: () => fetchFreshPortalData({ quiet: false })
+  };
+})();
+
 (() => {
   'use strict';
 
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.0';
+  const RAW_FRONTEND_VERSION = '16.3';
 
 
   /* =====================================================================
@@ -1326,7 +1572,7 @@
             <div class="adgb-auth-error" id="adgbLoginError"></div>
             <button class="adgb-login-submit" id="adgbLoginSubmit" type="submit">Sign in</button>
             <div class="adgb-login-version">
-              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.2</strong></span>
+              <span class="adgb-version-chip">FE <strong id="adgbLoginFeVersion">v16.3</strong></span>
               <span class="adgb-version-chip">BE <strong id="adgbLoginBeVersion">checking…</strong></span>
             </div>
             <div class="adgb-login-secondary">
@@ -1347,7 +1593,7 @@
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
       <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v16.2</strong></span>
+        <span class="adgb-version-chip">FE <strong>v16.3</strong></span>
         <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
       </div>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
@@ -1511,7 +1757,25 @@
     // Always show Login first. A stale session or offline backend must never
     // expose the dashboard or leave a blank page.
     showLoginPage();
-    loadAuthBackendVersion().catch(() => {});
+    /*
+     * V16.3: do not make a separate ping merely to display BE version.
+     * Cached bootstrap version is immediate; login/bootstrap refresh it.
+     */
+    const cachedBackendVersion =
+      localStorage.getItem('adgbPortalBackendVersionV163') || '';
+
+    if (cachedBackendVersion) {
+      setAuthBackendVersion(cachedBackendVersion);
+    }
+
+    window.addEventListener(
+      'adgb-instant-backend-version',
+      event => {
+        if (event.detail?.backendVersion) {
+          setAuthBackendVersion(event.detail.backendVersion);
+        }
+      }
+    );
 
     if (authState.token) {
       try {
@@ -2478,7 +2742,7 @@
   const RAW_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
 
-  const RAW_FRONTEND_VERSION = '16.0';
+  const RAW_FRONTEND_VERSION = '16.3';
 
   const RAW_DEFAULT_OFFICES = Object.freeze([
     { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
@@ -3053,41 +3317,17 @@
 
   async function loadRawData() {
     const refresh = document.getElementById('rawRefreshButton');
+    const snapshotKey = 'adgbPortalRawSnapshotV163';
 
-    if (refresh) {
-      refresh.disabled = true;
-      refresh.textContent = 'Refreshing…';
-    }
-
-    rawState.offices = RAW_DEFAULT_OFFICES.slice();
-    renderRawFallbackTable('Connecting to Raw Data backend…');
+    let cached = null;
 
     try {
-      const ping = await rawJsonp('ping');
+      cached = JSON.parse(localStorage.getItem(snapshotKey) || 'null');
+    } catch (ignore) {
+      cached = null;
+    }
 
-      if (!ping?.ok) {
-        throw new Error(
-          ping?.message || 'Apps Script backend did not respond correctly.'
-        );
-      }
-
-      const deployedVersion = String(ping.backendVersion || 'unknown');
-      updatePortalVersionBadge(deployedVersion, 'ok');
-
-      if (!ping.supportsRawData) {
-        throw new Error(
-          'Backend currently deployed is version ' +
-          deployedVersion +
-          '. It does not contain Raw Data support. Deploy Code.gs V15.18 as a New version.'
-        );
-      }
-
-      const data = await rawJsonp('rawBootstrap');
-
-      if (!data?.ok) {
-        throw new Error(data?.message || 'Could not load Raw Data.');
-      }
-
+    function applyRaw(data) {
       rawState.cycleKey = String(data.cycleKey || '');
       rawState.cycleName = String(data.cycleName || '');
       rawState.offices =
@@ -3100,22 +3340,80 @@
       rawState.grandTotal = Number(data.grandTotal) || 0;
       rawState.enteredCount = Number(data.enteredCount) || 0;
       rawState.totalCells = Number(data.totalCells) || 0;
-      rawState.backendVersion = String(
-        data.backendVersion || ping.backendVersion || ''
-      );
+      rawState.backendVersion = String(data.backendVersion || '');
       rawState.loaded = true;
-      updatePortalVersionBadge(rawState.backendVersion, 'ok');
 
+      updatePortalVersionBadge(rawState.backendVersion, 'ok');
       renderRawData();
 
-    } catch (error) {
-      rawState.loaded = false;
-      rawState.offices = RAW_DEFAULT_OFFICES.slice();
-      updatePortalVersionBadge(rawState.backendVersion || '', 'error');
+      if (rawState.backendVersion) {
+        window.dispatchEvent(
+          new CustomEvent('adgb-instant-backend-version', {
+            detail: { backendVersion: rawState.backendVersion }
+          })
+        );
+      }
+    }
 
-      renderRawFallbackTable(
-        error.message || 'Raw Data backend could not be reached.'
-      );
+    if (cached && cached.data) {
+      const currentMonth = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        year: 'numeric'
+      }).format(new Date());
+
+      if (
+        !cached.data.cycleName ||
+        String(cached.data.cycleName).toLowerCase() ===
+          currentMonth.toLowerCase()
+      ) {
+        applyRaw(cached.data);
+      }
+    }
+
+    if (refresh) {
+      refresh.disabled = true;
+      refresh.textContent = rawState.loaded
+        ? 'Updating…'
+        : 'Loading…';
+    }
+
+    if (!rawState.loaded) {
+      rawState.offices = RAW_DEFAULT_OFFICES.slice();
+      renderRawFallbackTable('Loading Raw Data…');
+    }
+
+    try {
+      /*
+       * rawBootstrap already returns backendVersion.
+       * The old separate ping was an unnecessary extra request.
+       */
+      const data = await rawJsonp('rawBootstrap');
+
+      if (!data?.ok) {
+        throw new Error(data?.message || 'Could not load Raw Data.');
+      }
+
+      applyRaw(data);
+
+      try {
+        localStorage.setItem(
+          snapshotKey,
+          JSON.stringify({
+            savedAt: Date.now(),
+            data: data
+          })
+        );
+      } catch (ignore) {}
+
+    } catch (error) {
+      if (!rawState.loaded) {
+        rawState.loaded = false;
+        rawState.offices = RAW_DEFAULT_OFFICES.slice();
+
+        renderRawFallbackTable(
+          error.message || 'Raw Data backend could not be reached.'
+        );
+      }
 
     } finally {
       if (refresh) {
