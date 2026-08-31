@@ -1,0 +1,23 @@
+V17.1 BACKEND SECURITY
+
+PUBLIC VIEW
+- Anonymous Reports dashboard: allowed.
+- Direct linked PDF/Drive URLs: removed from anonymous bootstrap.
+- Office Upload/View/Replace/Remove: concerned office PIN/password only,
+  only if Administrator enables Public Office Actions.
+- Raw Data editing: login required.
+- Subject management: login required.
+- Target/Reminder management: login required.
+- Users, Access Control, Current Files: login required.
+
+LOGIN REQUIRED
+- Anonymous dashboard request: rejected by Apps Script.
+- Legacy PIN alone: rejected.
+- Username/password session + role/permission required.
+
+ADMIN ONLY
+- Dashboard and actions: Administrator session only.
+- Other user sessions and PIN-only requests are rejected.
+
+Access mode is stored in Apps Script Script Properties and can be changed
+without editing GitHub or redeploying.

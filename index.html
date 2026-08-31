@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v170.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v170.png">
-  <link rel="shortcut icon" href="adgb-v170.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v171.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v171.png">
+  <link rel="shortcut icon" href="adgb-v171.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -545,7 +545,7 @@
   <!-- One-time cleanup of old cache/service-worker assets -->
   <script>
     (() => {
-      const KEY='ADGB_FULL_V170_CACHE_RESET';
+      const KEY='ADGB_FULL_V171_CACHE_RESET';
       if(localStorage.getItem(KEY)==='done') return;
       localStorage.setItem(KEY,'done');
       try{
@@ -694,7 +694,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.0</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.1</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -964,7 +964,9 @@
       setSystemState('Connecting…',false);
 
       try{
-        const data=await jsonpRequest('bootstrap');
+        const data=await jsonpRequest('bootstrap',{
+          sessionToken:window.ADGB_AUTH?.token||''
+        });
         if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
 
         state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
@@ -1088,7 +1090,9 @@
           }
 
           try{
-            const data=await jsonpRequest('bootstrap');
+            const data=await jsonpRequest('bootstrap',{
+              sessionToken:window.ADGB_AUTH?.token||''
+            });
 
             if(uploadKey){
               const item=data?.status?.[uploadKey];
@@ -1921,7 +1925,7 @@
     }
   </script>
 
-  <script src="portal-v170.js"></script>
-  <script src="sticky-v170.js"></script>
+  <script src="portal-v171.js"></script>
+  <script src="sticky-v171.js"></script>
 </body>
 </html>

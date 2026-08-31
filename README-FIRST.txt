@@ -1,45 +1,61 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.0 FULL PACKAGE
+ADG(B) REPORT SUBMISSION PORTAL — V17.1 ACCESS CONTROL
 
-THIS ZIP IS COMPLETE.
+FULL PACKAGE
 
-GITHUB FILES — upload these to repository root:
-1. index.html
-2. portal-v170.js
-3. sticky-v170.js
-4. adgb-v170.svg
-5. adgb-v170.png
-6. adgb-v170.ico
+GITHUB ROOT:
+- index.html
+- portal-v171.js
+- sticky-v171.js
+- adgb-v171.svg
+- adgb-v171.png
+- adgb-v171.ico
 
-APPS SCRIPT:
-7. Code.gs
+GOOGLE APPS SCRIPT:
+- Code.gs
 
-WHAT WAS CORRECTED
-- index.html is INCLUDED.
-- index.html already references the correct new JS filenames.
-- index.html already references the correct favicon filenames.
-- No manual index editing is required.
-- White-header override removed.
-- ADG(B) Report Submission Portal is now high-contrast white text on a
-  navy/indigo/teal premium header.
-- Favicon included.
-- One-time old cache/service-worker cleanup included.
-- V16.9 cache-proof approach retained with NEW physical V17 filenames.
-- Fast Data Engine retained.
-- Turbo login retained.
-- Raw Data fix retained.
-- Workflow Details remains removed.
-- Lazy Target/Reminder retained.
+NEW ADMIN -> ACCESS CONTROL
+After Administrator username/password login, a new Access button appears.
+
+MODES
+1. PUBLIC VIEW
+   Anyone with the URL can see report subjects, submitted/pending status,
+   summary and office status.
+   Upload/View/Replace/Remove can be allowed only after concerned office
+   PIN/password verification.
+   Public Raw Data and submitted timestamps are separately controlled.
+   Direct linked PDF/Drive URLs are NOT exposed to anonymous viewers.
+
+2. LOGIN REQUIRED
+   Username/password is required to open the dashboard.
+   Office PIN alone cannot bypass login mode.
+   Existing role and permission controls apply.
+
+3. ADMIN ONLY
+   Administrator username/password only.
+   Useful for maintenance or temporary restriction.
+
+ALWAYS LOGIN-PROTECTED
+- Users
+- Access Control
+- Current Files / Drive folder
+- Subject management
+- Raw Data editing / structure
+- Target / Reminder management
+
+DEFAULT AFTER DEPLOYMENT
+LOGIN REQUIRED.
+Nothing becomes public until Administrator changes it.
 
 INSTALL
-A. GITHUB
-   Upload the six GitHub files above and commit.
+GITHUB:
+Upload/replace the 6 GitHub files listed above.
 
-B. APPS SCRIPT
-   Replace Code.gs.
-   Save.
-   Deploy > Manage deployments > Edit > New version > Deploy.
-   DO NOT run setupPortal().
-   DO NOT run setPortalSecurityCodes().
+APPS SCRIPT:
+1. Replace Code.gs
+2. Save
+3. Deploy > Manage deployments > Edit > New version > Deploy
+4. Do NOT run setupPortal()
+5. Do NOT run setPortalSecurityCodes()
 
-EXPECTED
-FE v17.0 | BE v17.0
+EXPECTED:
+FE v17.1 | BE v17.1
