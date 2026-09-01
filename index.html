@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v1766.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1766.png">
-  <link rel="shortcut icon" href="adgb-v1766.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1767.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1767.png">
+  <link rel="shortcut icon" href="adgb-v1767.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -610,7 +610,41 @@
     @media(prefers-reduced-motion:reduce){
       *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
     }
-  </style>
+  
+    .subject-admin-row.hidden-subject-admin{
+      background:#eef0f2!important;
+      border:1px dashed #9aa2ac!important;
+    }
+    .subject-admin-row.hidden-subject-admin .subject-admin-info>strong,
+    .subject-admin-row.hidden-subject-admin .subject-admin-info>small{
+      color:#626b75!important;
+    }
+    .subject-hidden-badge{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:5px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:#555d68;
+      color:#fff;
+      font-size:.72rem;
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .subject-admin-actions .hide-subject{
+      background:#5f6771!important;
+      border-color:#5f6771!important;
+      color:#fff!important;
+    }
+    .subject-admin-actions .show-subject{
+      background:#0f766e!important;
+      border-color:#0f766e!important;
+      color:#fff!important;
+    }
+
+</style>
 
   <!-- One-time cleanup of old cache/service-worker assets -->
   <script>
@@ -764,7 +798,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.6</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.7</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -946,6 +980,7 @@
         </form>
 
         <div class="admin-summary subject-auto-create-guide">
+          <strong>Visibility:</strong> <b>Hide from dashboard</b> removes a subject for every dashboard user without deleting its history or files.<br>
           <strong>Auto-create per subject:</strong>
           <span>One-time</span> ·
           <span>Monthly only</span> ·
@@ -1063,6 +1098,12 @@
         const renameButton=event.target.closest('[data-rename]');
         if(renameButton)openRenameSubjectEditor(renameButton.dataset.rename);
 
+        const visibilityButton=event.target.closest('[data-toggle-visibility]');
+        if(visibilityButton){
+          toggleSubjectVisibility(visibilityButton.dataset.toggleVisibility);
+          return;
+        }
+
         const toggleButton=event.target.closest('[data-toggle-submission]');
         if(toggleButton)toggleSubjectSubmission(toggleButton.dataset.toggleSubmission);
 
@@ -1173,7 +1214,7 @@
         state.subjects=Array.isArray(data.subjects)?data.subjects:[];
         state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
           ?data.subjectMasters
-          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY'}));
+          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY',dashboardVisible:subject.dashboardVisible!==false}));
         state.status=mergeRecentStatusWrites(data.status||{});
         state.maxFileMb=Number(data.maxFileMb)||8;
         state.connected=true;
@@ -1242,9 +1283,11 @@
         const expectedRenamedLinkText=renamedSubjectId?String(payload.linkText||'').trim():'';
         const viewingSubmission=payload.action==='viewSubmission';
         const toggledSubjectId=payload.action==='adminSetSubjectSubmission'?String(payload.subjectId||''):'';
+        const visibilitySubjectId=payload.action==='adminSetSubjectVisibility'?String(payload.subjectId||''):'';
         const scheduledSubjectId=payload.action==='adminSetSubjectRecurrence'?String(payload.subjectId||''):'';
         const expectedRecurrence=scheduledSubjectId?String(payload.recurrenceMode||'MONTHLY'):'';
         const expectedSubmissionEnabled=toggledSubjectId?(payload.enabled===true||String(payload.enabled||'').toLowerCase()==='true'):null;
+        const expectedDashboardVisible=visibilitySubjectId?(payload.visible===true||String(payload.visible||'').toLowerCase()==='true'):null;
 
         const frame=document.createElement('iframe');
         const form=document.createElement('form');
@@ -1359,6 +1402,13 @@
               }
             }
 
+            if(visibilitySubjectId&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.id||'')===visibilitySubjectId);
+              if(subject&&((subject.dashboardVisible!==false)===expectedDashboardVisible)){
+                finish(null,{ok:true,message:expectedDashboardVisible?'Subject shown on dashboard.':'Subject hidden from all dashboard users.'});return;
+              }
+            }
+
             if(scheduledSubjectId&&Array.isArray(data?.subjectMasters)){
               const subject=data.subjectMasters.find(x=>String(x.id||'')===scheduledSubjectId);
               if(subject&&String(subject.recurrenceMode||'MONTHLY')===expectedRecurrence){
@@ -1385,7 +1435,8 @@
         form.submit();
 
         if(uploadKey||removalKey||addedSubjectName||archivedSubjectId||
-           updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId||scheduledSubjectId){
+           updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId||
+           visibilitySubjectId||scheduledSubjectId){
           statusTimer=setTimeout(pollBackendStatus,900);
         }
       });
@@ -2150,6 +2201,57 @@
       }
     }
 
+
+    async function toggleSubjectVisibility(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const visible=subject.dashboardVisible!==false;
+      const nextVisible=!visible;
+
+      const question=nextVisible
+        ?'Show "'+subject.name+'" on the dashboard again?'
+        :'Hide "'+subject.name+'" from ALL dashboard users? Existing history and Drive PDFs will remain preserved.';
+
+      if(!confirm(question))return;
+
+      const button=[...document.querySelectorAll('[data-toggle-visibility]')]
+        .find(x=>x.dataset.toggleVisibility===subjectId);
+
+      if(button)setBusy(button,true,nextVisible?'Showing…':'Hiding…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectVisibility',
+          securityCode:state.adminCode,
+          subjectId,
+          visible:nextVisible
+        });
+
+        showToast(
+          result.message||
+          (nextVisible?'Subject shown on dashboard.':'Subject hidden from dashboard.'),
+          'success'
+        );
+
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(
+          error.message||'Subject visibility could not be changed.',
+          'error'
+        );
+      }finally{
+        if(button&&button.isConnected){
+          setBusy(
+            button,
+            false,
+            nextVisible?'Show on dashboard':'Hide from dashboard'
+          );
+        }
+      }
+    }
+
     async function toggleSubjectSubmission(subjectId){
       const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
@@ -2251,6 +2353,7 @@ function renderAdminSubjects(){
 
       list.innerHTML=subjects.length?subjects.map(subject=>{
         const enabled=subject.submissionEnabled!==false;
+        const visible=subject.dashboardVisible!==false;
         const mode=subject.recurrenceMode||'MONTHLY';
         const combo=mode==='MONTHLY_QUARTERLY';
         const once=mode==='ONE_TIME';
@@ -2265,8 +2368,9 @@ function renderAdminSubjects(){
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
           :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
 
-        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin':'')+'"><span class="subject-admin-info">'+
+        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+'"><span class="subject-admin-info">'+
           '<strong>'+escapeHtml(subject.name)+'</strong>'+
+          (!visible?'<span class="subject-hidden-badge">Hidden from dashboard</span>':'')+
           '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
           '<small>'+linkInfo+'</small>'+
           '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small>'+
@@ -2274,6 +2378,9 @@ function renderAdminSubjects(){
           '<button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Auto-create</button>'+
           '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
           '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
+          '<button class="'+(visible?'hide-subject':'show-subject')+'" type="button" data-toggle-visibility="'+escapeAttr(subject.id)+'">'+
+          (visible?'Hide from dashboard':'Show on dashboard')+
+          '</button>'+
           '<button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button>'+
           '<button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button>'+
           '</span></div>';
@@ -2336,7 +2443,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1766.js"></script>
-  <script src="sticky-v1766.js"></script>
+  <script src="portal-v1767.js"></script>
+  <script src="sticky-v1767.js"></script>
 </body>
 </html>

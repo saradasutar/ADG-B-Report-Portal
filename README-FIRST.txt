@@ -1,66 +1,63 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6.6
-QE OPENS AUTOMATICALLY IN THE MONTH AFTER QUARTER END
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.7
+SUBJECT HIDE / SHOW CONTROL
 
-CORRECTED RULE
+NEW ADMIN FEATURE
+Administrator can hide any particular subject from ALL dashboard users.
 
-Quarter ended March:
-01-Apr -> QE Mar
+SUBJECT MANAGEMENT NOW HAS
+- Auto-create
+- Rename
+- Add/Edit PDF link
+- Hide from dashboard / Show on dashboard
+- Disable submissions / Enable submissions
+- Remove
 
-Quarter ended June:
-01-Jul -> QE Jun
+HIDE FROM DASHBOARD
+When Admin selects "Hide from dashboard":
+- The subject disappears completely from the live dashboard.
+- It disappears for Admin dashboard view, offices, viewers and public-view mode.
+- It is excluded from Submitted/Pending dashboard totals while hidden.
+- Direct office upload/view/remove attempts against that hidden subject are
+  blocked by the backend.
+- Historical Submissions remain preserved.
+- Existing Drive PDFs remain preserved.
+- Schedule settings remain preserved.
+- The subject remains visible in Administration -> Subject Management with
+  a "HIDDEN FROM DASHBOARD" badge.
+- Admin can restore it anytime with "Show on dashboard".
 
-Quarter ended September:
-01-Oct -> QE Sep
+DISABLE SUBMISSIONS IS DIFFERENT
+Disable submissions:
+- The subject stays visible on the dashboard.
+- The whole subject row/card remains visibly gray.
+- Pending offices show Closed.
+- Existing submitted PDFs remain viewable.
 
-Quarter ended December:
-01-Jan of next year -> QE Dec
+Hide from dashboard:
+- The entire subject disappears from the dashboard.
 
-EXAMPLE — PROBITY
-
-On 01-Sep-2026:
-Probity for the Month of Aug,2026
-NO "Probity for QE Sep,2026" row.
-
-On 01-Oct-2026:
-Probity for the Month of Sep,2026
-Probity for QE Sep,2026
-
-The QE row remains available during the October submission cycle; it is not a
-one-day-only row.
-
-JANUARY YEAR ROLLOVER
-On 01-Jan-2027:
-Probity for the Month of Dec,2026
-Probity for QE Dec,2026
-
-ADMIN AUTO-CREATE OPTIONS
+EXISTING FEATURES RETAINED
 - One-time
 - Monthly only
 - Monthly + Quarterly (QE)
+- QE Sep -> opens automatically from 01 Oct
+- Persistent Submitted-status engine
+- Gray rows for disabled subjects
+- Historical data and PDFs preserved
 
-For Monthly + Quarterly (QE), Admin stores only the base subject. The portal
-creates the appropriate Monthly and QE rows automatically.
+DATABASE UPGRADE
+Subjects sheet gets one additional safe column:
+17. Dashboard Visible
 
-MIGRATION
-Existing Monthly+Quarterly subjects that previously stored 4,6,9,12 are safely
-normalized to the new opening months:
-1,4,7,10
-
-No historical Submissions or Drive PDFs are deleted.
-
-DISABLED SUBJECT APPEARANCE RETAINED
-Disabled subject rows remain visibly gray on desktop, mobile and Admin list.
-
-STATUS ENGINE RETAINED
-V17.6.4/V17.6.5 persistent Submitted-status fixes remain in place.
+Existing subjects are automatically set to TRUE/Visible unless already hidden.
 
 GITHUB ROOT
 index.html
-portal-v1766.js
-sticky-v1766.js
-adgb-v1766.svg
-adgb-v1766.png
-adgb-v1766.ico
+portal-v1767.js
+sticky-v1767.js
+adgb-v1767.svg
+adgb-v1767.png
+adgb-v1767.ico
 
 APPS SCRIPT
 Code.gs
@@ -75,4 +72,4 @@ INSTALL
 7. Hard refresh once: Ctrl+Shift+R.
 
 EXPECTED
-FE v17.6.6 | BE v17.6.6
+FE v17.6.7 | BE v17.6.7
