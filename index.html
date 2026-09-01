@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v176.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v176.png">
-  <link rel="shortcut icon" href="adgb-v176.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1762.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1762.png">
+  <link rel="shortcut icon" href="adgb-v1762.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -699,7 +699,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.2</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -975,7 +975,13 @@
 
       document.addEventListener('click',event=>{
         const uploadButton=event.target.closest('[data-upload]');
-        if(uploadButton)openUpload(uploadButton.dataset.subject,uploadButton.dataset.office);
+        if(uploadButton){
+          if(uploadButton.disabled){
+            showToast(uploadButton.title||'This report action is not permitted for the current login.','error');
+            return;
+          }
+          openUpload(uploadButton.dataset.subject,uploadButton.dataset.office);
+        }
 
         const archiveButton=event.target.closest('[data-archive]');
         if(archiveButton)archiveSubject(archiveButton.dataset.archive);
@@ -1056,7 +1062,7 @@
         state.subjects=Array.isArray(data.subjects)?data.subjects:[];
         state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
           ?data.subjectMasters
-          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY'}));
+          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY'}));
         state.status=data.status||{};
         state.maxFileMb=Number(data.maxFileMb)||8;
         state.connected=true;
@@ -1359,12 +1365,21 @@
       return /^https:\/\/[^\s]+$/i.test(url)?url:'';
     }
 
+
+    function reportStatusFor(subject,office){
+      if(!subject||!office)return null;
+
+      return state.status[subject.id+'__'+office.id] ||
+        state.status[(subject.masterId||subject.id)+'__'+office.id] ||
+        null;
+    }
+
     function cellMatchesFilter(submitted){
       return state.statusFilter==='all'||(state.statusFilter==='submitted'?submitted:!submitted);
     }
 
     function renderDesktopCell(subject,office){
-      const item=state.status[subject.id+'__'+office.id];
+      const item=reportStatusFor(subject,office);
       const submitted=!!item?.submitted;
       const enabled=subject.submissionEnabled!==false;
 
@@ -1388,7 +1403,7 @@
     }
 
     function renderMobileCell(subject,office){
-      const item=state.status[subject.id+'__'+office.id];
+      const item=reportStatusFor(subject,office);
       const submitted=!!item?.submitted;
       const enabled=subject.submissionEnabled!==false;
 
@@ -1412,7 +1427,7 @@
       let complete=0;
 
       state.subjects.forEach(s=>offices.forEach(o=>{
-        if(state.status[s.id+'__'+o.id]?.submitted)complete++;
+        if(reportStatusFor(s,o)?.submitted)complete++;
       }));
 
       const percent=total?Math.round(complete*100/total):0;
@@ -1430,7 +1445,7 @@
 
       const officeTotal=state.subjects.length;
       $('#officeCycleList').innerHTML=state.offices.map(office=>{
-        const submitted=state.subjects.reduce((n,s)=>n+(state.status[s.id+'__'+office.id]?.submitted?1:0),0);
+        const submitted=state.subjects.reduce((n,s)=>n+(reportStatusFor(s,office)?.submitted?1:0),0);
         const pending=Math.max(officeTotal-submitted,0);
         const pct=officeTotal?Math.round(submitted*100/officeTotal):0;
         const active=state.officeFilter===office.id;
@@ -1458,43 +1473,73 @@
     }
 
     function openUpload(subjectId,officeId){
-      if(!state.connected){showToast('Complete the Apps Script connection before uploading.','error');return}
+      if(!state.connected){
+        showToast('Complete the Apps Script connection before uploading.','error');
+        return;
+      }
 
-      const subject=state.subjectMasters.find(x=>x.id===subjectId);
-      const office=state.offices.find(x=>x.id===officeId);
-      if(!subject||!office)return;
+      const subject=state.subjects.find(
+        x=>String(x.id)===String(subjectId)
+      );
+      const office=state.offices.find(
+        x=>String(x.id)===String(officeId)
+      );
 
-      const submitted=!!state.status[subjectId+'__'+officeId]?.submitted;
+      if(!subject){
+        showToast('This report row could not be opened. Refresh the dashboard and try again.','error');
+        return;
+      }
+
+      if(!office){
+        showToast('Office details could not be resolved. Refresh the dashboard and try again.','error');
+        return;
+      }
+
+      const item=reportStatusFor(subject,office);
+      const submitted=!!item?.submitted;
       const enabled=subject.submissionEnabled!==false;
       const viewOnly=!enabled;
 
       if(viewOnly&&!submitted){
-        showToast('Head Office has disabled submissions for this report subject.','error');return;
+        showToast('Submissions are closed for this report subject or reporting period.','error');
+        return;
       }
 
       state.selected={subject,office};
-      $('#uploadTitle').textContent=submitted?(viewOnly?'View submitted report':'View or replace submitted report'):'Upload report';
+
+      $('#uploadTitle').textContent=submitted
+        ?(viewOnly?'View submitted report':'View or replace submitted report')
+        :'Upload report';
+
       $('#uploadSubject').textContent=subject.name;
       $('#uploadOffice').textContent=office.name;
       $('#uploadForm').reset();
+
       $('#fileLabel').textContent='Choose a PDF file';
       $('#fileHint').textContent='Click to browse · PDF only · Maximum '+state.maxFileMb+' MB';
+
       $('#reportDropZone').classList.toggle('hidden',viewOnly);
       $('#uploadSubmit').classList.toggle('hidden',viewOnly);
       $('#uploadSubmit').disabled=true;
       $('#uploadSubmit').textContent=submitted?'Replace report':'Submit report';
+
       $('#viewReportButton').classList.toggle('hidden',!submitted);
       $('#viewReportButton').disabled=false;
       $('#viewReportButton').textContent='View submitted report';
+
       $('#removeReportButton').classList.toggle('hidden',!submitted||viewOnly);
       $('#removeReportButton').disabled=false;
       $('#removeReportButton').textContent='Remove uploaded report';
+
       $('#uploadPrivacyNote').textContent=viewOnly
-        ?'Head Office has closed submissions for this subject. Existing report remains available for viewing.'
-        :'Enter the office security code to view, replace, or remove a submitted report.';
+        ?'Submissions are closed for this period. Existing report remains available for viewing.'
+        :'Enter the concerned office security code/password to upload, view, replace, or remove its report.';
 
       openModal('upload');
-      setTimeout(()=>submitted?$('#officeCode').focus():$('#pdfFile').focus(),40);
+      setTimeout(()=>{
+        if(submitted)$('#officeCode')?.focus();
+        else $('#pdfFile')?.focus();
+      },40);
     }
 
     function handleFileSelection(){
@@ -2136,7 +2181,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v176.js"></script>
-  <script src="sticky-v176.js"></script>
+  <script src="portal-v1762.js"></script>
+  <script src="sticky-v1762.js"></script>
 </body>
 </html>

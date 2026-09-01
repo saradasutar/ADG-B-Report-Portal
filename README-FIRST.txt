@@ -1,40 +1,57 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.2
 
-QUARTERLY SUBJECTS OPEN ONLY ON THE LAST CALENDAR DATE
+FIXED TOGETHER
+1. Upload button not opening.
+2. Already-submitted reports showing as Pending/Upload.
 
-Base subject: Probity
+ROOT CAUSE
+Recurring rows use instance IDs (__M / __Q / __O), while parts of the old UI
+and legacy Current_Status data still referred to the original base subject ID.
 
-September 2026:
-1-Sep to 29-Sep:
-Probity for the Month of Aug,2026
+UPLOAD FIX
+The clicked row is resolved from the live dashboard subject instances, so
+Monthly, Quarterly and One-time buttons open correctly.
 
-30-Sep-2026:
-Probity for the Month of Aug,2026
-Probity for QE Sep,2026
+ALREADY-SUBMITTED REPAIR
+V17.6.2 performs a one-time compatibility repair:
+- Reads existing historical Submissions.
+- Finds the latest legacy Submitted/Removed event for each subject+office.
+- Copies that state into the current Monthly status ONLY if no newer genuine
+  current-cycle status exists.
+- Does NOT edit/delete historical Submissions.
+- Does NOT delete/move Drive PDFs.
+- Does NOT overwrite a newer current-cycle upload/removal.
+- Runs once only.
 
-The QE subject does not appear before 30-Sep-2026.
+It also makes old timestamp parsing safe so one bad timestamp cannot make
+Submitted status disappear.
 
-Quarterly opening dates:
-Last date of April, June, September and December.
-Examples:
-30-Apr-2026 -> Probity for QE Mar,2026
-30-Jun-2026 -> Probity for QE Jun,2026
+V17.6 QUARTER-END RULE RETAINED
+QE report appears only on the last calendar date of Apr/Jun/Sep/Dec.
 30-Sep-2026 -> Probity for QE Sep,2026
-31-Dec-2026 -> Probity for QE Dec,2026
-
-The Apps Script backend also enforces the last-date rule, so early direct upload is blocked.
-The open dashboard checks the India date every 30 seconds and refreshes data automatically when the date changes.
 
 GITHUB ROOT
 index.html
-portal-v176.js
-sticky-v176.js
-adgb-v176.svg
-adgb-v176.png
-adgb-v176.ico
+portal-v1762.js
+sticky-v1762.js
+adgb-v1762.svg
+adgb-v1762.png
+adgb-v1762.ico
 
 APPS SCRIPT
 Code.gs
 
-Deploy as New version. Do NOT run setupPortal() or setPortalSecurityCodes().
-Expected: FE v17.6 | BE v17.6
+INSTALL
+1. Upload/replace the six GitHub files.
+2. Replace Code.gs.
+3. Save.
+4. Deploy > Manage deployments > Edit > New version > Deploy.
+5. DO NOT run setupPortal().
+6. DO NOT run setPortalSecurityCodes().
+7. Hard refresh once: Ctrl+Shift+R.
+
+The FIRST load after deploying V17.6.2 may be a little slower while the
+one-time status compatibility repair runs.
+
+EXPECTED
+FE v17.6.2 | BE v17.6.2
