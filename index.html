@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v173.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v173.png">
-  <link rel="shortcut icon" href="adgb-v173.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v174.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v174.png">
+  <link rel="shortcut icon" href="adgb-v174.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -455,6 +455,8 @@
     .admin-field select{height:38px;border:1px solid #c7bfdd;border-radius:8px;padding:0 9px;background:#fff;color:#2c4260;font-weight:800;outline:none}
     .subject-schedule-badge{display:inline-flex;align-items:center;width:max-content;padding:3px 7px;border-radius:999px;background:#ede7ff;color:#58429a;border:1px solid #cfc2ef;font-size:8px;font-weight:900}
     .subject-schedule-badge.combo{background:#e3f7ef;color:#08735d;border-color:#a9dac7}
+    .subject-schedule-badge.once{background:#fff1dc;color:#8a5200;border-color:#efc67e}
+    .one-time-fields[hidden]{display:none!important}
     .subject-admin-list{max-height:300px;overflow:auto;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
     .subject-admin-row{min-height:49px;padding:8px 9px;border-bottom:1px solid #d9dfe8;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px}
     .subject-admin-row:last-child{border-bottom:0}
@@ -697,7 +699,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.3</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.4</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -772,10 +774,21 @@
           <label class="admin-field">
             <span>Automatic schedule</span>
             <select id="newSubjectRecurrence">
+              <option value="ONE_TIME" selected>One-time</option>
               <option value="MONTHLY">Monthly</option>
               <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
             </select>
-            <small>Quarterly adds an extra row in Apr, Jun, Sep & Dec.</small>
+            <small>The displayed subject automatically shows its month or quarter.</small>
+          </label>
+          <label class="admin-field one-time-fields" id="newOneTimeFields">
+            <span>One-time month / year</span>
+            <input id="newOneTimeCycle" type="month">
+            <small>The subject appears only during this month.</small>
+          </label>
+          <label class="admin-field one-time-fields" id="newOneTimeCloseField">
+            <span>Closing date (optional)</span>
+            <input id="newOneTimeClosingDate" type="date">
+            <small>After this date uploads close, while existing submissions remain viewable.</small>
           </label>
           <label class="admin-field">
             <span>Text to hyperlink (optional)</span>
@@ -842,9 +855,18 @@
             <label class="admin-field">
               <span>Schedule</span>
               <select id="scheduleRecurrenceMode">
+                <option value="ONE_TIME">One-time</option>
                 <option value="MONTHLY">Monthly</option>
                 <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
               </select>
+            </label>
+            <label class="admin-field one-time-fields" id="scheduleOneTimeCycleField">
+              <span>One-time month / year</span>
+              <input id="scheduleOneTimeCycle" type="month">
+            </label>
+            <label class="admin-field one-time-fields" id="scheduleOneTimeClosingField">
+              <span>Closing date (optional)</span>
+              <input id="scheduleOneTimeClosingDate" type="date">
             </label>
             <div class="admin-summary">
               <strong>Monthly:</strong> opens automatically every month.<br>
@@ -905,6 +927,8 @@
       const now=new Date();
       $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
       $('#cycleName').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(now)+' submission cycle';
+      if($('#newOneTimeCycle'))$('#newOneTimeCycle').value=now.toISOString().slice(0,7);
+      syncNewSubjectScheduleFields();
       loadPortal();
     });
 
@@ -925,6 +949,8 @@
       $('#cancelRenameSubjectButton')?.addEventListener('click',closeRenameSubjectEditor);
       $('#subjectScheduleForm')?.addEventListener('submit',saveSubjectSchedule);
       $('#cancelSubjectScheduleButton')?.addEventListener('click',closeSubjectScheduleEditor);
+      $('#newSubjectRecurrence')?.addEventListener('change',syncNewSubjectScheduleFields);
+      $('#scheduleRecurrenceMode')?.addEventListener('change',syncExistingSubjectScheduleFields);
       $('#officeFilter')?.addEventListener('change',event=>{
         state.officeFilter=event.target.value;renderMatrix();updateSummary();
       });
@@ -1648,10 +1674,37 @@
       return file;
     }
 
+
+    function syncNewSubjectScheduleFields(){
+      const mode=$('#newSubjectRecurrence')?.value||'ONE_TIME';
+      const oneTime=mode==='ONE_TIME';
+      if($('#newOneTimeFields'))$('#newOneTimeFields').hidden=!oneTime;
+      if($('#newOneTimeCloseField'))$('#newOneTimeCloseField').hidden=!oneTime;
+      if(oneTime&&$('#newOneTimeCycle')&&!$('#newOneTimeCycle').value){
+        $('#newOneTimeCycle').value=new Date().toISOString().slice(0,7);
+      }
+    }
+
+    function syncExistingSubjectScheduleFields(){
+      const mode=$('#scheduleRecurrenceMode')?.value||'MONTHLY';
+      const oneTime=mode==='ONE_TIME';
+      if($('#scheduleOneTimeCycleField'))$('#scheduleOneTimeCycleField').hidden=!oneTime;
+      if($('#scheduleOneTimeClosingField'))$('#scheduleOneTimeClosingField').hidden=!oneTime;
+    }
+
     async function addSubject(event){
       event.preventDefault();
       const name=$('#newSubject').value.trim();
       if(!name||!state.adminCode)return;
+
+      const recurrenceMode=$('#newSubjectRecurrence')?.value||'ONE_TIME';
+      const oneTimeCycle=recurrenceMode==='ONE_TIME'?($('#newOneTimeCycle')?.value||''):'';
+      const closingDate=recurrenceMode==='ONE_TIME'?($('#newOneTimeClosingDate')?.value||''):'';
+
+      if(recurrenceMode==='ONE_TIME'&&!oneTimeCycle){
+        showToast('Select the month and year for this one-time subject.','error');
+        return;
+      }
 
       const linkValue=$('#newSubjectLinkText').value;
       const selectedFile=$('#newSubjectLinkPdf').files[0];
@@ -1669,14 +1722,28 @@
       setBusy($('#addSubjectButton'),true,'Adding…');
 
       try{
-        const payload={action:'adminAddSubject',securityCode:state.adminCode,subjectName:name,linkText,recurrenceMode:$('#newSubjectRecurrence')?.value||'MONTHLY'};
+        const payload={
+          action:'adminAddSubject',
+          securityCode:state.adminCode,
+          subjectName:name,
+          linkText,
+          recurrenceMode,
+          oneTimeCycle,
+          closingDate
+        };
+
         if(file){
           payload.linkedPdfName=file.name;
           payload.linkedPdfMimeType='application/pdf';
           payload.linkedPdfBase64=await readFileBase64(file);
         }
+
         const result=await postToBackend(payload);
         $('#addSubjectForm').reset();
+        $('#newSubjectRecurrence').value='ONE_TIME';
+        $('#newOneTimeCycle').value=new Date().toISOString().slice(0,7);
+        syncNewSubjectScheduleFields();
+
         showToast(result.message||'Subject added successfully.','success');
         await loadPortal();
         renderAdminSubjects();
@@ -1900,26 +1967,101 @@
     }
 
         function openSubjectScheduleEditor(subjectId){
-      const subject=state.subjectMasters.find(x=>x.id===subjectId);if(!subject)return;
-      closeSubjectLinkEditor();closeRenameSubjectEditor();state.adminSchedulingSubjectId=subject.id;
-      $('#scheduleSubjectId').value=subject.id;$('#scheduleSubjectName').textContent='Subject: '+subject.name;
-      $('#scheduleRecurrenceMode').value=subject.recurrenceMode==='MONTHLY_QUARTERLY'?'MONTHLY_QUARTERLY':'MONTHLY';
-      $('#subjectScheduleForm').classList.remove('hidden');setTimeout(()=>$('#scheduleRecurrenceMode').focus(),40);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject)return;
+
+      closeSubjectLinkEditor();
+      closeRenameSubjectEditor();
+      state.adminSchedulingSubjectId=subject.id;
+
+      $('#scheduleSubjectId').value=subject.id;
+      $('#scheduleSubjectName').textContent='Subject: '+subject.name;
+      $('#scheduleRecurrenceMode').value=subject.recurrenceMode||'MONTHLY';
+      $('#scheduleOneTimeCycle').value=subject.oneTimeCycle||new Date().toISOString().slice(0,7);
+      $('#scheduleOneTimeClosingDate').value=subject.closingDate||'';
+
+      syncExistingSubjectScheduleFields();
+      $('#subjectScheduleForm').classList.remove('hidden');
+      setTimeout(()=>$('#scheduleRecurrenceMode').focus(),40);
     }
     function closeSubjectScheduleEditor(){state.adminSchedulingSubjectId='';const form=$('#subjectScheduleForm');if(!form)return;form.reset();form.classList.add('hidden');}
-    async function saveSubjectSchedule(event){event.preventDefault();const subject=state.subjectMasters.find(x=>x.id===state.adminSchedulingSubjectId);if(!subject||!state.adminCode)return;
-      const recurrenceMode=$('#scheduleRecurrenceMode').value,button=$('#saveSubjectScheduleButton');setBusy(button,true,'Saving…');
-      try{const result=await postToBackend({action:'adminSetSubjectRecurrence',securityCode:state.adminCode,subjectId:subject.id,recurrenceMode});showToast(result.message||'Subject schedule saved.','success');closeSubjectScheduleEditor();await loadPortal();renderAdminSubjects();}
-      catch(error){showToast(error.message||'Subject schedule could not be saved.','error')}finally{setBusy(button,false,'Save schedule')}}
+    async function saveSubjectSchedule(event){
+      event.preventDefault();
+      const subject=state.subjectMasters.find(x=>x.id===state.adminSchedulingSubjectId);
+      if(!subject||!state.adminCode)return;
+
+      const recurrenceMode=$('#scheduleRecurrenceMode').value;
+      const oneTimeCycle=recurrenceMode==='ONE_TIME'?($('#scheduleOneTimeCycle').value||''):'';
+      const closingDate=recurrenceMode==='ONE_TIME'?($('#scheduleOneTimeClosingDate').value||''):'';
+
+      if(recurrenceMode==='ONE_TIME'&&!oneTimeCycle){
+        showToast('Select the month and year for this one-time subject.','error');
+        return;
+      }
+
+      const button=$('#saveSubjectScheduleButton');
+      setBusy(button,true,'Saving…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectRecurrence',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          recurrenceMode,
+          oneTimeCycle,
+          closingDate
+        });
+        showToast(result.message||'Subject schedule saved.','success');
+        closeSubjectScheduleEditor();
+        await loadPortal();
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject schedule could not be saved.','error');
+      }finally{
+        setBusy(button,false,'Save schedule');
+      }
+    }
 
 function renderAdminSubjects(){
-      const list=$('#subjectAdminList');if(!list)return;
+      const list=$('#subjectAdminList');
+      if(!list)return;
+
       const subjects=Array.isArray(state.subjectMasters)?state.subjectMasters:[];
+
+      const monthLabel=cycle=>{
+        if(!/^\d{4}-\d{2}$/.test(String(cycle||'')))return '';
+        const [year,month]=String(cycle).split('-').map(Number);
+        return new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(new Date(year,month-1,1));
+      };
+
       list.innerHTML=subjects.length?subjects.map(subject=>{
-        const enabled=subject.submissionEnabled!==false,combo=subject.recurrenceMode==='MONTHLY_QUARTERLY';
-        const scheduleText=combo?'Monthly + Quarterly · Apr / Jun / Sep / Dec · Previous Quarter':'Monthly';
-        const linkInfo=subject.linkFileName?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName):(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
-        return '<div class="subject-admin-row"><span class="subject-admin-info"><strong>'+escapeHtml(subject.name)+'</strong><span class="subject-schedule-badge '+(combo?'combo':'')+'">'+escapeHtml(scheduleText)+'</span><small>'+linkInfo+'</small><small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small></span><span class="subject-admin-actions"><button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Schedule</button><button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button><button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button><button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button><button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button></span></div>';
+        const enabled=subject.submissionEnabled!==false;
+        const mode=subject.recurrenceMode||'MONTHLY';
+        const combo=mode==='MONTHLY_QUARTERLY';
+        const once=mode==='ONE_TIME';
+
+        const scheduleText=once
+          ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
+          :combo
+            ?'Monthly + Quarterly · Apr→Q1 · Jun→Q2 · Sep→Q3 · Dec→Q4'
+            :'Monthly · month/year shown automatically';
+
+        const linkInfo=subject.linkFileName
+          ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
+          :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
+
+        return '<div class="subject-admin-row"><span class="subject-admin-info">'+
+          '<strong>'+escapeHtml(subject.name)+'</strong>'+
+          '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
+          '<small>'+linkInfo+'</small>'+
+          '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small>'+
+          '</span><span class="subject-admin-actions">'+
+          '<button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Schedule</button>'+
+          '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
+          '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
+          '<button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button>'+
+          '<button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button>'+
+          '</span></div>';
       }).join(''):'<div class="subject-admin-row"><span>No active subjects</span></div>';
     }
 
@@ -1979,7 +2121,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v173.js"></script>
-  <script src="sticky-v173.js"></script>
+  <script src="portal-v174.js"></script>
+  <script src="sticky-v174.js"></script>
 </body>
 </html>
