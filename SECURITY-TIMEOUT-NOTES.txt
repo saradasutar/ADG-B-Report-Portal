@@ -1,0 +1,18 @@
+V17.2 SECURITY MODEL
+
+Frontend idle timer:
+Selected value: 5 / 10 / 15 / 20 / 30 minutes.
+Warning: exactly 60 seconds before the configured timeout.
+
+Backend safety fallback:
+The Apps Script session cache expires after:
+selected idle timeout + 5 minutes.
+
+Why the extra five minutes?
+It protects against browsers suspending JavaScript timers while also avoiding
+premature server expiry while a genuinely active user is still working.
+Genuine browser activity periodically refreshes the backend session with a
+throttled session check.
+
+The five-minute fallback is not an extra visible working period:
+the normal browser UI signs out at the selected timeout.

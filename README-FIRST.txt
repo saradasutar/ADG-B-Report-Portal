@@ -1,61 +1,52 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.1 ACCESS CONTROL
+ADG(B) REPORT SUBMISSION PORTAL — V17.2 SECURITY TIMEOUT
 
-FULL PACKAGE
+NEW ADMINISTRATOR PATH
+Administration → Security Settings
 
-GITHUB ROOT:
-- index.html
-- portal-v171.js
-- sticky-v171.js
-- adgb-v171.svg
-- adgb-v171.png
-- adgb-v171.ico
+ADMIN CAN SELECT
+5 / 10 / 15 / 20 / 30 minutes
 
-GOOGLE APPS SCRIPT:
-- Code.gs
+DEFAULT
+30 minutes
 
-NEW ADMIN -> ACCESS CONTROL
-After Administrator username/password login, a new Access button appears.
+BEHAVIOUR
+- One-minute warning before automatic sign-out.
+- "Stay signed in" button immediately resets the timer.
+- "Sign out now" button available in the warning.
+- Genuine activity resets the timer:
+  click / pointer / keyboard / touch / scroll.
+- Setting applies to every username/password user.
+- Public View has no login timeout because there is no signed-in session.
+- Backend session has only a maximum five-minute safety grace beyond the
+  selected idle timeout if the browser timer is suspended.
+- Browser/tab session token remains in sessionStorage, so closing the tab
+  does not preserve a login for reopening.
 
-MODES
-1. PUBLIC VIEW
-   Anyone with the URL can see report subjects, submitted/pending status,
-   summary and office status.
-   Upload/View/Replace/Remove can be allowed only after concerned office
-   PIN/password verification.
-   Public Raw Data and submitted timestamps are separately controlled.
-   Direct linked PDF/Drive URLs are NOT exposed to anonymous viewers.
+EXISTING FEATURES RETAINED
+- Public View / Login Required / Admin Only modes.
+- Concerned-office credential protection for public office actions.
+- Fast Data Engine.
+- Turbo login.
+- Raw Data.
+- Target / Reminder.
+- User permissions.
+- Favicon and premium colourful UI.
 
-2. LOGIN REQUIRED
-   Username/password is required to open the dashboard.
-   Office PIN alone cannot bypass login mode.
-   Existing role and permission controls apply.
+GITHUB — upload these files to repository root
+index.html
+portal-v172.js
+sticky-v172.js
+adgb-v172.svg
+adgb-v172.png
+adgb-v172.ico
 
-3. ADMIN ONLY
-   Administrator username/password only.
-   Useful for maintenance or temporary restriction.
+APPS SCRIPT
+Replace Code.gs.
+Save.
+Deploy → Manage deployments → Edit → New version → Deploy.
 
-ALWAYS LOGIN-PROTECTED
-- Users
-- Access Control
-- Current Files / Drive folder
-- Subject management
-- Raw Data editing / structure
-- Target / Reminder management
+DO NOT run setupPortal().
+DO NOT run setPortalSecurityCodes().
 
-DEFAULT AFTER DEPLOYMENT
-LOGIN REQUIRED.
-Nothing becomes public until Administrator changes it.
-
-INSTALL
-GITHUB:
-Upload/replace the 6 GitHub files listed above.
-
-APPS SCRIPT:
-1. Replace Code.gs
-2. Save
-3. Deploy > Manage deployments > Edit > New version > Deploy
-4. Do NOT run setupPortal()
-5. Do NOT run setPortalSecurityCodes()
-
-EXPECTED:
-FE v17.1 | BE v17.1
+EXPECTED
+FE v17.2 | BE v17.2
