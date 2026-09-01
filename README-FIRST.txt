@@ -1,86 +1,40 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.5
-OFFICIAL AUTOMATIC SUBJECT PERIOD NAMING
+ADG(B) REPORT SUBMISSION PORTAL — V17.6
 
-ADMIN ENTERS ONLY THE BASE SUBJECT
-Example:
-Probity
+QUARTERLY SUBJECTS OPEN ONLY ON THE LAST CALENDAR DATE
 
-THE PORTAL GENERATES THE FULL SUBJECT AUTOMATICALLY.
+Base subject: Probity
 
-SEPTEMBER 2026 SUBMISSION CYCLE
-
-Monthly:
+September 2026:
+1-Sep to 29-Sep:
 Probity for the Month of Aug,2026
 
-Quarterly:
+30-Sep-2026:
+Probity for the Month of Aug,2026
 Probity for QE Sep,2026
 
-The Administrator does NOT type Aug, Sep, year, "Month of", or "QE".
+The QE subject does not appear before 30-Sep-2026.
 
-MONTHLY RULE
-The monthly row refers to the PREVIOUS reporting month.
-
+Quarterly opening dates:
+Last date of April, June, September and December.
 Examples:
-September 2026 cycle
-→ Probity for the Month of Aug,2026
+30-Apr-2026 -> Probity for QE Mar,2026
+30-Jun-2026 -> Probity for QE Jun,2026
+30-Sep-2026 -> Probity for QE Sep,2026
+31-Dec-2026 -> Probity for QE Dec,2026
 
-January 2027 cycle
-→ Probity for the Month of Dec,2026
-
-QUARTERLY RULE
-Quarterly row retains the portal schedule:
-April / June / September / December.
-
-Display wording:
-April 2026
-→ Probity for QE Mar,2026
-
-June 2026
-→ Probity for QE Jun,2026
-
-September 2026
-→ Probity for QE Sep,2026
-
-December 2026
-→ Probity for QE Dec,2026
-
-ONE-TIME
-One-time subjects continue to show their selected month/year and appear only
-for the selected cycle.
-
-ALL V17.4 FEATURES RETAINED
-- One-time / Monthly / Monthly + Quarterly schedules
-- Monthly status reset by submission cycle
-- Historical Submissions and Drive files preserved
-- Public View / Login Required / Admin Only
-- Concerned-office credential protection
-- Administration → Security Settings
-- 5/10/15/20/30 minute timeout
-- 30-minute default and 1-minute warning
-- Fast Data Engine
-- Raw Data
-- Target / Reminder
-- User permissions
-- Favicon and premium UI
+The Apps Script backend also enforces the last-date rule, so early direct upload is blocked.
+The open dashboard checks the India date every 30 seconds and refreshes data automatically when the date changes.
 
 GITHUB ROOT
 index.html
-portal-v175.js
-sticky-v175.js
-adgb-v175.svg
-adgb-v175.png
-adgb-v175.ico
+portal-v176.js
+sticky-v176.js
+adgb-v176.svg
+adgb-v176.png
+adgb-v176.ico
 
 APPS SCRIPT
 Code.gs
 
-DEPLOY
-1. Upload/replace GitHub files.
-2. Replace Code.gs.
-3. Save.
-4. Deploy → Manage deployments → Edit → New version → Deploy.
-5. DO NOT run setupPortal().
-6. DO NOT run setPortalSecurityCodes().
-
-EXPECTED
-FE v17.5 | BE v17.5
+Deploy as New version. Do NOT run setupPortal() or setPortalSecurityCodes().
+Expected: FE v17.6 | BE v17.6
