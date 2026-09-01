@@ -1,57 +1,71 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6.2
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.3
+LIVE SUBMITTED STATUS + ADMIN AUTO-CREATE SCHEDULE FIX
 
-FIXED TOGETHER
-1. Upload button not opening.
-2. Already-submitted reports showing as Pending/Upload.
+FIX 1 — SUBMITTED MUST SHOW IMMEDIATELY
+After a successful upload:
+- Backend writes Current_Status.
+- SpreadsheetApp.flush() commits the status before the success response.
+- Frontend immediately changes that exact cell to Submitted.
+- Dashboard then performs an uncached fresh bootstrap to verify the status.
+- Summary cards and office Submitted/Pending counts update immediately.
+- The normal cached fast path is still used for ordinary dashboard loads.
 
-ROOT CAUSE
-Recurring rows use instance IDs (__M / __Q / __O), while parts of the old UI
-and legacy Current_Status data still referred to the original base subject ID.
+This directly addresses:
+Upload succeeds / green success toast appears / dashboard still shows Upload.
 
-UPLOAD FIX
-The clicked row is resolved from the live dashboard subject instances, so
-Monthly, Quarterly and One-time buttons open correctly.
+FIX 2 — ADMIN CHOOSES AUTO-CREATE MODE PER SUBJECT
+For every new or existing subject, Admin can choose:
+1. One-time
+2. Monthly only
+3. Monthly + Quarterly (QE)
 
-ALREADY-SUBMITTED REPAIR
-V17.6.2 performs a one-time compatibility repair:
-- Reads existing historical Submissions.
-- Finds the latest legacy Submitted/Removed event for each subject+office.
-- Copies that state into the current Monthly status ONLY if no newer genuine
-  current-cycle status exists.
-- Does NOT edit/delete historical Submissions.
-- Does NOT delete/move Drive PDFs.
-- Does NOT overwrite a newer current-cycle upload/removal.
-- Runs once only.
+Monthly only:
+- Monthly row every month.
+- Example September cycle:
+  Probity for the Month of Aug,2026
 
-It also makes old timestamp parsing safe so one bad timestamp cannot make
-Submitted status disappear.
+Monthly + Quarterly (QE):
+- Monthly row every month.
+- QE row also appears on the quarter-end opening rule.
+- Example:
+  Probity for QE Sep,2026
 
-V17.6 QUARTER-END RULE RETAINED
-QE report appears only on the last calendar date of Apr/Jun/Sep/Dec.
-30-Sep-2026 -> Probity for QE Sep,2026
+The Admin stores only the base subject, e.g. Probity.
+
+FIX 3 — VERSION DISPLAY
+The visible FE badge is now correctly V17.6.3 instead of remaining hard-coded
+as V17.6.
+
+V17.6 QUARTER RULE RETAINED
+QE subject opens only on the last calendar date of Apr/Jun/Sep/Dec.
+
+DATA SAFETY
+- Existing Submissions preserved.
+- Existing Drive PDFs preserved.
+- Users/passwords preserved.
+- Office codes preserved.
+- Security Settings preserved.
+- No setup reset required.
 
 GITHUB ROOT
 index.html
-portal-v1762.js
-sticky-v1762.js
-adgb-v1762.svg
-adgb-v1762.png
-adgb-v1762.ico
+portal-v1763.js
+sticky-v1763.js
+adgb-v1763.svg
+adgb-v1763.png
+adgb-v1763.ico
 
 APPS SCRIPT
 Code.gs
 
 INSTALL
-1. Upload/replace the six GitHub files.
+1. Replace/upload the six GitHub files.
 2. Replace Code.gs.
 3. Save.
-4. Deploy > Manage deployments > Edit > New version > Deploy.
+4. Deploy → Manage deployments → Edit → New version → Deploy.
 5. DO NOT run setupPortal().
 6. DO NOT run setPortalSecurityCodes().
 7. Hard refresh once: Ctrl+Shift+R.
 
-The FIRST load after deploying V17.6.2 may be a little slower while the
-one-time status compatibility repair runs.
-
-EXPECTED
-FE v17.6.2 | BE v17.6.2
+EXPECTED AFTER REFRESH
+FE v17.6.3 | BE v17.6.3

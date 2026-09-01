@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v1762.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1762.png">
-  <link rel="shortcut icon" href="adgb-v1762.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1763.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1763.png">
+  <link rel="shortcut icon" href="adgb-v1763.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -699,7 +699,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.2</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.3</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -775,10 +775,10 @@
             <span>Automatic schedule</span>
             <select id="newSubjectRecurrence">
               <option value="ONE_TIME" selected>One-time</option>
-              <option value="MONTHLY">Monthly</option>
-              <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
+              <option value="MONTHLY">Monthly only</option>
+              <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
             </select>
-            <small>The displayed subject is generated automatically, e.g. “Probity for the Month of Aug,2026” or “Probity for QE Sep,2026”.</small>
+            <small>Admin chooses the schedule for this subject: One-time, Monthly only, or Monthly + Quarterly (QE). The reporting period is added automatically.</small>
           </label>
           <label class="admin-field one-time-fields" id="newOneTimeFields">
             <span>One-time month / year</span>
@@ -856,8 +856,8 @@
               <span>Schedule</span>
               <select id="scheduleRecurrenceMode">
                 <option value="ONE_TIME">One-time</option>
-                <option value="MONTHLY">Monthly</option>
-                <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
+                <option value="MONTHLY">Monthly only</option>
+                <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
               </select>
             </label>
             <label class="admin-field one-time-fields" id="scheduleOneTimeCycleField">
@@ -869,8 +869,8 @@
               <input id="scheduleOneTimeClosingDate" type="date">
             </label>
             <div class="admin-summary">
-              <strong>Monthly:</strong> opens automatically every month.<br>
-              <strong>Monthly + Quarterly:</strong> monthly continues, plus a separate
+              <strong>Monthly only:</strong> opens automatically every month.<br>
+              <strong>Monthly + Quarterly (QE):</strong> monthly continues, plus a separate
               <strong>Quarterly (Previous Quarter)</strong> row in
               <strong>April, June, September and December</strong>.
             </div>
@@ -881,6 +881,13 @@
           </div>
         </form>
 
+        <div class="admin-summary subject-auto-create-guide">
+          <strong>Auto-create per subject:</strong>
+          <span>One-time</span> ·
+          <span>Monthly only</span> ·
+          <span>Monthly + Quarterly (QE)</span>.
+          For Monthly + Quarterly, the monthly row is created every month and the QE row is created only on the configured quarter-end date.
+        </div>
         <div class="subject-admin-list" id="subjectAdminList"></div>
         <div class="admin-summary">
           Disabled subjects remain visible and existing reports can still be viewed. Renaming preserves IDs, reports and linked PDFs.
@@ -1033,7 +1040,7 @@
       renderMatrix();
     }
 
-    async function loadPortal(){
+    async function loadPortal(forceFresh=false){
       setNotice('',false);
       const refresh=$('#refreshButton');
       if(refresh)setBusy(refresh,true,'Refreshing…');
@@ -1054,7 +1061,8 @@
 
       try{
         const data=await jsonpRequest('bootstrap',{
-          sessionToken:window.ADGB_AUTH?.token||''
+          sessionToken:window.ADGB_AUTH?.token||'',
+          fresh:forceFresh?'1':'0'
         });
         if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
 
@@ -1304,7 +1312,7 @@
         if(state.search&&!subject.name.toLowerCase().includes(state.search))return false;
         if(state.statusFilter==='all')return true;
         return offices.some(office=>{
-          const submitted=!!state.status[subject.id+'__'+office.id]?.submitted;
+          const submitted=!!reportStatusFor(subject,office)?.submitted;
           return state.statusFilter==='submitted'?submitted:!submitted;
         });
       });
@@ -1576,7 +1584,7 @@
         showToast('Head Office has disabled submissions for this report subject.','error');return;
       }
 
-      const existing=state.status[state.selected.subject.id+'__'+state.selected.office.id]?.submitted;
+      const existing=!!reportStatusFor(state.selected.subject,state.selected.office)?.submitted;
       const defaultLabel=existing?'Replace report':'Submit report';
       setBusy($('#uploadSubmit'),true,'Uploading…');
 
@@ -1592,9 +1600,21 @@
           fileBase64
         });
 
+        const statusKey=
+          result.statusKey ||
+          (state.selected.subject.id+'__'+state.selected.office.id);
+
+        state.status[statusKey]={
+          submitted:true,
+          submittedAt:result.submittedAt||new Date().toISOString()
+        };
+
+        // Paint Submitted immediately; then verify against an uncached backend read.
+        renderAll(result.submittedAt||new Date().toISOString());
+
         closeModal('upload');
         showToast(result.message||'Report submitted successfully.','success');
-        await loadPortal();
+        await loadPortal(true);
       }catch(error){
         showToast(error.message||'Upload failed.','error');
       }finally{
@@ -1677,7 +1697,7 @@
         });
         closeModal('upload');
         showToast(result.message||'Report removed successfully.','success');
-        await loadPortal();
+        await loadPortal(true);
       }catch(error){
         showToast(error.message||'Report could not be removed.','error');
       }finally{
@@ -1805,7 +1825,7 @@
         syncNewSubjectScheduleFields();
 
         showToast(result.message||'Subject added successfully.','success');
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject could not be added.','error');
@@ -1874,7 +1894,7 @@
         const result=await postToBackend(payload);
         showToast(result.message||'PDF hyperlink updated.','success');
         closeSubjectLinkEditor();
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject PDF hyperlink could not be updated.','error');
@@ -1967,7 +1987,7 @@
         });
         showToast(result.message||'Subject renamed successfully.','success');
         closeRenameSubjectEditor();
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject could not be renamed.','error');
@@ -1988,7 +2008,7 @@
           subjectId
         });
         showToast(result.message||'Subject removed.','success');
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject could not be removed.','error');
@@ -2017,7 +2037,7 @@
           enabled:next
         });
         showToast(result.message||'Submission setting updated.','success');
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Submission setting could not be updated.','error');
@@ -2073,7 +2093,7 @@
         });
         showToast(result.message||'Subject schedule saved.','success');
         closeSubjectScheduleEditor();
-        await loadPortal();
+        await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject schedule could not be saved.','error');
@@ -2103,8 +2123,8 @@ function renderAdminSubjects(){
         const scheduleText=once
           ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
           :combo
-            ?'Monthly + Quarterly · QE opens only on month-end date'
-            :'Monthly · previous reporting month shown automatically';
+            ?'Monthly + Quarterly (QE) · QE opens only on quarter-end date'
+            :'Monthly only · previous reporting month shown automatically';
 
         const linkInfo=subject.linkFileName
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
@@ -2116,7 +2136,7 @@ function renderAdminSubjects(){
           '<small>'+linkInfo+'</small>'+
           '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small>'+
           '</span><span class="subject-admin-actions">'+
-          '<button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Schedule</button>'+
+          '<button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Auto-create</button>'+
           '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
           '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
           '<button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button>'+
@@ -2181,7 +2201,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1762.js"></script>
-  <script src="sticky-v1762.js"></script>
+  <script src="portal-v1763.js"></script>
+  <script src="sticky-v1763.js"></script>
 </body>
 </html>
