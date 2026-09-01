@@ -1,47 +1,66 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6.5
-QE LAST-DATE CORRECTION + GRAY DISABLED SUBJECT ROWS
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.6
+QE OPENS AUTOMATICALLY IN THE MONTH AFTER QUARTER END
 
-QE DATE CORRECTION
-The quarterly subject now requires BOTH:
-- a configured quarterly month (Apr / Jun / Sep / Dec), AND
-- the LAST calendar date of that month.
+CORRECTED RULE
 
-Therefore on 01-Sep-2026:
-Probity for QE Sep,2026 MUST NOT appear.
+Quarter ended March:
+01-Apr -> QE Mar
 
-On 30-Sep-2026:
-Probity for QE Sep,2026 appears automatically.
+Quarter ended June:
+01-Jul -> QE Jun
 
-Backend enforcement matches the screen:
-an early direct attempt to use a quarterly instance is rejected before the
-last calendar date.
+Quarter ended September:
+01-Oct -> QE Sep
 
-DISABLED SUBJECT APPEARANCE
-When Administrator chooses Disable submissions:
-- the COMPLETE subject row becomes visibly gray on desktop;
-- the COMPLETE subject card becomes visibly gray on mobile;
-- the subject is also gray in the Administrator subject list;
-- pending offices show Closed;
-- already-submitted reports remain viewable;
-- new upload/replace activity remains disabled.
+Quarter ended December:
+01-Jan of next year -> QE Dec
 
-EXISTING V17.6.4 STATUS ENGINE FIX RETAINED
-- successful Submitted status remains persistent;
-- append-only Submissions remains authoritative for current-cycle status;
-- stale/duplicate Current_Status rows cannot reverse a new submission.
+EXAMPLE — PROBITY
+
+On 01-Sep-2026:
+Probity for the Month of Aug,2026
+NO "Probity for QE Sep,2026" row.
+
+On 01-Oct-2026:
+Probity for the Month of Sep,2026
+Probity for QE Sep,2026
+
+The QE row remains available during the October submission cycle; it is not a
+one-day-only row.
+
+JANUARY YEAR ROLLOVER
+On 01-Jan-2027:
+Probity for the Month of Dec,2026
+Probity for QE Dec,2026
 
 ADMIN AUTO-CREATE OPTIONS
 - One-time
 - Monthly only
 - Monthly + Quarterly (QE)
 
+For Monthly + Quarterly (QE), Admin stores only the base subject. The portal
+creates the appropriate Monthly and QE rows automatically.
+
+MIGRATION
+Existing Monthly+Quarterly subjects that previously stored 4,6,9,12 are safely
+normalized to the new opening months:
+1,4,7,10
+
+No historical Submissions or Drive PDFs are deleted.
+
+DISABLED SUBJECT APPEARANCE RETAINED
+Disabled subject rows remain visibly gray on desktop, mobile and Admin list.
+
+STATUS ENGINE RETAINED
+V17.6.4/V17.6.5 persistent Submitted-status fixes remain in place.
+
 GITHUB ROOT
 index.html
-portal-v1765.js
-sticky-v1765.js
-adgb-v1765.svg
-adgb-v1765.png
-adgb-v1765.ico
+portal-v1766.js
+sticky-v1766.js
+adgb-v1766.svg
+adgb-v1766.png
+adgb-v1766.ico
 
 APPS SCRIPT
 Code.gs
@@ -50,10 +69,10 @@ INSTALL
 1. Replace/upload all six GitHub files.
 2. Replace Code.gs.
 3. Save.
-4. Deploy → Manage deployments → Edit → New version → Deploy.
+4. Deploy -> Manage deployments -> Edit -> New version -> Deploy.
 5. DO NOT run setupPortal().
 6. DO NOT run setPortalSecurityCodes().
 7. Hard refresh once: Ctrl+Shift+R.
 
 EXPECTED
-FE v17.6.5 | BE v17.6.5
+FE v17.6.6 | BE v17.6.6

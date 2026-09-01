@@ -1,0 +1,13 @@
+QE AUTO-CREATION RULE — V17.6.6
+
+QE Mar -> opens 01 Apr
+QE Jun -> opens 01 Jul
+QE Sep -> opens 01 Oct
+QE Dec -> opens 01 Jan of next year
+
+Example:
+Base subject: Probity
+
+01-Oct-2026 automatically displays:
+Probity for the Month of Sep,2026
+Probity for QE Sep,2026

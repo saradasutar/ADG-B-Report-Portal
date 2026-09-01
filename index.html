@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v1765.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1765.png">
-  <link rel="shortcut icon" href="adgb-v1765.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1766.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1766.png">
+  <link rel="shortcut icon" href="adgb-v1766.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -764,7 +764,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.5</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.6</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -843,7 +843,7 @@
               <option value="MONTHLY">Monthly only</option>
               <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
             </select>
-            <small>Admin chooses the schedule for this subject: One-time, Monthly only, or Monthly + Quarterly (QE). The reporting period is added automatically.</small>
+            <small>Admin chooses: One-time, Monthly only, or Monthly + Quarterly (QE). QE opens in the following month—for example, QE Sep,2026 appears automatically from 01-Oct-2026.</small>
           </label>
           <label class="admin-field one-time-fields" id="newOneTimeFields">
             <span>One-time month / year</span>
@@ -935,9 +935,8 @@
             </label>
             <div class="admin-summary">
               <strong>Monthly only:</strong> opens automatically every month.<br>
-              <strong>Monthly + Quarterly (QE):</strong> monthly continues, plus a separate
-              <strong>Quarterly (Previous Quarter)</strong> row in
-              <strong>April, June, September and December</strong>.
+              <strong>Monthly + Quarterly (QE):</strong> monthly continues, and the QE row opens automatically
+              on <strong>1 January, 1 April, 1 July and 1 October</strong> for the quarter ended in the previous month.
             </div>
           </div>
           <div class="admin-link-actions">
@@ -951,7 +950,7 @@
           <span>One-time</span> ·
           <span>Monthly only</span> ·
           <span>Monthly + Quarterly (QE)</span>.
-          For Monthly + Quarterly, the monthly row is created every month and the QE row is created only on the configured quarter-end date.
+          For Monthly + Quarterly, the monthly row is created every month and the QE row is created automatically from the 1st day of the month following quarter end.
         </div>
         <div class="subject-admin-list" id="subjectAdminList"></div>
         <div class="admin-summary">
@@ -2259,7 +2258,7 @@ function renderAdminSubjects(){
         const scheduleText=once
           ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
           :combo
-            ?'Monthly + Quarterly (QE) · QE appears only on the last date'
+            ?'Monthly + Quarterly (QE) · QE opens next month after quarter end'
             :'Monthly only · previous reporting month shown automatically';
 
         const linkInfo=subject.linkFileName
@@ -2337,7 +2336,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1765.js"></script>
-  <script src="sticky-v1765.js"></script>
+  <script src="portal-v1766.js"></script>
+  <script src="sticky-v1766.js"></script>
 </body>
 </html>
