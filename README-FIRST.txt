@@ -1,59 +1,47 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6.4
-PERMANENT SUBMITTED-STATUS ENGINE FIX
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.5
+QE LAST-DATE CORRECTION + GRAY DISABLED SUBJECT ROWS
 
-SYMPTOM FIXED
-Upload succeeds → cell shows Submitted briefly → after fresh reload it changes
-back to Upload/Pending.
+QE DATE CORRECTION
+The quarterly subject now requires BOTH:
+- a configured quarterly month (Apr / Jun / Sep / Dec), AND
+- the LAST calendar date of that month.
 
-WHY THIS COULD HAPPEN
-Older portal upgrades could leave duplicate/stale rows in Current_Status.
-The upload updated one Current_Status row, but a later stale duplicate could
-win on the following read. Therefore the frontend's successful local status
-was replaced by old data.
+Therefore on 01-Sep-2026:
+Probity for QE Sep,2026 MUST NOT appear.
 
-V17.6.4 FIXES THE STATUS ENGINE AT FOUR LEVELS
+On 30-Sep-2026:
+Probity for QE Sep,2026 appears automatically.
 
-1. Current_Status WRITE
-Every row having the same Status Key is updated, not only the first match.
+Backend enforcement matches the screen:
+an early direct attempt to use a quarterly instance is rejected before the
+last calendar date.
 
-2. Current_Status READ
-If duplicate rows exist, the row with the newest Updated At wins.
+DISABLED SUBJECT APPEARANCE
+When Administrator chooses Disable submissions:
+- the COMPLETE subject row becomes visibly gray on desktop;
+- the COMPLETE subject card becomes visibly gray on mobile;
+- the subject is also gray in the Administrator subject list;
+- pending offices show Closed;
+- already-submitted reports remain viewable;
+- new upload/replace activity remains disabled.
 
-3. APPEND-ONLY SUBMISSIONS = FINAL AUTHORITY
-For the current month, the dashboard overlays Current_Status with the latest
-event from the append-only Submissions history. A real new Submitted event
-therefore cannot be changed back to Pending by an older Current_Status row.
+EXISTING V17.6.4 STATUS ENGINE FIX RETAINED
+- successful Submitted status remains persistent;
+- append-only Submissions remains authoritative for current-cycle status;
+- stale/duplicate Current_Status rows cannot reverse a new submission.
 
-4. SUCCESS READ-BACK
-Before Apps Script returns "submitted successfully", it reads the status back
-and confirms that the exact subject+office is Submitted.
-
-FRONTEND SAFETY
-A backend-confirmed upload/remove is protected on screen for two minutes while
-any late stale browser/backend response finishes. Once the server returns the
-same state, the temporary protection removes itself automatically.
-
-LEGACY ALREADY-SUBMITTED REPAIR
-The compatibility promotion is rerun once under the new V1764 marker. It never
-deletes historical Submissions or Drive PDFs and never overwrites a real newer
-current-cycle state.
-
-ADMIN AUTO-CREATE OPTIONS RETAINED
-Per subject:
+ADMIN AUTO-CREATE OPTIONS
 - One-time
 - Monthly only
 - Monthly + Quarterly (QE)
 
-V17.6 QUARTER RULE RETAINED
-QE row opens only on the last calendar date of Apr / Jun / Sep / Dec.
-
 GITHUB ROOT
 index.html
-portal-v1764.js
-sticky-v1764.js
-adgb-v1764.svg
-adgb-v1764.png
-adgb-v1764.ico
+portal-v1765.js
+sticky-v1765.js
+adgb-v1765.svg
+adgb-v1765.png
+adgb-v1765.ico
 
 APPS SCRIPT
 Code.gs
@@ -68,12 +56,4 @@ INSTALL
 7. Hard refresh once: Ctrl+Shift+R.
 
 EXPECTED
-FE v17.6.4 | BE v17.6.4
-
-TEST
-Upload one PDF.
-The button must change to Submitted and remain Submitted after:
-- 5 seconds
-- manual Refresh
-- Ctrl+R
-- reopening the portal
+FE v17.6.5 | BE v17.6.5

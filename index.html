@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v1764.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1764.png">
-  <link rel="shortcut icon" href="adgb-v1764.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1765.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1765.png">
+  <link rel="shortcut icon" href="adgb-v1765.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -353,6 +353,71 @@
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
+
+    /* V17.6.5 — whole disabled subject row is visibly gray */
+    tbody tr.disabled-subject-row>th,
+    tbody tr.disabled-subject-row>td{
+      background:#e5e7eb!important;
+      border-color:#c8cdd4!important;
+      color:#68707a!important;
+    }
+    tbody tr.disabled-subject-row>th{
+      box-shadow:2px 0 4px rgba(55,65,81,.08)!important;
+    }
+    tbody tr.disabled-subject-row .subject-wrap,
+    tbody tr.disabled-subject-row .subject-link{
+      color:#656d76!important;
+      filter:grayscale(1);
+    }
+    tbody tr.disabled-subject-row .upload-button{
+      box-shadow:none!important;
+    }
+    tbody tr.disabled-subject-row .upload-button.submitted{
+      background:#f2f3f5!important;
+      border-color:#aeb5bd!important;
+      color:#5e6872!important;
+    }
+    tbody tr.disabled-subject-row .submitted-time,
+    tbody tr.disabled-subject-row .replace-hint{
+      color:#717984!important;
+    }
+
+    .subject-card.disabled-subject-card{
+      background:#e5e7eb!important;
+      border-color:#c7ccd3!important;
+      box-shadow:none!important;
+    }
+    .subject-card.disabled-subject-card .subject-card-title{
+      background:linear-gradient(135deg,#777f89,#a0a6ad)!important;
+      color:#fff!important;
+    }
+    .subject-card.disabled-subject-card .office-list>div{
+      background:#e8eaed!important;
+      border-color:#ccd1d7!important;
+    }
+    .subject-card.disabled-subject-card .office-name,
+    .subject-card.disabled-subject-card small{
+      color:#68717c!important;
+    }
+    .subject-card.disabled-subject-card button.submitted{
+      background:#f1f2f4!important;
+      border-color:#aeb5bd!important;
+      color:#606a74!important;
+    }
+
+    .subject-admin-row.disabled-subject-admin{
+      background:#e4e7eb!important;
+      border-color:#c7ccd3!important;
+    }
+    .subject-admin-row.disabled-subject-admin .subject-admin-info>strong,
+    .subject-admin-row.disabled-subject-admin .subject-admin-info>small{
+      color:#69717b!important;
+    }
+    .subject-admin-row.disabled-subject-admin .subject-schedule-badge{
+      filter:grayscale(1);
+      opacity:.82;
+    }
+
     .filtered-cell{background:#f0f1f5;color:#929aaa}
 
     .cell-status{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
@@ -699,7 +764,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.4</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.5</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1373,17 +1438,21 @@
       }
 
       const headers=offices.map(o=>'<th scope="col">'+escapeHtml(o.name)+'</th>').join('');
-      const rows=subjects.map((s,index)=>
-        '<tr><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
-        String(index+1).padStart(2,'0')+'</span><span>'+renderSubjectTitle(s)+'</span></span></th>'+
-        offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>'
-      ).join('');
+      const rows=subjects.map((s,index)=>{
+        const disabled=s.submissionEnabled===false;
+        return '<tr class="'+(disabled?'disabled-subject-row':'')+'"'+
+          (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
+          String(index+1).padStart(2,'0')+'</span><span>'+renderSubjectTitle(s)+'</span></span></th>'+
+          offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>';
+      }).join('');
 
-      const cards=subjects.map((s,index)=>
-        '<article class="subject-card"><div class="subject-card-title"><span>'+
-        String(index+1).padStart(2,'0')+'</span><h3>'+renderSubjectTitle(s)+'</h3></div>'+
-        '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>'
-      ).join('');
+      const cards=subjects.map((s,index)=>{
+        const disabled=s.submissionEnabled===false;
+        return '<article class="subject-card '+(disabled?'disabled-subject-card':'')+'"'+
+          (disabled?' aria-disabled="true"':'')+'><div class="subject-card-title"><span>'+
+          String(index+1).padStart(2,'0')+'</span><h3>'+renderSubjectTitle(s)+'</h3></div>'+
+          '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>';
+      }).join('');
 
       $('#matrixContent').innerHTML=
         '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
@@ -2190,14 +2259,14 @@ function renderAdminSubjects(){
         const scheduleText=once
           ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
           :combo
-            ?'Monthly + Quarterly (QE) · QE opens only on quarter-end date'
+            ?'Monthly + Quarterly (QE) · QE appears only on the last date'
             :'Monthly only · previous reporting month shown automatically';
 
         const linkInfo=subject.linkFileName
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
           :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
 
-        return '<div class="subject-admin-row"><span class="subject-admin-info">'+
+        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin':'')+'"><span class="subject-admin-info">'+
           '<strong>'+escapeHtml(subject.name)+'</strong>'+
           '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
           '<small>'+linkInfo+'</small>'+
@@ -2268,7 +2337,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1764.js"></script>
-  <script src="sticky-v1764.js"></script>
+  <script src="portal-v1765.js"></script>
+  <script src="sticky-v1765.js"></script>
 </body>
 </html>
