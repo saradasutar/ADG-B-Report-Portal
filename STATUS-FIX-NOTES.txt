@@ -1,0 +1,16 @@
+V17.6.4 STATUS CONSISTENCY
+
+Authoritative event log:
+Submissions
+
+Fast current index:
+Current_Status
+
+Rule:
+Current_Status is used for speed, but current-cycle Submissions events override
+it if there is any disagreement.
+
+No destructive migration:
+- Submissions rows are never deleted.
+- PDFs are never deleted by the repair.
+- User/security data is untouched.

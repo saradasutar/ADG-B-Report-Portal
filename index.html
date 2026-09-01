@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v1763.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1763.png">
-  <link rel="shortcut icon" href="adgb-v1763.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v1764.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1764.png">
+  <link rel="shortcut icon" href="adgb-v1764.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -699,7 +699,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.3</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.4</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -913,7 +913,7 @@
 
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
-      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',
+      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',recentStatusWrites:{},
       connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
 
@@ -1040,6 +1040,45 @@
       renderMatrix();
     }
 
+
+    function mergeRecentStatusWrites(serverStatus){
+      const merged={...(serverStatus||{})};
+      const now=Date.now();
+
+      Object.keys(state.recentStatusWrites||{}).forEach(key=>{
+        const recent=state.recentStatusWrites[key];
+
+        if(!recent||recent.expiresAt<=now){
+          delete state.recentStatusWrites[key];
+          return;
+        }
+
+        const server=merged[key];
+
+        /*
+         * If server has now caught up, clear the temporary protection.
+         */
+        if(
+          server &&
+          !!server.submitted===!!recent.submitted
+        ){
+          delete state.recentStatusWrites[key];
+          return;
+        }
+
+        /*
+         * Upload/remove already returned backend success. Prevent a late stale
+         * bootstrap response from reversing the confirmed state on screen.
+         */
+        merged[key]={
+          submitted:!!recent.submitted,
+          submittedAt:recent.submittedAt||''
+        };
+      });
+
+      return merged;
+    }
+
     async function loadPortal(forceFresh=false){
       setNotice('',false);
       const refresh=$('#refreshButton');
@@ -1071,7 +1110,7 @@
         state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
           ?data.subjectMasters
           :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY'}));
-        state.status=data.status||{};
+        state.status=mergeRecentStatusWrites(data.status||{});
         state.maxFileMb=Number(data.maxFileMb)||8;
         state.connected=true;
         state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
@@ -1604,9 +1643,19 @@
           result.statusKey ||
           (state.selected.subject.id+'__'+state.selected.office.id);
 
+        const confirmedAt=
+          result.submittedAt||
+          new Date().toISOString();
+
         state.status[statusKey]={
           submitted:true,
-          submittedAt:result.submittedAt||new Date().toISOString()
+          submittedAt:confirmedAt
+        };
+
+        state.recentStatusWrites[statusKey]={
+          submitted:true,
+          submittedAt:confirmedAt,
+          expiresAt:Date.now()+120000
         };
 
         // Paint Submitted immediately; then verify against an uncached backend read.
@@ -1695,6 +1744,24 @@
           officeId:state.selected.office.id,
           securityCode
         });
+        const statusKey=
+          state.selected.subject.id+
+          '__'+
+          state.selected.office.id;
+
+        state.status[statusKey]={
+          submitted:false,
+          submittedAt:''
+        };
+
+        state.recentStatusWrites[statusKey]={
+          submitted:false,
+          submittedAt:'',
+          expiresAt:Date.now()+120000
+        };
+
+        renderAll(new Date().toISOString());
+
         closeModal('upload');
         showToast(result.message||'Report removed successfully.','success');
         await loadPortal(true);
@@ -2201,7 +2268,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1763.js"></script>
-  <script src="sticky-v1763.js"></script>
+  <script src="portal-v1764.js"></script>
+  <script src="sticky-v1764.js"></script>
 </body>
 </html>

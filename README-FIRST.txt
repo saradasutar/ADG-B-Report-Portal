@@ -1,65 +1,65 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.6.3
-LIVE SUBMITTED STATUS + ADMIN AUTO-CREATE SCHEDULE FIX
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.4
+PERMANENT SUBMITTED-STATUS ENGINE FIX
 
-FIX 1 — SUBMITTED MUST SHOW IMMEDIATELY
-After a successful upload:
-- Backend writes Current_Status.
-- SpreadsheetApp.flush() commits the status before the success response.
-- Frontend immediately changes that exact cell to Submitted.
-- Dashboard then performs an uncached fresh bootstrap to verify the status.
-- Summary cards and office Submitted/Pending counts update immediately.
-- The normal cached fast path is still used for ordinary dashboard loads.
+SYMPTOM FIXED
+Upload succeeds → cell shows Submitted briefly → after fresh reload it changes
+back to Upload/Pending.
 
-This directly addresses:
-Upload succeeds / green success toast appears / dashboard still shows Upload.
+WHY THIS COULD HAPPEN
+Older portal upgrades could leave duplicate/stale rows in Current_Status.
+The upload updated one Current_Status row, but a later stale duplicate could
+win on the following read. Therefore the frontend's successful local status
+was replaced by old data.
 
-FIX 2 — ADMIN CHOOSES AUTO-CREATE MODE PER SUBJECT
-For every new or existing subject, Admin can choose:
-1. One-time
-2. Monthly only
-3. Monthly + Quarterly (QE)
+V17.6.4 FIXES THE STATUS ENGINE AT FOUR LEVELS
 
-Monthly only:
-- Monthly row every month.
-- Example September cycle:
-  Probity for the Month of Aug,2026
+1. Current_Status WRITE
+Every row having the same Status Key is updated, not only the first match.
 
-Monthly + Quarterly (QE):
-- Monthly row every month.
-- QE row also appears on the quarter-end opening rule.
-- Example:
-  Probity for QE Sep,2026
+2. Current_Status READ
+If duplicate rows exist, the row with the newest Updated At wins.
 
-The Admin stores only the base subject, e.g. Probity.
+3. APPEND-ONLY SUBMISSIONS = FINAL AUTHORITY
+For the current month, the dashboard overlays Current_Status with the latest
+event from the append-only Submissions history. A real new Submitted event
+therefore cannot be changed back to Pending by an older Current_Status row.
 
-FIX 3 — VERSION DISPLAY
-The visible FE badge is now correctly V17.6.3 instead of remaining hard-coded
-as V17.6.
+4. SUCCESS READ-BACK
+Before Apps Script returns "submitted successfully", it reads the status back
+and confirms that the exact subject+office is Submitted.
+
+FRONTEND SAFETY
+A backend-confirmed upload/remove is protected on screen for two minutes while
+any late stale browser/backend response finishes. Once the server returns the
+same state, the temporary protection removes itself automatically.
+
+LEGACY ALREADY-SUBMITTED REPAIR
+The compatibility promotion is rerun once under the new V1764 marker. It never
+deletes historical Submissions or Drive PDFs and never overwrites a real newer
+current-cycle state.
+
+ADMIN AUTO-CREATE OPTIONS RETAINED
+Per subject:
+- One-time
+- Monthly only
+- Monthly + Quarterly (QE)
 
 V17.6 QUARTER RULE RETAINED
-QE subject opens only on the last calendar date of Apr/Jun/Sep/Dec.
-
-DATA SAFETY
-- Existing Submissions preserved.
-- Existing Drive PDFs preserved.
-- Users/passwords preserved.
-- Office codes preserved.
-- Security Settings preserved.
-- No setup reset required.
+QE row opens only on the last calendar date of Apr / Jun / Sep / Dec.
 
 GITHUB ROOT
 index.html
-portal-v1763.js
-sticky-v1763.js
-adgb-v1763.svg
-adgb-v1763.png
-adgb-v1763.ico
+portal-v1764.js
+sticky-v1764.js
+adgb-v1764.svg
+adgb-v1764.png
+adgb-v1764.ico
 
 APPS SCRIPT
 Code.gs
 
 INSTALL
-1. Replace/upload the six GitHub files.
+1. Replace/upload all six GitHub files.
 2. Replace Code.gs.
 3. Save.
 4. Deploy → Manage deployments → Edit → New version → Deploy.
@@ -67,5 +67,13 @@ INSTALL
 6. DO NOT run setPortalSecurityCodes().
 7. Hard refresh once: Ctrl+Shift+R.
 
-EXPECTED AFTER REFRESH
-FE v17.6.3 | BE v17.6.3
+EXPECTED
+FE v17.6.4 | BE v17.6.4
+
+TEST
+Upload one PDF.
+The button must change to Submitted and remain Submitted after:
+- 5 seconds
+- manual Refresh
+- Ctrl+R
+- reopening the portal
