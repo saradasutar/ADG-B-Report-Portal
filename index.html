@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v172.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v172.png">
-  <link rel="shortcut icon" href="adgb-v172.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v173.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v173.png">
+  <link rel="shortcut icon" href="adgb-v173.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -430,7 +430,7 @@
 
     .field{margin-top:11px;display:grid;gap:5px}
     .field>span,.admin-field>span{font-size:9px;font-weight:900;color:#31455f}
-    .field input,.admin-field input{
+    .field input,.admin-field input,.admin-field select{
       height:38px;border:1px solid #c7bfdd;border-radius:8px;padding:0 10px;background:#fff;outline:none
     }
     .field small,.admin-field small{font-size:8px;color:#6a798c}
@@ -442,7 +442,7 @@
       min-height:36px;border-radius:8px;padding:0 13px;font-size:10px;font-weight:900
     }
     .cancel{border:1px solid #c6bddc;background:#fff;color:#344b65}
-    .submit,.admin-add button{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff}
+    .submit,.admin-add button{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff;align-self:end}
     .view-report,.remove-report{
       flex:1 0 100%;margin:0 0 3px;border:0;color:#fff;font-size:12px!important
     }
@@ -451,7 +451,10 @@
     #viewReportButton:not(.hidden),#removeReportButton:not(.hidden){display:inline-flex!important;align-items:center;justify-content:center}
     .privacy-note{text-align:center;font-size:8px!important}
 
-    .admin-add{display:grid;grid-template-columns:1.35fr 1fr 1.35fr auto;gap:8px;margin:14px 0;align-items:end}
+    .admin-add{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0;align-items:end}
+    .admin-field select{height:38px;border:1px solid #c7bfdd;border-radius:8px;padding:0 9px;background:#fff;color:#2c4260;font-weight:800;outline:none}
+    .subject-schedule-badge{display:inline-flex;align-items:center;width:max-content;padding:3px 7px;border-radius:999px;background:#ede7ff;color:#58429a;border:1px solid #cfc2ef;font-size:8px;font-weight:900}
+    .subject-schedule-badge.combo{background:#e3f7ef;color:#08735d;border-color:#a9dac7}
     .subject-admin-list{max-height:300px;overflow:auto;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
     .subject-admin-row{min-height:49px;padding:8px 9px;border-bottom:1px solid #d9dfe8;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px}
     .subject-admin-row:last-child{border-bottom:0}
@@ -694,7 +697,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.2</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.3</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -767,6 +770,14 @@
             <input id="newSubject" type="text" maxlength="100" required placeholder="Enter report subject">
           </label>
           <label class="admin-field">
+            <span>Automatic schedule</span>
+            <select id="newSubjectRecurrence">
+              <option value="MONTHLY">Monthly</option>
+              <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
+            </select>
+            <small>Quarterly adds an extra row in Apr, Jun, Sep & Dec.</small>
+          </label>
+          <label class="admin-field">
             <span>Text to hyperlink (optional)</span>
             <input id="newSubjectLinkText" type="text" maxlength="80" placeholder="Exact words in subject">
             <small>Example: July 2026</small>
@@ -823,6 +834,31 @@
           </div>
         </form>
 
+        <form class="admin-link-editor hidden" id="subjectScheduleForm">
+          <h3>Automatic subject schedule</h3>
+          <p id="scheduleSubjectName"></p>
+          <input id="scheduleSubjectId" type="hidden">
+          <div class="admin-link-grid">
+            <label class="admin-field">
+              <span>Schedule</span>
+              <select id="scheduleRecurrenceMode">
+                <option value="MONTHLY">Monthly</option>
+                <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
+              </select>
+            </label>
+            <div class="admin-summary">
+              <strong>Monthly:</strong> opens automatically every month.<br>
+              <strong>Monthly + Quarterly:</strong> monthly continues, plus a separate
+              <strong>Quarterly (Previous Quarter)</strong> row in
+              <strong>April, June, September and December</strong>.
+            </div>
+          </div>
+          <div class="admin-link-actions">
+            <button class="cancel" id="cancelSubjectScheduleButton" type="button">Cancel</button>
+            <button class="submit" id="saveSubjectScheduleButton" type="submit">Save schedule</button>
+          </div>
+        </form>
+
         <div class="subject-admin-list" id="subjectAdminList"></div>
         <div class="admin-summary">
           Disabled subjects remain visible and existing reports can still be viewed. Renaming preserves IDs, reports and linked PDFs.
@@ -847,8 +883,8 @@
     const CHECK_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
 
     const state={
-      offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
-      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',
+      offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
+      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',
       connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
 
@@ -887,6 +923,8 @@
       $('#cancelSubjectLinkButton')?.addEventListener('click',closeSubjectLinkEditor);
       $('#renameSubjectForm')?.addEventListener('submit',renameSubject);
       $('#cancelRenameSubjectButton')?.addEventListener('click',closeRenameSubjectEditor);
+      $('#subjectScheduleForm')?.addEventListener('submit',saveSubjectSchedule);
+      $('#cancelSubjectScheduleButton')?.addEventListener('click',closeSubjectScheduleEditor);
       $('#officeFilter')?.addEventListener('change',event=>{
         state.officeFilter=event.target.value;renderMatrix();updateSummary();
       });
@@ -909,6 +947,9 @@
 
         const toggleButton=event.target.closest('[data-toggle-submission]');
         if(toggleButton)toggleSubjectSubmission(toggleButton.dataset.toggleSubmission);
+
+        const scheduleButton=event.target.closest('[data-schedule-subject]');
+        if(scheduleButton)openSubjectScheduleEditor(scheduleButton.dataset.scheduleSubject);
 
         const closeButton=event.target.closest('[data-close]');
         if(closeButton)closeModal(closeButton.dataset.close);
@@ -954,6 +995,7 @@
         state.connected=false;
         state.offices=FALLBACK_OFFICES;
         state.subjects=FALLBACK_SUBJECTS;
+        state.subjectMasters=FALLBACK_SUBJECTS;
         state.status={};
         renderAll();
         setNotice('Portal setup is incomplete: Apps Script URL is not configured.',true);
@@ -971,6 +1013,9 @@
 
         state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
         state.subjects=Array.isArray(data.subjects)?data.subjects:[];
+        state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
+          ?data.subjectMasters
+          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY'}));
         state.status=data.status||{};
         state.maxFileMb=Number(data.maxFileMb)||8;
         state.connected=true;
@@ -983,6 +1028,7 @@
         state.supportsReceipts=false;
         state.offices=FALLBACK_OFFICES;
         state.subjects=FALLBACK_SUBJECTS;
+        state.subjectMasters=FALLBACK_SUBJECTS;
         state.status={};
         renderAll();
         setNotice('Could not connect to the report database. Check the Apps Script deployment.',true);
@@ -1027,17 +1073,19 @@
         const addedSubjectName=payload.action==='adminAddSubject'?String(payload.subjectName||'').trim():'';
         const linkedPdfIncluded=!!String(payload.linkedPdfBase64||'');
         const addedSubjectLinkText=addedSubjectName?String(payload.linkText||'').trim():'';
-        const subjectWasPresent=addedSubjectName?state.subjects.some(s=>s.name.toLowerCase()===addedSubjectName.toLowerCase()):false;
+        const subjectWasPresent=addedSubjectName?state.subjectMasters.some(s=>s.name.toLowerCase()===addedSubjectName.toLowerCase()):false;
         const archivedSubjectId=payload.action==='adminArchiveSubject'?String(payload.subjectId||''):'';
-        const archiveWasPresent=archivedSubjectId?state.subjects.some(s=>s.id===archivedSubjectId):false;
+        const archiveWasPresent=archivedSubjectId?state.subjectMasters.some(s=>s.id===archivedSubjectId):false;
         const updatedLinkSubjectId=payload.action==='adminUpdateSubjectLink'?String(payload.subjectId||''):'';
         const expectedLinkText=updatedLinkSubjectId?String(payload.linkText||'').trim():'';
-        const previousLinkUrl=updatedLinkSubjectId?String(state.subjects.find(s=>s.id===updatedLinkSubjectId)?.linkUrl||''):'';
+        const previousLinkUrl=updatedLinkSubjectId?String(state.subjectMasters.find(s=>s.id===updatedLinkSubjectId)?.linkUrl||''):'';
         const renamedSubjectId=payload.action==='adminRenameSubject'?String(payload.subjectId||''):'';
         const expectedSubjectName=renamedSubjectId?String(payload.subjectName||'').trim():'';
         const expectedRenamedLinkText=renamedSubjectId?String(payload.linkText||'').trim():'';
         const viewingSubmission=payload.action==='viewSubmission';
         const toggledSubjectId=payload.action==='adminSetSubjectSubmission'?String(payload.subjectId||''):'';
+        const scheduledSubjectId=payload.action==='adminSetSubjectRecurrence'?String(payload.subjectId||''):'';
+        const expectedRecurrence=scheduledSubjectId?String(payload.recurrenceMode||'MONTHLY'):'';
         const expectedSubmissionEnabled=toggledSubjectId?(payload.enabled===true||String(payload.enabled||'').toLowerCase()==='true'):null;
 
         const frame=document.createElement('iframe');
@@ -1109,20 +1157,20 @@
               }
             }
 
-            if(addedSubjectName&&!subjectWasPresent&&Array.isArray(data?.subjects)){
-              const subject=data.subjects.find(x=>String(x.name||'').toLowerCase()===addedSubjectName.toLowerCase());
+            if(addedSubjectName&&!subjectWasPresent&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.name||'').toLowerCase()===addedSubjectName.toLowerCase());
               if(subject&&(!linkedPdfIncluded||(String(subject.linkText||'').trim()===addedSubjectLinkText&&!!subject.linkUrl))){
                 finish(null,{ok:true,message:linkedPdfIncluded?'Subject created and PDF hyperlink added successfully.':'Subject and Drive folder created successfully.'});return;
               }
             }
 
-            if(archivedSubjectId&&archiveWasPresent&&Array.isArray(data?.subjects)&&
-               !data.subjects.some(s=>String(s.id||'')===archivedSubjectId)){
+            if(archivedSubjectId&&archiveWasPresent&&Array.isArray(data?.subjectMasters)&&
+               !data.subjectMasters.some(s=>String(s.id||'')===archivedSubjectId)){
               finish(null,{ok:true,message:'Subject removed successfully. Existing files were preserved.'});return;
             }
 
-            if(updatedLinkSubjectId&&Array.isArray(data?.subjects)){
-              const subject=data.subjects.find(x=>String(x.id||'')===updatedLinkSubjectId);
+            if(updatedLinkSubjectId&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.id||'')===updatedLinkSubjectId);
               if(subject){
                 const textMatches=String(subject.linkText||'').trim()===expectedLinkText;
                 const url=String(subject.linkUrl||'');
@@ -1138,18 +1186,25 @@
               }
             }
 
-            if(renamedSubjectId&&Array.isArray(data?.subjects)){
-              const subject=data.subjects.find(x=>String(x.id||'')===renamedSubjectId);
+            if(renamedSubjectId&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.id||'')===renamedSubjectId);
               if(subject&&String(subject.name||'').trim()===expectedSubjectName&&
                  (!subject.linkUrl||String(subject.linkText||'').trim()===expectedRenamedLinkText)){
                 finish(null,{ok:true,message:'Subject and its Google Drive folder were renamed successfully.'});return;
               }
             }
 
-            if(toggledSubjectId&&Array.isArray(data?.subjects)){
-              const subject=data.subjects.find(x=>String(x.id||'')===toggledSubjectId);
+            if(toggledSubjectId&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.id||'')===toggledSubjectId);
               if(subject&&((subject.submissionEnabled!==false)===expectedSubmissionEnabled)){
                 finish(null,{ok:true,message:expectedSubmissionEnabled?'Sub-office submissions enabled successfully.':'Sub-office submissions disabled successfully.'});return;
+              }
+            }
+
+            if(scheduledSubjectId&&Array.isArray(data?.subjectMasters)){
+              const subject=data.subjectMasters.find(x=>String(x.id||'')===scheduledSubjectId);
+              if(subject&&String(subject.recurrenceMode||'MONTHLY')===expectedRecurrence){
+                finish(null,{ok:true,message:'Subject schedule saved successfully.'});return;
               }
             }
           }catch(e){}
@@ -1172,7 +1227,7 @@
         form.submit();
 
         if(uploadKey||removalKey||addedSubjectName||archivedSubjectId||
-           updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId){
+           updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId||scheduledSubjectId){
           statusTimer=setTimeout(pollBackendStatus,900);
         }
       });
@@ -1364,7 +1419,7 @@
     function openUpload(subjectId,officeId){
       if(!state.connected){showToast('Complete the Apps Script connection before uploading.','error');return}
 
-      const subject=state.subjects.find(x=>x.id===subjectId);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
       const office=state.offices.find(x=>x.id===officeId);
       if(!subject||!office)return;
 
@@ -1558,6 +1613,7 @@
       state.adminCode='';
       closeSubjectLinkEditor();
       closeRenameSubjectEditor();
+      closeSubjectScheduleEditor();
       $('#adminLogin').classList.remove('hidden');
       $('#adminPanel').classList.add('hidden');
       $('#adminLoginForm').reset();
@@ -1613,7 +1669,7 @@
       setBusy($('#addSubjectButton'),true,'Adding…');
 
       try{
-        const payload={action:'adminAddSubject',securityCode:state.adminCode,subjectName:name,linkText};
+        const payload={action:'adminAddSubject',securityCode:state.adminCode,subjectName:name,linkText,recurrenceMode:$('#newSubjectRecurrence')?.value||'MONTHLY'};
         if(file){
           payload.linkedPdfName=file.name;
           payload.linkedPdfMimeType='application/pdf';
@@ -1632,7 +1688,7 @@
     }
 
     function openSubjectLinkEditor(subjectId){
-      const subject=state.subjects.find(x=>x.id===subjectId);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject)return;
 
       closeRenameSubjectEditor();
@@ -1658,7 +1714,7 @@
 
     async function saveSubjectLink(event){
       event.preventDefault();
-      const subject=state.subjects.find(x=>x.id===state.adminEditingSubjectId);
+      const subject=state.subjectMasters.find(x=>x.id===state.adminEditingSubjectId);
       if(!subject||!state.adminCode)return;
 
       const selectedFile=$('#editSubjectLinkPdf').files[0];
@@ -1701,7 +1757,7 @@
     }
 
     async function clearSubjectLink(){
-      const subject=state.subjects.find(x=>x.id===state.adminEditingSubjectId);
+      const subject=state.subjectMasters.find(x=>x.id===state.adminEditingSubjectId);
       if(!subject||!state.adminCode||!subject.linkUrl)return;
 
       if(!confirm('Remove the PDF hyperlink from "'+subject.name+'"?'))return;
@@ -1729,7 +1785,7 @@
     }
 
     function openRenameSubjectEditor(subjectId){
-      const subject=state.subjects.find(x=>x.id===subjectId);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject)return;
 
       closeSubjectLinkEditor();
@@ -1758,7 +1814,7 @@
 
     async function renameSubject(event){
       event.preventDefault();
-      const subject=state.subjects.find(x=>x.id===state.adminRenamingSubjectId);
+      const subject=state.subjectMasters.find(x=>x.id===state.adminRenamingSubjectId);
       if(!subject||!state.adminCode)return;
 
       const subjectName=$('#renameSubjectName').value.replace(/\s+/g,' ').trim();
@@ -1794,7 +1850,7 @@
     }
 
     async function archiveSubject(subjectId){
-      const subject=state.subjects.find(x=>x.id===subjectId);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
       if(!confirm('Remove "'+subject.name+'" from the portal? Existing files will be preserved.'))return;
 
@@ -1813,7 +1869,7 @@
     }
 
     async function toggleSubjectSubmission(subjectId){
-      const subject=state.subjects.find(x=>x.id===subjectId);
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
 
       const enabled=subject.submissionEnabled!==false;
@@ -1843,31 +1899,28 @@
       }
     }
 
-    function renderAdminSubjects(){
-      const list=$('#subjectAdminList');
-      if(!list)return;
+        function openSubjectScheduleEditor(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);if(!subject)return;
+      closeSubjectLinkEditor();closeRenameSubjectEditor();state.adminSchedulingSubjectId=subject.id;
+      $('#scheduleSubjectId').value=subject.id;$('#scheduleSubjectName').textContent='Subject: '+subject.name;
+      $('#scheduleRecurrenceMode').value=subject.recurrenceMode==='MONTHLY_QUARTERLY'?'MONTHLY_QUARTERLY':'MONTHLY';
+      $('#subjectScheduleForm').classList.remove('hidden');setTimeout(()=>$('#scheduleRecurrenceMode').focus(),40);
+    }
+    function closeSubjectScheduleEditor(){state.adminSchedulingSubjectId='';const form=$('#subjectScheduleForm');if(!form)return;form.reset();form.classList.add('hidden');}
+    async function saveSubjectSchedule(event){event.preventDefault();const subject=state.subjectMasters.find(x=>x.id===state.adminSchedulingSubjectId);if(!subject||!state.adminCode)return;
+      const recurrenceMode=$('#scheduleRecurrenceMode').value,button=$('#saveSubjectScheduleButton');setBusy(button,true,'Saving…');
+      try{const result=await postToBackend({action:'adminSetSubjectRecurrence',securityCode:state.adminCode,subjectId:subject.id,recurrenceMode});showToast(result.message||'Subject schedule saved.','success');closeSubjectScheduleEditor();await loadPortal();renderAdminSubjects();}
+      catch(error){showToast(error.message||'Subject schedule could not be saved.','error')}finally{setBusy(button,false,'Save schedule')}}
 
-      list.innerHTML=state.subjects.length
-        ?state.subjects.map(subject=>{
-          const enabled=subject.submissionEnabled!==false;
-          const linkInfo=subject.linkFileName
-            ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
-            :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
-
-          return '<div class="subject-admin-row">'+
-            '<span class="subject-admin-info"><strong>'+escapeHtml(subject.name)+'</strong>'+
-            '<small>'+linkInfo+'</small>'+
-            '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+
-            (enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small></span>'+
-            '<span class="subject-admin-actions">'+
-            '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
-            '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
-            '<button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+
-            (enabled?'Disable submissions':'Enable submissions')+'</button>'+
-            '<button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button>'+
-            '</span></div>';
-        }).join('')
-        :'<div class="subject-admin-row"><span>No active subjects</span></div>';
+function renderAdminSubjects(){
+      const list=$('#subjectAdminList');if(!list)return;
+      const subjects=Array.isArray(state.subjectMasters)?state.subjectMasters:[];
+      list.innerHTML=subjects.length?subjects.map(subject=>{
+        const enabled=subject.submissionEnabled!==false,combo=subject.recurrenceMode==='MONTHLY_QUARTERLY';
+        const scheduleText=combo?'Monthly + Quarterly · Apr / Jun / Sep / Dec · Previous Quarter':'Monthly';
+        const linkInfo=subject.linkFileName?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName):(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
+        return '<div class="subject-admin-row"><span class="subject-admin-info"><strong>'+escapeHtml(subject.name)+'</strong><span class="subject-schedule-badge '+(combo?'combo':'')+'">'+escapeHtml(scheduleText)+'</span><small>'+linkInfo+'</small><small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small></span><span class="subject-admin-actions"><button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Schedule</button><button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button><button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button><button class="toggle-submission '+(enabled?'':'enable-submission')+'" type="button" data-toggle-submission="'+escapeAttr(subject.id)+'">'+(enabled?'Disable submissions':'Enable submissions')+'</button><button class="remove-subject" type="button" data-archive="'+escapeAttr(subject.id)+'">Remove</button></span></div>';
+      }).join(''):'<div class="subject-admin-row"><span>No active subjects</span></div>';
     }
 
     function openModal(name){
@@ -1890,6 +1943,7 @@
         state.adminCode='';
         closeSubjectLinkEditor();
         closeRenameSubjectEditor();
+        closeSubjectScheduleEditor();
       }
     }
 
@@ -1925,7 +1979,7 @@
     }
   </script>
 
-  <script src="portal-v172.js"></script>
-  <script src="sticky-v172.js"></script>
+  <script src="portal-v173.js"></script>
+  <script src="sticky-v173.js"></script>
 </body>
 </html>

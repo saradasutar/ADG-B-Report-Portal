@@ -1,52 +1,101 @@
-ADG(B) REPORT SUBMISSION PORTAL — V17.2 SECURITY TIMEOUT
+ADG(B) REPORT SUBMISSION PORTAL — V17.3 RECURRING SUBJECTS
 
-NEW ADMINISTRATOR PATH
-Administration → Security Settings
+NEW: ADMIN SUBJECT SCHEDULE
 
-ADMIN CAN SELECT
-5 / 10 / 15 / 20 / 30 minutes
+For each report subject, Admin can save:
+1. Monthly
+2. Monthly + Quarterly
 
-DEFAULT
-30 minutes
+MONTHLY
+- The subject opens automatically every month.
+- Every new month starts fresh as Pending for every concerned office.
+- The previous month's Submitted status does NOT carry forward.
+- Historical submissions remain preserved.
 
-BEHAVIOUR
-- One-minute warning before automatic sign-out.
-- "Stay signed in" button immediately resets the timer.
-- "Sign out now" button available in the warning.
-- Genuine activity resets the timer:
-  click / pointer / keyboard / touch / scroll.
-- Setting applies to every username/password user.
-- Public View has no login timeout because there is no signed-in session.
-- Backend session has only a maximum five-minute safety grace beyond the
-  selected idle timeout if the browser timer is suspended.
-- Browser/tab session token remains in sessionStorage, so closing the tab
-  does not preserve a login for reopening.
+MONTHLY + QUARTERLY
+- The normal Monthly row still opens every month.
+- In April, June, September and December, a SECOND row opens automatically:
+  <Subject Name> — Quarterly (Previous Quarter)
+- Monthly and Quarterly upload status are separate.
+
+QUARTERLY MONTHS
+April / June / September / December
+
+ADMIN USE
+Administrator > Manage report subjects
+
+For a new subject:
+- Enter Subject name.
+- Choose Automatic schedule:
+  Monthly
+  OR
+  Monthly + Quarterly
+- Save subject.
+
+For an existing subject:
+- Open Administrator.
+- Select Schedule beside the required subject.
+- Choose Monthly or Monthly + Quarterly.
+- Save schedule.
+
+DRIVE FOLDER ORGANISATION
+Every upload is organised automatically as:
+
+Subject
+  > YYYY
+    > MM-Month
+      > Monthly
+      > Quarterly - Previous Quarter
+
+MONTHLY ROLLOVER
+V17.3 makes Current_Status cycle-aware.
+Example:
+- August report Submitted
+- On 1 September, September automatically starts Pending
+- August submission remains preserved in Submissions and Drive
+
+DATA MIGRATION
+- Existing Subjects are preserved.
+- Existing active subjects default to Monthly.
+- Existing Submissions are preserved.
+- Older submissions are interpreted as Monthly.
+- Current_Status is rebuilt once from historical Submissions.
+- No old report PDF is deleted.
 
 EXISTING FEATURES RETAINED
-- Public View / Login Required / Admin Only modes.
-- Concerned-office credential protection for public office actions.
-- Fast Data Engine.
-- Turbo login.
-- Raw Data.
-- Target / Reminder.
-- User permissions.
-- Favicon and premium colourful UI.
+- Public View / Login Required / Admin Only
+- Concerned-office PIN/password protection
+- Administration > Security Settings
+- 5 / 10 / 15 / 20 / 30 minute timeout
+- 30-minute default
+- 1-minute inactivity warning
+- Fast Data Engine
+- Turbo login
+- Raw Data
+- Target / Reminder
+- User permissions
+- Favicon and premium colourful UI
 
-GITHUB — upload these files to repository root
+GITHUB — upload these files to repository root:
 index.html
-portal-v172.js
-sticky-v172.js
-adgb-v172.svg
-adgb-v172.png
-adgb-v172.ico
+portal-v173.js
+sticky-v173.js
+adgb-v173.svg
+adgb-v173.png
+adgb-v173.ico
 
-APPS SCRIPT
-Replace Code.gs.
-Save.
-Deploy → Manage deployments → Edit → New version → Deploy.
+APPS SCRIPT:
+Replace Code.gs
+Save
+Deploy > Manage deployments > Edit > New version > Deploy
 
-DO NOT run setupPortal().
-DO NOT run setPortalSecurityCodes().
+DO NOT RUN:
+setupPortal()
+setPortalSecurityCodes()
+
+FIRST V17.3 LOAD
+The backend upgrades the Subjects, Submissions and Current_Status schemas once,
+then rebuilds the lightweight current-status index from preserved history.
 
 EXPECTED
-FE v17.2 | BE v17.2
+FE v17.3 | BE v17.3

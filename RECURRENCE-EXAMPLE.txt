@@ -1,0 +1,45 @@
+V17.3 EXAMPLE
+
+If Admin marks "Financial Report" as Monthly + Quarterly:
+
+January
+- Financial Report
+
+February
+- Financial Report
+
+March
+- Financial Report
+
+April
+- Financial Report
+- Financial Report — Quarterly (Previous Quarter)
+
+May
+- Financial Report
+
+June
+- Financial Report
+- Financial Report — Quarterly (Previous Quarter)
+
+July
+- Financial Report
+
+August
+- Financial Report
+
+September
+- Financial Report
+- Financial Report — Quarterly (Previous Quarter)
+
+October
+- Financial Report
+
+November
+- Financial Report
+
+December
+- Financial Report
+- Financial Report — Quarterly (Previous Quarter)
+
+Each row has independent Pending / Submitted status for each office.
