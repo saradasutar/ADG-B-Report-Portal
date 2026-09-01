@@ -6,9 +6,9 @@
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
 
-  <link rel="icon" type="image/svg+xml" href="adgb-v174.svg">
-  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v174.png">
-  <link rel="shortcut icon" href="adgb-v174.ico">
+  <link rel="icon" type="image/svg+xml" href="adgb-v175.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="adgb-v175.png">
+  <link rel="shortcut icon" href="adgb-v175.ico">
 
   <title>ADG(B) Report Submission Portal</title>
 
@@ -699,7 +699,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.4</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.5</span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -778,7 +778,7 @@
               <option value="MONTHLY">Monthly</option>
               <option value="MONTHLY_QUARTERLY">Monthly + Quarterly</option>
             </select>
-            <small>The displayed subject automatically shows its month or quarter.</small>
+            <small>The displayed subject is generated automatically, e.g. “Probity for the Month of Aug,2026” or “Probity for QE Sep,2026”.</small>
           </label>
           <label class="admin-field one-time-fields" id="newOneTimeFields">
             <span>One-time month / year</span>
@@ -2043,8 +2043,8 @@ function renderAdminSubjects(){
         const scheduleText=once
           ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
           :combo
-            ?'Monthly + Quarterly · Apr→Q1 · Jun→Q2 · Sep→Q3 · Dec→Q4'
-            :'Monthly · month/year shown automatically';
+            ?'Monthly + Quarterly · automatic Month + QE wording'
+            :'Monthly · previous reporting month shown automatically';
 
         const linkInfo=subject.linkFileName
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
@@ -2121,7 +2121,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v174.js"></script>
-  <script src="sticky-v174.js"></script>
+  <script src="portal-v175.js"></script>
+  <script src="sticky-v175.js"></script>
 </body>
 </html>

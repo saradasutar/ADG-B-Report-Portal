@@ -1,0 +1,20 @@
+V17.5 SUBJECT EXAMPLES
+
+Admin stores:
+Probity
+
+September 2026 dashboard automatically displays:
+Probity for the Month of Aug,2026
+Probity for QE Sep,2026
+
+Admin stores:
+Monthly Progress Report
+
+September 2026 dashboard automatically displays:
+Monthly Progress Report for the Month of Aug,2026
+Monthly Progress Report for QE Sep,2026
+
+January 2027 monthly rollover:
+Probity for the Month of Dec,2026
+
+No month/year/QE wording has to be typed manually by Admin.
