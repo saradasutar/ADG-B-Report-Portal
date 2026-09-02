@@ -1,0 +1,45 @@
+ADG(B) REPORT SUBMISSION PORTAL
+Subject text readability update (index.html only)
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+
+The "Report subject" column previously ran the whole thing together as one
+long bold sentence, e.g.:
+
+  "Rationalization of the policy regarding recovery of wrongly excess
+   payment made to Govt Servants for the Month of Aug,2026"
+
+It's now split visually into two clearly separated parts:
+
+  Rationalization of the policy regarding recovery of wrongly excess
+  payment made to Govt Servants for Servants           <- bold, larger
+  🗓 Monthly · Aug,2026                                  <- small pill below
+
+The period is shown as a small rounded pill, colour-coded by schedule type
+so you can tell report types apart at a glance:
+  - Monthly            -> blue pill, 🗓
+  - Quarterly (QE)      -> green pill, 📊
+  - One-time            -> amber pill, 📌
+
+This applies to both the desktop table and the mobile card view, and still
+works correctly with the existing PDF-hyperlink feature (the underlined,
+clickable portion of a subject name).
+
+Nothing else changed -- your previous "Fix folder names now" button and
+folder-naming fix in Code.gs are untouched; Code.gs was not modified this
+round at all.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace index.html in your GitHub Pages repo (ADG-B-Report-Portal) with
+   the supplied index.html.
+2. Commit the change (the green "Commit changes..." button on GitHub --
+   this step is required, editing alone doesn't publish it).
+3. Wait 30-60 seconds for GitHub Pages to rebuild, then hard refresh the
+   portal (Ctrl/Cmd+Shift+R), or use the portal's own "Clear portal cache"
+   button on the login screen.
+
+No Apps Script / Code.gs changes or redeploy needed for this update.

@@ -341,15 +341,28 @@
     thead th:first-child{width:280px;text-align:left;padding-left:16px;left:0;z-index:6}
     tbody th,tbody td{height:58px;border-right:1px solid #d7e0ea;border-bottom:1px solid #d7e0ea}
     tbody th{
-      position:sticky;left:0;z-index:2;padding:7px 12px;
+      position:sticky;left:0;z-index:2;padding:9px 14px;
       background:#fff5e8;text-align:left;color:#243b60;
-      font-size:15px;line-height:1.15;font-weight:850;
+      font-size:14.5px;line-height:1.34;font-weight:800;
       box-shadow:2px 0 4px rgba(11,59,96,.04)
     }
     tbody tr:nth-child(even) th{background:#f0edff}
     tbody td{text-align:center;padding:4px}
-    .subject-wrap{display:flex;align-items:center;gap:7px}
-    .subject-number{flex:0 0 auto;color:#6f7f92;font-size:8px;font-weight:850}
+    .subject-wrap{display:flex;align-items:flex-start;gap:9px}
+    .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
+    .subject-title-block{display:flex;flex-direction:column;gap:5px;min-width:0}
+    .subject-title-main{font-size:15px;font-weight:900;line-height:1.32;letter-spacing:-.006em;color:#1b3357}
+    .subject-title-period{
+      display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;
+      padding:2.5px 9px;border-radius:999px;
+      background:#eef3fc;color:#33517a;border:1px solid #d4e0f2;
+      font-size:9.5px;font-weight:850;letter-spacing:.03em;white-space:normal
+    }
+    .subject-title-period::before{content:"🗓";font-size:8.5px}
+    .subject-title-period.kind-quarterly{background:#e8faf3;color:#0a7758;border-color:#bce8d5}
+    .subject-title-period.kind-quarterly::before{content:"📊"}
+    .subject-title-period.kind-onetime{background:#fff3dc;color:#8a5200;border-color:#f0d19c}
+    .subject-title-period.kind-onetime::before{content:"📌"}
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
@@ -1613,7 +1626,7 @@
         const disabled=s.submissionEnabled===false;
         return '<tr class="'+(disabled?'disabled-subject-row':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
-          String(index+1).padStart(2,'0')+'</span><span>'+renderSubjectTitle(s)+'</span></span></th>'+
+          String(index+1).padStart(2,'0')+'</span>'+renderSubjectTitle(s)+'</span></th>'+
           offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>';
       }).join('');
 
@@ -1632,9 +1645,35 @@
     }
 
     function renderSubjectTitle(subject){
-      const name=String(subject?.name||'');
+      const fullName=String(subject?.name||'');
+      const baseName=String(subject?.baseName||'').trim();
+      const periodLabel=String(subject?.periodLabel||'').trim();
+      const reportKind=String(subject?.reportKind||'').toUpperCase();
       const linkText=String(subject?.linkText||'').trim();
       const linkUrl=validSubjectUrl(subject?.linkUrl);
+
+      /*
+       * V17.7.6 — readability: show the subject name bold and on its own
+       * line, with the reporting period as a small, colour-coded pill
+       * underneath instead of one long run-on sentence. Falls back to the
+       * old single-line rendering if baseName/periodLabel aren't present
+       * on this payload for any reason.
+       */
+      if(!baseName||!periodLabel){
+        return '<span class="subject-title-block"><span class="subject-title-main">'+
+          renderLinkedSubjectName(fullName,linkText,linkUrl)+'</span></span>';
+      }
+
+      const kindClass=reportKind==='QUARTERLY'?'kind-quarterly':reportKind==='ONE_TIME'?'kind-onetime':'kind-monthly';
+      const kindLabel=reportKind==='QUARTERLY'?'Quarterly (QE)':reportKind==='ONE_TIME'?'One-time':'Monthly';
+
+      return '<span class="subject-title-block">'+
+        '<span class="subject-title-main">'+renderLinkedSubjectName(baseName,linkText,linkUrl)+'</span>'+
+        '<span class="subject-title-period '+kindClass+'">'+escapeHtml(kindLabel)+' · '+escapeHtml(periodLabel)+'</span>'+
+        '</span>';
+    }
+
+    function renderLinkedSubjectName(name,linkText,linkUrl){
       if(!linkText||!linkUrl)return escapeHtml(name);
 
       const start=name.toLowerCase().indexOf(linkText.toLowerCase());
