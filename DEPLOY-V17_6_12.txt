@@ -1,0 +1,42 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.12
+
+ROOT CAUSE FOUND
+The "Submitted" status protection (recentStatusWrites) that guards a
+just-confirmed upload from being overwritten by a slightly stale backend
+response lived ONLY in browser JavaScript memory. A page refresh wipes all
+JS memory instantly — including that protection — at exactly the moment it
+was needed most. So immediately after refresh, the dashboard trusted the
+very first backend response with no safety net, and any small timing lag
+on Google's side (Apps Script CacheService / Sheets reads shortly after a
+write are not always instantly consistent across workers) made the report
+appear to "vanish" back to Upload.
+
+FIXES IN THIS VERSION
+1. (index.html) The upload/removal status protection (recentStatusWrites)
+   is now persisted to sessionStorage and restored BEFORE the first
+   bootstrap call on every page load. It now survives a refresh.
+2. (Code.gs) Backend bootstrap status is no longer served from the
+   10-minute structural cache under ANY path (cached or fresh) — it is
+   now always computed live, on every single call, from the one
+   authoritative status function. This removes the last chance for the
+   cached and fresh code paths to disagree.
+
+DEPLOY
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Save the project.
+3. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+   (Do NOT run setupPortal() or setPortalSecurityCodes() again.)
+4. Replace index.html in your GitHub Pages repo (ADG-B-Report-Portal) with
+   the supplied index.html.
+5. Commit / push, then hard refresh the portal once (Ctrl/Cmd+Shift+R).
+
+VERIFY THE NEW BACKEND IS LIVE
+Open your Apps Script /exec URL directly in a browser tab with
+?action=ping appended, e.g.:
+  https://script.google.com/macros/s/XXXX/exec?action=ping
+Confirm the JSON response shows "backendVersion":"17.6.12" — if it still
+shows 17.6.11, the new deployment version was not actually published yet.
+
+EXPECTED BEHAVIOUR AFTER THIS DEPLOY
+Upload PDF -> Submitted -> refresh (even repeatedly) -> stays Submitted.

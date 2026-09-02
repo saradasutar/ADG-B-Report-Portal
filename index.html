@@ -1016,6 +1016,36 @@
       connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
 
+    /*
+     * V17.6.12 FIX:
+     * recentStatusWrites is the safety net that protects a just-confirmed
+     * Submitted/Removed status from being overwritten by a slightly stale
+     * bootstrap response. It previously lived only in JS memory, so a page
+     * refresh wiped it instantly -- the exact moment it was needed most.
+     * Persist it to sessionStorage (survives refresh, not a new tab/browser)
+     * so "upload -> refresh" reliably keeps showing Submitted.
+     */
+    const RECENT_STATUS_KEY='adgbPortalRecentStatusWritesV1';
+
+    function loadRecentStatusWrites(){
+      try{
+        const raw=sessionStorage.getItem(RECENT_STATUS_KEY);
+        if(!raw)return;
+        const parsed=JSON.parse(raw);
+        const now=Date.now();
+        Object.keys(parsed||{}).forEach(key=>{
+          const entry=parsed[key];
+          if(entry&&entry.expiresAt>now)state.recentStatusWrites[key]=entry;
+        });
+      }catch(ignore){}
+    }
+
+    function saveRecentStatusWrites(){
+      try{
+        sessionStorage.setItem(RECENT_STATUS_KEY,JSON.stringify(state.recentStatusWrites||{}));
+      }catch(ignore){}
+    }
+
     const $=selector=>document.querySelector(selector);
     const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({
       '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
@@ -1030,6 +1060,7 @@
 
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
+      loadRecentStatusWrites();
       const now=new Date();
       $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
       $('#cycleName').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(now)+' submission cycle';
@@ -1149,12 +1180,14 @@
     function mergeRecentStatusWrites(serverStatus){
       const merged={...(serverStatus||{})};
       const now=Date.now();
+      let changed=false;
 
       Object.keys(state.recentStatusWrites||{}).forEach(key=>{
         const recent=state.recentStatusWrites[key];
 
         if(!recent||recent.expiresAt<=now){
           delete state.recentStatusWrites[key];
+          changed=true;
           return;
         }
 
@@ -1171,12 +1204,14 @@
              then repainting Upload a moment later. */
           if(!recent.submitted){
             delete state.recentStatusWrites[key];
+            changed=true;
             return;
           }
           const serverAt=String(server.submittedAt||'');
           const recentAt=String(recent.submittedAt||'');
           if(serverAt && recentAt && serverAt===recentAt){
             delete state.recentStatusWrites[key];
+            changed=true;
             return;
           }
         }
@@ -1190,6 +1225,8 @@
           submittedAt:recent.submittedAt||''
         };
       });
+
+      if(changed)saveRecentStatusWrites();
 
       return merged;
     }
@@ -1789,6 +1826,7 @@
           submittedAt:confirmedAt,
           expiresAt:Date.now()+86400000
         };
+        saveRecentStatusWrites();
 
         // Paint Submitted immediately; then verify against an uncached backend read.
         renderAll(result.submittedAt||new Date().toISOString());
@@ -1891,6 +1929,7 @@
           submittedAt:'',
           expiresAt:Date.now()+86400000
         };
+        saveRecentStatusWrites();
 
         renderAll(new Date().toISOString());
 
