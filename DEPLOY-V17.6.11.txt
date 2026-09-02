@@ -1,0 +1,18 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.6.11
+
+FIXES
+1. Submitted status is now read live from the compact Current_Status sheet even when the dashboard snapshot is cached.
+2. Refresh/re-login will therefore retain Submitted after a successful upload.
+3. Browser-side recent upload protection is extended as a safety net.
+4. Existing V17.6.10 duplicate-folder lock/consolidation remains included.
+
+DEPLOY
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy a NEW web-app version using the same /exec deployment URL.
+3. Replace index.html on GitHub Pages.
+4. Hard refresh the portal (Ctrl/Cmd+Shift+R) once.
+5. Do NOT run setup/reset functions.
+
+EXPECTED
+Upload PDF -> Submitted -> refresh -> Submitted.
+All offices for the same subject/period continue to use one common submission folder.
