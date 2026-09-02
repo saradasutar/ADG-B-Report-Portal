@@ -352,17 +352,28 @@
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
     .subject-title-block{display:flex;flex-direction:column;gap:5px;min-width:0}
     .subject-title-main{font-size:15px;font-weight:900;line-height:1.32;letter-spacing:-.006em;color:#1b3357}
-    .subject-title-period{
-      display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;
-      padding:2.5px 9px;border-radius:999px;
-      background:#eef3fc;color:#33517a;border:1px solid #d4e0f2;
-      font-size:9.5px;font-weight:850;letter-spacing:.03em;white-space:normal
+   .subject-title-period {
+      display: inline-flex; align-items: center; gap: 6px; width: max-content; max-width: 100%;
+      padding: 4px 10px; border-radius: 6px; 
+      background: #1e3a8a; /* Deep blue background */
+      color: #ffffff; /* Bright white text */
+      border: none;
+      font-size: 10px; font-weight: 800; letter-spacing: .04em; white-space: normal;
+      box-shadow: 0 2px 5px rgba(30, 58, 138, 0.25);
     }
-    .subject-title-period::before{content:"🗓";font-size:8.5px}
-    .subject-title-period.kind-quarterly{background:#e8faf3;color:#0a7758;border-color:#bce8d5}
-    .subject-title-period.kind-quarterly::before{content:"📊"}
-    .subject-title-period.kind-onetime{background:#fff3dc;color:#8a5200;border-color:#f0d19c}
-    .subject-title-period.kind-onetime::before{content:"📌"}
+    .subject-title-period::before { content: "🗓"; font-size: 9.5px; }
+    
+    .subject-title-period.kind-quarterly { 
+      background: #065f46; /* Deep emerald green */
+      box-shadow: 0 2px 5px rgba(6, 95, 70, 0.25);
+    }
+    .subject-title-period.kind-quarterly::before { content: "📊"; }
+    
+    .subject-title-period.kind-onetime { 
+      background: #9a3412; /* Deep amber/orange */
+      box-shadow: 0 2px 5px rgba(154, 52, 18, 0.25);
+    }
+    .subject-title-period.kind-onetime::before { content: "📌"; }
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
