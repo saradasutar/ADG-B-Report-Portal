@@ -876,8 +876,9 @@
               <option value="ONE_TIME" selected>One-time</option>
               <option value="MONTHLY">Monthly only</option>
               <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
+              <option value="QUARTERLY_ONLY">Quarterly only (QE)</option>
             </select>
-            <small>Admin chooses: One-time, Monthly only, or Monthly + Quarterly (QE). QE opens in the following month—for example, QE Sep,2026 appears automatically from 01-Oct-2026.</small>
+            <small>Admin chooses: One-time, Monthly only, Monthly + Quarterly (QE), or Quarterly only (QE). QE opens in the following month—for example, QE Sep,2026 appears automatically from 01-Oct-2026.</small>
           </label>
           <label class="admin-field one-time-fields" id="newOneTimeFields">
             <span>One-time month / year</span>
@@ -957,6 +958,7 @@
                 <option value="ONE_TIME">One-time</option>
                 <option value="MONTHLY">Monthly only</option>
                 <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
+                <option value="QUARTERLY_ONLY">Quarterly only (QE)</option>
               </select>
             </label>
             <label class="admin-field one-time-fields" id="scheduleOneTimeCycleField">
@@ -1067,6 +1069,7 @@
       if($('#newOneTimeCycle'))$('#newOneTimeCycle').value=now.toISOString().slice(0,7);
       syncNewSubjectScheduleFields();
       initialiseAutomaticDateRollover();
+      initialiseAutomaticSelfHeal();
       loadPortal();
     });
 
@@ -1084,6 +1087,32 @@
         if(next!==portalDateKey){ portalDateKey=next; loadPortal(); }
       },30000);
     }
+
+    /*
+     * V17.7.2 — durability: self-heal a long-open tab automatically.
+     * A quiet background refresh every few minutes, plus an immediate
+     * refresh whenever the person switches back to this tab, means any
+     * earlier transient failure (or a report submitted from another
+     * device/tab) corrects itself without the person needing to notice
+     * anything or click Refresh themselves.
+     */
+    let lastAutoRefreshAt=0;
+    function autoRefreshIfDue(minGapMs){
+      const now=Date.now();
+      if(now-lastAutoRefreshAt<minGapMs)return;
+      lastAutoRefreshAt=now;
+      loadPortal();
+    }
+    function initialiseAutomaticSelfHeal(){
+      setInterval(()=>{
+        if(document.visibilityState==='visible')autoRefreshIfDue(60000);
+      },240000);
+
+      document.addEventListener('visibilitychange',()=>{
+        if(document.visibilityState==='visible')autoRefreshIfDue(30000);
+      });
+    }
+
     function bindEvents(){
       $('#retryButton')?.addEventListener('click',loadPortal);
       $('#refreshButton')?.addEventListener('click',loadPortal);
@@ -1241,7 +1270,7 @@
         state.offices=FALLBACK_OFFICES;
         state.subjects=FALLBACK_SUBJECTS;
         state.subjectMasters=FALLBACK_SUBJECTS;
-        state.status={};
+        state.status=mergeRecentStatusWrites({});
         renderAll();
         setNotice('Portal setup is incomplete: Apps Script URL is not configured.',true);
         if(refresh)setBusy(refresh,false,'↻ Refresh');
@@ -1250,38 +1279,74 @@
 
       setSystemState('Connecting…',false);
 
+      /*
+       * V17.7.1/17.7.2 FIX:
+       * state.connected starts false on every fresh page load, so the old
+       * "keep last known state on failure" guard below never protected the
+       * FIRST bootstrap call after a refresh -- a single transient blip
+       * (slow Apps Script cold start, brief network hiccup, JSONP timeout)
+       * wiped the whole dashboard back to FALLBACK_SUBJECTS with
+       * state.status={}, which looks exactly like "Submitted vanished".
+       * Absorb that with up to 3 attempts (short exponential backoff)
+       * before ever touching displayed state.
+       */
+      let data=null;
+      let lastError=null;
+      const maxAttempts=3;
+
       try{
-        const data=await jsonpRequest('bootstrap',{
-          sessionToken:window.ADGB_AUTH?.token||'',
-          fresh:forceFresh?'1':'0'
-        });
-        if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
-
-        state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
-        state.subjects=Array.isArray(data.subjects)?data.subjects:[];
-        state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
-          ?data.subjectMasters
-          :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY',dashboardVisible:subject.dashboardVisible!==false}));
-        state.status=mergeRecentStatusWrites(data.status||{});
-        state.maxFileMb=Number(data.maxFileMb)||8;
-        state.connected=true;
-        state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
-
-        if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
-        renderAll(data.lastUpdated);
-      }catch(error){
-        const hadLiveState=state.connected===true && Array.isArray(state.subjects) && state.subjects.length>0;
-        state.connected=hadLiveState;
-        state.supportsReceipts=hadLiveState ? state.supportsReceipts : false;
-        if(!hadLiveState){
-          state.offices=FALLBACK_OFFICES;
-          state.subjects=FALLBACK_SUBJECTS;
-          state.subjectMasters=FALLBACK_SUBJECTS;
-          state.status={};
+        for(let attempt=1;attempt<=maxAttempts;attempt++){
+          try{
+            data=await jsonpRequest('bootstrap',{
+              sessionToken:window.ADGB_AUTH?.token||'',
+              fresh:forceFresh?'1':'0'
+            });
+            if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
+            lastError=null;
+            break;
+          }catch(error){
+            lastError=error;
+            data=null;
+            if(attempt<maxAttempts)await new Promise(resolve=>setTimeout(resolve,attempt*800));
+          }
         }
-        renderAll();
-        setNotice('Could not refresh the report database. The last confirmed dashboard state is being retained.',true);
-        if(!hadLiveState)showToast(error.message||'Connection failed.','error');
+
+        if(data){
+          state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
+          state.subjects=Array.isArray(data.subjects)?data.subjects:[];
+          state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
+            ?data.subjectMasters
+            :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY',dashboardVisible:subject.dashboardVisible!==false}));
+          state.status=mergeRecentStatusWrites(data.status||{});
+          state.maxFileMb=Number(data.maxFileMb)||8;
+          state.connected=true;
+          state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
+
+          if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
+          renderAll(data.lastUpdated);
+        }else{
+          const error=lastError||new Error('Connection failed.');
+          const hadLiveState=state.connected===true && Array.isArray(state.subjects) && state.subjects.length>0;
+          state.connected=hadLiveState;
+          state.supportsReceipts=hadLiveState ? state.supportsReceipts : false;
+          if(!hadLiveState){
+            state.offices=FALLBACK_OFFICES;
+            state.subjects=FALLBACK_SUBJECTS;
+            state.subjectMasters=FALLBACK_SUBJECTS;
+            /*
+             * Even with no confirmed subject list, never blank out a status
+             * key that was just confirmed by a successful upload/removal --
+             * mergeRecentStatusWrites({}) still returns those protected
+             * entries so a just-submitted report keeps showing Submitted
+             * once the dashboard reconnects, instead of first flashing to
+             * Pending and only fixing itself a refresh later.
+             */
+            state.status=mergeRecentStatusWrites({});
+          }
+          renderAll();
+          setNotice('Could not refresh the report database. The last confirmed dashboard state is being retained.',true);
+          if(!hadLiveState)showToast(error.message||'Connection failed.','error');
+        }
       }finally{
         if(refresh)setBusy(refresh,false,'↻ Refresh');
       }
@@ -1824,7 +1889,7 @@
         state.recentStatusWrites[statusKey]={
           submitted:true,
           submittedAt:confirmedAt,
-          expiresAt:Date.now()+86400000
+          expiresAt:Date.now()+259200000
         };
         saveRecentStatusWrites();
 
@@ -1927,7 +1992,7 @@
         state.recentStatusWrites[statusKey]={
           submitted:false,
           submittedAt:'',
-          expiresAt:Date.now()+86400000
+          expiresAt:Date.now()+259200000
         };
         saveRecentStatusWrites();
 
@@ -2409,12 +2474,15 @@ function renderAdminSubjects(){
         const mode=subject.recurrenceMode||'MONTHLY';
         const combo=mode==='MONTHLY_QUARTERLY';
         const once=mode==='ONE_TIME';
+        const quarterlyOnly=mode==='QUARTERLY_ONLY';
 
         const scheduleText=once
           ?'One-time · '+(monthLabel(subject.oneTimeCycle)||'month not selected')+(subject.closingDate?' · closes '+subject.closingDate:'')
           :combo
             ?'Monthly + Quarterly (QE) · QE opens next month after quarter end'
-            :'Monthly only · previous reporting month shown automatically';
+            :quarterlyOnly
+              ?'Quarterly only (QE) · appears only the month after each quarter end'
+              :'Monthly only · previous reporting month shown automatically';
 
         const linkInfo=subject.linkFileName
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)

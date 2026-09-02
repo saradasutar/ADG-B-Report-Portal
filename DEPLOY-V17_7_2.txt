@@ -1,0 +1,131 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.2
+Durability audit + fixes for "Submitted" permanence
+
+===========================================================================
+WHAT CHANGED IN THIS VERSION
+===========================================================================
+
+1) REAL BUG FOUND: View/Remove could contradict the dashboard badge
+   ---------------------------------------------------------------
+   The Submitted/Pending badge on the dashboard (getLatestSubmissionStatus_)
+   already trusted the append-only Submissions log as the final authority
+   for the current month, layered ON TOP of the compact Current_Status
+   index -- specifically to protect against a stale/duplicate Current_
+   Status row. But the actual View and Remove actions
+   (findLatestSubmissionForOffice_) were never updated to use that same
+   overlay -- they only ever consulted Current_Status directly.
+
+   Net effect: in the exact rare scenario the overlay exists to guard
+   against, a person could see "Submitted" on the dashboard, then click
+   "View submitted report" and get "No submitted report is available to
+   view for the current month" -- a direct contradiction between what's
+   displayed and what's actionable. Fixed by making View/Remove read from
+   the exact same authoritative source (the Submissions event log) as the
+   badge, via a new findLatestSubmissionEventForOffice_ helper.
+
+2) Defensive hardening around CacheService
+   ----------------------------------------
+   Three cache.put() calls were not wrapped in try/catch:
+     - the bootstrap structural cache (report dashboard)
+     - the Raw Data bootstrap cache
+     - the SLIDING SESSION REFRESH that runs on almost every authenticated
+       request, including every single bootstrap call
+   Any of these throwing (e.g. a rare CacheService write hiccup, or a
+   payload nudging the ~100KB per-key limit) would have failed the whole
+   request outright. All three are now best-effort: a caching failure
+   degrades gracefully (uncached this one time / session still valid for
+   this request) instead of ever failing the person's request. The third
+   one in particular is a strong candidate for a rare, hard-to-reproduce
+   "please sign in again" / status hiccup, since it runs on nearly every
+   call.
+
+3) Frontend: stronger self-correction
+   ------------------------------------
+   - loadPortal() now retries up to 3 times (short exponential backoff)
+     before ever touching what's on screen, instead of 2.
+   - The local "just confirmed" protection for a report you just
+     uploaded/removed (recentStatusWrites) is extended from 24 hours to
+     72 hours of headroom.
+   - New: a quiet background refresh every 4 minutes (only while the tab
+     is visible), plus an immediate refresh whenever you switch back to
+     this browser tab. A transient issue -- or someone else's later
+     upload/removal -- self-corrects on screen without anyone needing to
+     notice or manually click Refresh.
+   - The one remaining state.status={} reset (the "Apps Script URL isn't
+     configured at all" case) now also runs through the same protection
+     merge, for full consistency across every code path.
+
+===========================================================================
+WHY "PERMANENTLY SUBMITTED" IS NOW A REASONABLE GUARANTEE
+===========================================================================
+
+Durable truth: Submitted/Removed state lives in two Google Sheets
+(Current_Status + the append-only Submissions log), which is Google's own
+durable storage -- not any cache. Every read path (dashboard badge, View,
+Remove) now consults the same authoritative logic. CacheService is used
+only as a speed optimisation for the parts that are safe to be slightly
+stale (subject list, session sliding-expiry) and is never the source of
+truth for Submitted/Pending -- and every cache write is now best-effort,
+never able to fail a request.
+
+The historical "vanishing" bugs, in the order they were actually found and
+fixed across this conversation, were:
+  - status being served from a 10-minute structural cache that could
+    disagree with live truth (fixed: status is now always computed live)
+  - the "just confirmed" protection existing only in browser memory, wiped
+    by any page refresh (fixed: persisted to sessionStorage)
+  - the "keep last known state on failure" guard never actually protecting
+    the FIRST load after a refresh, because state.connected always starts
+    false (fixed: retry before ever touching displayed state)
+  - View/Remove silently using a less-authoritative status source than the
+    badge itself (fixed in this version)
+
+What's intentionally NOT "permanent": each new reporting cycle (calendar
+month, Asia/Kolkata time) is a fresh reporting period by design -- Pending
+returns for everyone at the start of a new month, and a QUARTERLY-only or
+ONE-TIME subject only appears in its scheduled months. That's the intended
+monthly/quarterly reporting model, not a bug.
+
+===========================================================================
+FURTHER RECOMMENDATIONS (not implemented -- for your awareness)
+===========================================================================
+
+- GitHub Pages caching: if you ever see the OLD version keep running after
+  a deploy even past a hard refresh, GitHub's CDN can serve a stale
+  index.html for a few minutes after a push, or a browser/service worker
+  disk cache can hold on to it longer. The portal's own "Clear portal
+  cache" button already unregisters any service worker and clears the
+  Cache Storage API scoped to this repo, which is the right tool for that
+  -- worth reaching for that button (not just Ctrl/Cmd+Shift+R) if a
+  deployed fix ever doesn't seem to be taking effect.
+- Consider periodically archiving very old rows out of the Submissions
+  sheet (e.g. anything older than 12-24 months) into a separate "Archive"
+  spreadsheet. Every status read scans the full Submissions sheet for the
+  current cycle; this is fine for years at typical volumes for 6 offices,
+  but is worth revisiting if the sheet ever grows into the tens of
+  thousands of rows.
+- The admin "Security Settings" idle-timeout options (5-30 minutes) are a
+  real trade-off against this durability work: a very short idle timeout
+  increases how often a person's session token needs silent re-validation
+  in the background, which is now fully defensive but still an extra
+  round trip. 30 minutes (the default) is a reasonable balance.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Save the project.
+3. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+   (Do NOT run setupPortal() or setPortalSecurityCodes() again.)
+4. Replace index.html in your GitHub Pages repo (ADG-B-Report-Portal) with
+   the supplied index.html.
+5. Commit / push, then use the portal's own "Clear portal cache" button
+   once (login screen), or a hard refresh (Ctrl/Cmd+Shift+R).
+
+VERIFY
+- Open ?action=ping on your /exec URL and confirm "backendVersion":"17.7.2".
+- Upload a report, confirm Submitted, then: refresh a fresh page load,
+  click View submitted report, switch away and back to the browser tab,
+  and wait a few minutes with the tab open -- all should consistently
+  keep showing Submitted and let you open the PDF.
