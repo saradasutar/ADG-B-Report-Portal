@@ -1694,10 +1694,24 @@
 
     function reportStatusFor(subject,office){
       if(!subject||!office)return null;
+      
+      // We must check the current cycle key because the backend 
+      // sometimes prefixes the status key with the cycle month.
+      const currentCycle = document.getElementById('cycleName')?.textContent.includes('cycle') 
+        ? state.cycleKey // If you have cycleKey stored in state
+        : new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit' }).format(new Date()).slice(0, 7);
 
-      return state.status[subject.id+'__'+office.id] ||
-        state.status[(subject.masterId||subject.id)+'__'+office.id] ||
-        null;
+      // Check all 4 possible ways the key might be formatted in state.status
+      const key1 = subject.id + '__' + office.id;
+      const key2 = (subject.masterId || subject.id) + '__' + office.id;
+      const key3 = currentCycle + '__' + key1;
+      const key4 = currentCycle + '__' + key2;
+
+      return state.status[key1] || 
+             state.status[key2] || 
+             state.status[key3] || 
+             state.status[key4] || 
+             null;
     }
 
     function cellMatchesFilter(submitted){
