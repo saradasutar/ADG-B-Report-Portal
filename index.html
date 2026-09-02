@@ -865,6 +865,11 @@
         <h2>Manage report subjects</h2>
         <p>Add, rename, remove, attach a PDF hyperlink, or disable submissions.</p>
 
+        <div class="admin-field" style="margin-bottom:14px">
+          <button id="fixFolderNamesButton" type="button">🗂 Fix folder names now</button>
+          <small>One-click fix for any subject folder in Drive still showing just the plain subject name instead of "&lt;Subject&gt; for the Month of &lt;Mon&gt;,&lt;Year&gt;". Safe to run anytime — folders already correct are left alone.</small>
+        </div>
+
         <form class="admin-add" id="addSubjectForm">
           <label class="admin-field">
             <span>Subject name</span>
@@ -1117,6 +1122,7 @@
       $('#retryButton')?.addEventListener('click',loadPortal);
       $('#refreshButton')?.addEventListener('click',loadPortal);
       $('#adminButton')?.addEventListener('click',openAdmin);
+      $('#fixFolderNamesButton')?.addEventListener('click',fixSubjectFolderNames);
       $('#pdfFile')?.addEventListener('change',handleFileSelection);
       $('#uploadForm')?.addEventListener('submit',submitUpload);
       $('#viewReportButton')?.addEventListener('click',viewSubmittedReport);
@@ -2315,6 +2321,28 @@
         renderAdminSubjects();
       }catch(error){
         showToast(error.message||'Subject could not be removed.','error');
+      }
+    }
+
+    async function fixSubjectFolderNames(){
+      if(!state.adminCode){
+        showToast('Verify the Head Office code first.','error');
+        return;
+      }
+
+      const button=$('#fixFolderNamesButton');
+      setBusy(button,true,'Fixing folder names…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminRenameSubjectFolders',
+          securityCode:state.adminCode
+        });
+        showToast(result.message||'Folder names updated.','success');
+      }catch(error){
+        showToast(error.message||'Folder names could not be updated.','error');
+      }finally{
+        setBusy(button,false,'🗂 Fix folder names now');
       }
     }
 

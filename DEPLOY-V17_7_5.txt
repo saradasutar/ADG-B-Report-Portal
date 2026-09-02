@@ -1,0 +1,73 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.5
+No more Apps Script editor needed to fix folder names
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+
+Last version's fix required running a function inside the Apps Script code
+editor (Run button, function dropdown, checking logs) to fix folders that
+were already created with the plain subject name. That's an easy set of
+steps to get stuck on if you're not used to the Apps Script editor.
+
+This version removes that requirement completely:
+
+1. NEW: a "🗂 Fix folder names now" button, directly inside the portal's
+   own Admin panel (Head Office login required) -- no code editor, no
+   function dropdown, no logs to check. Click it, and it renames every
+   subject's Drive folder that still needs it, then shows you the result
+   right there in the app (e.g. "Folder names updated: 3 renamed, 1
+   already correct.").
+
+2. Adding a new subject now shows the ACTUAL Drive folder name it just
+   used, right in the success message -- e.g. "Subject saved as Monthly...
+   Drive folder: "aaaaaaaaaaaaaaa for the Month of Aug,2026"." No more
+   needing to separately open Drive or a diagnostic URL to confirm it
+   worked -- you see it immediately, in the same place you added the
+   subject.
+
+===========================================================================
+HOW TO USE IT
+===========================================================================
+
+1. Deploy this version (steps below).
+2. In the portal, click the Administrator button, sign in with the Head
+   Office code.
+3. In the admin panel, click "🗂 Fix folder names now" (near the top,
+   above "Add subject").
+4. You'll see a message confirming exactly how many folders were renamed.
+   Check Drive -- your "aaaaaaaaaaaaaaa" folder (and any others) should
+   now read "aaaaaaaaaaaaaaa for the Month of Aug,2026".
+5. From now on, every NEW subject you add will already show its correct
+   Drive folder name in the confirmation message the moment you add it --
+   no separate check needed.
+
+Safe to click "Fix folder names now" as many times as you like -- folders
+that are already correctly named are simply left alone each time.
+
+===========================================================================
+IF IT STILL DOESN'T WORK AFTER CLICKING THE BUTTON
+===========================================================================
+
+If the button's result message says folders "could not be accessed", or
+the button doesn't appear at all in your Admin panel, that is a strong,
+concrete signal that the currently live Apps Script deployment is not
+actually running this Code.gs version yet -- please re-check step 3 below
+(Deploy > Manage deployments > Edit > New version > Deploy) very
+carefully, as this is the single most common thing to miss with Apps
+Script.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Replace index.html in your GitHub Pages repo with the supplied
+   index.html.
+3. In Apps Script: Deploy > Manage deployments > click the pencil/edit
+   icon on your ACTIVE deployment (the one whose URL your portal actually
+   uses) > Version dropdown > "New version" > Deploy.
+4. Commit / push index.html, then hard refresh the portal
+   (Ctrl/Cmd+Shift+R), or use the portal's own "Clear portal cache" button
+   on the login screen.
+5. Confirm: <your /exec URL>?action=ping shows "backendVersion":"17.7.5".
+6. Follow "HOW TO USE IT" above.
