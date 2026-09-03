@@ -350,30 +350,14 @@
     tbody td{text-align:center;padding:4px}
     .subject-wrap{display:flex;align-items:flex-start;gap:9px}
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
-    .subject-title-block{display:flex;flex-direction:column;gap:5px;min-width:0}
-    .subject-title-main{font-size:15px;font-weight:900;line-height:1.32;letter-spacing:-.006em;color:#1b3357}
-   .subject-title-period {
-      display: inline-flex; align-items: center; gap: 6px; width: max-content; max-width: 100%;
-      padding: 4px 10px; border-radius: 6px; 
-      background: #1e3a8a; /* Deep blue background */
-      color: #ffffff; /* Bright white text */
-      border: none;
-      font-size: 10px; font-weight: 800; letter-spacing: .04em; white-space: normal;
-      box-shadow: 0 2px 5px rgba(30, 58, 138, 0.25);
+    .subject-title-main{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.003em;color:#1b3357}
+    .subject-title-highlight{
+      display:inline;padding:2px 6px;border-radius:5px;
+      background:#fef9c3;color:#1b3357;
+      font-weight:900;letter-spacing:.005em;
+      -webkit-box-decoration-break:clone;box-decoration-break:clone
     }
-    .subject-title-period::before { content: "🗓"; font-size: 9.5px; }
-    
-    .subject-title-period.kind-quarterly { 
-      background: #065f46; /* Deep emerald green */
-      box-shadow: 0 2px 5px rgba(6, 95, 70, 0.25);
-    }
-    .subject-title-period.kind-quarterly::before { content: "📊"; }
-    
-    .subject-title-period.kind-onetime { 
-      background: #9a3412; /* Deep amber/orange */
-      box-shadow: 0 2px 5px rgba(154, 52, 18, 0.25);
-    }
-    .subject-title-period.kind-onetime::before { content: "📌"; }
+    .subject-date-red{color:#b91c1c;font-weight:950}
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
@@ -1290,6 +1274,49 @@
       return merged;
     }
 
+    /*
+     * V17.7.8 FIX (permanent, not another format guess):
+     * Previously this trusted the server's pre-joined "subjectId__officeId"
+     * string keys in data.status directly -- any silent mismatch in how
+     * the two sides built that string would be invisible. The backend now
+     * ships subjectId/officeId as real, separate fields in data.statusList;
+     * the lookup key is built HERE, from the exact same subject.id/office.id
+     * used everywhere else in this file (see reportStatusFor), so a
+     * key-format mismatch is now structurally impossible rather than
+     * something to keep guessing around. Falls back to the older
+     * dictionary shape only if an unexpected/older response lacks
+     * statusList entirely.
+     */
+    function buildStatusMapFromServer(data){
+      const list=Array.isArray(data?.statusList)?data.statusList:null;
+
+      if(!list){
+        return data?.status||{};
+      }
+
+      const map={};
+      list.forEach(entry=>{
+        if(!entry||!entry.subjectId||!entry.officeId)return;
+        map[entry.subjectId+'__'+entry.officeId]={
+          submitted:!!entry.submitted,
+          submittedAt:entry.submittedAt||''
+        };
+      });
+
+      // Low-friction diagnostic: if this ever needs debugging again, open
+      // the browser console (F12) and read/copy this one line -- no
+      // Network-tab steps needed.
+      try{
+        console.info('[ADGB status]',{
+          entries:list.length,
+          submitted:list.filter(e=>e&&e.submitted).length,
+          backendVersion:data?.backendVersion||''
+        });
+      }catch(ignore){}
+
+      return map;
+    }
+
     async function loadPortal(forceFresh=false){
       setNotice('',false);
       const refresh=$('#refreshButton');
@@ -1347,7 +1374,7 @@
           state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
             ?data.subjectMasters
             :state.subjects.map(subject=>({...subject,id:subject.masterId||String(subject.id||'').replace(/__(M|Q|O)$/,''),name:subject.baseName||subject.name,recurrenceMode:subject.recurrenceMode||'MONTHLY',dashboardVisible:subject.dashboardVisible!==false}));
-          state.status=mergeRecentStatusWrites(data.status||{});
+          state.status=mergeRecentStatusWrites(buildStatusMapFromServer(data));
           state.maxFileMb=Number(data.maxFileMb)||8;
           state.connected=true;
           state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
@@ -1658,30 +1685,38 @@
     function renderSubjectTitle(subject){
       const fullName=String(subject?.name||'');
       const baseName=String(subject?.baseName||'').trim();
-      const periodLabel=String(subject?.periodLabel||'').trim();
+      const periodDateToken=String(subject?.periodDateToken||'').trim();
       const reportKind=String(subject?.reportKind||'').toUpperCase();
       const linkText=String(subject?.linkText||'').trim();
       const linkUrl=validSubjectUrl(subject?.linkUrl);
 
       /*
-       * V17.7.6 — readability: show the subject name bold and on its own
-       * line, with the reporting period as a small, colour-coded pill
-       * underneath instead of one long run-on sentence. Falls back to the
-       * old single-line rendering if baseName/periodLabel aren't present
-       * on this payload for any reason.
+       * V17.7.8 — exact requested phrasing, date/QE token FIRST, whole
+       * label on one continuous light-yellow highlight:
+       *   Monthly:   "2026,Aug Monthly Probity Report"  (date in bold red)
+       *   Quarterly: "2026,Sep QE Probity Report"       (date in bold red)
+       *   One-time:  "Probity Report"                   (no date at all)
+       * The date/number portion is additionally bold red; the rest of the
+       * highlighted phrase ("Monthly Probity Report" / "QE Probity Report"
+       * / "Probity Report") stays normal-coloured text on the same yellow.
        */
-      if(!baseName||!periodLabel){
-        return '<span class="subject-title-block"><span class="subject-title-main">'+
-          renderLinkedSubjectName(fullName,linkText,linkUrl)+'</span></span>';
+      if(!baseName){
+        return '<span class="subject-title-main">'+renderLinkedSubjectName(fullName,linkText,linkUrl)+'</span>';
       }
 
-      const kindClass=reportKind==='QUARTERLY'?'kind-quarterly':reportKind==='ONE_TIME'?'kind-onetime':'kind-monthly';
-      const kindLabel=reportKind==='QUARTERLY'?'Quarterly (QE)':reportKind==='ONE_TIME'?'One-time':'Monthly';
+      const nameHtml=renderLinkedSubjectName(baseName,linkText,linkUrl);
 
-      return '<span class="subject-title-block">'+
-        '<span class="subject-title-main">'+renderLinkedSubjectName(baseName,linkText,linkUrl)+'</span>'+
-        '<span class="subject-title-period '+kindClass+'">'+escapeHtml(kindLabel)+' · '+escapeHtml(periodLabel)+'</span>'+
-        '</span>';
+      if(reportKind==='ONE_TIME'||!periodDateToken){
+        return '<span class="subject-title-main"><mark class="subject-title-highlight">'+nameHtml+'</mark></span>';
+      }
+
+      const qualifier=reportKind==='QUARTERLY'?'QE':'Monthly';
+
+      return '<span class="subject-title-main">'+
+        '<mark class="subject-title-highlight">'+
+        '<span class="subject-date-red">'+escapeHtml(periodDateToken)+'</span> '+
+        qualifier+' '+nameHtml+
+        '</mark></span>';
     }
 
     function renderLinkedSubjectName(name,linkText,linkUrl){
@@ -1705,24 +1740,10 @@
 
     function reportStatusFor(subject,office){
       if(!subject||!office)return null;
-      
-      // We must check the current cycle key because the backend 
-      // sometimes prefixes the status key with the cycle month.
-      const currentCycle = document.getElementById('cycleName')?.textContent.includes('cycle') 
-        ? state.cycleKey // If you have cycleKey stored in state
-        : new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit' }).format(new Date()).slice(0, 7);
 
-      // Check all 4 possible ways the key might be formatted in state.status
-      const key1 = subject.id + '__' + office.id;
-      const key2 = (subject.masterId || subject.id) + '__' + office.id;
-      const key3 = currentCycle + '__' + key1;
-      const key4 = currentCycle + '__' + key2;
-
-      return state.status[key1] || 
-             state.status[key2] || 
-             state.status[key3] || 
-             state.status[key4] || 
-             null;
+      return state.status[subject.id+'__'+office.id] ||
+        state.status[(subject.masterId||subject.id)+'__'+office.id] ||
+        null;
     }
 
     function cellMatchesFilter(submitted){

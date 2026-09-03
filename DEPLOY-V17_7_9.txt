@@ -1,0 +1,81 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.9
+
+===========================================================================
+1) HIGHLIGHT REFINEMENT (this turn's main change)
+===========================================================================
+The WHOLE subject phrase now sits on one continuous light-yellow highlight,
+with just the leading date/number in bold red inside it. For a subject
+named "Probity Report":
+
+  Monthly:    [ 2026,Aug Monthly Probity Report ]
+                ^^^^^^^^ red bold      <---------- all on light yellow
+  Quarterly:  [ 2026,Sep QE Probity Report ]
+                ^^^^^^^^ red bold      <---------- all on light yellow
+  One-time:   [ Probity Report ]       <---------- all on light yellow, no red
+
+Verified by simulating the exact HTML output before shipping:
+  MONTHLY:   <mark class="subject-title-highlight">
+               <span class="subject-date-red">2026,Aug</span> Monthly Probity Report
+             </mark>
+  QUARTERLY: <mark class="subject-title-highlight">
+               <span class="subject-date-red">2026,Sep</span> QE Probity Report
+             </mark>
+  ONE_TIME:  <mark class="subject-title-highlight">Probity Report</mark>
+
+Folder naming is unchanged (already correct, reconfirmed):
+  Monthly -> "2026,Aug Probity Report", Quarterly -> "2026,Sep QE Probity
+  Report", One-time -> "2026 Probity Report".
+
+===========================================================================
+2) "STILL NOT SHOWING SUBMITTED" -- FULL AUDIT RESULT
+===========================================================================
+I re-traced the ENTIRE chain end to end, line by line, specifically
+checking for the class of bug that's hardest to catch by reading code in
+isolation: a silent mismatch between how the backend and frontend each
+build the "subjectId__officeId" lookup key used to find a report's status.
+
+What I found already in place and verified correct:
+- Code.gs: getLatestSubmissionStatus_ now stamps subjectId/officeId as
+  real fields on every status entry (from both the Current_Status index
+  AND the authoritative Submissions-log overlay -- both paths verified).
+- Code.gs: getBootstrapData_ ships these as result.statusList, an array of
+  {subjectId, officeId, submitted, submittedAt} -- not a pre-joined string
+  key at all anymore.
+- index.html: buildStatusMapFromServer() rebuilds the lookup key on the
+  FRONTEND from those two separate fields, using the exact same
+  subjectId+'__'+officeId pattern that reportStatusFor(), submitUpload(),
+  and the backend's own statusKey all already use. A format mismatch is
+  now structurally impossible, not just believed-to-be-fixed.
+- submitUpload()'s optimistic key and the backend's handleUpload_'s
+  returned statusKey use the identical instance.instanceId+'__'+office.id
+  pattern -- confirmed matching.
+
+I could not find any further bug through this trace. If it's still
+happening after deploying this exact version, the most useful next step
+is a concrete data point rather than another guess:
+
+  Open the browser's console (F12 -> Console tab) right after a refresh.
+  Look for a line starting "[ADGB status]" -- it logs how many status
+  entries came back and how many show submitted, straight from the live
+  response, every single bootstrap call. If you can copy/paste that line
+  (or a screenshot of it) alongside what the dashboard is actually
+  showing at that moment, that tells us definitively whether the backend
+  is sending the right data (frontend rendering bug) or not (backend/data
+  bug) -- rather than us continuing to guess blind.
+
+Also worth double-checking once more, since it's the single most common
+Apps Script gotcha and would explain "still not fixed" even when the code
+itself is correct: confirm <your /exec URL>?action=ping shows
+"backendVersion":"17.7.9" specifically. If it shows any older number, the
+live deployment has not picked up these fixes yet -- Deploy > Manage
+deployments > Edit (pencil) > Version: New version > Deploy.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit, wait ~30-60s.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.9".
