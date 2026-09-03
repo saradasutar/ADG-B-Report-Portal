@@ -1,0 +1,67 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.10
+Dashboard label: final word order (qualifier + subject, then date)
+
+===========================================================================
+WHAT CHANGED — for a subject named "Probity Report"
+===========================================================================
+DASHBOARD LABEL (report matrix, desktop + mobile)
+  Monthly:    Monthly Probity Report for Aug,2026
+  Quarterly:  Quarterly Probity Report for QE Sep,2026
+  One-time:   Probity Report                        (no date at all)
+
+  "Monthly Probity Report" / "Quarterly Probity Report" / "Probity Report"
+  sits on a light-yellow highlight.
+  The trailing "Aug,2026" / "QE Sep,2026" is in deep red text (plain
+  background, not highlighted). "for" is a plain connector word.
+
+Verified by simulating the exact HTML before shipping:
+  MONTHLY:   <mark class="subject-title-highlight">Monthly Probity Report</mark>
+             for <span class="subject-date-red">Aug,2026</span>
+  QUARTERLY: <mark class="subject-title-highlight">Quarterly Probity Report</mark>
+             for <span class="subject-date-red">QE Sep,2026</span>
+  ONE_TIME:  <mark class="subject-title-highlight">Probity Report</mark>
+
+DRIVE FOLDER NAME — unchanged, reconfirmed untouched by this edit:
+  Monthly:    2026,Aug Probity Report
+  Quarterly:  2026,Sep QE Probity Report
+  One-time:   2026 Probity Report
+
+===========================================================================
+IMPORTANT — YOUR SCREENSHOT SHOWS THE OLD VERSION IS STILL LIVE
+===========================================================================
+The screenshot you sent shows plain "Probity Report" and "Rationalization
+of the policy..." with NO date prefix and NO red/yellow styling at all --
+none of the naming work from the last several rounds is showing yet. This
+confirms the live GitHub Pages site (saradasutar.github.io/ADG-B-Report-
+Portal/) has not picked up any of these index.html updates.
+
+To fix this for good, please follow these exact steps and verify each one:
+
+1. Go to your GitHub repository for ADG-B-Report-Portal in a browser.
+2. Click index.html in the file list, then the pencil (edit) icon.
+3. Select ALL existing content (Ctrl/Cmd+A) and delete it.
+4. Open the index.html file supplied here, select all its content, copy,
+   and paste it into GitHub's editor completely replacing the old content.
+5. Scroll down and click the green "Commit changes..." button -- this
+   step is the one most easily missed. Editing alone does not publish
+   anything; you must commit.
+6. Wait 30-60 seconds for GitHub Pages to rebuild.
+7. Open the live portal URL and hard refresh: Ctrl+Shift+R (Windows) or
+   Cmd+Shift+R (Mac). If still unsure, use the portal's own
+   "Clear portal cache" button on the login screen -- it clears more than
+   a normal refresh does.
+8. To verify beyond doubt: right-click the page -> "View Page Source"
+   (or Ctrl+U), then Ctrl+F and search for "subject-title-highlight". If
+   found, the new file is live. If not found, the commit did not go
+   through, or the wrong file/repo was edited.
+
+Separately, also redeploy Code.gs (Apps Script side) the same way as
+before:
+  Deploy > Manage deployments > Edit (pencil) on the active deployment >
+  Version: "New version" > Deploy.
+Confirm via: <your /exec URL>?action=ping shows "backendVersion":"17.7.10".
+
+Once both are actually live, "Probity Report" (Monthly) should visibly
+read "Monthly Probity Report for Aug,2026" with the styling described
+above -- that visual change itself is the simplest possible proof the
+deploy worked, no technical steps needed to check it.

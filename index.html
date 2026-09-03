@@ -357,7 +357,7 @@
       font-weight:900;letter-spacing:.005em;
       -webkit-box-decoration-break:clone;box-decoration-break:clone
     }
-    .subject-date-red{color:#b91c1c;font-weight:950}
+    .subject-date-red{color:#8b0000;font-weight:950;letter-spacing:.01em}
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
@@ -1691,32 +1691,30 @@
       const linkUrl=validSubjectUrl(subject?.linkUrl);
 
       /*
-       * V17.7.8 — exact requested phrasing, date/QE token FIRST, whole
-       * label on one continuous light-yellow highlight:
-       *   Monthly:   "2026,Aug Monthly Probity Report"  (date in bold red)
-       *   Quarterly: "2026,Sep QE Probity Report"       (date in bold red)
-       *   One-time:  "Probity Report"                   (no date at all)
-       * The date/number portion is additionally bold red; the rest of the
-       * highlighted phrase ("Monthly Probity Report" / "QE Probity Report"
-       * / "Probity Report") stays normal-coloured text on the same yellow.
+       * V17.7.10 — exact requested phrasing, qualifier + subject FIRST,
+       * date/QE token LAST:
+       *   Monthly:   "Monthly Probity Report for Aug,2026"
+       *   Quarterly: "Quarterly Probity Report for QE Sep,2026"
+       *   One-time:  "Probity Report" (no date at all)
+       * "Monthly/Quarterly Probity Report" sits on a light-yellow
+       * highlight; the trailing "Aug,2026" / "QE Sep,2026" is deep red
+       * text (plain background, not highlighted); "for" is a plain
+       * connector word.
        */
       if(!baseName){
         return '<span class="subject-title-main">'+renderLinkedSubjectName(fullName,linkText,linkUrl)+'</span>';
       }
 
       const nameHtml=renderLinkedSubjectName(baseName,linkText,linkUrl);
+      const qualifier=reportKind==='QUARTERLY'?'Quarterly ':reportKind==='MONTHLY'?'Monthly ':'';
+      const highlightedSubject='<mark class="subject-title-highlight">'+qualifier+nameHtml+'</mark>';
 
       if(reportKind==='ONE_TIME'||!periodDateToken){
-        return '<span class="subject-title-main"><mark class="subject-title-highlight">'+nameHtml+'</mark></span>';
+        return '<span class="subject-title-main">'+highlightedSubject+'</span>';
       }
 
-      const qualifier=reportKind==='QUARTERLY'?'QE':'Monthly';
-
-      return '<span class="subject-title-main">'+
-        '<mark class="subject-title-highlight">'+
-        '<span class="subject-date-red">'+escapeHtml(periodDateToken)+'</span> '+
-        qualifier+' '+nameHtml+
-        '</mark></span>';
+      return '<span class="subject-title-main">'+highlightedSubject+' for '+
+        '<span class="subject-date-red">'+escapeHtml(periodDateToken)+'</span></span>';
     }
 
     function renderLinkedSubjectName(name,linkText,linkUrl){
