@@ -1,0 +1,62 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.14
+"Fix folder names now" now also fixes THIS PERIOD's upload folder
+
+===========================================================================
+WHAT WAS ACTUALLY GOING ON (from your screenshot)
+===========================================================================
+There are actually TWO different folders involved per subject, not one:
+
+1. The "container" folder -- created the moment a subject is added, and
+   tracked by its Drive ID in the Subjects sheet. "Fix folder names now"
+   already correctly renames this one (that's why "2026,Aug Monthly
+   Pending Audit Paras CAG CCA" in your screenshot was already right).
+
+2. The CURRENT PERIOD's upload folder -- created separately, the moment
+   an office actually uploads a report for that period, by searching for
+   a folder with the right name (or creating one if none exists). This
+   folder is found ENTIRELY BY NAME, not by any tracked ID.
+
+If an office uploaded a report before the naming scheme was last updated,
+that upload created a folder under the OLD name (e.g. "Probity Report for
+the Month of Aug,2026") -- and because this button previously only ever
+touched the tracked container folder, it never touched that one. Worse,
+if anyone had uploaded again this month AFTER the naming update, the
+portal would search for the new name, not find it, and create a SECOND,
+separate folder -- leaving the office's earlier upload stranded in the
+old one. That's exactly what your marked folders show.
+
+===========================================================================
+THE FIX
+===========================================================================
+"Fix folder names now" now also scans for this period's upload folder
+under every naming scheme this portal has ever used (plain subject name,
+and the old "Subject for the Month of X" / "Subject for QE X" wording),
+for every subject, and either:
+  - renames it in place, if no correctly-named folder exists yet, or
+  - MERGES its files into the correctly-named folder if one already
+    exists (so nothing uploaded is ever lost or left behind), then
+    removes the now-empty old folder.
+
+This only ever touches THIS CYCLE's period folder -- genuinely historical
+folders from past months (like "Monthly Probity Report for July,2026" in
+your screenshot) are correctly left alone; they're supposed to keep their
+own month's name forever.
+
+The results popup (added last version) now also reports these fixes, e.g.
+"Probity Report for the Month of Aug,2026 → 2026,Aug Monthly Probity
+Report (this period's upload folder)", or a "Merged old upload folder...
+into..." line if a correctly-named folder already existed too.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.14".
+6. Administrator -> Manage report subjects -> "Fix folder names now" ->
+   read the popup. The folders you marked in your screenshot should now
+   show up as fixed there, and in Drive.
