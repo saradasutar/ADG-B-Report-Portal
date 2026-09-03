@@ -1,0 +1,57 @@
+ADG(B) REPORT SUBMISSION PORTAL
+Urgent badge/highlight redesign -- now genuinely stands out (index.html only)
+
+===========================================================================
+WHY IT WASN'T NOTICEABLE BEFORE
+===========================================================================
+The original Urgent styling used gold/amber (#e0a415 / #c47f00) -- but
+that same gold/amber tone is already used all over this portal for other
+things (schedule badges, several admin buttons), so "Urgent" visually
+blended into the rest of the interface instead of standing apart from it.
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+New colour language, chosen specifically to NOT overlap with any other
+colour already used in this portal:
+
+  URGENT (not yet due)  -> vivid deep-orange (#e64a19 / #ff7043)
+  OVERDUE               -> intense red/crimson (#8e0000 / #c62828),
+                            one level more alarming than plain "urgent"
+
+Applied consistently everywhere urgency shows up:
+  - Admin panel row: thicker border PLUS a solid coloured stripe down the
+    left edge of the row (a common "flagged item" pattern), not just a
+    thin outline.
+  - Admin "★ Urgent" badge: bigger, bolder, solid orange-to-red gradient
+    with a soft pulsing glow animation -- the badge visibly breathes,
+    which draws the eye far more effectively than any static colour can.
+  - Dashboard star: larger (13px -> 16px) and now has its own gentle
+    pulse/scale animation.
+  - Dashboard row/card: thicker coloured border top+bottom AND a solid
+    left-edge stripe on the subject-name cell.
+  - "Due <date>" / "Overdue <date>" chip: was a faint colour-tinted pill
+    before -- now a solid, high-contrast orange (or red once overdue)
+    pill with white text.
+  - Overdue state escalates further: deeper red, a faster/stronger pulse,
+    and a subtle background pulse across the whole row.
+
+All animations are automatically turned off for anyone with "reduce
+motion" enabled in their OS/browser accessibility settings -- the portal
+already had that safeguard in place and it applies to these too.
+
+The "✎ Edit due date" button was recoloured to a neutral blue-grey (it's
+an action, not a status) so it no longer visually competes with the
+orange/red status colours.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace index.html in your GitHub Pages repo with the supplied
+   index.html, commit changes (the green button), wait ~30-60s.
+2. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+3. Code.gs does not need to be redeployed -- unchanged this round.
+4. Check: a subject marked urgent should now be genuinely hard to miss,
+   both in the admin list and on the main dashboard, with a due date (if
+   set) showing as a solid orange "Due <date>" pill that turns red and
+   pulses once the date has passed.
