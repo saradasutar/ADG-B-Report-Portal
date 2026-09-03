@@ -555,6 +555,7 @@
     .admin-link-actions button{min-height:33px;border-radius:7px;padding:0 10px;font-size:9px;font-weight:900}
     .clear-link{margin-right:auto;border:1px solid #e0a6ae;background:#fff7f8;color:#a02d3e}
     .admin-summary{margin-top:10px;padding:9px;border-radius:8px;background:linear-gradient(110deg,#e4f2ff,#eee7ff,#e4f8ef);color:#68798c;font-size:9px;line-height:1.45}
+    .schedule-switch-note{margin:8px 0 0;color:#8a5200;font-size:9px;font-weight:750;line-height:1.4}
 
     .subject-link{color:#075da5;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
     .subject-link:hover{color:#087f70}.subject-link-mark{font-size:.72em;margin-left:2px}
@@ -983,10 +984,14 @@
               <input id="scheduleOneTimeClosingDate" type="date">
             </label>
             <div class="admin-summary">
-              <strong>Monthly only:</strong> opens automatically every month.<br>
-              <strong>Monthly + Quarterly (QE):</strong> monthly continues, and the QE row opens automatically
-              on <strong>1 January, 1 April, 1 July and 1 October</strong> for the quarter ended in the previous month.
+              <strong>One-time:</strong> appears only during the selected month/year, then disappears.<br>
+              <strong>Monthly only:</strong> opens automatically every month for the previous reporting month.<br>
+              <strong>Monthly + Quarterly (QE):</strong> monthly continues, and the QE row also opens automatically
+              on <strong>1 January, 1 April, 1 July and 1 October</strong> for the quarter ended in the previous month.<br>
+              <strong>Quarterly only (QE):</strong> no monthly requirement at all -- only appears in Jan/Apr/Jul/Oct
+              for the QE quarter just ended.
             </div>
+            <p class="schedule-switch-note">Switching schedule here changes it for every office from now on. Past submissions and files are always kept.</p>
           </div>
           <div class="admin-link-actions">
             <button class="cancel" id="cancelSubjectScheduleButton" type="button">Cancel</button>
@@ -2607,7 +2612,7 @@ function renderAdminSubjects(){
           '<small>'+linkInfo+'</small>'+
           '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small>'+
           '</span><span class="subject-admin-actions">'+
-          '<button type="button" data-schedule-subject="'+escapeAttr(subject.id)+'">Auto-create</button>'+
+          '<button type="button" title="Change this subject between Monthly, Quarterly, One-time, or Monthly + Quarterly" data-schedule-subject="'+escapeAttr(subject.id)+'">Change schedule</button>'+
           '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
           '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
           '<button class="'+(visible?'hide-subject':'show-subject')+'" type="button" data-toggle-visibility="'+escapeAttr(subject.id)+'">'+

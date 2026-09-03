@@ -1,0 +1,56 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.12
+Changing a subject's schedule (Monthly / Quarterly / One-time)
+
+===========================================================================
+GOOD NEWS: THE BACKEND FOR THIS ALREADY EXISTED AND WORKS
+===========================================================================
+The ability to change an existing subject's schedule between One-time,
+Monthly only, Monthly + Quarterly (QE), and Quarterly only (QE) was
+already fully built and wired -- both the button and the backend action
+(adminSetSubjectRecurrence) already worked correctly. The problem was
+discoverability: the button that opens this editor was labelled
+"Auto-create", which doesn't read as "change the schedule" at all.
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+1. The button is now labelled "Change schedule" (with a tooltip spelling
+   out exactly what it does), instead of the confusing "Auto-create".
+
+2. The schedule editor's explanation box now covers all four modes
+   (previously it only explained Monthly and Monthly+Quarterly, leaving
+   One-time and Quarterly-only unexplained), plus a short note that
+   switching schedule never deletes past submissions or files.
+
+3. REAL BUG FOUND AND FIXED: renaming a subject already renamed its Drive
+   folder to match (so it never went stale) -- but changing its SCHEDULE
+   never did. A Monthly subject's folder ("...Monthly Probity Report")
+   would keep that exact name even after switching it to Quarterly-only,
+   until someone happened to separately click "Fix folder names now".
+   Now the folder is renamed automatically, right when the schedule
+   change is saved -- same best-effort safety as elsewhere: a rare Drive
+   hiccup here can never block the schedule save itself from succeeding.
+
+===========================================================================
+HOW TO USE IT
+===========================================================================
+1. Administrator -> sign in with Head Office code -> Manage report
+   subjects.
+2. Find the subject in the list, click "Change schedule".
+3. Pick the new schedule from the dropdown (One-time / Monthly only /
+   Monthly + Quarterly (QE) / Quarterly only (QE)).
+4. For One-time, also pick the month/year (and optionally a closing
+   date). Click "Save schedule".
+5. The subject immediately reflects the new schedule on the dashboard,
+   and its Drive folder is renamed to match on the very next load.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.12".
