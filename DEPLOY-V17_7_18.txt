@@ -1,0 +1,51 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.18
+Fixes "Mark as urgent is not working"
+
+===========================================================================
+WHAT WAS ACTUALLY BROKEN
+===========================================================================
+Last version's rename (Important -> Urgent) changed more than just labels
+and colours -- it also renamed the ACTION NAME the button sends to the
+backend (adminSetSubjectImportance -> adminSetSubjectUrgency) and the
+field name inside it (important -> urgent). That's different from every
+other change in this rename: a stray CSS class or button caption doesn't
+matter if the two files are a version apart, but an action name has to
+match EXACTLY between index.html and Code.gs, or the backend has no idea
+what was asked of it.
+
+Since Code.gs and index.html are deployed separately (one on Apps Script,
+one on GitHub Pages) and have repeatedly gone live a few minutes apart in
+this project, that's exactly the kind of change that breaks the moment
+the two aren't updated at precisely the same time -- clicking "Mark
+urgent" would silently fail (or show "Unsupported operation") if the
+backend hadn't picked up the rename yet, or vice versa.
+
+===========================================================================
+THE FIX
+===========================================================================
+The backend now accepts EITHER name for this action -- the current one
+(adminSetSubjectUrgency / urgent) and the previous one
+(adminSetSubjectImportance / important) -- so it works correctly no
+matter which exact moment index.html and Code.gs each finish deploying.
+This only required a Code.gs change; index.html is unchanged this round.
+
+This is specifically about protecting against a few-minutes deployment
+gap, not a general invitation to mix old and new files indefinitely --
+please still deploy both files properly per the steps below.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+   (Deploying Code.gs FIRST this time is the safer order -- this new
+   backend tolerates an old/cached frontend, so there's no bad window
+   even if GitHub Pages takes its usual 30-60 seconds to catch up.)
+3. index.html does not need to be replaced this round if you already
+   deployed the previous version (V17.7.17) -- it's unchanged. If you're
+   not sure, redeploying it again is harmless.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.18".
+6. Try it: Administrator -> Manage report subjects -> "☆ Mark urgent" on
+   any subject. It should now work regardless of exact deploy timing.
