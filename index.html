@@ -1081,6 +1081,24 @@
           </div>
         </form>
 
+        <form class="admin-link-editor hidden" id="subjectUrgentForm">
+          <h3 id="urgentFormHeading">Mark subject urgent</h3>
+          <p id="urgentSubjectName"></p>
+          <input id="urgentSubjectId" type="hidden">
+          <div class="admin-link-grid">
+            <label class="admin-field">
+              <span>Due date (optional)</span>
+              <input id="urgentDueDateInput" type="date">
+              <small>Leave blank for no due date. This subject will be pinned to the top of the dashboard with a gold star.</small>
+            </label>
+          </div>
+          <div class="admin-link-actions">
+            <button class="clear-link" id="clearUrgentDueDateButton" type="button" hidden>Clear due date</button>
+            <button class="cancel" id="cancelSubjectUrgentButton" type="button">Cancel</button>
+            <button class="submit" id="saveSubjectUrgentButton" type="submit">Save</button>
+          </div>
+        </form>
+
         <div class="admin-summary subject-auto-create-guide">
           <strong>Visibility:</strong> <b>Hide from dashboard</b> removes a subject for every dashboard user without deleting its history or files.<br>
           <strong>Auto-create per subject:</strong>
@@ -1114,7 +1132,7 @@
 
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
-      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',recentStatusWrites:{},
+      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',recentStatusWrites:{},
       connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
 
@@ -1231,6 +1249,9 @@
       $('#cancelRenameSubjectButton')?.addEventListener('click',closeRenameSubjectEditor);
       $('#subjectScheduleForm')?.addEventListener('submit',saveSubjectSchedule);
       $('#cancelSubjectScheduleButton')?.addEventListener('click',closeSubjectScheduleEditor);
+      $('#subjectUrgentForm')?.addEventListener('submit',saveSubjectUrgent);
+      $('#cancelSubjectUrgentButton')?.addEventListener('click',closeSubjectUrgentEditor);
+      $('#clearUrgentDueDateButton')?.addEventListener('click',clearSubjectUrgentDueDate);
       $('#newSubjectRecurrence')?.addEventListener('change',syncNewSubjectScheduleFields);
       $('#scheduleRecurrenceMode')?.addEventListener('change',syncExistingSubjectScheduleFields);
       $('#officeFilter')?.addEventListener('change',event=>{
@@ -2350,6 +2371,7 @@
       if(!subject)return;
 
       closeRenameSubjectEditor();
+      closeSubjectUrgentEditor();
       state.adminEditingSubjectId=subject.id;
       $('#editSubjectId').value=subject.id;
       $('#editSubjectName').textContent=subject.name;
@@ -2447,6 +2469,7 @@
       if(!subject)return;
 
       closeSubjectLinkEditor();
+      closeSubjectUrgentEditor();
       state.adminRenamingSubjectId=subject.id;
       $('#renameSubjectId').value=subject.id;
       $('#renameCurrentSubjectName').textContent='Current name: '+subject.name;
@@ -2618,81 +2641,55 @@
       }
     }
 
-    function promptForUrgentDueDate(defaultValue){
-      const raw=prompt(
-        'Optional due date for this urgent item (YYYY-MM-DD), or leave blank for none:',
-        defaultValue||''
-      );
-      if(raw===null)return undefined; // user cancelled
-      const trimmed=raw.trim();
-      if(!trimmed)return '';
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)||isNaN(new Date(trimmed+'T00:00:00').getTime())){
-        showToast('Enter the due date as YYYY-MM-DD, e.g. 2026-09-15.','error');
-        return undefined;
-      }
-      return trimmed;
-    }
-
-    async function toggleSubjectUrgency(subjectId){
+    /*
+     * V17.7.19 FIX: replaced every window.prompt()-based flow here with an
+     * in-page form. Native browser dialogs (prompt/alert/confirm) can be
+     * silently suppressed by the browser after a person has seen several
+     * of them in a row on the same page (Chrome's own "Prevent this page
+     * from creating additional dialogs" behaviour) -- at that point
+     * prompt() returns null instantly with no visible popup at all, which
+     * looks exactly like "the button does nothing". An in-page form has
+     * no such failure mode.
+     */
+    function openSubjectUrgentEditor(subjectId){
       const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
 
-      const urgent=subject.urgent===true;
-      const nextUrgent=!important;
+      closeSubjectLinkEditor();
+      closeRenameSubjectEditor();
+      closeSubjectScheduleEditor();
 
-      let dueDate='';
-      if(nextUrgent){
-        dueDate=promptForUrgentDueDate('');
-        if(dueDate===undefined)return; // cancelled or invalid
-      }
+      state.adminUrgentSubjectId=subject.id;
+      const alreadyUrgent=subject.urgent===true;
 
-      const button=[...document.querySelectorAll('[data-toggle-urgency]')]
-        .find(x=>x.dataset.toggleUrgency===subjectId);
+      $('#urgentSubjectId').value=subject.id;
+      $('#urgentSubjectName').textContent='Subject: '+subject.name;
+      $('#urgentFormHeading').textContent=alreadyUrgent?'Edit urgent due date':'Mark subject urgent';
+      $('#urgentDueDateInput').value=subject.urgentDueDate||'';
+      $('#saveSubjectUrgentButton').textContent=alreadyUrgent?'Save due date':'Mark urgent';
+      $('#clearUrgentDueDateButton').hidden=!alreadyUrgent;
 
-      if(button)setBusy(button,true,nextUrgent?'Marking…':'Unmarking…');
-
-      try{
-        const result=await postToBackend({
-          action:'adminSetSubjectUrgency',
-          securityCode:state.adminCode,
-          subjectId,
-          urgent:nextUrgent,
-          dueDate
-        });
-
-        showToast(
-          result.message||
-          (nextUrgent?'Subject marked urgent.':'Subject no longer marked urgent.'),
-          'success'
-        );
-
-        await loadPortal(true);
-        renderAdminSubjects();
-      }catch(error){
-        showToast(
-          error.message||'Subject urgency could not be changed.',
-          'error'
-        );
-      }finally{
-        if(button&&button.isConnected){
-          setBusy(
-            button,
-            false,
-            nextUrgent?'★ Unmark urgent':'☆ Mark urgent'
-          );
-        }
-      }
+      $('#subjectUrgentForm').classList.remove('hidden');
+      setTimeout(()=>$('#urgentDueDateInput').focus(),40);
     }
 
-    async function editSubjectUrgentDueDate(subjectId){
+    function closeSubjectUrgentEditor(){
+      state.adminUrgentSubjectId='';
+      const form=$('#subjectUrgentForm');
+      if(!form)return;
+      form.reset();
+      form.classList.add('hidden');
+    }
+
+    async function saveSubjectUrgent(event){
+      event.preventDefault();
+
+      const subjectId=$('#urgentSubjectId').value;
       const subject=state.subjectMasters.find(x=>x.id===subjectId);
-      if(!subject||!state.adminCode||subject.urgent!==true)return;
+      if(!subject||!state.adminCode)return;
 
-      const dueDate=promptForUrgentDueDate(subject.urgentDueDate||'');
-      if(dueDate===undefined)return;
-
-      const button=[...document.querySelectorAll('[data-edit-due-date]')]
-        .find(x=>x.dataset.editDueDate===subjectId);
+      const dueDate=$('#urgentDueDateInput').value.trim();
+      const button=$('#saveSubjectUrgentButton');
       if(button)setBusy(button,true,'Saving…');
 
       try{
@@ -2704,14 +2701,63 @@
           dueDate
         });
 
-        showToast(result.message||'Due date updated.','success');
+        showToast(result.message||'Subject marked urgent.','success');
+        closeSubjectUrgentEditor();
         await loadPortal(true);
         renderAdminSubjects();
       }catch(error){
-        showToast(error.message||'Due date could not be updated.','error');
+        showToast(error.message||'Subject urgency could not be changed.','error');
       }finally{
-        if(button&&button.isConnected)setBusy(button,false,'✎ Edit due date');
+        if(button&&button.isConnected)setBusy(button,false,'Mark urgent');
       }
+    }
+
+    async function clearSubjectUrgentDueDate(){
+      $('#urgentDueDateInput').value='';
+      await saveSubjectUrgent({preventDefault(){}});
+    }
+
+    async function toggleSubjectUrgency(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const urgent=subject.urgent===true;
+
+      if(!urgent){
+        // Marking urgent: open the in-page form so a due date can be set.
+        openSubjectUrgentEditor(subjectId);
+        return;
+      }
+
+      // Unmarking: no extra input needed, so no form -- just toggle off.
+      const button=[...document.querySelectorAll('[data-toggle-urgency]')]
+        .find(x=>x.dataset.toggleUrgency===subjectId);
+
+      if(button)setBusy(button,true,'Unmarking…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectUrgency',
+          securityCode:state.adminCode,
+          subjectId,
+          urgent:false,
+          dueDate:''
+        });
+
+        showToast(result.message||'Subject no longer marked urgent.','success');
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject urgency could not be changed.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,'☆ Mark urgent');
+      }
+    }
+
+    function editSubjectUrgentDueDate(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode||subject.urgent!==true)return;
+      openSubjectUrgentEditor(subjectId);
     }
 
     async function toggleSubjectSubmission(subjectId){
@@ -2751,6 +2797,7 @@
 
       closeSubjectLinkEditor();
       closeRenameSubjectEditor();
+      closeSubjectUrgentEditor();
       state.adminSchedulingSubjectId=subject.id;
 
       $('#scheduleSubjectId').value=subject.id;
@@ -2882,6 +2929,7 @@ function renderAdminSubjects(){
         closeSubjectLinkEditor();
         closeRenameSubjectEditor();
         closeSubjectScheduleEditor();
+        closeSubjectUrgentEditor();
       }
     }
 

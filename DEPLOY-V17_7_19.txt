@@ -1,0 +1,71 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.19
+Fixes "Mark urgent -- Nothing happening" (index.html only, Code.gs unchanged)
+
+===========================================================================
+BUG #1 -- THE ACTUAL CAUSE (found and fixed)
+===========================================================================
+One line inside toggleSubjectUrgency() still read:
+
+    const nextUrgent = !important;
+
+"important" was not declared anywhere in scope -- it should have read
+!urgent. This happened because the Important-to-Urgent rename script
+deliberately protected any "!important" text from being touched, to
+avoid corrupting the ~67 legitimate CSS "!important" declarations
+elsewhere in this same file. This one instance, however, was a
+JavaScript boolean negation, not CSS, and it got wrongly protected too.
+
+Effect: the instant you clicked "Mark urgent", this line threw an
+uncaught ReferenceError, before the code ever reached the part that asks
+for a due date or saves anything -- completely silently, with nothing
+visible to you at all. Only the browser's own developer console would
+have shown it. The whole file was re-checked for this same mistake; this
+was the only occurrence.
+
+Fixed: that line now correctly reads `const nextUrgent = !urgent;`.
+
+===========================================================================
+BUG #2 -- A FRAGILITY REMOVED WHILE FIXING THIS
+===========================================================================
+The due-date entry used the browser's native prompt() dialog. Chrome (and
+other browsers) will silently suppress ALL future prompt()/alert()/
+confirm() dialogs on a page once someone has seen several in a row and
+checked "Prevent this page from creating additional dialogs" -- easy to
+trigger given how much testing this portal has been through. Once
+suppressed, prompt() just returns null instantly with no visible popup,
+which looks exactly like "the button does nothing" -- the same symptom
+as Bug #1, from a completely different cause.
+
+Fixed: due-date entry (for both "Mark urgent" and "Edit due date") now
+uses a proper in-page form -- the same style already used for "Change
+schedule" and "Rename" -- with Save / Cancel / Clear due date buttons.
+No native browser dialogs are used anywhere in this flow anymore, so this
+entire class of silent failure is no longer possible here.
+
+===========================================================================
+WHAT TO EXPECT NOW
+===========================================================================
+1. Administrator -> Manage report subjects -> click "☆ Mark urgent" on
+   any subject.
+2. A small form appears in place (not a popup) with an optional due-date
+   field and Save / Cancel buttons.
+3. Click Save (with or without a date) -- the subject is marked urgent,
+   pinned to the top of the dashboard with a gold star and highlight.
+4. "✎ Edit due date" on an already-urgent subject opens the same form,
+   pre-filled with its current due date, with an extra "Clear due date"
+   button.
+5. "★ Unmark urgent" still works as a single click with no form, exactly
+   as before.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace index.html in your GitHub Pages repo with the supplied
+   index.html, commit changes (the green button), wait ~30-60s.
+2. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on the
+   login screen.
+3. Code.gs does NOT need to be redeployed this round -- it is unchanged
+   from V17.7.18. If you're not fully sure it's already live, redeploying
+   it again is harmless.
+4. Try it: Administrator -> Manage report subjects -> "☆ Mark urgent" on
+   Probity Report. You should now see the in-page form, not silence.
