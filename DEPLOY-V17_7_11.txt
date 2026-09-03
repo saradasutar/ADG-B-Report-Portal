@@ -1,0 +1,45 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.11
+
+===========================================================================
+WHAT CHANGED — for a subject named "Probity Report"
+===========================================================================
+DASHBOARD LABEL (report matrix, desktop + mobile)
+  Monthly:    Probity Report for the Month of Aug,2026
+  Quarterly:  Probity Report for QE Sep,2026
+  One-time:   Probity Report                          (no date at all)
+
+  Only "Probity Report" itself sits on the light-yellow highlight this
+  time -- no "Monthly"/"Quarterly" qualifier word before it anymore.
+  "for" / "for the" are plain connector words.
+  The trailing "Month of Aug,2026" / "QE Sep,2026" is deep red text (plain
+  background, not highlighted).
+
+DRIVE FOLDER NAME -- CHANGED THIS ROUND (Monthly only):
+  Monthly:    2026,Aug Monthly Probity Report   <- now includes "Monthly"
+  Quarterly:  2026,Sep QE Probity Report          (unchanged)
+  One-time:   2026 Probity Report                 (unchanged)
+
+Verified by simulating the exact output before shipping (see the assistant
+message for the full trace) -- both the dashboard HTML and the three
+folder-name strings matched the request exactly.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.11".
+
+VERIFY
+- A Monthly subject "Probity Report" should read "Probity Report for the
+  Month of Aug,2026" -- "Probity Report" on yellow, "Month of Aug,2026" in
+  deep red -- and its Drive folder should be "2026,Aug Monthly Probity
+  Report".
+- A Quarterly subject should read "Probity Report for QE Sep,2026", with
+  a Drive folder named "2026,Sep QE Probity Report".
+- A One-time subject should show only "Probity Report" (yellow, no date),
+  with a Drive folder named "<year> Probity Report".

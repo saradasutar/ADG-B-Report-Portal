@@ -1691,29 +1691,30 @@
       const linkUrl=validSubjectUrl(subject?.linkUrl);
 
       /*
-       * V17.7.10 — exact requested phrasing, qualifier + subject FIRST,
-       * date/QE token LAST:
-       *   Monthly:   "Monthly Probity Report for Aug,2026"
-       *   Quarterly: "Quarterly Probity Report for QE Sep,2026"
+       * V17.7.11 — exact requested phrasing, bare subject name FIRST (no
+       * "Monthly"/"Quarterly" qualifier word this time), date phrase LAST:
+       *   Monthly:   "Probity Report for the Month of Aug,2026"
+       *   Quarterly: "Probity Report for QE Sep,2026"
        *   One-time:  "Probity Report" (no date at all)
-       * "Monthly/Quarterly Probity Report" sits on a light-yellow
-       * highlight; the trailing "Aug,2026" / "QE Sep,2026" is deep red
-       * text (plain background, not highlighted); "for" is a plain
-       * connector word.
+       * Only "Probity Report" itself sits on the light-yellow highlight;
+       * "for"/"for the" are plain connector words; the trailing
+       * "Month of Aug,2026" / "QE Sep,2026" is deep red text (no
+       * highlight background).
        */
       if(!baseName){
         return '<span class="subject-title-main">'+renderLinkedSubjectName(fullName,linkText,linkUrl)+'</span>';
       }
 
       const nameHtml=renderLinkedSubjectName(baseName,linkText,linkUrl);
-      const qualifier=reportKind==='QUARTERLY'?'Quarterly ':reportKind==='MONTHLY'?'Monthly ':'';
-      const highlightedSubject='<mark class="subject-title-highlight">'+qualifier+nameHtml+'</mark>';
+      const highlightedSubject='<mark class="subject-title-highlight">'+nameHtml+'</mark>';
 
       if(reportKind==='ONE_TIME'||!periodDateToken){
         return '<span class="subject-title-main">'+highlightedSubject+'</span>';
       }
 
-      return '<span class="subject-title-main">'+highlightedSubject+' for '+
+      const connector=reportKind==='MONTHLY'?' for the ':' for ';
+
+      return '<span class="subject-title-main">'+highlightedSubject+connector+
         '<span class="subject-date-red">'+escapeHtml(periodDateToken)+'</span></span>';
     }
 
