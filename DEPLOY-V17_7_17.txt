@@ -1,0 +1,43 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.17
+Renamed: "Important" -> "Urgent"
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+The feature added last version (pin a subject to the top of the dashboard
+with a gold star and an optional due date) is now called "Urgent" instead
+of "Important" everywhere it appears:
+
+  - Admin panel button: "☆ Mark urgent" / "★ Unmark urgent"
+  - Admin panel badge: "★ Urgent" (turns red "★ Urgent · Overdue <date>"
+    once its due date has passed)
+  - Dashboard: same gold star + gold-highlighted row/card, "Due <date>"
+    chip, and automatic red "Overdue" styling once the date passes --
+    only the word changed, the whole behaviour is identical to before.
+  - The Subjects sheet's column headers now read "Urgent" and "Urgent
+    Due Date" (previously "Important" / "Important Due Date"). This
+    updates itself automatically the next time the portal reads the
+    sheet after this deploy -- no manual editing needed, and no existing
+    data (which subjects were already marked, and their due dates) is
+    touched or lost. Only the header label text changes.
+
+This was a careful, targeted rename -- not a blanket find-and-replace --
+specifically to avoid touching the ~67 unrelated "!important" CSS
+declarations elsewhere in index.html that control the page's styling.
+Verified: that CSS is byte-for-byte unchanged; only this feature's own
+function names, button text, badges, and sheet columns were renamed.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.17".
+
+Any subject you already marked "Important" under the previous version
+will simply show as "Urgent" now, with its star, due date, and position
+at the top of the dashboard all fully preserved.

@@ -358,6 +358,58 @@
       -webkit-box-decoration-break:clone;box-decoration-break:clone
     }
     .subject-date-red{color:#8b0000;font-weight:950;letter-spacing:.01em}
+    tbody tr.urgent-subject-row>th,
+    tbody tr.urgent-subject-row>td{
+      background:linear-gradient(105deg,#fff8e6,#fffdf5)!important;
+      border-top:2px solid #e0a415;
+      border-bottom:2px solid #e0a415;
+    }
+    tbody tr.urgent-subject-row:first-child>th,
+    tbody tr.urgent-subject-row:first-child>td{border-top:2px solid #e0a415}
+    .urgent-star{
+      display:inline-block;flex:0 0 auto;margin-top:1px;margin-right:1px;
+      color:#c47f00;font-size:13px;line-height:1;
+      text-shadow:0 1px 0 rgba(255,255,255,.6);
+    }
+    .subject-card.urgent-subject-card{
+      border:2px solid #e0a415!important;
+      box-shadow:0 6px 18px rgba(196,127,0,.18)!important;
+    }
+    .subject-card.urgent-subject-card .subject-card-title{
+      background:linear-gradient(105deg,#8a5c00,#c47f00 58%,#e0a415)!important;
+    }
+    .subject-title-column{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .urgent-due-chip{
+      display:inline-flex;width:max-content;align-items:center;gap:4px;
+      padding:2px 7px;border-radius:999px;
+      background:#fff3d6;color:#8a5c00;border:1px solid #f0d19c;
+      font-size:9px;font-weight:900;letter-spacing:.01em;
+    }
+    .urgent-due-chip.overdue{
+      background:#ffe1e1;color:#a3161a;border-color:#f0a8a8;
+    }
+    tbody tr.overdue-subject-row>th,
+    tbody tr.overdue-subject-row>td{
+      background:linear-gradient(105deg,#fff2f2,#fffafa)!important;
+      border-top:2px solid #c0272c;
+      border-bottom:2px solid #c0272c;
+    }
+    .subject-card.overdue-subject-card{
+      border-color:#c0272c!important;
+      box-shadow:0 6px 18px rgba(192,39,44,.2)!important;
+    }
+    .subject-card.overdue-subject-card .subject-card-title{
+      background:linear-gradient(105deg,#7a1418,#a3161a 58%,#c0272c)!important;
+    }
+    .subject-urgent-badge.overdue{
+      background:linear-gradient(120deg,#a3161a,#c0272c)!important;
+      box-shadow:0 2px 6px rgba(163,22,26,.3)!important;
+    }
+    .subject-admin-actions .edit-due-date{
+      border-color:#c9a24a!important;
+      color:#6b4a00!important;
+      background:#fffbef!important;
+    }
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
     .closed-cell{background:#f2eff7}
@@ -641,6 +693,36 @@
       font-weight:900;
       letter-spacing:.04em;
       text-transform:uppercase;
+    }
+    .subject-admin-row.urgent-subject-admin{
+      border:2px solid #e0a415!important;
+      background:linear-gradient(105deg,#fffaea,#fff);
+      box-shadow:0 3px 12px rgba(224,164,21,.16);
+    }
+    .subject-urgent-badge{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:5px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:linear-gradient(120deg,#e0a415,#c47f00);
+      color:#fff;
+      font-size:.72rem;
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      box-shadow:0 2px 6px rgba(196,127,0,.28);
+    }
+    .subject-admin-actions .mark-urgent{
+      border-color:#e0a415!important;
+      color:#8a5c00!important;
+      background:#fff8e6!important;
+    }
+    .subject-admin-actions .unmark-urgent{
+      border-color:#c47f00!important;
+      color:#fff!important;
+      background:linear-gradient(120deg,#e0a415,#c47f00)!important;
     }
     .subject-admin-actions .hide-subject{
       background:#5f6771!important;
@@ -1183,6 +1265,18 @@
           return;
         }
 
+        const urgencyButton=event.target.closest('[data-toggle-urgency]');
+        if(urgencyButton){
+          toggleSubjectUrgency(urgencyButton.dataset.toggleUrgency);
+          return;
+        }
+
+        const editDueDateButton=event.target.closest('[data-edit-due-date]');
+        if(editDueDateButton){
+          editSubjectUrgentDueDate(editDueDateButton.dataset.editDueDate);
+          return;
+        }
+
         const toggleButton=event.target.closest('[data-toggle-submission]');
         if(toggleButton)toggleSubjectSubmission(toggleButton.dataset.toggleSubmission);
 
@@ -1667,17 +1761,23 @@
       const headers=offices.map(o=>'<th scope="col">'+escapeHtml(o.name)+'</th>').join('');
       const rows=subjects.map((s,index)=>{
         const disabled=s.submissionEnabled===false;
-        return '<tr class="'+(disabled?'disabled-subject-row':'')+'"'+
+        const urgent=s.urgent===true;
+        const overdue=isUrgentOverdue(s);
+        return '<tr class="'+(disabled?'disabled-subject-row':'')+(urgent?' urgent-subject-row':'')+(overdue?' overdue-subject-row':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
-          String(index+1).padStart(2,'0')+'</span>'+renderSubjectTitle(s)+'</span></th>'+
+          (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
+          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column">'+renderSubjectTitle(s)+urgentDueDateChip(s)+'</span></span></th>'+
           offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>';
       }).join('');
 
       const cards=subjects.map((s,index)=>{
         const disabled=s.submissionEnabled===false;
-        return '<article class="subject-card '+(disabled?'disabled-subject-card':'')+'"'+
+        const urgent=s.urgent===true;
+        const overdue=isUrgentOverdue(s);
+        return '<article class="subject-card '+(disabled?'disabled-subject-card':'')+(urgent?' urgent-subject-card':'')+(overdue?' overdue-subject-card':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><div class="subject-card-title"><span>'+
-          String(index+1).padStart(2,'0')+'</span><h3>'+renderSubjectTitle(s)+'</h3></div>'+
+          (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
+          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column"><h3>'+renderSubjectTitle(s)+'</h3>'+urgentDueDateChip(s)+'</span></div>'+
           '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>';
       }).join('');
 
@@ -1685,6 +1785,19 @@
         '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
         headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
+    }
+
+    function isUrgentOverdue(subject){
+      return subject?.urgent===true && !!subject?.urgentDueDate &&
+        subject.urgentDueDate < new Date().toISOString().slice(0,10);
+    }
+
+    function urgentDueDateChip(subject){
+      if(subject?.urgent!==true || !subject?.urgentDueDate)return '';
+      const overdue=isUrgentOverdue(subject);
+      const text=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+        .format(new Date(subject.urgentDueDate+'T00:00:00'));
+      return '<span class="urgent-due-chip'+(overdue?' overdue':'')+'">'+(overdue?'Overdue ':'Due ')+escapeHtml(text)+'</span>';
     }
 
     function renderSubjectTitle(subject){
@@ -2505,6 +2618,102 @@
       }
     }
 
+    function promptForUrgentDueDate(defaultValue){
+      const raw=prompt(
+        'Optional due date for this urgent item (YYYY-MM-DD), or leave blank for none:',
+        defaultValue||''
+      );
+      if(raw===null)return undefined; // user cancelled
+      const trimmed=raw.trim();
+      if(!trimmed)return '';
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)||isNaN(new Date(trimmed+'T00:00:00').getTime())){
+        showToast('Enter the due date as YYYY-MM-DD, e.g. 2026-09-15.','error');
+        return undefined;
+      }
+      return trimmed;
+    }
+
+    async function toggleSubjectUrgency(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const urgent=subject.urgent===true;
+      const nextUrgent=!important;
+
+      let dueDate='';
+      if(nextUrgent){
+        dueDate=promptForUrgentDueDate('');
+        if(dueDate===undefined)return; // cancelled or invalid
+      }
+
+      const button=[...document.querySelectorAll('[data-toggle-urgency]')]
+        .find(x=>x.dataset.toggleUrgency===subjectId);
+
+      if(button)setBusy(button,true,nextUrgent?'Marking…':'Unmarking…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectUrgency',
+          securityCode:state.adminCode,
+          subjectId,
+          urgent:nextUrgent,
+          dueDate
+        });
+
+        showToast(
+          result.message||
+          (nextUrgent?'Subject marked urgent.':'Subject no longer marked urgent.'),
+          'success'
+        );
+
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(
+          error.message||'Subject urgency could not be changed.',
+          'error'
+        );
+      }finally{
+        if(button&&button.isConnected){
+          setBusy(
+            button,
+            false,
+            nextUrgent?'★ Unmark urgent':'☆ Mark urgent'
+          );
+        }
+      }
+    }
+
+    async function editSubjectUrgentDueDate(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode||subject.urgent!==true)return;
+
+      const dueDate=promptForUrgentDueDate(subject.urgentDueDate||'');
+      if(dueDate===undefined)return;
+
+      const button=[...document.querySelectorAll('[data-edit-due-date]')]
+        .find(x=>x.dataset.editDueDate===subjectId);
+      if(button)setBusy(button,true,'Saving…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectUrgency',
+          securityCode:state.adminCode,
+          subjectId,
+          urgent:true,
+          dueDate
+        });
+
+        showToast(result.message||'Due date updated.','success');
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Due date could not be updated.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,'✎ Edit due date');
+      }
+    }
+
     async function toggleSubjectSubmission(subjectId){
       const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
@@ -2607,6 +2816,7 @@ function renderAdminSubjects(){
       list.innerHTML=subjects.length?subjects.map(subject=>{
         const enabled=subject.submissionEnabled!==false;
         const visible=subject.dashboardVisible!==false;
+        const urgent=subject.urgent===true;
         const mode=subject.recurrenceMode||'MONTHLY';
         const combo=mode==='MONTHLY_QUARTERLY';
         const once=mode==='ONE_TIME';
@@ -2624,13 +2834,21 @@ function renderAdminSubjects(){
           ?'Linked text: '+escapeHtml(subject.linkText)+' · PDF: '+escapeHtml(subject.linkFileName)
           :(subject.linkUrl?'Previous URL hyperlink · upload a PDF to replace it':'No PDF hyperlink');
 
-        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+'"><span class="subject-admin-info">'+
+        const dueDateText=subject.urgentDueDate
+          ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.urgentDueDate+'T00:00:00'))
+          :'';
+        const overdue=urgent&&subject.urgentDueDate&&subject.urgentDueDate<new Date().toISOString().slice(0,10);
+
+        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+(urgent?' urgent-subject-admin':'')+(overdue?' overdue-subject-admin':'')+'"><span class="subject-admin-info">'+
           '<strong>'+escapeHtml(subject.name)+'</strong>'+
+          (urgent?'<span class="subject-urgent-badge'+(overdue?' overdue':'')+'">★ Urgent'+(dueDateText?(' · '+(overdue?'Overdue ':'Due ')+dueDateText):'')+'</span>':'')+
           (!visible?'<span class="subject-hidden-badge">Hidden from dashboard</span>':'')+
           '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
           '<small>'+linkInfo+'</small>'+
           '<small class="'+(enabled?'submission-open':'submission-closed')+'">'+(enabled?'SUBMISSIONS ENABLED':'SUBMISSIONS DISABLED')+'</small>'+
           '</span><span class="subject-admin-actions">'+
+          '<button class="'+(urgent?'unmark-urgent':'mark-urgent')+'" type="button" title="Pin this subject to the top of the dashboard with a gold highlight" data-toggle-urgency="'+escapeAttr(subject.id)+'">'+(urgent?'★ Unmark urgent':'☆ Mark urgent')+'</button>'+
+          (urgent?'<button type="button" class="edit-due-date" title="Change or remove the due date" data-edit-due-date="'+escapeAttr(subject.id)+'">✎ Edit due date</button>':'')+
           '<button type="button" title="Change this subject between Monthly, Quarterly, One-time, or Monthly + Quarterly" data-schedule-subject="'+escapeAttr(subject.id)+'">Change schedule</button>'+
           '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
           '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
