@@ -1,0 +1,68 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.13
+"Fix folder names now" -- full visibility into what it actually did
+
+===========================================================================
+WHAT I FOUND
+===========================================================================
+I re-traced the entire rename chain (button -> adminRenameSubjectFolders
+-> currentContainerFolderName_ -> folderNameForSubjectPeriod_ ->
+folderPeriodPrefix_) line by line and it's all still correctly wired --
+this should compute "2026,Aug Monthly Probity Report" etc. exactly per
+the latest naming spec.
+
+However, I found a real, concrete gap: the backend already computed a
+full per-subject breakdown (exactly what changed, or exactly why a
+subject was skipped), but the button only ever showed a one-line summary
+toast that disappears after 5 seconds -- it never showed WHICH subjects,
+WHY a particular one didn't change, or what name the backend actually
+computed for it. That's exactly the kind of gap that makes "nothing
+seems to have happened" impossible to diagnose from the portal alone.
+
+===========================================================================
+WHAT CHANGED
+===========================================================================
+1. After clicking "Fix folder names now", you now also get a popup
+   listing every subject and exactly what happened to it:
+     - "Old Name  →  New Name" for anything actually renamed
+     - "Already correct: <name>" for anything left unchanged -- CRITICALLY,
+       this now always shows the actual name, even when nothing changed.
+       If this ever shows a name that's missing "Monthly" or looks like
+       an older format, that's concrete proof the LIVE Apps Script
+       deployment is still running older naming logic, not that this
+       button failed to do its job.
+     - The specific reason for anything that couldn't be touched (no
+       folder tracked, or the folder couldn't be accessed).
+2. The summary toast now shows as an error (red) rather than success
+   (green) if nothing could be renamed and something failed, instead of
+   always appearing green regardless of outcome.
+
+===========================================================================
+HOW THIS SETTLES IT EITHER WAY
+===========================================================================
+Click "Fix folder names now" after deploying this version, then read the
+popup:
+
+- If you see "Old Name → New Name" entries with "Monthly" now appearing
+  where it wasn't before -- it worked, and folders are now renamed.
+- If you see "Already correct: 2026,Aug Probity Report" (missing the
+  word "Monthly") -- your live Apps Script deployment has NOT picked up
+  the naming update yet. Redo: Deploy > Manage deployments > Edit
+  (pencil) > Version: "New version" > Deploy, then click the button again.
+- If you see "Already correct: 2026,Aug Monthly Probity Report" -- it's
+  genuinely already correct, nothing more to do.
+- If you see "Could not access this subject's Drive folder" -- that
+  points to a Drive permissions/ownership issue worth checking directly
+  in Drive for that specific folder.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.13".
+6. Administrator -> Manage report subjects -> "Fix folder names now" ->
+   read the popup for the exact per-subject result.

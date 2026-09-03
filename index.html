@@ -2427,7 +2427,26 @@
           action:'adminRenameSubjectFolders',
           securityCode:state.adminCode
         });
-        showToast(result.message||'Folder names updated.','success');
+
+        const renamed=Number(result.renamed||0);
+        const unavailable=Number(result.unavailable||0);
+        const toastType=renamed>0?'success':(unavailable>0?'error':'success');
+        showToast(result.message||'Folder names updated.',toastType);
+
+        /*
+         * V17.7.13 FIX: the backend already computes a full per-subject
+         * breakdown (old name -> new name, or exactly why a subject was
+         * skipped), but it was never actually shown -- only the one-line
+         * summary toast, which disappears in 5 seconds and can't say WHY
+         * a particular folder didn't rename. Show the full breakdown so
+         * "nothing seems to have happened" becomes concrete, readable
+         * proof either way.
+         */
+        const details=Array.isArray(result.details)?result.details:[];
+        if(details.length){
+          const lines=details.map(d=>'• '+(d.subjectName||'(unnamed subject)')+': '+(d.result||''));
+          alert('Folder name check -- details:\n\n'+lines.join('\n'));
+        }
       }catch(error){
         showToast(error.message||'Folder names could not be updated.','error');
       }finally{
