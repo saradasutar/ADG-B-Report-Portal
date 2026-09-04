@@ -1,0 +1,81 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.22
+Cache-busting fix + new "Time Bound" badge (separate from Urgent)
+
+===========================================================================
+1) "SUBMITTED SHOWS DIFFERENTLY ACROSS TABS/BROWSERS/DEVICES"
+===========================================================================
+Your two screenshots showed a logged-in tab correctly displaying
+"Submitted" while a freshly-opened public-view tab showed "Upload" for
+the exact same report -- even though both were hitting the same live
+backend (BE v17.7.21 confirmed in your screenshot).
+
+I re-traced the backend's public/guest-viewing code once more and
+confirmed it already correctly preserves the true submitted status for
+every viewer, logged in or not -- it only ever hides the exact timestamp
+for guests, never the status itself. So this pointed at the browser
+serving a stale CACHED copy of the page's own script files to the fresh
+tab, rather than a data problem.
+
+FIX: index.html's two script tags now include a version tag
+(portal-v1767.js?v=17721, sticky-v1767.js?v=17721). Browsers treat a
+changed URL as a different file to fetch fresh, rather than reusing
+whatever they cached before -- this stops a browser/tab/device from ever
+running stale JavaScript against a newer backend again, without you
+needing to remember to hard-refresh every device by hand after each
+future update.
+
+===========================================================================
+2) NEW: "TIME BOUND" BADGE -- SEPARATE FROM "URGENT"
+===========================================================================
+A completely separate marking from Urgent, as you asked for:
+  - Its own purple/violet badge and colour, distinct from Urgent's
+    orange/red, the physically-received teal/blue, and the gold schedule
+    badges -- never visually confused with any of them.
+  - Does NOT pin the subject to the top of the dashboard the way Urgent
+    does -- Urgent alone still controls sort order. Time Bound is purely
+    an informational badge with a due date.
+  - Visible to EVERY dashboard viewer, not just admins -- shows right
+    next to the subject name on the main dashboard.
+  - Turns red and reads "Overdue" once its due date passes, exactly like
+    Urgent does, but independently.
+
+HOW TO SET IT:
+  - AT CREATION: the "Add subject" form now has a "Time bound (has a due
+    date)" checkbox -- tick it and a due-date field appears.
+  - LATER, on any existing subject: Administrator -> Manage report
+    subjects -> "🕓 Mark time-bound" on that subject -> enter an optional
+    due date in the small form that appears -> Save. An "✎ Edit due date"
+    button appears afterwards to change or clear it, and
+    "🕓 Unmark time-bound" removes it.
+
+===========================================================================
+3) "MARK AS PHYSICALLY RECEIVED" -- ALREADY LIVE, HERE'S WHERE TO FIND IT
+===========================================================================
+This was built and shipped two versions ago (V17.7.21) -- nothing new
+was needed this round. If you haven't seen it yet:
+  1. Click any report's "Upload" button while signed in as Administrator.
+  2. If the report is still Pending, you'll see a
+     "📋 Mark physically received" button in that modal.
+  3. Enter the date it was actually received (no PDF needed) and save.
+  4. It then shows a distinct blue/teal "Received" badge on the
+     dashboard, for everyone, instead of the usual green "Submitted".
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. This time, the script cache-busting means you should NOT need a hard
+   refresh or "Clear portal cache" for most devices/tabs to pick up the
+   change automatically going forward -- but for this specific deploy,
+   doing one hard refresh everywhere once is still recommended, since the
+   OLD script tags (without ?v=17721) are still what's cached right now.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.22".
+
+Two new columns ("Time Bound", "Time Bound Due Date") are added
+automatically to the Subjects sheet the next time the portal reads it
+after this deploy -- existing subjects simply start as not-time-bound,
+nothing else changes.

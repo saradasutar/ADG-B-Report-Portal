@@ -407,6 +407,24 @@
       box-shadow:0 2px 8px rgba(127,16,16,.45);
       animation:overduePulseGlow 1.4s ease-in-out infinite;
     }
+    .time-bound-chip{
+      display:inline-flex;width:max-content;align-items:center;gap:4px;
+      padding:3px 9px;border-radius:999px;
+      background:linear-gradient(120deg,#8b5cf6,#6d28d9);color:#fff;
+      font-size:9.5px;font-weight:950;letter-spacing:.02em;
+      box-shadow:0 2px 6px rgba(109,40,217,.35);
+    }
+    .time-bound-chip.overdue{
+      background:linear-gradient(120deg,#c62828,#7f1010);
+      box-shadow:0 2px 8px rgba(127,16,16,.45);
+    }
+    tbody tr.time-bound-subject-row>th,
+    tbody tr.time-bound-subject-row>td{
+      box-shadow:inset 4px 0 0 #7c3aed!important;
+    }
+    .subject-card.time-bound-subject-card{
+      border-left:4px solid #7c3aed!important;
+    }
     tbody tr.overdue-subject-row>th,
     tbody tr.overdue-subject-row>td{
       background:linear-gradient(105deg,#fff0f0,#fffafa)!important;
@@ -786,6 +804,42 @@
       background:linear-gradient(120deg,#ff7043,#e64a19)!important;
       font-weight:950!important;
     }
+    .subject-admin-row.time-bound-subject-admin{
+      border-left:6px solid #7c3aed!important;
+    }
+    .subject-time-bound-badge{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:5px;
+      padding:5px 12px;
+      border-radius:999px;
+      background:linear-gradient(120deg,#8b5cf6,#6d28d9);
+      color:#fff;
+      font-size:.78rem;
+      font-weight:950;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      box-shadow:0 3px 10px rgba(109,40,217,.4);
+    }
+    .subject-time-bound-badge.overdue{
+      background:linear-gradient(120deg,#c62828,#7f1010)!important;
+      box-shadow:0 3px 12px rgba(127,16,16,.5)!important;
+    }
+    .subject-admin-actions .mark-time-bound{
+      border-color:#7c3aed!important;
+      color:#5b21b6!important;
+      background:#f5f0ff!important;
+      font-weight:950!important;
+    }
+    .subject-admin-actions .unmark-time-bound{
+      border-color:#7c3aed!important;
+      color:#fff!important;
+      background:linear-gradient(120deg,#8b5cf6,#6d28d9)!important;
+      font-weight:950!important;
+    }
+    .admin-checkbox-field span{display:flex!important;align-items:center;gap:8px;font-weight:800}
+    .admin-checkbox-field input[type="checkbox"]{width:16px;height:16px;accent-color:#7c3aed}
     .subject-admin-actions .hide-subject{
       background:#5f6771!important;
       border-color:#5f6771!important;
@@ -1089,6 +1143,14 @@
             <input id="newSubjectLinkPdf" type="file" accept="application/pdf,.pdf">
             <small>PDF only · maximum 8 MB</small>
           </label>
+          <label class="admin-field admin-checkbox-field">
+            <span><input id="newSubjectTimeBound" type="checkbox"> Time bound (has a due date)</span>
+            <small>Shows a distinct purple "Time Bound" badge with the due date, visible to everyone -- separate from Urgent. Can also be set or changed later.</small>
+          </label>
+          <label class="admin-field" id="newTimeBoundDueField" hidden>
+            <span>Time-bound due date</span>
+            <input id="newSubjectTimeBoundDate" type="date">
+          </label>
           <button id="addSubjectButton" type="submit">Add subject</button>
         </form>
 
@@ -1192,6 +1254,24 @@
           </div>
         </form>
 
+        <form class="admin-link-editor hidden" id="subjectTimeBoundForm">
+          <h3 id="timeBoundFormHeading">Mark subject time-bound</h3>
+          <p id="timeBoundSubjectName"></p>
+          <input id="timeBoundSubjectId" type="hidden">
+          <div class="admin-link-grid">
+            <label class="admin-field">
+              <span>Due date (optional)</span>
+              <input id="timeBoundDueDateInput" type="date">
+              <small>Leave blank for no due date. Shows a separate purple "Time Bound" badge to every viewer -- this does not pin the subject to the top like Urgent does.</small>
+            </label>
+          </div>
+          <div class="admin-link-actions">
+            <button class="clear-link" id="clearTimeBoundDueDateButton" type="button" hidden>Clear due date</button>
+            <button class="cancel" id="cancelSubjectTimeBoundButton" type="button">Cancel</button>
+            <button class="submit" id="saveSubjectTimeBoundButton" type="submit">Save</button>
+          </div>
+        </form>
+
         <div class="admin-summary subject-auto-create-guide">
           <strong>Visibility:</strong> <b>Hide from dashboard</b> removes a subject for every dashboard user without deleting its history or files.<br>
           <strong>Auto-create per subject:</strong>
@@ -1226,7 +1306,7 @@
 
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
-      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',recentStatusWrites:{},
+      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',adminTimeBoundSubjectId:'',recentStatusWrites:{},
       connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
 
@@ -1243,8 +1323,7 @@
 
     function loadRecentStatusWrites(){
       try{
-        // Changed from sessionStorage to localStorage so it shares across all tabs instantly
-        const raw=localStorage.getItem(RECENT_STATUS_KEY);
+        const raw=sessionStorage.getItem(RECENT_STATUS_KEY);
         if(!raw)return;
         const parsed=JSON.parse(raw);
         const now=Date.now();
@@ -1257,8 +1336,7 @@
 
     function saveRecentStatusWrites(){
       try{
-        // Changed from sessionStorage to localStorage
-        localStorage.setItem(RECENT_STATUS_KEY,JSON.stringify(state.recentStatusWrites||{}));
+        sessionStorage.setItem(RECENT_STATUS_KEY,JSON.stringify(state.recentStatusWrites||{}));
       }catch(ignore){}
     }
 
@@ -1282,6 +1360,7 @@
       $('#cycleName').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(now)+' submission cycle';
       if($('#newOneTimeCycle'))$('#newOneTimeCycle').value=now.toISOString().slice(0,7);
       syncNewSubjectScheduleFields();
+      syncNewSubjectTimeBoundField();
       initialiseAutomaticDateRollover();
       initialiseAutomaticSelfHeal();
       loadPortal();
@@ -1352,7 +1431,11 @@
       $('#subjectUrgentForm')?.addEventListener('submit',saveSubjectUrgent);
       $('#cancelSubjectUrgentButton')?.addEventListener('click',closeSubjectUrgentEditor);
       $('#clearUrgentDueDateButton')?.addEventListener('click',clearSubjectUrgentDueDate);
+      $('#subjectTimeBoundForm')?.addEventListener('submit',saveSubjectTimeBound);
+      $('#cancelSubjectTimeBoundButton')?.addEventListener('click',closeSubjectTimeBoundEditor);
+      $('#clearTimeBoundDueDateButton')?.addEventListener('click',clearSubjectTimeBoundDueDate);
       $('#newSubjectRecurrence')?.addEventListener('change',syncNewSubjectScheduleFields);
+      $('#newSubjectTimeBound')?.addEventListener('change',syncNewSubjectTimeBoundField);
       $('#scheduleRecurrenceMode')?.addEventListener('change',syncExistingSubjectScheduleFields);
       $('#officeFilter')?.addEventListener('change',event=>{
         state.officeFilter=event.target.value;renderMatrix();updateSummary();
@@ -1395,6 +1478,18 @@
         const editDueDateButton=event.target.closest('[data-edit-due-date]');
         if(editDueDateButton){
           editSubjectUrgentDueDate(editDueDateButton.dataset.editDueDate);
+          return;
+        }
+
+        const timeBoundButton=event.target.closest('[data-toggle-time-bound]');
+        if(timeBoundButton){
+          toggleSubjectTimeBound(timeBoundButton.dataset.toggleTimeBound);
+          return;
+        }
+
+        const editTimeBoundDueDateButton=event.target.closest('[data-edit-time-bound-due-date]');
+        if(editTimeBoundDueDateButton){
+          editSubjectTimeBoundDueDate(editTimeBoundDueDateButton.dataset.editTimeBoundDueDate);
           return;
         }
 
@@ -1889,10 +1984,11 @@
         const disabled=s.submissionEnabled===false;
         const urgent=s.urgent===true;
         const overdue=isUrgentOverdue(s);
-        return '<tr class="'+(disabled?'disabled-subject-row':'')+(urgent?' urgent-subject-row':'')+(overdue?' overdue-subject-row':'')+'"'+
+        const timeBound=s.timeBound===true;
+        return '<tr class="'+(disabled?'disabled-subject-row':'')+(urgent?' urgent-subject-row':'')+(overdue?' overdue-subject-row':'')+(timeBound?' time-bound-subject-row':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
           (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
-          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column">'+renderSubjectTitle(s)+urgentDueDateChip(s)+'</span></span></th>'+
+          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column">'+renderSubjectTitle(s)+urgentDueDateChip(s)+timeBoundBadge(s)+'</span></span></th>'+
           offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>';
       }).join('');
 
@@ -1900,10 +1996,11 @@
         const disabled=s.submissionEnabled===false;
         const urgent=s.urgent===true;
         const overdue=isUrgentOverdue(s);
-        return '<article class="subject-card '+(disabled?'disabled-subject-card':'')+(urgent?' urgent-subject-card':'')+(overdue?' overdue-subject-card':'')+'"'+
+        const timeBound=s.timeBound===true;
+        return '<article class="subject-card '+(disabled?'disabled-subject-card':'')+(urgent?' urgent-subject-card':'')+(overdue?' overdue-subject-card':'')+(timeBound?' time-bound-subject-card':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><div class="subject-card-title"><span>'+
           (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
-          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column"><h3>'+renderSubjectTitle(s)+'</h3>'+urgentDueDateChip(s)+'</span></div>'+
+          String(index+1).padStart(2,'0')+'</span><span class="subject-title-column"><h3>'+renderSubjectTitle(s)+'</h3>'+urgentDueDateChip(s)+timeBoundBadge(s)+'</span></div>'+
           '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>';
       }).join('');
 
@@ -1924,6 +2021,26 @@
       const text=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'})
         .format(new Date(subject.urgentDueDate+'T00:00:00'));
       return '<span class="urgent-due-chip'+(overdue?' overdue':'')+'">'+(overdue?'Overdue ':'Due ')+escapeHtml(text)+'</span>';
+    }
+
+    /*
+     * V17.7.22: "Time Bound" -- a separate flag/badge from Urgent, visible
+     * to every dashboard viewer (not just admins). Distinct purple colour
+     * so it's never confused with Urgent's orange/red or the physically-
+     * received teal/blue.
+     */
+    function isTimeBoundOverdue(subject){
+      return subject?.timeBound===true && !!subject?.timeBoundDueDate &&
+        subject.timeBoundDueDate < new Date().toISOString().slice(0,10);
+    }
+
+    function timeBoundBadge(subject){
+      if(subject?.timeBound!==true)return '';
+      const overdue=isTimeBoundOverdue(subject);
+      const dueText=subject.timeBoundDueDate
+        ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.timeBoundDueDate+'T00:00:00'))
+        :'';
+      return '<span class="time-bound-chip'+(overdue?' overdue':'')+'">🕓 Time Bound'+(dueText?(' · '+(overdue?'Overdue ':'Due ')+escapeHtml(dueText)):'')+'</span>';
     }
 
     function renderSubjectTitle(subject){
@@ -2545,6 +2662,11 @@
       }
     }
 
+    function syncNewSubjectTimeBoundField(){
+      const checked=$('#newSubjectTimeBound')?.checked||false;
+      if($('#newTimeBoundDueField'))$('#newTimeBoundDueField').hidden=!checked;
+    }
+
     function syncExistingSubjectScheduleFields(){
       const mode=$('#scheduleRecurrenceMode')?.value||'MONTHLY';
       const oneTime=mode==='ONE_TIME';
@@ -2565,6 +2687,9 @@
         showToast('Select the month and year for this one-time subject.','error');
         return;
       }
+
+      const timeBound=$('#newSubjectTimeBound')?.checked||false;
+      const timeBoundDueDate=timeBound?($('#newSubjectTimeBoundDate')?.value||''):'';
 
       const linkValue=$('#newSubjectLinkText').value;
       const selectedFile=$('#newSubjectLinkPdf').files[0];
@@ -2589,7 +2714,9 @@
           linkText,
           recurrenceMode,
           oneTimeCycle,
-          closingDate
+          closingDate,
+          timeBound,
+          timeBoundDueDate
         };
 
         if(file){
@@ -2620,6 +2747,7 @@
 
       closeRenameSubjectEditor();
       closeSubjectUrgentEditor();
+      closeSubjectTimeBoundEditor();
       state.adminEditingSubjectId=subject.id;
       $('#editSubjectId').value=subject.id;
       $('#editSubjectName').textContent=subject.name;
@@ -2718,6 +2846,7 @@
 
       closeSubjectLinkEditor();
       closeSubjectUrgentEditor();
+      closeSubjectTimeBoundEditor();
       state.adminRenamingSubjectId=subject.id;
       $('#renameSubjectId').value=subject.id;
       $('#renameCurrentSubjectName').textContent='Current name: '+subject.name;
@@ -3008,6 +3137,120 @@
       openSubjectUrgentEditor(subjectId);
     }
 
+    /*
+     * V17.7.22: "Time Bound" mirrors the Urgent editor pattern exactly
+     * (same in-page-form-not-prompt() reasoning) but is a fully separate
+     * flag/badge -- marking or unmarking Time Bound never touches Urgent,
+     * and does not reorder the dashboard.
+     */
+    function openSubjectTimeBoundEditor(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      closeSubjectLinkEditor();
+      closeRenameSubjectEditor();
+      closeSubjectScheduleEditor();
+      closeSubjectUrgentEditor();
+
+      state.adminTimeBoundSubjectId=subject.id;
+      const alreadyTimeBound=subject.timeBound===true;
+
+      $('#timeBoundSubjectId').value=subject.id;
+      $('#timeBoundSubjectName').textContent='Subject: '+subject.name;
+      $('#timeBoundFormHeading').textContent=alreadyTimeBound?'Edit time-bound due date':'Mark subject time-bound';
+      $('#timeBoundDueDateInput').value=subject.timeBoundDueDate||'';
+      $('#saveSubjectTimeBoundButton').textContent=alreadyTimeBound?'Save due date':'Mark time-bound';
+      $('#clearTimeBoundDueDateButton').hidden=!alreadyTimeBound;
+
+      $('#subjectTimeBoundForm').classList.remove('hidden');
+      setTimeout(()=>$('#timeBoundDueDateInput').focus(),40);
+    }
+
+    function closeSubjectTimeBoundEditor(){
+      state.adminTimeBoundSubjectId='';
+      const form=$('#subjectTimeBoundForm');
+      if(!form)return;
+      form.reset();
+      form.classList.add('hidden');
+    }
+
+    async function saveSubjectTimeBound(event){
+      event.preventDefault();
+
+      const subjectId=$('#timeBoundSubjectId').value;
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const dueDate=$('#timeBoundDueDateInput').value.trim();
+      const button=$('#saveSubjectTimeBoundButton');
+      if(button)setBusy(button,true,'Saving…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectTimeBound',
+          securityCode:state.adminCode,
+          subjectId,
+          timeBound:true,
+          dueDate
+        });
+
+        showToast(result.message||'Subject marked time-bound.','success');
+        closeSubjectTimeBoundEditor();
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject time-bound status could not be changed.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,'Mark time-bound');
+      }
+    }
+
+    async function clearSubjectTimeBoundDueDate(){
+      $('#timeBoundDueDateInput').value='';
+      await saveSubjectTimeBound({preventDefault(){}});
+    }
+
+    async function toggleSubjectTimeBound(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode)return;
+
+      const timeBound=subject.timeBound===true;
+
+      if(!timeBound){
+        openSubjectTimeBoundEditor(subjectId);
+        return;
+      }
+
+      const button=[...document.querySelectorAll('[data-toggle-time-bound]')]
+        .find(x=>x.dataset.toggleTimeBound===subjectId);
+
+      if(button)setBusy(button,true,'Unmarking…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetSubjectTimeBound',
+          securityCode:state.adminCode,
+          subjectId,
+          timeBound:false,
+          dueDate:''
+        });
+
+        showToast(result.message||'Subject no longer marked time-bound.','success');
+        await loadPortal(true);
+        renderAdminSubjects();
+      }catch(error){
+        showToast(error.message||'Subject time-bound status could not be changed.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,'🕓 Mark time-bound');
+      }
+    }
+
+    function editSubjectTimeBoundDueDate(subjectId){
+      const subject=state.subjectMasters.find(x=>x.id===subjectId);
+      if(!subject||!state.adminCode||subject.timeBound!==true)return;
+      openSubjectTimeBoundEditor(subjectId);
+    }
+
     async function toggleSubjectSubmission(subjectId){
       const subject=state.subjectMasters.find(x=>x.id===subjectId);
       if(!subject||!state.adminCode)return;
@@ -3046,6 +3289,7 @@
       closeSubjectLinkEditor();
       closeRenameSubjectEditor();
       closeSubjectUrgentEditor();
+      closeSubjectTimeBoundEditor();
       state.adminSchedulingSubjectId=subject.id;
 
       $('#scheduleSubjectId').value=subject.id;
@@ -3112,6 +3356,7 @@ function renderAdminSubjects(){
         const enabled=subject.submissionEnabled!==false;
         const visible=subject.dashboardVisible!==false;
         const urgent=subject.urgent===true;
+        const timeBound=subject.timeBound===true;
         const mode=subject.recurrenceMode||'MONTHLY';
         const combo=mode==='MONTHLY_QUARTERLY';
         const once=mode==='ONE_TIME';
@@ -3134,9 +3379,15 @@ function renderAdminSubjects(){
           :'';
         const overdue=urgent&&subject.urgentDueDate&&subject.urgentDueDate<new Date().toISOString().slice(0,10);
 
-        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+(urgent?' urgent-subject-admin':'')+(overdue?' overdue-subject-admin':'')+'"><span class="subject-admin-info">'+
+        const timeBoundDueDateText=subject.timeBoundDueDate
+          ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.timeBoundDueDate+'T00:00:00'))
+          :'';
+        const timeBoundOverdue=timeBound&&subject.timeBoundDueDate&&subject.timeBoundDueDate<new Date().toISOString().slice(0,10);
+
+        return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+(urgent?' urgent-subject-admin':'')+(overdue?' overdue-subject-admin':'')+(timeBound?' time-bound-subject-admin':'')+'"><span class="subject-admin-info">'+
           '<strong>'+escapeHtml(subject.name)+'</strong>'+
           (urgent?'<span class="subject-urgent-badge'+(overdue?' overdue':'')+'">★ Urgent'+(dueDateText?(' · '+(overdue?'Overdue ':'Due ')+dueDateText):'')+'</span>':'')+
+          (timeBound?'<span class="subject-time-bound-badge'+(timeBoundOverdue?' overdue':'')+'">🕓 Time Bound'+(timeBoundDueDateText?(' · '+(timeBoundOverdue?'Overdue ':'Due ')+timeBoundDueDateText):'')+'</span>':'')+
           (!visible?'<span class="subject-hidden-badge">Hidden from dashboard</span>':'')+
           '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
           '<small>'+linkInfo+'</small>'+
@@ -3144,6 +3395,8 @@ function renderAdminSubjects(){
           '</span><span class="subject-admin-actions">'+
           '<button class="'+(urgent?'unmark-urgent':'mark-urgent')+'" type="button" title="Pin this subject to the top of the dashboard with a gold highlight" data-toggle-urgency="'+escapeAttr(subject.id)+'">'+(urgent?'★ Unmark urgent':'☆ Mark urgent')+'</button>'+
           (urgent?'<button type="button" class="edit-due-date" title="Change or remove the due date" data-edit-due-date="'+escapeAttr(subject.id)+'">✎ Edit due date</button>':'')+
+          '<button class="'+(timeBound?'unmark-time-bound':'mark-time-bound')+'" type="button" title="Show a separate purple Time Bound badge with a due date, visible to everyone -- does not reorder the dashboard" data-toggle-time-bound="'+escapeAttr(subject.id)+'">'+(timeBound?'🕓 Unmark time-bound':'🕓 Mark time-bound')+'</button>'+
+          (timeBound?'<button type="button" class="edit-due-date" title="Change or remove the time-bound due date" data-edit-time-bound-due-date="'+escapeAttr(subject.id)+'">✎ Edit due date</button>':'')+
           '<button type="button" title="Change this subject between Monthly, Quarterly, One-time, or Monthly + Quarterly" data-schedule-subject="'+escapeAttr(subject.id)+'">Change schedule</button>'+
           '<button type="button" data-rename="'+escapeAttr(subject.id)+'">Rename</button>'+
           '<button type="button" data-edit-link="'+escapeAttr(subject.id)+'">'+(subject.linkUrl?'Edit PDF link':'Add PDF link')+'</button>'+
@@ -3179,6 +3432,7 @@ function renderAdminSubjects(){
         closeRenameSubjectEditor();
         closeSubjectScheduleEditor();
         closeSubjectUrgentEditor();
+        closeSubjectTimeBoundEditor();
       }
     }
 
@@ -3214,7 +3468,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js"></script>
-  <script src="sticky-v1767.js"></script>
+  <script src="portal-v1767.js?v=17721"></script>
+  <script src="sticky-v1767.js?v=17721"></script>
 </body>
 </html>
