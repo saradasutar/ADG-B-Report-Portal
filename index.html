@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ADG(B) Report Submission Portal, CPWD Bengaluru">
   <meta name="theme-color" content="#082f63">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
   <link rel="icon" type="image/svg+xml" href="adgb-v1767.svg">
   <link rel="icon" type="image/png" sizes="64x64" href="adgb-v1767.png">
@@ -1004,7 +1007,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.24</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.26</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1707,7 +1710,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.24 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.26 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -3489,7 +3492,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17724"></script>
-  <script src="sticky-v1767.js?v=17724"></script>
+  <script src="portal-v1767.js?v=17726"></script>
+  <script src="sticky-v1767.js?v=17726"></script>
 </body>
 </html>
