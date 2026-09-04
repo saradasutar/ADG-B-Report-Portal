@@ -1243,7 +1243,8 @@
 
     function loadRecentStatusWrites(){
       try{
-        const raw=sessionStorage.getItem(RECENT_STATUS_KEY);
+        // Changed from sessionStorage to localStorage so it shares across all tabs instantly
+        const raw=localStorage.getItem(RECENT_STATUS_KEY);
         if(!raw)return;
         const parsed=JSON.parse(raw);
         const now=Date.now();
@@ -1256,7 +1257,8 @@
 
     function saveRecentStatusWrites(){
       try{
-        sessionStorage.setItem(RECENT_STATUS_KEY,JSON.stringify(state.recentStatusWrites||{}));
+        // Changed from sessionStorage to localStorage
+        localStorage.setItem(RECENT_STATUS_KEY,JSON.stringify(state.recentStatusWrites||{}));
       }catch(ignore){}
     }
 
