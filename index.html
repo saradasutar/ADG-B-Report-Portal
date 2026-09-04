@@ -1007,7 +1007,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.26</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.27</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1343,6 +1343,28 @@
     }
 
     const $=selector=>document.querySelector(selector);
+
+    /*
+     * V17.7.27 FIX: this portal has TWO sign-in systems -- a separate,
+     * more sophisticated session-based one (shown as "Signed in as
+     * Administrator" at the top) that pre-fills the #adminCode field's
+     * value whenever it recognises the person, and this app's own
+     * simpler state.adminCode, which previously only ever got set by
+     * explicitly submitting the Administrator login form here in THIS
+     * page session. If someone is already recognised as Administrator by
+     * the session system but never happened to submit this form in this
+     * exact tab, state.adminCode stayed empty and every admin-only
+     * button/badge in this file (History, Mark physically received,
+     * Urgent, Time Bound) stayed hidden -- even though they were
+     * genuinely, visibly signed in. This keeps state.adminCode in sync
+     * with whatever credential is actually sitting in that field, so
+     * either sign-in path is recognised correctly.
+     */
+    function syncAdminCodeFromSession(){
+      if(state.adminCode)return;
+      const fieldValue=$('#adminCode')?.value?.trim();
+      if(fieldValue)state.adminCode=fieldValue;
+    }
     const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({
       '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
     }[char]));
@@ -1710,7 +1732,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.26 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.27 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2288,15 +2310,24 @@
        * later removed is exactly the case this button exists to make
        * provable instead of a guess.
        */
-      $('#historyReportButton').classList.toggle('hidden',!state.adminCode);
-
       /*
-       * V17.7.21: Head Office can mark a report as received without a
-       * digital upload (e.g. it arrived on paper). Only offered while the
-       * report is still Pending -- once something is on record (digital or
-       * physical), Remove is the correct way to undo it, not a second mark.
+       * V17.7.27 FIX: this portal has two sign-in systems -- this app's own
+       * state.adminCode, and a separate session-based one that recognises
+       * "Signed in as Administrator" and pre-fills the #adminCode field
+       * shortly AFTER this modal becomes visible (via its own delayed
+       * detection, not before). Calling this once now correctly handles a
+       * credential already present; calling it again a moment after the
+       * modal opens (below) catches the case where the OTHER system fills
+       * it in immediately afterward -- so either sign-in path is honoured,
+       * not just whichever happened to go through this app's own login
+       * form in this exact tab.
        */
-      $('#markPhysicallyReceivedButton').classList.toggle('hidden',!state.adminCode||submitted);
+      function applyAdminGatedButtons(){
+        syncAdminCodeFromSession();
+        $('#historyReportButton').classList.toggle('hidden',!state.adminCode);
+        $('#markPhysicallyReceivedButton').classList.toggle('hidden',!state.adminCode||submitted);
+      }
+      applyAdminGatedButtons();
       closePhysicalReceiptEditor();
 
       $('#uploadPrivacyNote').textContent=viewOnly
@@ -2305,9 +2336,10 @@
 
       openModal('upload');
       setTimeout(()=>{
+        applyAdminGatedButtons();
         if(submitted)$('#officeCode')?.focus();
         else $('#pdfFile')?.focus();
-      },40);
+      },220);
     }
 
     /*
@@ -3358,6 +3390,8 @@ function renderAdminSubjects(){
       const list=$('#subjectAdminList');
       if(!list)return;
 
+      syncAdminCodeFromSession();
+
       const subjects=Array.isArray(state.subjectMasters)?state.subjectMasters:[];
 
       const monthLabel=cycle=>{
@@ -3492,7 +3526,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17726"></script>
-  <script src="sticky-v1767.js?v=17726"></script>
+  <script src="portal-v1767.js?v=17727"></script>
+  <script src="sticky-v1767.js?v=17727"></script>
 </body>
 </html>
