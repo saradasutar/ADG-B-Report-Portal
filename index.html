@@ -854,18 +854,16 @@
 
 </style>
 
-  <!-- One-time cleanup of old cache/service-worker assets -->
+  <!-- Cache/service-worker cleanup -- runs on every load, not just once,
+       so a service worker registered at any point (even accidentally, at
+       any time in the past) can never silently keep serving a stale
+       cached copy of this page indefinitely. -->
   <script>
     (() => {
-      const KEY='ADGB_FULL_V171_CACHE_RESET';
-      if(localStorage.getItem(KEY)==='done') return;
-      localStorage.setItem(KEY,'done');
       try{
         if('serviceWorker' in navigator){
           navigator.serviceWorker.getRegistrations().then(regs=>{
-            regs.forEach(r=>{
-              if(String(r.scope||'').includes('/ADG-B-Report-Portal/')) r.unregister();
-            });
+            regs.forEach(r=>r.unregister());
           });
         }
       }catch(e){}
