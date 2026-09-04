@@ -565,6 +565,7 @@
     }
     footer div{display:grid;gap:1px}
     footer strong{font-size:11px}footer span{font-size:8px;color:rgba(255,255,255,.82)}
+    #footerBuild{font-weight:800;color:#fff;letter-spacing:.01em}
 
     .modal-backdrop{
       position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;overflow:auto;
@@ -1005,7 +1006,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · Portal v17.6.10</span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.23</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1698,6 +1699,18 @@
           state.maxFileMb=Number(data.maxFileMb)||8;
           state.connected=true;
           state.supportsReceipts=versionAtLeast(data.backendVersion,13,4);
+
+          /*
+           * V17.7.23: a visible, self-verifying freshness check -- shows
+           * the frontend build baked into THIS index.html file alongside
+           * the live backend version this exact page just received. If
+           * these ever look older than expected, the fix is a hard
+           * refresh (Ctrl/Cmd+Shift+R) -- no need to search page source
+           * or guess whether a deploy actually landed.
+           */
+          if(data.backendVersion&&$('#footerBuild')){
+            $('#footerBuild').textContent='Portal file build: 17.7.23 · Live backend: v'+data.backendVersion;
+          }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
           renderAll(data.lastUpdated);
@@ -3468,7 +3481,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17721"></script>
-  <script src="sticky-v1767.js?v=17721"></script>
+  <script src="portal-v1767.js?v=17723"></script>
+  <script src="sticky-v1767.js?v=17723"></script>
 </body>
 </html>
