@@ -441,6 +441,7 @@
     }
     .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
     .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
+    .received-cell{background:linear-gradient(135deg,#e3f4fb,#dbeffa)}
     .closed-cell{background:#f2eff7}
 
     /* V17.6.5 — whole disabled subject row is visibly gray */
@@ -517,6 +518,7 @@
     }
     .upload-button:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(98,35,45,.09)}
     .upload-button.submitted{border-color:#93cfb7;background:#f0fff8;color:var(--green)}
+    .upload-button.submitted.received-physically{border-color:#7cc3d9;background:#eefaff;color:#0e7490}
     .upload-button.closed{border-color:#bbb0c7;background:#f6f3f8;color:#675c76;box-shadow:none}
     .upload-button svg,.office-list button svg,.drop-zone svg,.modal-icon svg{
       width:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round
@@ -557,7 +559,19 @@
       box-shadow:0 26px 70px rgba(0,0,0,.25)
     }
     .modal.wide{width:min(720px,100%)}
-    .modal-close{
+    .history-report{border-color:#5b7fa6!important;color:#2c4a68!important;background:#eef5fb!important}
+    .history-list{margin-top:12px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+    .history-loading,.history-empty{padding:18px;text-align:center;color:#637786;font-size:11px;font-weight:700}
+    .history-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid #dce6ec;background:#fff}
+    .history-row.history-submitted{border-left:4px solid #0f9d6c;background:#f2fbf6}
+    .history-row.history-removed{border-left:4px solid #c0272c;background:#fff5f5}
+    .history-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:5px}
+    .history-submitted .history-dot{background:#0f9d6c}
+    .history-removed .history-dot{background:#c0272c}
+    .history-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .history-body strong{font-size:12.5px;color:#17394f}
+    .history-time{font-size:10px;color:#637786;font-weight:750}
+    .history-file{font-size:9.5px;color:#8a97ab;overflow-wrap:anywhere}    .modal-close{
       position:absolute;right:12px;top:11px;width:31px;height:31px;border:0;border-radius:50%;
       background:#edf3f8;color:var(--navy);font-size:19px
     }
@@ -651,7 +665,16 @@
     .subject-card-title .subject-link{color:#fff0a7}
     .office-list>div{min-height:52px;padding:7px 11px;border-bottom:1px solid #d8e0e9;display:flex;align-items:center;justify-content:space-between;gap:10px}
     .office-list>div:last-child{border-bottom:0}
-    .pending-office{background:#fff0f3}.submitted-office{background:#e7faf1}.closed-office{background:#f3eff7}
+    .pending-office{background:#fff0f3}.submitted-office{background:#e7faf1}.received-office{background:#e3f4fb}.closed-office{background:#f3eff7}
+    .office-action button.submitted.received-physically{border-color:#7cc3d9!important;background:#eefaff!important;color:#0e7490!important}
+    .received-physically-badge{
+      display:inline-flex;width:max-content;align-items:center;gap:4px;
+      margin-top:3px;padding:2px 8px;border-radius:999px;
+      background:linear-gradient(120deg,#0e7490,#0891b2);color:#fff;
+      font-size:8.5px;font-weight:900;letter-spacing:.02em;
+      box-shadow:0 2px 6px rgba(14,116,144,.3);
+    }
+    .mark-received-btn{border-color:#7cc3d9!important;color:#0e7490!important;background:#eefaff!important}
     .office-name{font-size:14px;font-weight:900}
     .office-list button{
       min-width:100px;min-height:33px;padding:0 9px;border:1px solid #d8a4ad;border-radius:8px;
@@ -959,6 +982,8 @@
         </label>
 
         <div class="modal-actions">
+          <button class="history-report hidden" id="historyReportButton" type="button">🕘 History</button>
+          <button class="mark-received-btn hidden" id="markPhysicallyReceivedButton" type="button">📋 Mark physically received</button>
           <button class="view-report hidden" id="viewReportButton" type="button">View submitted report</button>
           <button class="remove-report hidden" id="removeReportButton" type="button">Remove uploaded report</button>
           <button class="cancel" data-close="upload" type="button">Cancel</button>
@@ -966,7 +991,36 @@
         </div>
       </form>
 
+      <form class="admin-link-editor hidden" id="physicalReceiptForm">
+        <h3>Mark as physically received</h3>
+        <p id="physicalReceiptSubtitle" class="privacy-note"></p>
+        <div class="admin-link-grid">
+          <label class="admin-field">
+            <span>Date physically received</span>
+            <input id="physicalReceiptDate" type="date" required>
+            <small>No PDF is required for this. The report will show a distinct "Physically received" badge instead of the usual Submitted checkmark, visible to everyone.</small>
+          </label>
+        </div>
+        <div class="admin-link-actions">
+          <button class="cancel" id="cancelPhysicalReceiptButton" type="button">Cancel</button>
+          <button class="submit" id="savePhysicalReceiptButton" type="submit">Mark received</button>
+        </div>
+      </form>
+
       <p class="privacy-note" id="uploadPrivacyNote">Enter the office security code to view, replace, or remove a submitted report.</p>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="historyBackdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <button class="modal-close" data-close="history" type="button">×</button>
+      <span class="modal-kicker">HEAD OFFICE · AUDIT LOG</span>
+      <h2 id="historyTitle">Submission history</h2>
+      <p id="historySubtitle" class="privacy-note"></p>
+      <div id="historyList" class="history-list"></div>
+      <div class="modal-actions">
+        <button class="cancel" data-close="history" type="button">Close</button>
+      </div>
     </section>
   </div>
 
@@ -1168,6 +1222,7 @@
       .map((name,index)=>({id:'SETUP_'+(index+1),name}));
     const UPLOAD_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>';
     const CHECK_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
+    const RECEIVED_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8"></path><path d="M4 8l8-5 8 5"></path><path d="M9 13h6"></path></svg>';
 
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
@@ -1279,6 +1334,10 @@
       $('#uploadForm')?.addEventListener('submit',submitUpload);
       $('#viewReportButton')?.addEventListener('click',viewSubmittedReport);
       $('#removeReportButton')?.addEventListener('click',removeSubmittedReport);
+      $('#historyReportButton')?.addEventListener('click',showSubmissionHistory);
+      $('#markPhysicallyReceivedButton')?.addEventListener('click',openPhysicalReceiptEditor);
+      $('#cancelPhysicalReceiptButton')?.addEventListener('click',closePhysicalReceiptEditor);
+      $('#physicalReceiptForm')?.addEventListener('submit',savePhysicalReceipt);
       $('#adminLoginForm')?.addEventListener('submit',verifyAdministrator);
       $('#addSubjectForm')?.addEventListener('submit',addSubject);
       $('#editSubjectLinkForm')?.addEventListener('submit',saveSubjectLink);
@@ -1400,10 +1459,13 @@
          */
         if(server && !!server.submitted===!!recent.submitted){
           /* Do not clear the protection merely because a stale response has
-             the same boolean state. For uploads, require the server timestamp
-             to match/reach the locally confirmed timestamp. This prevents a
-             late old bootstrap response from clearing the protection and
-             then repainting Upload a moment later. */
+             the same boolean state. For uploads, require the server
+             timestamp to have reached (>=) the locally confirmed one --
+             not necessarily byte-identical, since Sheets can format a
+             timestamp very slightly differently between reads. Using
+             exact equality here meant a genuinely newer, correct server
+             confirmation could get needlessly overridden by the older
+             locally-cached timestamp forever, until the hard expiry. */
           if(!recent.submitted){
             delete state.recentStatusWrites[key];
             changed=true;
@@ -1411,7 +1473,7 @@
           }
           const serverAt=String(server.submittedAt||'');
           const recentAt=String(recent.submittedAt||'');
-          if(serverAt && recentAt && serverAt===recentAt){
+          if(serverAt && recentAt && serverAt>=recentAt){
             delete state.recentStatusWrites[key];
             changed=true;
             return;
@@ -1424,7 +1486,8 @@
          */
         merged[key]={
           submitted:!!recent.submitted,
-          submittedAt:recent.submittedAt||''
+          submittedAt:recent.submittedAt||'',
+          receivedPhysically:!!recent.receivedPhysically
         };
       });
 
@@ -1458,7 +1521,8 @@
         if(!entry||!entry.subjectId||!entry.officeId)return;
         map[entry.subjectId+'__'+entry.officeId]={
           submitted:!!entry.submitted,
-          submittedAt:entry.submittedAt||''
+          submittedAt:entry.submittedAt||'',
+          receivedPhysically:!!entry.receivedPhysically
         };
       });
 
@@ -1930,6 +1994,7 @@
     function renderDesktopCell(subject,office){
       const item=reportStatusFor(subject,office);
       const submitted=!!item?.submitted;
+      const receivedPhysically=submitted&&!!item?.receivedPhysically;
       const enabled=subject.submissionEnabled!==false;
 
       if(!cellMatchesFilter(submitted))return '<td class="filtered-cell">—</td>';
@@ -1938,13 +2003,14 @@
         return '<td class="closed-cell"><div class="cell-status"><button type="button" class="upload-button closed" disabled>Closed</button><small class="submitted-time">By Head Office</small></div></td>';
       }
 
-      const icon=submitted?CHECK_ICON:UPLOAD_ICON;
-      const label=submitted?'Submitted':'Upload';
-      const className=submitted?'upload-button submitted':'upload-button';
+      const icon=submitted?(receivedPhysically?RECEIVED_ICON:CHECK_ICON):UPLOAD_ICON;
+      const label=submitted?(receivedPhysically?'Received':'Submitted'):'Upload';
+      const className=submitted?('upload-button submitted'+(receivedPhysically?' received-physically':'')):'upload-button';
 
-      return '<td class="'+(submitted?'submitted-cell':'pending-cell')+'"><div class="cell-status">'+
+      return '<td class="'+(submitted?(receivedPhysically?'received-cell':'submitted-cell'):'pending-cell')+'"><div class="cell-status">'+
         '<button type="button" class="'+className+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+icon+label+'</button>'+
         (submitted?
+          (receivedPhysically?'<span class="received-physically-badge">📋 Physically received</span>':'')+
           '<small class="submitted-time">'+formatDate(item.submittedAt)+'</small>'+
           '<small class="replace-hint">'+(enabled?'Select to view or replace':'Viewing only · submissions closed')+'</small>'
           :'')+
@@ -1954,6 +2020,7 @@
     function renderMobileCell(subject,office){
       const item=reportStatusFor(subject,office);
       const submitted=!!item?.submitted;
+      const receivedPhysically=submitted&&!!item?.receivedPhysically;
       const enabled=subject.submissionEnabled!==false;
 
       if(!cellMatchesFilter(submitted))return '';
@@ -1961,11 +2028,12 @@
         return '<div class="closed-office"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="closed" disabled>Closed</button><small>By Head Office</small></span></div>';
       }
 
-      const label=submitted?'Submitted':'Upload';
-      return '<div class="'+(submitted?'submitted-office':'pending-office')+'">'+
+      const label=submitted?(receivedPhysically?'Received':'Submitted'):'Upload';
+      return '<div class="'+(submitted?(receivedPhysically?'received-office':'submitted-office'):'pending-office')+'">'+
         '<span class="office-name">'+escapeHtml(office.name)+'</span>'+
-        '<span class="office-action"><button type="button" class="'+(submitted?'submitted':'')+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+
-        (submitted?CHECK_ICON:UPLOAD_ICON)+label+'</button>'+
+        '<span class="office-action"><button type="button" class="'+(submitted?('submitted'+(receivedPhysically?' received-physically':'')):'')+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+
+        (submitted?(receivedPhysically?RECEIVED_ICON:CHECK_ICON):UPLOAD_ICON)+label+'</button>'+
+        (receivedPhysically?'<span class="received-physically-badge">📋 Physically received</span>':'')+
         (submitted?'<small>'+formatDate(item.submittedAt)+' · '+(enabled?'view or replace':'view only · submissions closed')+'</small>':'')+
         '</span></div>';
     }
@@ -2080,6 +2148,24 @@
       $('#removeReportButton').disabled=false;
       $('#removeReportButton').textContent='Remove uploaded report';
 
+      /*
+       * V17.7.20: Head Office can check the FULL event history for this
+       * exact subject+office at any time -- whether it's currently
+       * Submitted or Pending -- since a report that was submitted then
+       * later removed is exactly the case this button exists to make
+       * provable instead of a guess.
+       */
+      $('#historyReportButton').classList.toggle('hidden',!state.adminCode);
+
+      /*
+       * V17.7.21: Head Office can mark a report as received without a
+       * digital upload (e.g. it arrived on paper). Only offered while the
+       * report is still Pending -- once something is on record (digital or
+       * physical), Remove is the correct way to undo it, not a second mark.
+       */
+      $('#markPhysicallyReceivedButton').classList.toggle('hidden',!state.adminCode||submitted);
+      closePhysicalReceiptEditor();
+
       $('#uploadPrivacyNote').textContent=viewOnly
         ?'Submissions are closed for this period. Existing report remains available for viewing.'
         :'Enter the concerned office security code/password to upload, view, replace, or remove its report.';
@@ -2089,6 +2175,75 @@
         if(submitted)$('#officeCode')?.focus();
         else $('#pdfFile')?.focus();
       },40);
+    }
+
+    /*
+     * V17.7.21: in-page form (not prompt()) for marking a report received
+     * without a PDF -- same reasoning as the Urgent due-date fix: native
+     * dialogs can be silently suppressed by the browser after repeated use
+     * on the same page, which looked exactly like "the button does
+     * nothing" for an earlier feature. This has no such failure mode.
+     */
+    function openPhysicalReceiptEditor(){
+      if(!state.selected||!state.adminCode)return;
+      const{subject,office}=state.selected;
+
+      $('#uploadForm').classList.add('hidden');
+      $('#physicalReceiptSubtitle').textContent=subject.name+' — '+office.name;
+      $('#physicalReceiptDate').value=new Date().toISOString().slice(0,10);
+      $('#physicalReceiptForm').classList.remove('hidden');
+      setTimeout(()=>$('#physicalReceiptDate')?.focus(),40);
+    }
+
+    function closePhysicalReceiptEditor(){
+      const form=$('#physicalReceiptForm');
+      if(!form)return;
+      form.classList.add('hidden');
+      form.reset();
+      $('#uploadForm')?.classList.remove('hidden');
+    }
+
+    async function savePhysicalReceipt(event){
+      event.preventDefault();
+      if(!state.selected||!state.adminCode)return;
+
+      const{subject,office}=state.selected;
+      const receivedDate=$('#physicalReceiptDate').value.trim();
+
+      if(!receivedDate){
+        showToast('Enter the date this report was physically received.','error');
+        return;
+      }
+
+      const button=$('#savePhysicalReceiptButton');
+      setBusy(button,true,'Saving…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminMarkPhysicallyReceived',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          officeId:office.id,
+          receivedDate
+        });
+
+        const statusKey=result.statusKey||(subject.id+'__'+office.id);
+        state.recentStatusWrites[statusKey]={
+          submitted:true,
+          submittedAt:result.submittedAt||'',
+          receivedPhysically:true,
+          expiresAt:Date.now()+2592000000
+        };
+        saveRecentStatusWrites();
+
+        closeModal('upload');
+        showToast(result.message||'Report marked as physically received.','success');
+        await loadPortal(true);
+      }catch(error){
+        showToast(error.message||'Report could not be marked as received.','error');
+      }finally{
+        setBusy(button,false,'Mark received');
+      }
     }
 
     function handleFileSelection(){
@@ -2157,7 +2312,7 @@
         state.recentStatusWrites[statusKey]={
           submitted:true,
           submittedAt:confirmedAt,
-          expiresAt:Date.now()+259200000
+          expiresAt:Date.now()+2592000000
         };
         saveRecentStatusWrites();
 
@@ -2260,7 +2415,7 @@
         state.recentStatusWrites[statusKey]={
           submitted:false,
           submittedAt:'',
-          expiresAt:Date.now()+259200000
+          expiresAt:Date.now()+2592000000
         };
         saveRecentStatusWrites();
 
@@ -2273,6 +2428,58 @@
         showToast(error.message||'Report could not be removed.','error');
       }finally{
         setBusy(button,false,'Remove uploaded report');
+      }
+    }
+
+    /*
+     * V17.7.20: "it showed Submitted, then later showed Upload again, and
+     * nobody removed it" is unresolvable by reassurance alone. The
+     * Submissions sheet is an append-only event log -- upload and remove
+     * are the ONLY two things that ever write to it -- so the true history
+     * for any subject+office is always fully recoverable. This shows that
+     * history directly, in-page (no alert()/prompt(), since those can be
+     * silently suppressed by the browser after repeated use), so Head
+     * Office can see, as fact rather than guesswork, exactly what happened
+     * and when.
+     */
+    async function showSubmissionHistory(){
+      if(!state.selected||!state.adminCode)return;
+
+      const{subject,office}=state.selected;
+      $('#historySubtitle').textContent=subject.name+' — '+office.name;
+      $('#historyList').innerHTML='<p class="history-loading">Loading history…</p>';
+      openModal('history');
+
+      try{
+        const result=await postToBackend({
+          action:'adminGetSubmissionHistory',
+          securityCode:state.adminCode,
+          subjectId:subject.id,
+          officeId:office.id
+        });
+
+        const events=Array.isArray(result.events)?result.events:[];
+
+        if(!events.length){
+          $('#historyList').innerHTML='<p class="history-empty">No upload or removal events found for this subject and office in the current reporting cycle.</p>';
+          return;
+        }
+
+        $('#historyList').innerHTML=events.map(e=>{
+          const submitted=String(e.status||'').toUpperCase()==='SUBMITTED';
+          const receivedPhysically=submitted&&!!e.receivedPhysically;
+          return '<div class="history-row '+(submitted?'history-submitted':'history-removed')+'">'+
+            '<span class="history-dot"></span>'+
+            '<span class="history-body">'+
+              '<strong>'+(submitted?(receivedPhysically?'Physically received':'Submitted'):'Removed')+'</strong>'+
+              '<span class="history-time">'+escapeHtml(e.timestampDisplay||'')+'</span>'+
+              (e.fileName?'<span class="history-file">'+escapeHtml(e.fileName)+'</span>':'')+
+              (receivedPhysically?'<span class="history-file">No PDF on file · marked by Head Office</span>':'')+
+            '</span>'+
+          '</div>';
+        }).join('');
+      }catch(error){
+        $('#historyList').innerHTML='<p class="history-empty">'+escapeHtml(error.message||'History could not be loaded.')+'</p>';
       }
     }
 
@@ -2962,6 +3169,7 @@ function renderAdminSubjects(){
       if(name==='upload'){
         state.selected=null;
         if($('#officeCode'))$('#officeCode').value='';
+        closePhysicalReceiptEditor();
       }
       if(name==='admin'){
         state.adminCode='';

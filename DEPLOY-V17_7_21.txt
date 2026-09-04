@@ -1,0 +1,84 @@
+ADG(B) REPORT SUBMISSION PORTAL — V17.7.21
+Submission history viewer + "Mark as physically received"
+
+===========================================================================
+1) "SUBMITTED SHOWS UPLOAD LATER, WITHOUT ANYONE REMOVING IT"
+===========================================================================
+I traced every single code path that can ever write submitted:false to
+the sheet. There are exactly two: an explicit Remove action (requiring
+the office/admin security code), or the start of a new monthly cycle
+(everyone starts Pending again each month by design -- not applicable
+right now, still within September). No other function, migration, or
+background process can flip a report back to Pending. I could not find a
+bug causing this from code review alone.
+
+So instead of another round of guessing, I built the tool that actually
+resolves this: a Submission History viewer. The Submissions sheet is an
+append-only event log -- upload, remove, and now physical-receipt-marking
+are the ONLY things that ever write to it -- so the true history for any
+subject+office is always fully recoverable.
+
+HOW TO USE IT:
+  Click any report's cell (Submitted, Received, or Upload) to open its
+  modal, then click "🕘 History" (Head Office login required). You'll see
+  every event for that exact subject+office, in order, with the date/time
+  and what happened -- Submitted, Physically received, or Removed. If a
+  report ever reverts to Pending again, open this immediately and you'll
+  see, as fact rather than guesswork, exactly what happened and when.
+
+Also hardened as defence in depth while investigating:
+  - The "just confirmed" client-side protection window extended from 72
+    hours to 30 days.
+  - Fixed an overly-strict timestamp check that could get stuck showing
+    a stale confirmation time instead of accepting a genuinely newer,
+    correct one from the server.
+
+===========================================================================
+2) NEW: MARK A REPORT AS PHYSICALLY RECEIVED (NO PDF NEEDED)
+===========================================================================
+For a report that arrived on paper, by email, or any way outside the
+portal -- Head Office can now record it as received without a digital
+upload.
+
+HOW TO USE IT:
+  1. Click the relevant office's "Upload" button for that subject.
+  2. If you're signed in as Administrator, you'll see a new
+     "📋 Mark physically received" button.
+  3. Enter the date it was actually received (defaults to today) and
+     save. No PDF is required.
+
+This uses the EXACT SAME underlying status system as a normal upload --
+same append-only log, same Current_Status table, same "permanent until
+removed" guarantee -- there is no separate, weaker code path for this.
+
+===========================================================================
+3) NEW: DISTINCT BADGE FOR PHYSICALLY-RECEIVED REPORTS, VISIBLE TO ALL
+===========================================================================
+A physically-received report looks different everywhere, for every
+viewer (not just admins) -- so nobody mistakes it for a normal digital
+submission:
+  - The cell reads "Received" instead of "Submitted", with its own icon
+    and a distinct blue/teal colour (green stays reserved for a normal
+    PDF upload; orange/red stay reserved for Urgent/Overdue).
+  - A small "📋 Physically received" badge appears under the button.
+  - The date shown is the date YOU entered as received, not today's date.
+  - "View submitted report" correctly explains there's no PDF to open,
+    rather than showing a confusing file error.
+  - "Remove" still works exactly the same way for these -- it just skips
+    the Drive-trash step since there was never a file.
+
+===========================================================================
+DEPLOY
+===========================================================================
+1. Replace Code.gs in Google Apps Script with the supplied Code.gs.
+2. Deploy > Manage deployments > Edit (pencil) on the active deployment >
+   Version: New version > Deploy.
+3. Replace index.html in your GitHub Pages repo, commit changes (the
+   green button), wait ~30-60s for Pages to rebuild.
+4. Hard refresh (Ctrl/Cmd+Shift+R) or use "Clear portal cache" on login.
+5. Confirm <your /exec URL>?action=ping shows "backendVersion":"17.7.21".
+
+Two new columns ("Received Physically") are added automatically to both
+the Submissions and Current_Status sheets the next time the portal reads
+them after this deploy -- existing data is untouched, nothing is
+reformatted, and every existing report keeps working exactly as before.
