@@ -707,6 +707,37 @@
       box-shadow:0 2px 6px rgba(14,116,144,.3);
     }
     .mark-received-btn{border-color:#7cc3d9!important;color:#0e7490!important;background:#eefaff!important}
+    .print-pending-button{
+      min-height:38px;padding:0 12px;border:2px solid #4338ca;border-radius:9px;
+      background:#eef0ff;color:#3730a3;font-size:11px;font-weight:900;cursor:pointer;
+      align-self:flex-end;
+    }
+    .print-pending-button:hover{background:#e0e3ff}
+
+    /*
+     * "Print pending status" -- a plain, black-and-white-friendly report
+     * built fresh from live data each time the button is clicked, kept
+     * completely hidden on-screen and shown ONLY inside the browser's
+     * print dialog (via @media print below). Everything else on the page
+     * is hidden while printing, so this is the only thing that reaches
+     * paper.
+     */
+    .print-only{display:none}
+    @media print{
+      body>*:not(#printPendingReport){display:none!important}
+      #printPendingReport{display:block!important}
+      .print-report-header{border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:16px}
+      .print-report-header h1{margin:0 0 4px;font-size:18px}
+      .print-report-header p{margin:0;font-size:11px}
+      .print-report-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;font-weight:700}
+      .print-office-group{margin-bottom:16px;break-inside:avoid}
+      .print-office-group h2{margin:0 0 6px;padding:4px 0;border-bottom:1px solid #000;font-size:13px}
+      .print-office-group table{width:100%;border-collapse:collapse;font-size:10px}
+      .print-office-group th,.print-office-group td{border:1px solid #666;padding:5px 7px;text-align:left}
+      .print-office-group th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .print-empty-office{padding:6px 0;font-size:10px;font-style:italic}
+      .print-report-footer{margin-top:20px;font-size:9px;color:#333}
+    }
     .office-name{font-size:14px;font-weight:900}
     .office-list button{
       min-width:100px;min-height:33px;padding:0 9px;border:2px solid #c0272c;border-radius:8px;
@@ -1001,6 +1032,7 @@
             <label class="tool-field">Search subject
               <input id="subjectSearch" type="search" placeholder="Type report name">
             </label>
+            <button class="print-pending-button hidden" id="printPendingButton" type="button" title="Print a paper-friendly list of pending Monthly and Quarterly reports, as on today">🖨 Print pending status</button>
           </div>
         </div>
 
@@ -1020,8 +1052,10 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.33</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.34</span></span>
   </footer>
+
+  <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
@@ -1457,6 +1491,7 @@
       $('#viewReportButton')?.addEventListener('click',viewSubmittedReport);
       $('#removeReportButton')?.addEventListener('click',removeSubmittedReport);
       $('#historyReportButton')?.addEventListener('click',showSubmissionHistory);
+      $('#printPendingButton')?.addEventListener('click',printPendingStatus);
       $('#markPhysicallyReceivedButton')?.addEventListener('click',openPhysicalReceiptEditor);
       $('#cancelPhysicalReceiptButton')?.addEventListener('click',closePhysicalReceiptEditor);
       $('#physicalReceiptForm')?.addEventListener('submit',savePhysicalReceipt);
@@ -1749,7 +1784,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.33 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.34 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2023,6 +2058,9 @@
       const count=$('#resultCount');
       if(count)count.textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
 
+      syncAdminCodeFromSession();
+      $('#printPendingButton')?.classList.toggle('hidden',!state.adminCode);
+
       if(!state.subjects.length){
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
         return;
@@ -2208,6 +2246,57 @@
         (receivedPhysically?'<span class="received-physically-badge">📋 Physically received</span>':'')+
         (submitted?'<small>'+formatDate(item.submittedAt)+' · '+(enabled?'view or replace':'view only · submissions closed')+'</small>':'')+
         '</span></div>';
+    }
+
+    /*
+     * Admin-only: builds a plain, paper-friendly report of every Monthly
+     * and Quarterly subject that is still Pending, grouped by office, as
+     * of right now -- then opens the browser's print dialog. One-time
+     * subjects are deliberately excluded (this is specifically a
+     * recurring-report compliance view). Built fresh from live data every
+     * time, regardless of whatever on-screen filter happens to be active.
+     */
+    function printPendingStatus(){
+      if(!state.adminCode)return;
+
+      const recurring=state.subjects.filter(s=>s.reportKind==='MONTHLY'||s.reportKind==='QUARTERLY');
+      const now=new Date();
+      const asOnText=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now)+
+        ', '+new Intl.DateTimeFormat('en-IN',{hour:'2-digit',minute:'2-digit'}).format(now);
+
+      const officeGroups=state.offices.map(office=>{
+        const pending=recurring.filter(s=>!reportStatusFor(s,office)?.submitted);
+        return {office,pending};
+      });
+
+      const totalPending=officeGroups.reduce((sum,g)=>sum+g.pending.length,0);
+
+      const groupsHtml=officeGroups.map(({office,pending})=>{
+        if(!pending.length){
+          return '<div class="print-office-group"><h2>'+escapeHtml(office.name)+'</h2>'+
+            '<p class="print-empty-office">No pending Monthly or Quarterly reports.</p></div>';
+        }
+        const rows=pending.map((s,i)=>'<tr>'+
+          '<td>'+(i+1)+'</td>'+
+          '<td>'+escapeHtml(s.baseName||s.name)+'</td>'+
+          '<td>'+(s.reportKind==='QUARTERLY'?'Quarterly':'Monthly')+'</td>'+
+          '<td>'+escapeHtml(s.periodLabel||'')+'</td>'+
+          '</tr>').join('');
+        return '<div class="print-office-group"><h2>'+escapeHtml(office.name)+' — '+pending.length+' pending</h2>'+
+          '<table><thead><tr><th>Sl.</th><th>Report subject</th><th>Type</th><th>Period</th></tr></thead>'+
+          '<tbody>'+rows+'</tbody></table></div>';
+      }).join('');
+
+      $('#printPendingReport').innerHTML=
+        '<div class="print-report-header">'+
+          '<h1>O/o Additional Director General (B), CPWD, Bengaluru</h1>'+
+          '<p>Pending Report Status — Monthly &amp; Quarterly Reports</p>'+
+          '<div class="print-report-meta"><span>As on: '+escapeHtml(asOnText)+'</span><span>Total pending: '+totalPending+'</span></div>'+
+        '</div>'+
+        groupsHtml+
+        '<p class="print-report-footer">Generated from the ADG(B) Report Submission Portal. One-time subjects are not included in this list.</p>';
+
+      window.print();
     }
 
     function updateSummary(){
@@ -3552,7 +3641,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17733"></script>
-  <script src="sticky-v1767.js?v=17733"></script>
+  <script src="portal-v1767.js?v=17734"></script>
+  <script src="sticky-v1767.js?v=17734"></script>
 </body>
 </html>
