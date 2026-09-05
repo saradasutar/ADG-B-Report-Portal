@@ -10,6 +10,7 @@ const CONFIG = Object.freeze({
 const STICKY_FOCUS_ID_STORAGE_KEY = "adgbReportStickyFocusIdV159";
 const STICKY_FOCUS_COLLAPSED_STORAGE_KEY = "adgbReportStickyFocusCollapsedV159";
 const STICKY_FOCUS_LAYOUT_STORAGE_KEY = "adgbReportStickyFocusLayoutV159";
+const STICKY_LAUNCHER_LAYOUT_STORAGE_KEY = "adgbReportStickyLauncherLayoutV1767";
 const STICKY_ADMIN_CODE_SESSION_KEY = "adgbReportStickyAdminCodeV159";
 
 const STICKY_FOCUS_SIZES = Object.freeze([
@@ -26,6 +27,9 @@ const state = {
   stickyFocusCollapsed: readStickyFocusCollapsed(),
   stickyFocusLayout: readStickyFocusLayout(),
   stickyFocusDrag: null,
+  launcherLayout: readLauncherLayout(),
+  launcherDrag: null,
+  launcherJustDragged: false,
   adminCode: sessionStorage.getItem(STICKY_ADMIN_CODE_SESSION_KEY) || "",
   adminUnlocked: false
 };
@@ -51,7 +55,29 @@ function initExactHrSticky() {
     "stickyFocusManage", "stickyFocusUnpin", "stickyFocusAdminActions", "stickyFocusEdit", "stickyFocusComplete", "stickyFocusDelete", "stickyAdminUnlock", "stickyAdminHint"
   ].forEach((id) => { refs[id] = document.getElementById(id); });
 
-  refs.stickyNotesButton.addEventListener("click", openStickyNotes);
+  applyLauncherPosition();
+  requestAnimationFrame(clampLauncherPosition);
+
+  refs.stickyNotesButton.addEventListener("click", (event) => {
+    if (state.launcherJustDragged) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    openStickyNotes();
+  });
+  refs.stickyNotesButton.addEventListener("pointerdown", startLauncherDrag);
+  refs.stickyNotesButton.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    state.launcherLayout = { x: null, y: null };
+    saveLauncherLayout();
+    applyLauncherPosition();
+    showToast("Target / Reminder tab position reset.");
+  });
+  window.addEventListener("pointermove", moveLauncherDrag);
+  window.addEventListener("pointerup", finishLauncherDrag);
+  window.addEventListener("pointercancel", finishLauncherDrag);
+  window.addEventListener("resize", clampLauncherPosition);
   refs.stickyNoteForm.addEventListener("submit", saveStickyNote);
   refs.stickyActiveList.addEventListener("click", handleStickyNoteAction);
   refs.stickyCompletedList.addEventListener("click", handleStickyNoteAction);
@@ -230,38 +256,41 @@ function injectExactHrStickyStyles() {
   top:52%!important;
   transform:translateY(-50%);
   z-index:94!important;
+  touch-action:none;
 }
 .hr-sticky-launch .sticky-launch-btn{
-  width:48px!important;
-  min-height:168px!important;
-  padding:10px 6px!important;
+  width:30px!important;
+  min-height:96px!important;
+  padding:6px 3px!important;
   display:flex!important;
   flex-direction:column!important;
   align-items:center!important;
   justify-content:center!important;
-  gap:7px!important;
-  border-radius:16px 0 0 16px!important;
+  gap:4px!important;
+  border-radius:12px 0 0 12px!important;
   border-right:0!important;
   color:#fff!important;
   border-color:#6950d6!important;
   background:linear-gradient(180deg,#5d48d4,#7449d9)!important;
   box-shadow:0 12px 32px rgba(74,57,170,.28)!important;
+  cursor:grab!important;
 }
-.hr-sticky-launch .sticky-side-icon{font-size:16px}
+body.sticky-launch-dragging .hr-sticky-launch .sticky-launch-btn{cursor:grabbing!important}
+.hr-sticky-launch .sticky-side-icon{font-size:12px}
 .hr-sticky-launch .sticky-side-label{
   writing-mode:vertical-rl;
   transform:rotate(180deg);
   white-space:nowrap;
-  font-size:9px;
+  font-size:7.5px;
   font-weight:950;
-  letter-spacing:.04em;
+  letter-spacing:.03em;
 }
 .hr-sticky-launch .sticky-launch-btn b{
-  min-width:24px!important;
-  height:24px!important;
+  min-width:15px!important;
+  height:15px!important;
   background:#fff!important;
   color:#5d48d4!important;
-  font-size:10px!important;
+  font-size:7.5px!important;
 }
 .hr-sticky-dialog{
   position:fixed!important;
@@ -566,7 +595,7 @@ function injectExactHrStickyMarkup() {
   const launcher = document.createElement("div");
   launcher.className = "hr-sticky-launch";
   launcher.innerHTML = `
-    <button id="stickyNotesButton" class="soft-btn sticky-launch-btn" type="button" aria-haspopup="dialog" title="Open Target / Reminder">
+    <button id="stickyNotesButton" class="soft-btn sticky-launch-btn" type="button" aria-haspopup="dialog" title="Open Target / Reminder · Drag to move · Double-click to reset position">
       <span class="sticky-side-icon" aria-hidden="true">✦</span>
       <span class="sticky-side-label">Target / Reminder</span>
       <b id="stickyActiveCount">0</b>
@@ -1295,6 +1324,164 @@ function saveStickyFocusPreference() {
       JSON.stringify(state.stickyFocusLayout)
     );
   } catch {}
+}
+
+/*
+ * Target/Reminder launcher tab: draggable positioning, mirroring the
+ * exact same read/save/apply pattern already used for the pinned sticky
+ * note above. Position is stored separately from that note's own layout,
+ * since the launcher tab and a pinned note are independent, both
+ * user-repositionable elements.
+ */
+function readLauncherLayout() {
+  const fallback = { x: null, y: null };
+
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(STICKY_LAUNCHER_LAYOUT_STORAGE_KEY) || "null"
+    );
+
+    if (!parsed || typeof parsed !== "object") return fallback;
+
+    return {
+      x: Number.isFinite(parsed.x) ? parsed.x : null,
+      y: Number.isFinite(parsed.y) ? parsed.y : null
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveLauncherLayout() {
+  try {
+    localStorage.setItem(
+      STICKY_LAUNCHER_LAYOUT_STORAGE_KEY,
+      JSON.stringify(state.launcherLayout)
+    );
+  } catch {}
+}
+
+function applyLauncherPosition() {
+  const launcher = refs.stickyNotesButton?.closest(".hr-sticky-launch");
+  if (!launcher) return;
+
+  /*
+   * The base CSS anchors this element with top/right using !important
+   * (so it reliably wins over any other stylesheet rule at its default
+   * position). A plain style.top = "..." assignment does NOT override an
+   * !important stylesheet rule -- setProperty(..., "important") is
+   * required here, or none of this would visibly do anything.
+   */
+  if (
+    !Number.isFinite(state.launcherLayout.x) ||
+    !Number.isFinite(state.launcherLayout.y)
+  ) {
+    launcher.style.removeProperty("left");
+    launcher.style.removeProperty("top");
+    launcher.style.removeProperty("right");
+    launcher.style.removeProperty("transform");
+    return;
+  }
+
+  launcher.style.setProperty("left", `${state.launcherLayout.x}px`, "important");
+  launcher.style.setProperty("top", `${state.launcherLayout.y}px`, "important");
+  launcher.style.setProperty("right", "auto", "important");
+  launcher.style.setProperty("transform", "none", "important");
+}
+
+function clampLauncherPosition() {
+  const launcher = refs.stickyNotesButton?.closest(".hr-sticky-launch");
+  if (
+    !launcher ||
+    !Number.isFinite(state.launcherLayout.x) ||
+    !Number.isFinite(state.launcherLayout.y)
+  ) {
+    return;
+  }
+
+  const rect = launcher.getBoundingClientRect();
+  const maxX = Math.max(8, window.innerWidth - rect.width - 8);
+  const maxY = Math.max(8, window.innerHeight - rect.height - 8);
+
+  state.launcherLayout.x = Math.max(8, Math.min(maxX, state.launcherLayout.x));
+  state.launcherLayout.y = Math.max(8, Math.min(maxY, state.launcherLayout.y));
+
+  applyLauncherPosition();
+}
+
+/*
+ * The launcher button must stay clickable (to open the panel) as well as
+ * draggable (to move it) -- the standard way to support both is to only
+ * treat a pointer sequence as a drag once it has actually moved past a
+ * small threshold, and suppress the click that naturally follows a real
+ * drag's pointerup.
+ */
+const LAUNCHER_DRAG_THRESHOLD_PX = 6;
+
+function startLauncherDrag(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  const launcher = refs.stickyNotesButton?.closest(".hr-sticky-launch");
+  if (!launcher) return;
+
+  const rect = launcher.getBoundingClientRect();
+
+  state.launcherDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    originX: rect.left,
+    originY: rect.top,
+    moved: false
+  };
+
+  try {
+    refs.stickyNotesButton.setPointerCapture(event.pointerId);
+  } catch {}
+}
+
+function moveLauncherDrag(event) {
+  const drag = state.launcherDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+
+  const dx = event.clientX - drag.startX;
+  const dy = event.clientY - drag.startY;
+
+  if (!drag.moved) {
+    if (Math.abs(dx) < LAUNCHER_DRAG_THRESHOLD_PX && Math.abs(dy) < LAUNCHER_DRAG_THRESHOLD_PX) {
+      return;
+    }
+    drag.moved = true;
+    document.body.classList.add("sticky-launch-dragging");
+  }
+
+  const launcher = refs.stickyNotesButton.closest(".hr-sticky-launch");
+  const rect = launcher.getBoundingClientRect();
+  const maxX = Math.max(8, window.innerWidth - rect.width - 8);
+  const maxY = Math.max(8, window.innerHeight - rect.height - 8);
+
+  state.launcherLayout.x = Math.max(8, Math.min(maxX, drag.originX + dx));
+  state.launcherLayout.y = Math.max(8, Math.min(maxY, drag.originY + dy));
+
+  applyLauncherPosition();
+  event.preventDefault();
+}
+
+function finishLauncherDrag(event) {
+  const drag = state.launcherDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+
+  state.launcherDrag = null;
+  document.body.classList.remove("sticky-launch-dragging");
+
+  if (drag.moved) {
+    saveLauncherLayout();
+    // A real drag just happened -- suppress the click that would
+    // otherwise follow this same pointerup and reopen/close the panel
+    // unintentionally.
+    state.launcherJustDragged = true;
+    setTimeout(() => { state.launcherJustDragged = false; }, 0);
+  }
 }
 
 async function toggleStickyAdmin() {
