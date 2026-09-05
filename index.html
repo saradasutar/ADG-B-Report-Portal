@@ -1007,7 +1007,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.29</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.30</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1345,25 +1345,29 @@
     const $=selector=>document.querySelector(selector);
 
     /*
-     * V17.7.27 FIX: this portal has TWO sign-in systems -- a separate,
-     * more sophisticated session-based one (shown as "Signed in as
-     * Administrator" at the top) that pre-fills the #adminCode field's
-     * value whenever it recognises the person, and this app's own
-     * simpler state.adminCode, which previously only ever got set by
-     * explicitly submitting the Administrator login form here in THIS
-     * page session. If someone is already recognised as Administrator by
-     * the session system but never happened to submit this form in this
-     * exact tab, state.adminCode stayed empty and every admin-only
-     * button/badge in this file (History, Mark physically received,
-     * Urgent, Time Bound) stayed hidden -- even though they were
-     * genuinely, visibly signed in. This keeps state.adminCode in sync
-     * with whatever credential is actually sitting in that field, so
-     * either sign-in path is recognised correctly.
+     * V17.7.30 FIX: earlier versions of this fix checked #adminCode, but
+     * that field is ONLY pre-filled when the separate Administrator PANEL
+     * opens (a different modal entirely). Inside the UPLOAD modal -- where
+     * History and Mark-physically-received actually live -- the other
+     * sign-in system pre-fills a DIFFERENT field, #officeCode, with a
+     * "SESSION:<token>" credential once it recognises the signed-in
+     * person. That's why this never worked here even though the person
+     * was genuinely signed in: the wrong field was being checked. A
+     * "SESSION:..." value there is safe to adopt -- if it doesn't
+     * actually carry Head-Office-level permission, the backend's own
+     * verifyCode_('HEAD_OFFICE', ...) check on every admin action still
+     * rejects it; this only affects whether the button is shown, not
+     * whether the action is allowed to succeed.
      */
     function syncAdminCodeFromSession(){
       if(state.adminCode)return;
-      const fieldValue=$('#adminCode')?.value?.trim();
-      if(fieldValue)state.adminCode=fieldValue;
+      const officeField=$('#officeCode')?.value?.trim();
+      if(officeField&&officeField.startsWith('SESSION:')){
+        state.adminCode=officeField;
+        return;
+      }
+      const adminField=$('#adminCode')?.value?.trim();
+      if(adminField)state.adminCode=adminField;
     }
     const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({
       '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
@@ -1732,7 +1736,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.29 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.30 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -3535,7 +3539,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17729"></script>
-  <script src="sticky-v1767.js?v=17729"></script>
+  <script src="portal-v1767.js?v=17730"></script>
+  <script src="sticky-v1767.js?v=17730"></script>
 </body>
 </html>
