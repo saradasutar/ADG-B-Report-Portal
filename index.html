@@ -1074,7 +1074,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.36</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.37</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1448,6 +1448,34 @@
       }
       const adminField=$('#adminCode')?.value?.trim();
       if(adminField)state.adminCode=adminField;
+    }
+
+    /*
+     * V17.7.37 FIX: even syncAdminCodeFromSession() above only works if
+     * #officeCode or #adminCode happen to have already been pre-filled --
+     * which only happens once the Upload modal or Administrator panel has
+     * been opened at least once in this session. Someone already signed
+     * in as Administrator via the OTHER system, who simply hasn't opened
+     * either of those yet, would never trigger either path -- exactly
+     * "print button not found" even though they're genuinely an admin.
+     *
+     * The other system sets #adgbUserRole's text to exactly
+     * "Administrator" and un-hides #adgbManageUsers immediately upon
+     * sign-in, with no dependency on any modal ever opening. This checks
+     * those directly as a second, independent signal -- purely for
+     * DISPLAY purposes (deciding whether to show admin-only controls like
+     * the print button). It intentionally does NOT feed state.adminCode:
+     * any action that actually calls the backend still needs a real
+     * credential, which syncAdminCodeFromSession() or the login form
+     * still provide, and the backend's own permission check is the real
+     * security boundary regardless of what this shows or hides.
+     */
+    function isRecognizedAsAdmin(){
+      if(state.adminCode)return true;
+      if($('#adgbUserRole')?.textContent?.trim()==='Administrator')return true;
+      const manageUsers=document.getElementById('adgbManageUsers');
+      if(manageUsers&&manageUsers.hidden===false)return true;
+      return false;
     }
     const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({
       '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
@@ -1824,7 +1852,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.36 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.37 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2099,7 +2127,7 @@
       if(count)count.textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
 
       syncAdminCodeFromSession();
-      $('#printPendingButton')?.classList.toggle('hidden',!state.adminCode);
+      $('#printPendingButton')?.classList.toggle('hidden',!isRecognizedAsAdmin());
 
       if(!state.subjects.length){
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
@@ -2297,7 +2325,7 @@
      * time, regardless of whatever on-screen filter happens to be active.
      */
     function printPendingStatus(){
-      if(!state.adminCode)return;
+      if(!isRecognizedAsAdmin())return;
 
       const recurring=state.subjects.filter(s=>s.reportKind==='MONTHLY'||s.reportKind==='QUARTERLY');
       const now=new Date();
@@ -3795,7 +3823,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17736"></script>
-  <script src="sticky-v1767.js?v=17736"></script>
+  <script src="portal-v1767.js?v=17737"></script>
+  <script src="sticky-v1767.js?v=17737"></script>
 </body>
 </html>
