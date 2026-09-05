@@ -639,6 +639,10 @@
     }
     .cancel{border:1px solid #c6bddc;background:#fff;color:#344b65}
     .submit,.admin-add button{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff;align-self:end}
+    #sendPendingEmailsButton.confirm-armed{
+      background:linear-gradient(135deg,#c0272c,#8e0000)!important;
+      animation:overduePulseGlow 1.4s ease-in-out infinite;
+    }
     .view-report,.remove-report{
       flex:1 0 100%;margin:0 0 3px;border:0;color:#fff;font-size:12px!important
     }
@@ -654,6 +658,24 @@
     .subject-schedule-badge.once{background:#fff1dc;color:#8a5200;border-color:#efc67e}
     .one-time-fields[hidden]{display:none!important}
     .subject-admin-list{max-height:300px;overflow:auto;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
+    .office-email-list{margin-top:10px;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
+    .office-email-row{
+      min-height:44px;padding:8px 9px;border-bottom:1px solid #d9dfe8;
+      display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:10px;
+    }
+    .office-email-row:last-child{border-bottom:0}
+    .office-email-row strong{min-width:96px;flex:0 0 auto;color:#1b3357}
+    .office-email-row input{
+      flex:1 1 200px;min-width:0;min-height:33px;border:1px solid #c9d3dc;
+      border-radius:7px;padding:0 9px;font-size:11px;color:#17394f;background:#fff;
+    }
+    .office-email-row input:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.12);outline:0}
+    .office-email-row button{
+      flex:0 0 auto;min-height:33px;padding:0 10px;border:1px solid #c9d3dc;border-radius:7px;
+      background:#fff;color:#31546a;font-size:9.5px;font-weight:900;cursor:pointer;
+    }
+    .office-email-row button:hover{background:#f4f9fb}
+    .office-email-row small{flex:0 0 100%;color:#8a97ab}
     .subject-admin-row{min-height:49px;padding:8px 9px;border-bottom:1px solid #d9dfe8;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px}
     .subject-admin-row:last-child{border-bottom:0}
     .subject-admin-info{min-width:0;display:grid;gap:3px}
@@ -1052,7 +1074,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.34</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.36</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1333,6 +1355,17 @@
         <div class="admin-summary">
           Disabled subjects remain visible and existing reports can still be viewed. Renaming preserves IDs, reports and linked PDFs.
         </div>
+
+        <div class="admin-summary" id="pendingReminderIntro">
+          <strong>📧 Pending report reminders</strong> — set each office's email address below, then send every office its own current Monthly/Quarterly pending list with one click. An office with nothing pending gets a short "all clear" email rather than being silently skipped.
+        </div>
+        <div class="office-email-list" id="officeEmailList"></div>
+        <div class="admin-link-actions" id="sendPendingEmailsRow">
+          <button id="sendPendingEmailsButton" type="button" class="submit">📧 Send pending reminders now</button>
+        </div>
+        <div class="admin-summary">
+          <strong>To send these automatically on a schedule</strong> (no manual clicking): open the Apps Script editor for this portal → Triggers (clock icon, left sidebar) → Add Trigger → function <b>scheduledPendingStatusEmailJob</b> → Time-driven → pick how often (e.g. Day timer, 9am–10am) → Save. It always reflects whatever is genuinely pending at the moment it runs.
+        </div>
       </div>
     </section>
   </div>
@@ -1492,6 +1525,7 @@
       $('#removeReportButton')?.addEventListener('click',removeSubmittedReport);
       $('#historyReportButton')?.addEventListener('click',showSubmissionHistory);
       $('#printPendingButton')?.addEventListener('click',printPendingStatus);
+      $('#sendPendingEmailsButton')?.addEventListener('click',sendPendingEmailsNow);
       $('#markPhysicallyReceivedButton')?.addEventListener('click',openPhysicalReceiptEditor);
       $('#cancelPhysicalReceiptButton')?.addEventListener('click',closePhysicalReceiptEditor);
       $('#physicalReceiptForm')?.addEventListener('submit',savePhysicalReceipt);
@@ -1566,6 +1600,12 @@
         const editTimeBoundDueDateButton=event.target.closest('[data-edit-time-bound-due-date]');
         if(editTimeBoundDueDateButton){
           editSubjectTimeBoundDueDate(editTimeBoundDueDateButton.dataset.editTimeBoundDueDate);
+          return;
+        }
+
+        const saveOfficeEmailButton=event.target.closest('[data-save-office-email]');
+        if(saveOfficeEmailButton){
+          saveOfficeEmail(saveOfficeEmailButton.dataset.saveOfficeEmail);
           return;
         }
 
@@ -1784,7 +1824,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.34 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.36 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2299,6 +2339,109 @@
       window.print();
     }
 
+    /*
+     * Office email configuration -- loaded once when the Administrator
+     * panel is opened, editable inline. adminSetOfficeEmail/
+     * adminGetOfficeEmails and the actual sending logic
+     * (adminSendPendingEmails, plus scheduledPendingStatusEmailJob for
+     * fully automatic sending) already existed on the backend; this is
+     * the missing frontend for that.
+     */
+    async function renderOfficeEmailList(){
+      const container=$('#officeEmailList');
+      if(!container||!state.adminCode)return;
+
+      container.innerHTML='<div class="office-email-row"><small>Loading office emails…</small></div>';
+
+      try{
+        const result=await postToBackend({
+          action:'adminGetOfficeEmails',
+          securityCode:state.adminCode
+        });
+
+        const offices=Array.isArray(result.offices)?result.offices:[];
+        container.innerHTML=offices.map(o=>
+          '<div class="office-email-row">'+
+            '<strong>'+escapeHtml(o.name)+'</strong>'+
+            '<input type="email" placeholder="office@cpwd.gov.in" value="'+escapeAttr(o.email||'')+'" data-office-email-input="'+escapeAttr(o.id)+'">'+
+            '<button type="button" data-save-office-email="'+escapeAttr(o.id)+'">Save</button>'+
+          '</div>'
+        ).join('')||'<div class="office-email-row"><small>No offices found.</small></div>';
+      }catch(error){
+        container.innerHTML='<div class="office-email-row"><small>'+escapeHtml(error.message||'Office emails could not be loaded.')+'</small></div>';
+      }
+    }
+
+    async function saveOfficeEmail(officeId){
+      const input=document.querySelector('[data-office-email-input="'+CSS.escape(officeId)+'"]');
+      const button=document.querySelector('[data-save-office-email="'+CSS.escape(officeId)+'"]');
+      if(!input||!state.adminCode)return;
+
+      const email=input.value.trim();
+      if(button)setBusy(button,true,'Saving…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSetOfficeEmail',
+          securityCode:state.adminCode,
+          officeId,
+          email
+        });
+        showToast(result.message||'Office email saved.','success');
+      }catch(error){
+        showToast(error.message||'Office email could not be saved.','error');
+      }finally{
+        if(button&&button.isConnected)setBusy(button,false,'Save');
+      }
+    }
+
+    /*
+     * Sending real emails to real offices deserves a deliberate,
+     * two-step confirmation -- but a native confirm() can be silently
+     * suppressed by the browser after repeated use elsewhere in this
+     * session (see the Mark-physically-received fix earlier), so this
+     * uses an in-page arm/confirm toggle on the button itself instead,
+     * auto-disarming after a few seconds if not followed through.
+     */
+    let pendingEmailsConfirmArmed=false;
+    let pendingEmailsConfirmTimer=null;
+
+    async function sendPendingEmailsNow(){
+      if(!state.adminCode)return;
+      const button=$('#sendPendingEmailsButton');
+      if(!button)return;
+
+      if(!pendingEmailsConfirmArmed){
+        pendingEmailsConfirmArmed=true;
+        button.textContent='Click again to confirm sending to all offices';
+        button.classList.add('confirm-armed');
+        clearTimeout(pendingEmailsConfirmTimer);
+        pendingEmailsConfirmTimer=setTimeout(()=>{
+          pendingEmailsConfirmArmed=false;
+          button.textContent='📧 Send pending reminders now';
+          button.classList.remove('confirm-armed');
+        },6000);
+        return;
+      }
+
+      pendingEmailsConfirmArmed=false;
+      clearTimeout(pendingEmailsConfirmTimer);
+      button.classList.remove('confirm-armed');
+      setBusy(button,true,'Sending…');
+
+      try{
+        const result=await postToBackend({
+          action:'adminSendPendingEmails',
+          securityCode:state.adminCode
+        });
+        showToast(result.message||'Reminder emails sent.','success');
+      }catch(error){
+        showToast(error.message||'Reminder emails could not be sent.','error');
+      }finally{
+        setBusy(button,false,'📧 Send pending reminders now');
+      }
+    }
+
     function updateSummary(){
       const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
       const total=state.subjects.length*offices.length;
@@ -2793,6 +2936,17 @@
       $('#adminLogin').classList.add('hidden');
       $('#adminPanel').classList.remove('hidden');
       renderAdminSubjects();
+      renderOfficeEmailList();
+      /*
+       * V17.7.36 FIX: state.adminCode is now set, but nothing on the MAIN
+       * dashboard (behind this modal) re-checks it until some unrelated
+       * event happens to trigger a full re-render -- so admin-only
+       * controls living there (like "Print pending status") stayed
+       * hidden after logging in, even though the person was now a
+       * verified admin. Re-render the matrix right here so anything
+       * gated on state.adminCode picks it up immediately.
+       */
+      renderMatrix();
       setTimeout(()=>$('#newSubject').focus(),40);
     }
 
@@ -3641,7 +3795,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17734"></script>
-  <script src="sticky-v1767.js?v=17734"></script>
+  <script src="portal-v1767.js?v=17736"></script>
+  <script src="sticky-v1767.js?v=17736"></script>
 </body>
 </html>
