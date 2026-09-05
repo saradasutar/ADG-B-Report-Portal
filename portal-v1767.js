@@ -187,20 +187,25 @@
     style.textContent = `
       html.adgb-auth-locking body > :not(#adgbAuthRoot){visibility:hidden!important}
       #adgbAuthRoot{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:20px;background:
-        radial-gradient(circle at 15% 18%,rgba(14,165,233,.18),transparent 27%),
-        radial-gradient(circle at 84% 78%,rgba(15,118,110,.18),transparent 30%),
-        linear-gradient(135deg,#e8f4f8,#f8fbfd 48%,#edf8f4)}
+        radial-gradient(circle at 10% 12%,rgba(255,183,3,.28),transparent 24%),
+        radial-gradient(circle at 90% 15%,rgba(255,111,174,.24),transparent 26%),
+        radial-gradient(circle at 14% 88%,rgba(139,92,246,.22),transparent 28%),
+        radial-gradient(circle at 90% 90%,rgba(16,185,129,.24),transparent 28%),
+        radial-gradient(circle at 50% 50%,rgba(59,130,246,.1),transparent 45%),
+        linear-gradient(135deg,#eef4ff 0%,#fdf2fa 45%,#eefcf6 100%)}
       #adgbAuthRoot[hidden]{display:none!important}
-      .adgb-login-shell{width:min(920px,100%);min-height:520px;display:grid;grid-template-columns:1.05fr .95fr;overflow:hidden;border:1px solid #cddde7;border-radius:26px;background:#fff;box-shadow:0 30px 90px rgba(8,47,73,.22)}
-      .adgb-login-brand{position:relative;overflow:hidden;padding:58px;display:flex;flex-direction:column;justify-content:center;color:#fff;background:linear-gradient(145deg,#073a5b,#075985 50%,#0f766e)}
-      .adgb-login-brand::after{content:"";position:absolute;width:310px;height:310px;border-radius:50%;right:-130px;top:-120px;background:rgba(103,232,249,.18)}
-      .adgb-login-mark{width:64px;height:64px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.35);border-radius:20px;background:rgba(255,255,255,.11);font:900 14px Arial;margin-bottom:34px}
+      .adgb-login-shell{width:min(920px,100%);min-height:520px;display:grid;grid-template-columns:1.05fr .95fr;overflow:hidden;border:1px solid #cddde7;border-radius:26px;background:#fff;box-shadow:0 30px 90px rgba(76,29,149,.22)}
+      .adgb-login-shell::before{content:"";display:block;grid-column:1/-1;height:6px;background:linear-gradient(90deg,#ffb703 0 20%,#ff6fae 20% 40%,#8b5cf6 40% 60%,#3b82f6 60% 80%,#10b981 80% 100%)}
+      .adgb-login-brand{position:relative;overflow:hidden;padding:58px;display:flex;flex-direction:column;justify-content:center;color:#fff;background:linear-gradient(150deg,#082f63 0%,#173fa7 32%,#7c3aed 66%,#0f766e 100%)}
+      .adgb-login-brand::after{content:"";position:absolute;width:310px;height:310px;border-radius:50%;right:-130px;top:-120px;background:rgba(255,183,3,.22)}
+      .adgb-login-brand::before{content:"";position:absolute;z-index:0;width:220px;height:220px;border-radius:50%;left:-90px;bottom:-100px;background:rgba(255,111,174,.18)}
+      .adgb-login-mark{width:64px;height:64px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.35);border-radius:20px;background:rgba(255,255,255,.11);font:900 14px Arial;margin-bottom:34px;position:relative;z-index:1;box-shadow:0 8px 22px rgba(0,0,0,.18)}
       .adgb-login-brand small{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#bae6fd}
       .adgb-login-brand h1{position:relative;z-index:1;margin:10px 0 18px;font-family:Georgia,serif;font-size:42px;line-height:1.08}
       .adgb-login-brand p{position:relative;z-index:1;margin:0;max-width:450px;color:#d8eff8;font-size:14px;line-height:1.65}
-      .adgb-login-panel{padding:54px;display:flex;align-items:center;background:linear-gradient(160deg,#fff,#f7fbfd)}
+      .adgb-login-panel{padding:54px;display:flex;align-items:center;background:linear-gradient(160deg,#fff,#fdf6fb 55%,#f6fbfd)}
       .adgb-login-form{width:100%}
-      .adgb-login-form .kicker{color:#087f70;font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+      .adgb-login-form .kicker{color:#c026d3;font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
       .adgb-login-form h2{margin:8px 0 7px;color:#123b55;font-family:Georgia,serif;font-size:34px}
       .adgb-login-form>p{margin:0 0 26px;color:#677c89;font-size:13px;line-height:1.55}
       .adgb-auth-field{display:grid;gap:7px;margin:15px 0}
@@ -210,7 +215,8 @@
       .adgb-password-wrap{position:relative}.adgb-password-wrap input{padding-right:68px}.adgb-password-wrap button{position:absolute;right:7px;top:7px;height:34px;border:0;border-radius:8px;padding:0 10px;background:#edf5f8;color:#075985;font-size:10px;font-weight:900}
       .adgb-remember{display:flex;align-items:center;gap:8px;margin:12px 0 5px;color:#607785;font-size:11px}.adgb-remember input{width:15px;height:15px}
       .adgb-auth-error{min-height:20px;margin:7px 0;color:#b91c1c;font-size:11px;font-weight:800}
-      .adgb-login-submit{width:100%;height:50px;border:0;border-radius:12px;background:linear-gradient(135deg,#075985,#0f766e);color:#fff;font-weight:900;box-shadow:0 10px 24px rgba(7,89,133,.2)}
+      .adgb-login-submit{width:100%;height:50px;border:0;border-radius:12px;background:linear-gradient(135deg,#ff6fae,#8b5cf6 55%,#3b82f6);color:#fff;font-weight:900;box-shadow:0 10px 26px rgba(139,92,246,.32)}
+      .adgb-login-submit:hover{box-shadow:0 13px 30px rgba(139,92,246,.4)}
       .adgb-login-version{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;color:#79909d;font-size:9px;font-weight:800}
       .adgb-version-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border:1px solid #c7dbe7;border-radius:999px;background:#f5fafc;color:#456577;font-size:9px;font-weight:900}
       .adgb-version-chip strong{color:#075985}
