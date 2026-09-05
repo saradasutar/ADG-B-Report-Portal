@@ -1007,7 +1007,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.28</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.29</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1732,7 +1732,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.28 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.29 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2338,13 +2338,16 @@
       if(submitted)$('#officeCode')?.focus();
       else $('#pdfFile')?.focus();
 
+      /*
+       * Simplified: always re-apply on each tick rather than trying to
+       * detect whether a different report's modal has since opened. The
+       * worst case if that happens is a harmless, briefly-stale toggle
+       * on shared button elements -- far safer than any chance of this
+       * guard incorrectly skipping the recheck and leaving the button
+       * hidden for good.
+       */
       [150,350,700,1200,2000,3200].forEach(delay=>{
-        setTimeout(()=>{
-          // Stop once the modal has been closed, so this never fights a
-          // later, unrelated openUpload() call for a different report.
-          if(state.selected?.subject?.id!==subjectId||state.selected?.office?.id!==officeId)return;
-          applyAdminGatedButtons();
-        },delay);
+        setTimeout(applyAdminGatedButtons,delay);
       });
     }
 
@@ -3532,7 +3535,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17728"></script>
-  <script src="sticky-v1767.js?v=17728"></script>
+  <script src="portal-v1767.js?v=17729"></script>
+  <script src="sticky-v1767.js?v=17729"></script>
 </body>
 </html>
