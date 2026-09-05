@@ -303,7 +303,7 @@
     .legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#627188;font-size:8.5px}
     .legend span{display:inline-flex;align-items:center;gap:5px}
     .legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
-    .legend-await{background:var(--rose)}.legend-done{background:var(--green)}
+    .legend-await{background:var(--rose)}.legend-done{background:var(--green)}.legend-received{background:#0e7490}
 
     .matrix-tools{
       padding:7px 9px;
@@ -460,9 +460,9 @@
       color:#2c4a68!important;
       background:#eef5fb!important;
     }
-    .pending-cell{background:linear-gradient(135deg,#fff0f3,#ffe9ec)}
-    .submitted-cell{background:linear-gradient(135deg,#e5fbf1,#def7ef)}
-    .received-cell{background:linear-gradient(135deg,#e3f4fb,#dbeffa)}
+    .pending-cell{background:linear-gradient(135deg,#ffe4e8,#ffd9df)}
+    .submitted-cell{background:linear-gradient(135deg,#d3f7e3,#c3f2d7)}
+    .received-cell{background:linear-gradient(135deg,#cceffb,#b8e8f7)}
     .closed-cell{background:#f2eff7}
 
     /* V17.6.5 — whole disabled subject row is visibly gray */
@@ -533,13 +533,19 @@
 
     .cell-status{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
     .upload-button{
-      min-width:102px;height:33px;border:1px solid #e0a6af;border-radius:8px;
-      background:#fff8fa;color:#ad3044;display:inline-flex;align-items:center;justify-content:center;gap:5px;
-      font-size:11px;font-weight:900;box-shadow:0 2px 6px rgba(98,35,45,.05)
+      min-width:102px;height:33px;border:2px solid #c0272c;border-radius:8px;
+      background:#fff;color:#c0272c;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+      font-size:11px;font-weight:950;box-shadow:0 2px 6px rgba(192,39,44,.12)
     }
-    .upload-button:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(98,35,45,.09)}
-    .upload-button.submitted{border-color:#93cfb7;background:#f0fff8;color:var(--green)}
-    .upload-button.submitted.received-physically{border-color:#7cc3d9;background:#eefaff;color:#0e7490}
+    .upload-button:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(192,39,44,.2)}
+    .upload-button.submitted{
+      border-color:#0f8a4b;background:linear-gradient(120deg,#16a34a,#0f8a4b);
+      color:#fff;box-shadow:0 2px 8px rgba(15,138,75,.35)
+    }
+    .upload-button.submitted.received-physically{
+      border-color:#0e7490;background:linear-gradient(120deg,#0891b2,#0e7490);
+      color:#fff;box-shadow:0 2px 8px rgba(14,116,144,.35)
+    }
     .upload-button.closed{border-color:#bbb0c7;background:#f6f3f8;color:#675c76;box-shadow:none}
     .upload-button svg,.office-list button svg,.drop-zone svg,.modal-icon svg{
       width:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round
@@ -687,8 +693,12 @@
     .subject-card-title .subject-link{color:#fff0a7}
     .office-list>div{min-height:52px;padding:7px 11px;border-bottom:1px solid #d8e0e9;display:flex;align-items:center;justify-content:space-between;gap:10px}
     .office-list>div:last-child{border-bottom:0}
-    .pending-office{background:#fff0f3}.submitted-office{background:#e7faf1}.received-office{background:#e3f4fb}.closed-office{background:#f3eff7}
-    .office-action button.submitted.received-physically{border-color:#7cc3d9!important;background:#eefaff!important;color:#0e7490!important}
+    .pending-office{background:#ffe4e8}.submitted-office{background:#d3f7e3}.received-office{background:#cceffb}.closed-office{background:#f3eff7}
+    .office-action button.submitted.received-physically{
+      border-color:#0e7490!important;
+      background:linear-gradient(120deg,#0891b2,#0e7490)!important;
+      color:#fff!important;
+    }
     .received-physically-badge{
       display:inline-flex;width:max-content;align-items:center;gap:4px;
       margin-top:3px;padding:2px 8px;border-radius:999px;
@@ -699,10 +709,12 @@
     .mark-received-btn{border-color:#7cc3d9!important;color:#0e7490!important;background:#eefaff!important}
     .office-name{font-size:14px;font-weight:900}
     .office-list button{
-      min-width:100px;min-height:33px;padding:0 9px;border:1px solid #d8a4ad;border-radius:8px;
-      background:#fff;color:#a32e42;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10px;font-weight:900
+      min-width:100px;min-height:33px;padding:0 9px;border:2px solid #c0272c;border-radius:8px;
+      background:#fff;color:#c0272c;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10px;font-weight:950
     }
-    .office-list button.submitted{border-color:#91ccb5;color:var(--green)}
+    .office-list button.submitted{
+      border-color:#0f8a4b;background:linear-gradient(120deg,#16a34a,#0f8a4b);color:#fff;
+    }
     .office-list button.closed{border-color:#bcb0ca;background:#f6f3f8;color:#675c76}
     .office-list small{font-size:8px;color:#69798d}
     .office-action{display:flex;align-items:flex-end;flex-direction:column;gap:2px}
@@ -972,6 +984,7 @@
           <div class="legend">
             <span><i class="legend-await"></i>Awaiting upload</span>
             <span><i class="legend-done"></i>Submitted</span>
+            <span><i class="legend-received"></i>Physically received</span>
           </div>
         </div>
 
@@ -1007,7 +1020,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.30</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.31</span></span>
   </footer>
 
   <div class="modal-backdrop hidden" id="uploadBackdrop">
@@ -1736,7 +1749,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.30 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.31 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -3539,7 +3552,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17730"></script>
-  <script src="sticky-v1767.js?v=17730"></script>
+  <script src="portal-v1767.js?v=17731"></script>
+  <script src="sticky-v1767.js?v=17731"></script>
 </body>
 </html>
