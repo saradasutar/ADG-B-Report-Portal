@@ -544,7 +544,8 @@
     }
     .upload-button.submitted.received-physically{
       border-color:#0e7490;background:linear-gradient(120deg,#0891b2,#0e7490);
-      color:#fff;box-shadow:0 2px 8px rgba(14,116,144,.35)
+      color:#fff;box-shadow:0 2px 8px rgba(14,116,144,.35);
+      min-width:128px;height:auto;min-height:33px;padding:4px 8px;font-size:10px;white-space:nowrap;
     }
     .upload-button.closed{border-color:#bbb0c7;background:#f6f3f8;color:#675c76;box-shadow:none}
     .upload-button svg,.office-list button svg,.drop-zone svg,.modal-icon svg{
@@ -720,6 +721,7 @@
       border-color:#0e7490!important;
       background:linear-gradient(120deg,#0891b2,#0e7490)!important;
       color:#fff!important;
+      min-width:118px!important;height:auto!important;padding:5px 8px!important;font-size:9.5px!important;white-space:nowrap;
     }
     .received-physically-badge{
       display:inline-flex;width:max-content;align-items:center;gap:4px;
@@ -1119,7 +1121,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.41</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.42</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1898,7 +1900,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.41 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.42 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2329,13 +2331,12 @@
       }
 
       const icon=submitted?(receivedPhysically?RECEIVED_ICON:CHECK_ICON):UPLOAD_ICON;
-      const label=submitted?(receivedPhysically?'Received':'Submitted'):'Upload';
+      const label=submitted?(receivedPhysically?'Physically received':'Submitted'):'Upload';
       const className=submitted?('upload-button submitted'+(receivedPhysically?' received-physically':'')):'upload-button';
 
       return '<td class="'+(submitted?(receivedPhysically?'received-cell':'submitted-cell'):'pending-cell')+'"><div class="cell-status">'+
         '<button type="button" class="'+className+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+icon+label+'</button>'+
         (submitted?
-          (receivedPhysically?'<span class="received-physically-badge">📋 Physically received</span>':'')+
           '<small class="submitted-time">'+formatDate(item.submittedAt)+'</small>'+
           '<small class="replace-hint">'+(enabled?'Select to view or replace':'Viewing only · submissions closed')+'</small>'
           :'')+
@@ -2353,12 +2354,11 @@
         return '<div class="closed-office"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="closed" disabled>Closed</button><small>By Head Office</small></span></div>';
       }
 
-      const label=submitted?(receivedPhysically?'Received':'Submitted'):'Upload';
+      const label=submitted?(receivedPhysically?'Physically received':'Submitted'):'Upload';
       return '<div class="'+(submitted?(receivedPhysically?'received-office':'submitted-office'):'pending-office')+'">'+
         '<span class="office-name">'+escapeHtml(office.name)+'</span>'+
         '<span class="office-action"><button type="button" class="'+(submitted?('submitted'+(receivedPhysically?' received-physically':'')):'')+'" data-upload="1" data-subject="'+escapeAttr(subject.id)+'" data-office="'+escapeAttr(office.id)+'">'+
         (submitted?(receivedPhysically?RECEIVED_ICON:CHECK_ICON):UPLOAD_ICON)+label+'</button>'+
-        (receivedPhysically?'<span class="received-physically-badge">📋 Physically received</span>':'')+
         (submitted?'<small>'+formatDate(item.submittedAt)+' · '+(enabled?'view or replace':'view only · submissions closed')+'</small>':'')+
         '</span></div>';
     }
@@ -3956,7 +3956,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17741"></script>
-  <script src="sticky-v1767.js?v=17741"></script>
+  <script src="portal-v1767.js?v=17742"></script>
+  <script src="sticky-v1767.js?v=17742"></script>
 </body>
 </html>
