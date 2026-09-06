@@ -745,43 +745,64 @@
      * paper.
      */
     .print-only{display:none}
+    /*
+     * Visual styling for the pending-status report lives OUTSIDE the print
+     * media query on purpose: "Save as JPEG" (savePendingStatusAsJpeg)
+     * needs this element genuinely visible and laid out to capture it, at
+     * a moment when the browser is not actually printing -- so these
+     * rules must apply any time the element is shown, not only during an
+     * actual print. This has no effect the rest of the time, since
+     * #printPendingReport is display:none by default (.print-only below)
+     * regardless.
+     */
+    #printPendingReport{max-width:980px;margin:0 auto;padding:24px;background:#fff}
+    .print-report-header{border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:16px;text-align:center}
+    .print-report-header h1{margin:0 0 4px;font-size:18px}
+    .print-report-header p{margin:0;font-size:11px}
+    .print-report-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;font-weight:700}
+    .print-matrix{width:100%;border-collapse:collapse;font-size:10px;margin:0 auto 16px}
+    /*
+     * The on-screen dashboard's own "thead th" rule (dark gradient
+     * background, white text, sticky positioning, plus an oversized
+     * first-column width meant for its own subject-name column) is a
+     * broad, global selector -- it was silently bleeding into this
+     * table's header too, since this is also a <thead><th>. That's why
+     * the header row looked blank: white text landing on this table's
+     * own, separate light-gray print background. Given white-on-white
+     * was the actual failure, this uses a solid dark background with
+     * white text instead of a light background, so it can never repeat
+     * regardless of what any other rule sets. Everything else the
+     * global rule sets that doesn't belong on a print table (sticky
+     * positioning, the 280px width) is explicitly reset here too.
+     */
+    .print-matrix th,.print-matrix td{border:1px solid #666;padding:6px 8px;text-align:left}
+    .print-matrix th{
+      position:static!important;left:auto!important;
+      background:#333!important;color:#fff!important;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+      font-size:10px;font-weight:800;text-align:center;
+    }
+    .print-matrix td:first-child,.print-matrix th:first-child{
+      width:28px!important;text-align:center!important;padding-left:8px!important;
+    }
+    .print-matrix td.print-pending,.print-matrix td.print-done{text-align:center;font-weight:800}
+    .print-matrix td.print-pending{background:#f2f2f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .print-empty-office{padding:6px 0;font-size:10px;font-style:italic;text-align:center}
+    .print-report-footer{margin-top:20px;font-size:9px;color:#333;text-align:center}
+
+    /*
+     * Off-screen-but-rendered, for html2canvas to capture during "Save as
+     * JPEG" -- NOT display:none/visibility:hidden, since both of those
+     * skip layout entirely and html2canvas would capture a blank image.
+     */
+    #printPendingReport.print-only-capturing{
+      display:block!important;position:fixed;left:-9999px;top:0;width:1100px;z-index:-1;
+    }
+
     @media print{
       @page{size:landscape}
       body>*:not(#printPendingReport){display:none!important}
-      #printPendingReport{display:block!important;max-width:980px;margin:0 auto;padding:24px}
-      .print-report-header{border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:16px;text-align:center}
-      .print-report-header h1{margin:0 0 4px;font-size:18px}
-      .print-report-header p{margin:0;font-size:11px}
-      .print-report-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;font-weight:700}
-      .print-matrix{width:100%;border-collapse:collapse;font-size:10px;margin:0 auto 16px}
-      /*
-       * The on-screen dashboard's own "thead th" rule (dark gradient
-       * background, white text, sticky positioning, plus an oversized
-       * first-column width meant for its own subject-name column) is a
-       * broad, global selector -- it was silently bleeding into this
-       * table's header too, since this is also a <thead><th>. That's why
-       * the header row looked blank: white text landing on this table's
-       * own, separate light-gray print background. Given white-on-white
-       * was the actual failure, this uses a solid dark background with
-       * white text instead of a light background, so it can never repeat
-       * regardless of what any other rule sets. Everything else the
-       * global rule sets that doesn't belong on a print table (sticky
-       * positioning, the 280px width) is explicitly reset here too.
-       */
-      .print-matrix th,.print-matrix td{border:1px solid #666;padding:6px 8px;text-align:left}
-      .print-matrix th{
-        position:static!important;left:auto!important;
-        background:#333!important;color:#fff!important;
-        -webkit-print-color-adjust:exact;print-color-adjust:exact;
-        font-size:10px;font-weight:800;text-align:center;
-      }
-      .print-matrix td:first-child,.print-matrix th:first-child{
-        width:28px!important;text-align:center!important;padding-left:8px!important;
-      }
-      .print-matrix td.print-pending,.print-matrix td.print-done{text-align:center;font-weight:800}
-      .print-matrix td.print-pending{background:#f2f2f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .print-empty-office{padding:6px 0;font-size:10px;font-style:italic;text-align:center}
-      .print-report-footer{margin-top:20px;font-size:9px;color:#333;text-align:center}
+      #printPendingReport{display:block!important}
     }
     .office-name{font-size:14px;font-weight:900}
     .office-list button{
@@ -1078,6 +1099,7 @@
               <input id="subjectSearch" type="search" placeholder="Type report name">
             </label>
             <button class="print-pending-button hidden" id="printPendingButton" type="button" title="Print a paper-friendly list of pending Monthly and Quarterly reports, as on today">🖨 Print pending status</button>
+            <button class="print-pending-button hidden" id="saveJpegButton" type="button" title="Download the same pending status report as a JPEG image">📷 Save as JPEG</button>
           </div>
         </div>
 
@@ -1097,7 +1119,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.40</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.41</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1576,6 +1598,7 @@
       $('#removeReportButton')?.addEventListener('click',removeSubmittedReport);
       $('#historyReportButton')?.addEventListener('click',showSubmissionHistory);
       $('#printPendingButton')?.addEventListener('click',printPendingStatus);
+      $('#saveJpegButton')?.addEventListener('click',savePendingStatusAsJpeg);
       $('#sendPendingEmailsButton')?.addEventListener('click',sendPendingEmailsNow);
       $('#markPhysicallyReceivedButton')?.addEventListener('click',openPhysicalReceiptEditor);
       $('#cancelPhysicalReceiptButton')?.addEventListener('click',closePhysicalReceiptEditor);
@@ -1875,7 +1898,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.40 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.41 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2151,6 +2174,7 @@
 
       syncAdminCodeFromSession();
       $('#printPendingButton')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+      $('#saveJpegButton')?.classList.toggle('hidden',!isRecognizedAsAdmin());
 
       if(!state.subjects.length){
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
@@ -2347,8 +2371,14 @@
      * recurring-report compliance view). Built fresh from live data every
      * time, regardless of whatever on-screen filter happens to be active.
      */
-    function printPendingStatus(){
-      if(!isRecognizedAsAdmin())return;
+    /*
+     * Shared by both the print button and the "Save as JPEG" button below
+     * -- builds the report's HTML into #printPendingReport and returns
+     * whether there was anything to show. Kept as one function so the two
+     * export paths can never drift out of sync with each other.
+     */
+    function buildPendingStatusReport(){
+      if(!isRecognizedAsAdmin())return false;
 
       const recurring=state.subjects.filter(s=>s.reportKind==='MONTHLY'||s.reportKind==='QUARTERLY');
       const now=new Date();
@@ -2395,7 +2425,79 @@
         tableHtml+
         '<p class="print-report-footer">Generated from the ADG(B) Report Submission Portal. One-time subjects are not included in this list.</p>';
 
+      return true;
+    }
+
+    function printPendingStatus(){
+      if(!buildPendingStatusReport())return;
       window.print();
+    }
+
+    /*
+     * "Save as JPEG" -- the browser's print dialog only offers Save as
+     * PDF, not an image format, so this renders the same report markup
+     * to a canvas (via html2canvas, loaded from a CDN on first use only
+     * -- most sessions never touch this button) and downloads that as a
+     * .jpg file instead. The report container is normally display:none
+     * outside of @media print (see .print-only); html2canvas needs it
+     * genuinely visible and laid out to capture it, so it's shown
+     * off-screen (not display:none, not visibility:hidden -- both of
+     * those skip layout/rendering) just long enough to capture, then
+     * hidden again exactly as before.
+     */
+    let html2canvasLoadPromise=null;
+
+    function loadHtml2Canvas(){
+      if(window.html2canvas)return Promise.resolve();
+      if(html2canvasLoadPromise)return html2canvasLoadPromise;
+
+      html2canvasLoadPromise=new Promise((resolve,reject)=>{
+        const script=document.createElement('script');
+        script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload=()=>resolve();
+        script.onerror=()=>reject(new Error('Could not load the image export library. Check your internet connection and try again.'));
+        document.head.appendChild(script);
+      });
+
+      return html2canvasLoadPromise;
+    }
+
+    async function savePendingStatusAsJpeg(){
+      const button=$('#saveJpegButton');
+
+      try{
+        if(!buildPendingStatusReport())return;
+
+        if(button)setBusy(button,true,'Preparing…');
+        await loadHtml2Canvas();
+
+        const report=$('#printPendingReport');
+        report.classList.add('print-only-capturing');
+
+        const canvas=await window.html2canvas(report,{
+          scale:2,
+          backgroundColor:'#ffffff',
+          useCORS:true
+        });
+
+        report.classList.remove('print-only-capturing');
+
+        const dataUrl=canvas.toDataURL('image/jpeg',0.92);
+        const link=document.createElement('a');
+        const stamp=new Intl.DateTimeFormat('en-CA').format(new Date());
+        link.href=dataUrl;
+        link.download='ADGB-pending-status-'+stamp+'.jpg';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        showToast('Pending status image downloaded.','success');
+      }catch(error){
+        $('#printPendingReport')?.classList.remove('print-only-capturing');
+        showToast(error.message||'Could not create the image.','error');
+      }finally{
+        if(button)setBusy(button,false,'📷 Save as JPEG');
+      }
     }
 
     /*
@@ -3854,7 +3956,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17740"></script>
-  <script src="sticky-v1767.js?v=17740"></script>
+  <script src="portal-v1767.js?v=17741"></script>
+  <script src="sticky-v1767.js?v=17741"></script>
 </body>
 </html>
