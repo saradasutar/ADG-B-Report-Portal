@@ -784,6 +784,7 @@
       -webkit-print-color-adjust:exact;print-color-adjust:exact;
       font-size:10px;font-weight:800;text-align:center;
     }
+    .print-office-pending-count{display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;color:#e5e5e5}
     .print-matrix td:first-child,.print-matrix th:first-child{
       width:28px!important;text-align:center!important;padding-left:8px!important;
     }
@@ -1121,7 +1122,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.42</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.43</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1900,7 +1901,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.42 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.43 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2393,10 +2394,15 @@
        * the same layout as the on-screen dashboard.
        */
       let totalPending=0;
+      const officePendingCounts=Object.fromEntries(state.offices.map(o=>[o.id,0]));
+
       const bodyRows=recurring.map((s,i)=>{
         const officeCells=state.offices.map(office=>{
           const submitted=!!reportStatusFor(s,office)?.submitted;
-          if(!submitted)totalPending++;
+          if(!submitted){
+            totalPending++;
+            officePendingCounts[office.id]++;
+          }
           return '<td class="'+(submitted?'print-done':'print-pending')+'">'+(submitted?'✓':'Pending')+'</td>';
         }).join('');
         return '<tr>'+
@@ -2408,7 +2414,9 @@
           '</tr>';
       }).join('');
 
-      const officeHeaders=state.offices.map(o=>'<th>'+escapeHtml(o.name)+'</th>').join('');
+      const officeHeaders=state.offices.map(o=>
+        '<th>'+escapeHtml(o.name)+'<br><span class="print-office-pending-count">Pending - '+officePendingCounts[o.id]+'</span></th>'
+      ).join('');
 
       const tableHtml=recurring.length
         ? '<table class="print-matrix"><thead><tr>'+
@@ -3956,7 +3964,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17742"></script>
-  <script src="sticky-v1767.js?v=17742"></script>
+  <script src="portal-v1767.js?v=17743"></script>
+  <script src="sticky-v1767.js?v=17743"></script>
 </body>
 </html>
