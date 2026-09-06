@@ -1599,10 +1599,6 @@
         <span class="adgb-user-avatar" id="adgbUserAvatar">U</span>
         <span class="adgb-user-copy"><strong id="adgbUserName">User</strong><small id="adgbUserRole">Signed in</small></span>
       </div>
-      <div class="adgb-inside-version">
-        <span class="adgb-version-chip">FE <strong>v17.6.7</strong></span>
-        <span class="adgb-version-chip">BE <strong id="adgbInsideBeVersion">checking…</strong></span>
-      </div>
       <span class="adgb-mode-badge login" id="adgbAccessBadge">🔐 LOGIN REQUIRED</span>
       <button class="adgb-drive-link" id="adgbDriveFolderLink" type="button" hidden title="Open Current Submission Cycle folder">📁 Current files</button>
       <button class="adgb-user-action access" id="adgbAccessControl" type="button" hidden>Access</button>
