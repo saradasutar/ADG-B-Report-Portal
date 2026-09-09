@@ -223,7 +223,7 @@
 
     .workspace{
       display:grid;
-      grid-template-columns:235px minmax(0,1fr);
+      grid-template-columns:190px minmax(0,1fr);
       gap:10px;
       align-items:start;
     }
@@ -385,35 +385,6 @@
     .note-card-label{font-size:9px;font-weight:900;color:#8a5a00}
     .note-card .note-edit-btn{align-self:flex-start}
     .note-card-editing{gap:7px}
-
-    /*
-     * V17.7.47: an always-visible "Pending Reports" totals row at the
-     * bottom of the matrix, and its mobile-card equivalent -- distinct
-     * dark header + solid red badges (not outlined buttons like the
-     * office cells above it), so it reads unmistakably as a summary
-     * total rather than another clickable report row.
-     */
-    .pending-total-row th{
-      position:sticky;left:0;z-index:2;
-      background:#1b2a4a;color:#fff;text-align:left;padding:10px 14px;
-      font-size:13px;font-weight:900;letter-spacing:.02em;
-      box-shadow:2px 0 4px rgba(11,59,96,.15);
-    }
-    .pending-total-row{border-top:3px solid #0b3b60}
-    .pending-total-cell{background:#fff0f2;padding:8px 4px;text-align:center;border-top:3px solid #0b3b60}
-    .pending-total-badge{
-      display:inline-flex;align-items:center;justify-content:center;
-      min-width:38px;height:30px;padding:0 10px;border-radius:8px;
-      background:linear-gradient(120deg,#c0272c,#8e0000);color:#fff;
-      font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(192,39,44,.3);
-    }
-    .pending-total-card{
-      margin-top:10px;padding:11px 13px;border-radius:10px;
-      background:#1b2a4a;color:#fff;display:flex;flex-direction:column;gap:8px;
-    }
-    .pending-total-card-label{font-size:12px;font-weight:900;letter-spacing:.02em}
-    .pending-total-card-office{display:flex;align-items:center;justify-content:space-between;font-size:11px}
-    .pending-total-card-office .pending-total-badge{min-width:30px;height:26px;font-size:12px}
     .subject-wrap{display:flex;align-items:flex-start;gap:9px}
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
     .subject-title-main{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.003em;color:#1b3357}
@@ -1194,7 +1165,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.47</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.48</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2016,7 +1987,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.47 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.48 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2300,35 +2271,8 @@
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
         return;
       }
-
-      /*
-       * V17.7.47: an always-visible "Pending Reports" totals row at the
-       * bottom of the matrix -- same per-office pending count already
-       * shown in the Sub-offices sidebar, computed the exact same way
-       * (from the FULL state.subjects list, never the current
-       * Pending/Submitted/search filter), so the two numbers can never
-       * disagree. "Always visible" means: shown regardless of which
-       * status filter is active, even in the rare case where the
-       * filtered subject list itself is empty.
-       */
-      const officeTotalForFooter=state.subjects.length;
-      const footerCells=offices.map(office=>{
-        const submitted=state.subjects.reduce((n,s)=>n+(reportStatusFor(s,office)?.submitted?1:0),0);
-        const pending=Math.max(officeTotalForFooter-submitted,0);
-        return '<td class="pending-total-cell"><span class="pending-total-badge">'+pending+'</span></td>';
-      }).join('');
-      const footerRow='<tr class="pending-total-row"><th scope="row">Pending Reports</th>'+footerCells+(isAdmin?'<td class="note-cell"></td>':'')+'</tr>';
-
-      const footerCard='<div class="pending-total-card"><span class="pending-total-card-label">Pending Reports</span>'+
-        offices.map(office=>{
-          const submitted=state.subjects.reduce((n,s)=>n+(reportStatusFor(s,office)?.submitted?1:0),0);
-          const pending=Math.max(officeTotalForFooter-submitted,0);
-          return '<span class="pending-total-card-office"><span>'+escapeHtml(office.name)+'</span><span class="pending-total-badge">'+pending+'</span></span>';
-        }).join('')+
-        '</div>';
-
       if(!subjects.length){
-        $('#matrixContent').innerHTML='<div class="empty-result">No report subjects match the selected filters.</div>'+footerCard;
+        $('#matrixContent').innerHTML='<div class="empty-result">No report subjects match the selected filters.</div>';
         return;
       }
 
@@ -2361,9 +2305,8 @@
 
       $('#matrixContent').innerHTML=
         '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
-        headers+(isAdmin?'<th scope="col">Note</th>':'')+'</tr></thead><tbody>'+rows+'</tbody>'+
-        '<tfoot>'+footerRow+'</tfoot></table></div>'+
-        '<div class="mobile-matrix">'+cards+footerCard+'</div>';
+        headers+(isAdmin?'<th scope="col">Note</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        '<div class="mobile-matrix">'+cards+'</div>';
     }
 
     /*
@@ -4246,7 +4189,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17747"></script>
-  <script src="sticky-v1767.js?v=17747"></script>
+  <script src="portal-v1767.js?v=17748"></script>
+  <script src="sticky-v1767.js?v=17748"></script>
 </body>
 </html>
