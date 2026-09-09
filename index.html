@@ -358,6 +358,33 @@
     }
     tbody tr:nth-child(even) th{background:#f0edff}
     tbody td{text-align:center;padding:4px}
+
+    /*
+     * V17.7.46: admin-only "Note" column at the end of the matrix, plus
+     * its mobile-card equivalent. Warm amber tone (distinct from every
+     * other colour already used in this table) so it reads as a memo,
+     * not a status cell.
+     */
+    .note-cell{min-width:160px;max-width:220px;vertical-align:middle;background:#fffaf0}
+    .note-cell-display{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px}
+    .note-text{font-size:10px;color:#4c3a16;line-height:1.4;overflow-wrap:anywhere;white-space:pre-wrap}
+    .note-text-empty{color:#b39868;font-style:italic}
+    .note-edit-btn{border:1px solid #f0c869;background:#fff;color:#8a5a00;border-radius:6px;padding:2px 9px;font-size:8.5px;font-weight:800;cursor:pointer}
+    .note-edit-btn:hover{background:#fef3dc}
+    .note-cell-editing{display:flex;flex-direction:column;gap:6px;padding:7px 8px}
+    .note-edit-textarea{
+      width:100%;min-height:60px;border:1px solid #f0c869;border-radius:7px;padding:6px 7px;
+      font:inherit;font-size:10px;color:#4c3a16;resize:vertical;box-sizing:border-box;background:#fff;
+    }
+    .note-edit-actions{display:flex;justify-content:center;gap:6px}
+    .note-edit-actions button{min-height:25px;padding:0 9px;border-radius:6px;font-size:8.5px;font-weight:800;cursor:pointer}
+    .note-cancel-btn{border:1px solid #c6bddc;background:#fff;color:#344b65}
+    .note-save-btn{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff}
+
+    .note-card{margin-top:9px;padding:8px 9px;border:1px solid #f4c453;border-radius:8px;background:#fffaf0;display:flex;flex-direction:column;gap:5px}
+    .note-card-label{font-size:9px;font-weight:900;color:#8a5a00}
+    .note-card .note-edit-btn{align-self:flex-start}
+    .note-card-editing{gap:7px}
     .subject-wrap{display:flex;align-items:flex-start;gap:9px}
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
     .subject-title-main{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.003em;color:#1b3357}
@@ -665,6 +692,7 @@
     .subject-schedule-badge.combo{background:#e3f7ef;color:#08735d;border-color:#a9dac7}
     .subject-schedule-badge.once{background:#fff1dc;color:#8a5200;border-color:#efc67e}
     .one-time-fields[hidden]{display:none!important}
+    .fortnightly-fields[hidden]{display:none!important}
     .subject-admin-list{max-height:300px;overflow:auto;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
     .office-email-list{margin-top:10px;border:1px solid #c9c0de;border-radius:9px;background:rgba(255,255,255,.4)}
     .office-email-row{
@@ -1137,7 +1165,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.44</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.46</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1254,8 +1282,9 @@
               <option value="MONTHLY">Monthly only</option>
               <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
               <option value="QUARTERLY_ONLY">Quarterly only (QE)</option>
+              <option value="FORTNIGHTLY">Fortnightly (every 14 days)</option>
             </select>
-            <small>Admin chooses: One-time, Monthly only, Monthly + Quarterly (QE), or Quarterly only (QE). QE opens in the following month—for example, QE Sep,2026 appears automatically from 01-Oct-2026.</small>
+            <small>Admin chooses: One-time, Monthly only, Monthly + Quarterly (QE), Quarterly only (QE), or Fortnightly. QE opens in the following month—for example, QE Sep,2026 appears automatically from 01-Oct-2026.</small>
           </label>
           <label class="admin-field one-time-fields" id="newOneTimeFields">
             <span>One-time month / year</span>
@@ -1266,6 +1295,16 @@
             <span>Closing date (optional)</span>
             <input id="newOneTimeClosingDate" type="date">
             <small>After this date uploads close, while existing submissions remain viewable.</small>
+          </label>
+          <label class="admin-field fortnightly-fields" id="newFortnightlyStartField">
+            <span>Fortnightly start date</span>
+            <input id="newFortnightlyStartDate" type="date">
+            <small>The first due date. A new 14-day window then repeats automatically from this date, indefinitely.</small>
+          </label>
+          <label class="admin-field fortnightly-fields" id="newFortnightlyEndField">
+            <span>Fortnightly end date (optional)</span>
+            <input id="newFortnightlyEndDate" type="date">
+            <small>After this date the fortnightly requirement stops appearing. Leave blank for it to continue indefinitely -- for example, set roughly 3 months out for a temporary requirement.</small>
           </label>
           <label class="admin-field">
             <span>Text to hyperlink (optional)</span>
@@ -1344,6 +1383,7 @@
                 <option value="MONTHLY">Monthly only</option>
                 <option value="MONTHLY_QUARTERLY">Monthly + Quarterly (QE)</option>
                 <option value="QUARTERLY_ONLY">Quarterly only (QE)</option>
+                <option value="FORTNIGHTLY">Fortnightly (every 14 days)</option>
               </select>
             </label>
             <label class="admin-field one-time-fields" id="scheduleOneTimeCycleField">
@@ -1354,13 +1394,23 @@
               <span>Closing date (optional)</span>
               <input id="scheduleOneTimeClosingDate" type="date">
             </label>
+            <label class="admin-field fortnightly-fields" id="scheduleFortnightlyStartField">
+              <span>Fortnightly start date</span>
+              <input id="scheduleFortnightlyStartDate" type="date">
+            </label>
+            <label class="admin-field fortnightly-fields" id="scheduleFortnightlyEndField">
+              <span>Fortnightly end date (optional)</span>
+              <input id="scheduleFortnightlyEndDate" type="date">
+            </label>
             <div class="admin-summary">
               <strong>One-time:</strong> appears only during the selected month/year, then disappears.<br>
               <strong>Monthly only:</strong> opens automatically every month for the previous reporting month.<br>
               <strong>Monthly + Quarterly (QE):</strong> monthly continues, and the QE row also opens automatically
               on <strong>1 January, 1 April, 1 July and 1 October</strong> for the quarter ended in the previous month.<br>
               <strong>Quarterly only (QE):</strong> no monthly requirement at all -- only appears in Jan/Apr/Jul/Oct
-              for the QE quarter just ended.
+              for the QE quarter just ended.<br>
+              <strong>Fortnightly:</strong> a new 14-day window opens automatically from the start date, continuing
+              indefinitely unless an end date is set (e.g. roughly 3 months out for a temporary requirement).
             </div>
             <p class="schedule-switch-note">Switching schedule here changes it for every office from now on. Past submissions and files are always kept.</p>
           </div>
@@ -1452,7 +1502,7 @@
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
       selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',adminTimeBoundSubjectId:'',recentStatusWrites:{},
-      connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
+      connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:'',editingNoteSubjectId:''
     };
 
     /*
@@ -1701,6 +1751,27 @@
           return;
         }
 
+        const editNoteButton=event.target.closest('[data-edit-note]');
+        if(editNoteButton){
+          state.editingNoteSubjectId=editNoteButton.dataset.editNote;
+          renderMatrix();
+          setTimeout(()=>document.querySelector('[data-note-input="'+CSS.escape(state.editingNoteSubjectId)+'"]')?.focus(),30);
+          return;
+        }
+
+        const cancelNoteButton=event.target.closest('[data-cancel-note]');
+        if(cancelNoteButton){
+          state.editingNoteSubjectId='';
+          renderMatrix();
+          return;
+        }
+
+        const saveNoteButton=event.target.closest('[data-save-note]');
+        if(saveNoteButton){
+          saveSubjectNote(saveNoteButton.dataset.saveNote);
+          return;
+        }
+
         const toggleButton=event.target.closest('[data-toggle-submission]');
         if(toggleButton)toggleSubjectSubmission(toggleButton.dataset.toggleSubmission);
 
@@ -1916,7 +1987,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.44 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.46 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2191,9 +2262,10 @@
       if(count)count.textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
 
       syncAdminCodeFromSession();
-      $('#printPendingButton')?.classList.toggle('hidden',!isRecognizedAsAdmin());
-      $('#saveJpegButton')?.classList.toggle('hidden',!isRecognizedAsAdmin());
-      $('#includeOneTimeField')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+      const isAdmin=isRecognizedAsAdmin();
+      $('#printPendingButton')?.classList.toggle('hidden',!isAdmin);
+      $('#saveJpegButton')?.classList.toggle('hidden',!isAdmin);
+      $('#includeOneTimeField')?.classList.toggle('hidden',!isAdmin);
 
       if(!state.subjects.length){
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
@@ -2214,7 +2286,8 @@
           (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
           (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
           String(index+1).padStart(2,'0')+'</span><span class="subject-title-column">'+renderSubjectTitle(s)+urgentDueDateChip(s)+timeBoundBadge(s)+'</span></span></th>'+
-          offices.map(o=>renderDesktopCell(s,o)).join('')+'</tr>';
+          offices.map(o=>renderDesktopCell(s,o)).join('')+
+          (isAdmin?renderNoteCell(s):'')+'</tr>';
       }).join('');
 
       const cards=subjects.map((s,index)=>{
@@ -2226,13 +2299,66 @@
           (disabled?' aria-disabled="true"':'')+'><div class="subject-card-title"><span>'+
           (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
           String(index+1).padStart(2,'0')+'</span><span class="subject-title-column"><h3>'+renderSubjectTitle(s)+'</h3>'+urgentDueDateChip(s)+timeBoundBadge(s)+'</span></div>'+
-          '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div></article>';
+          '<div class="office-list">'+offices.map(o=>renderMobileCell(s,o)).join('')+'</div>'+
+          (isAdmin?renderNoteCard(s):'')+'</article>';
       }).join('');
 
       $('#matrixContent').innerHTML=
         '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
-        headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        headers+(isAdmin?'<th scope="col">Note</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
+    }
+
+    /*
+     * V17.7.46: a short, admin-only note per subject -- e.g. "compiled
+     * report sent to ADG on 5 Sep" -- shown as one extra column at the
+     * end of the matrix, alongside the office columns (not a separate
+     * panel). Click-to-edit inline, one row editable at a time, tracked
+     * via state.editingNoteSubjectId so renderMatrix's normal re-render
+     * naturally shows the right cell in edit mode.
+     */
+    function renderNoteCell(subject){
+      const masterId=subject.masterId||subject.id;
+      const editing=state.editingNoteSubjectId===masterId;
+      const note=String(subject.adminNote||'');
+
+      if(editing){
+        return '<td class="note-cell">'+
+          '<div class="note-cell-editing">'+
+            '<textarea class="note-edit-textarea" data-note-input="'+escapeAttr(masterId)+'" maxlength="500" placeholder="e.g. Compiled report sent to ADG on 5 Sep">'+escapeHtml(note)+'</textarea>'+
+            '<div class="note-edit-actions">'+
+              '<button type="button" class="note-cancel-btn" data-cancel-note="'+escapeAttr(masterId)+'">Cancel</button>'+
+              '<button type="button" class="note-save-btn" data-save-note="'+escapeAttr(masterId)+'">Save</button>'+
+            '</div>'+
+          '</div></td>';
+      }
+
+      return '<td class="note-cell">'+
+        '<div class="note-cell-display">'+
+          (note?'<span class="note-text">'+escapeHtml(note)+'</span>':'<span class="note-text note-text-empty">No note</span>')+
+          '<button type="button" class="note-edit-btn" data-edit-note="'+escapeAttr(masterId)+'" title="Edit note">'+(note?'✎':'+ Add')+'</button>'+
+        '</div></td>';
+    }
+
+    function renderNoteCard(subject){
+      const masterId=subject.masterId||subject.id;
+      const editing=state.editingNoteSubjectId===masterId;
+      const note=String(subject.adminNote||'');
+
+      if(editing){
+        return '<div class="note-card note-card-editing">'+
+          '<textarea class="note-edit-textarea" data-note-input="'+escapeAttr(masterId)+'" maxlength="500" placeholder="e.g. Compiled report sent to ADG on 5 Sep">'+escapeHtml(note)+'</textarea>'+
+          '<div class="note-edit-actions">'+
+            '<button type="button" class="note-cancel-btn" data-cancel-note="'+escapeAttr(masterId)+'">Cancel</button>'+
+            '<button type="button" class="note-save-btn" data-save-note="'+escapeAttr(masterId)+'">Save</button>'+
+          '</div></div>';
+      }
+
+      return '<div class="note-card">'+
+        '<span class="note-card-label">📝 Note</span>'+
+        (note?'<span class="note-text">'+escapeHtml(note)+'</span>':'<span class="note-text note-text-empty">No note</span>')+
+        '<button type="button" class="note-edit-btn" data-edit-note="'+escapeAttr(masterId)+'" title="Edit note">'+(note?'✎ Edit':'+ Add note')+'</button>'+
+        '</div>';
     }
 
     function isUrgentOverdue(subject){
@@ -2583,6 +2709,38 @@
       }catch(error){
         showToast(error.message||'Office email could not be saved.','error');
       }finally{
+        if(button&&button.isConnected)setBusy(button,false,'Save');
+      }
+    }
+
+    /*
+     * V17.7.46: saves a subject's admin-only note (the extra "Note"
+     * column at the end of the matrix). subjectId here is always the
+     * MASTER subject id -- renderNoteCell/renderNoteCard deliberately use
+     * subject.masterId, not subject.id, since a matrix row's own id is
+     * the report INSTANCE id (e.g. "...__M"), and the backend's note
+     * handler looks the subject up by its master id.
+     */
+    async function saveSubjectNote(subjectId){
+      const textarea=document.querySelector('[data-note-input="'+CSS.escape(subjectId)+'"]');
+      const button=document.querySelector('[data-save-note="'+CSS.escape(subjectId)+'"]');
+      if(!textarea||!state.adminCode)return;
+
+      const text=textarea.value.trim();
+      if(button)setBusy(button,true,'Saving…');
+
+      try{
+        await postToBackend({
+          action:'adminSetSubjectNote',
+          securityCode:state.adminCode,
+          subjectId,
+          text
+        });
+        state.editingNoteSubjectId='';
+        showToast(text?'Note saved.':'Note cleared.','success');
+        await loadPortal(true);
+      }catch(error){
+        showToast(error.message||'Note could not be saved.','error');
         if(button&&button.isConnected)setBusy(button,false,'Save');
       }
     }
@@ -3162,10 +3320,16 @@
     function syncNewSubjectScheduleFields(){
       const mode=$('#newSubjectRecurrence')?.value||'ONE_TIME';
       const oneTime=mode==='ONE_TIME';
+      const fortnightly=mode==='FORTNIGHTLY';
       if($('#newOneTimeFields'))$('#newOneTimeFields').hidden=!oneTime;
       if($('#newOneTimeCloseField'))$('#newOneTimeCloseField').hidden=!oneTime;
+      if($('#newFortnightlyStartField'))$('#newFortnightlyStartField').hidden=!fortnightly;
+      if($('#newFortnightlyEndField'))$('#newFortnightlyEndField').hidden=!fortnightly;
       if(oneTime&&$('#newOneTimeCycle')&&!$('#newOneTimeCycle').value){
         $('#newOneTimeCycle').value=new Date().toISOString().slice(0,7);
+      }
+      if(fortnightly&&$('#newFortnightlyStartDate')&&!$('#newFortnightlyStartDate').value){
+        $('#newFortnightlyStartDate').value=new Date().toISOString().slice(0,10);
       }
     }
 
@@ -3177,8 +3341,14 @@
     function syncExistingSubjectScheduleFields(){
       const mode=$('#scheduleRecurrenceMode')?.value||'MONTHLY';
       const oneTime=mode==='ONE_TIME';
+      const fortnightly=mode==='FORTNIGHTLY';
       if($('#scheduleOneTimeCycleField'))$('#scheduleOneTimeCycleField').hidden=!oneTime;
       if($('#scheduleOneTimeClosingField'))$('#scheduleOneTimeClosingField').hidden=!oneTime;
+      if($('#scheduleFortnightlyStartField'))$('#scheduleFortnightlyStartField').hidden=!fortnightly;
+      if($('#scheduleFortnightlyEndField'))$('#scheduleFortnightlyEndField').hidden=!fortnightly;
+      if(fortnightly&&$('#scheduleFortnightlyStartDate')&&!$('#scheduleFortnightlyStartDate').value){
+        $('#scheduleFortnightlyStartDate').value=new Date().toISOString().slice(0,10);
+      }
     }
 
     async function addSubject(event){
@@ -3189,10 +3359,23 @@
       const recurrenceMode=$('#newSubjectRecurrence')?.value||'ONE_TIME';
       const oneTimeCycle=recurrenceMode==='ONE_TIME'?($('#newOneTimeCycle')?.value||''):'';
       const closingDate=recurrenceMode==='ONE_TIME'?($('#newOneTimeClosingDate')?.value||''):'';
+      const fortnightlyStartDate=recurrenceMode==='FORTNIGHTLY'?($('#newFortnightlyStartDate')?.value||''):'';
+      const fortnightlyEndDate=recurrenceMode==='FORTNIGHTLY'?($('#newFortnightlyEndDate')?.value||''):'';
 
       if(recurrenceMode==='ONE_TIME'&&!oneTimeCycle){
         showToast('Select the month and year for this one-time subject.','error');
         return;
+      }
+
+      if(recurrenceMode==='FORTNIGHTLY'){
+        if(!fortnightlyStartDate){
+          showToast('Enter a fortnightly start date.','error');
+          return;
+        }
+        if(fortnightlyEndDate&&fortnightlyEndDate<fortnightlyStartDate){
+          showToast('The fortnightly end date must be on or after the start date.','error');
+          return;
+        }
       }
 
       const timeBound=$('#newSubjectTimeBound')?.checked||false;
@@ -3223,7 +3406,9 @@
           oneTimeCycle,
           closingDate,
           timeBound,
-          timeBoundDueDate
+          timeBoundDueDate,
+          fortnightlyStartDate,
+          fortnightlyEndDate
         };
 
         if(file){
@@ -3804,6 +3989,8 @@
       $('#scheduleRecurrenceMode').value=subject.recurrenceMode||'MONTHLY';
       $('#scheduleOneTimeCycle').value=subject.oneTimeCycle||new Date().toISOString().slice(0,7);
       $('#scheduleOneTimeClosingDate').value=subject.closingDate||'';
+      $('#scheduleFortnightlyStartDate').value=subject.fortnightlyStartDate||new Date().toISOString().slice(0,10);
+      $('#scheduleFortnightlyEndDate').value=subject.fortnightlyEndDate||'';
 
       syncExistingSubjectScheduleFields();
       $('#subjectScheduleForm').classList.remove('hidden');
@@ -3818,10 +4005,23 @@
       const recurrenceMode=$('#scheduleRecurrenceMode').value;
       const oneTimeCycle=recurrenceMode==='ONE_TIME'?($('#scheduleOneTimeCycle').value||''):'';
       const closingDate=recurrenceMode==='ONE_TIME'?($('#scheduleOneTimeClosingDate').value||''):'';
+      const fortnightlyStartDate=recurrenceMode==='FORTNIGHTLY'?($('#scheduleFortnightlyStartDate').value||''):'';
+      const fortnightlyEndDate=recurrenceMode==='FORTNIGHTLY'?($('#scheduleFortnightlyEndDate').value||''):'';
 
       if(recurrenceMode==='ONE_TIME'&&!oneTimeCycle){
         showToast('Select the month and year for this one-time subject.','error');
         return;
+      }
+
+      if(recurrenceMode==='FORTNIGHTLY'){
+        if(!fortnightlyStartDate){
+          showToast('Enter a fortnightly start date.','error');
+          return;
+        }
+        if(fortnightlyEndDate&&fortnightlyEndDate<fortnightlyStartDate){
+          showToast('The fortnightly end date must be on or after the start date.','error');
+          return;
+        }
       }
 
       const button=$('#saveSubjectScheduleButton');
@@ -3834,7 +4034,9 @@
           subjectId:subject.id,
           recurrenceMode,
           oneTimeCycle,
-          closingDate
+          closingDate,
+          fortnightlyStartDate,
+          fortnightlyEndDate
         });
         showToast(result.message||'Subject schedule saved.','success');
         closeSubjectScheduleEditor();
@@ -3987,7 +4189,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17744"></script>
-  <script src="sticky-v1767.js?v=17744"></script>
+  <script src="portal-v1767.js?v=17746"></script>
+  <script src="sticky-v1767.js?v=17746"></script>
 </body>
 </html>
