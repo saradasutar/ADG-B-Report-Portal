@@ -1165,7 +1165,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.48</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.49</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1554,6 +1554,29 @@
      */
     function syncAdminCodeFromSession(){
       if(state.adminCode)return;
+
+      /*
+       * V17.7.49 FIX: the checks below (officeCode/adminCode fields) only
+       * work once the Upload modal or Administrator panel has been opened
+       * at least once, since that's what triggers the session system to
+       * pre-fill them. Someone recognized as Administrator who simply
+       * hasn't opened either yet had NO way to get a real credential --
+       * exactly "note not saving" with no error shown, since the save
+       * function's own state.adminCode check silently returned early.
+       * window.ADGB_AUTH.credentialFor is the session system's own
+       * official API for this, reading directly from its internal
+       * session state rather than any DOM field that needs pre-filling
+       * first -- so it works immediately regardless of what's been
+       * opened. Tried first since it's the most reliable source.
+       */
+      try{
+        const sessionCredential=window.ADGB_AUTH?.credentialFor?.('HEAD_OFFICE','subjectManage');
+        if(sessionCredential){
+          state.adminCode=sessionCredential;
+          return;
+        }
+      }catch{}
+
       const officeField=$('#officeCode')?.value?.trim();
       if(officeField&&officeField.startsWith('SESSION:')){
         state.adminCode=officeField;
@@ -1564,24 +1587,17 @@
     }
 
     /*
-     * V17.7.37 FIX: even syncAdminCodeFromSession() above only works if
-     * #officeCode or #adminCode happen to have already been pre-filled --
-     * which only happens once the Upload modal or Administrator panel has
-     * been opened at least once in this session. Someone already signed
-     * in as Administrator via the OTHER system, who simply hasn't opened
-     * either of those yet, would never trigger either path -- exactly
-     * "print button not found" even though they're genuinely an admin.
-     *
-     * The other system sets #adgbUserRole's text to exactly
-     * "Administrator" and un-hides #adgbManageUsers immediately upon
-     * sign-in, with no dependency on any modal ever opening. This checks
-     * those directly as a second, independent signal -- purely for
+     * V17.7.37: #adgbUserRole's text is set to exactly "Administrator",
+     * and #adgbManageUsers is un-hidden, immediately upon sign-in via the
+     * OTHER session system -- with no dependency on any modal ever
+     * opening. Checked directly here as an independent signal for
      * DISPLAY purposes (deciding whether to show admin-only controls like
-     * the print button). It intentionally does NOT feed state.adminCode:
-     * any action that actually calls the backend still needs a real
-     * credential, which syncAdminCodeFromSession() or the login form
-     * still provide, and the backend's own permission check is the real
-     * security boundary regardless of what this shows or hides.
+     * the print button and the Note column). state.adminCode itself is
+     * now ALSO reliably populated without needing any modal opened
+     * first, via syncAdminCodeFromSession()'s window.ADGB_AUTH.credentialFor
+     * lookup above (V17.7.49) -- but the backend's own permission check
+     * remains the real security boundary regardless of what this shows
+     * or hides.
      */
     function isRecognizedAsAdmin(){
       if(state.adminCode)return true;
@@ -1987,7 +2003,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.48 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.49 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -4189,7 +4205,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17748"></script>
-  <script src="sticky-v1767.js?v=17748"></script>
+  <script src="portal-v1767.js?v=17749"></script>
+  <script src="sticky-v1767.js?v=17749"></script>
 </body>
 </html>
