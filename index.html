@@ -369,11 +369,23 @@
      */
     .note-cell{min-width:160px;max-width:220px;vertical-align:middle;background:#fffaf0}
     .note-cell-display{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px}
+    /*
+     * V17.7.57: made bulletproof with !important on every visual property
+     * (not just color/background) -- this portal has repeatedly hit
+     * cases where a broader, earlier/later rule elsewhere silently wins
+     * out over a plain, non-!important rule like this one used to be.
+     * Costs nothing here and removes any remaining doubt.
+     */
     .note-text{
-      font-size:10px;font-weight:800;color:#c0272c;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;
-      background:#fff6b0;padding:3px 6px;border-radius:5px;display:inline-block;
+      font-size:10px!important;font-weight:800!important;color:#c0272c!important;
+      line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;
+      background:#fff6b0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;
+      padding:3px 6px!important;border-radius:5px;display:inline-block;
     }
-    .note-text-empty{color:#b39868;font-style:italic;font-weight:600;background:none;padding:0}
+    .note-text-empty{
+      color:#b39868!important;font-style:italic;font-weight:600!important;
+      background:none!important;padding:0!important;
+    }
     .note-edit-btn{border:1px solid #f0c869;background:#fff;color:#8a5a00;border-radius:6px;padding:2px 9px;font-size:8.5px;font-weight:800;cursor:pointer}
     .note-edit-btn:hover{background:#fef3dc}
 
@@ -1177,7 +1189,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.56</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.57</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2053,7 +2065,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.56 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.57 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -4314,7 +4326,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17756"></script>
-  <script src="sticky-v1767.js?v=17756"></script>
+  <script src="portal-v1767.js?v=17757"></script>
+  <script src="sticky-v1767.js?v=17757"></script>
 </body>
 </html>
