@@ -360,13 +360,12 @@
     tbody td{text-align:center;padding:4px}
 
     /*
-     * V17.7.54: admin-only "Remark" column at the end of the matrix, plus
+     * V17.7.55: admin-only "Remark" column at the end of the matrix, plus
      * its mobile-card equivalent -- a compact DISPLAY, with editing now
-     * happening inline (renderRemarkEditRow, an expanding row placed
-     * directly below the subject's own row -- "in its place," not a
-     * separate modal). Warm amber tone (distinct from every other colour
-     * already used in this table) so it reads as a memo, not a status
-     * cell.
+     * happening directly within the subject's own Remark cell (not a
+     * separate row below it, and not a modal -- genuinely "in place").
+     * Warm amber tone (distinct from every other colour already used in
+     * this table) so it reads as a memo, not a status cell.
      */
     .note-cell{min-width:160px;max-width:220px;vertical-align:middle;background:#fffaf0}
     .note-cell-display{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px}
@@ -374,28 +373,27 @@
     .note-text-empty{color:#b39868;font-style:italic}
     .note-edit-btn{border:1px solid #f0c869;background:#fff;color:#8a5a00;border-radius:6px;padding:2px 9px;font-size:8.5px;font-weight:800;cursor:pointer}
     .note-edit-btn:hover{background:#fef3dc}
-    .note-cell-active{background:#fdf0d5}
 
     .note-card{margin-top:9px;padding:8px 9px;border:1px solid #f4c453;border-radius:8px;background:#fffaf0;display:flex;flex-direction:column;gap:5px}
     .note-card-label{font-size:9px;font-weight:900;color:#8a5a00}
     .note-card .note-edit-btn{align-self:flex-start}
     .note-card-editing{gap:7px}
 
-    .remark-edit-row td{padding:0;border-top:0}
-    .remark-edit-panel{
-      padding:12px 16px;background:linear-gradient(180deg,#fffaf0,#fff6e6);
-      border-top:2px solid #f0c869;border-bottom:1px solid #f0c869;
-      display:flex;flex-direction:column;gap:8px;
-    }
-    .remark-edit-label{font-size:11px;font-weight:900;color:#8a5a00}
+    /*
+     * When actively editing, the cell widens beyond its normal narrow
+     * column (160px up to 260px) for a more comfortable writing width --
+     * still the SAME cell, in the SAME row, just temporarily roomier.
+     */
+    .note-cell-active{min-width:260px;max-width:340px;background:#fdf0d5;vertical-align:top}
+    .remark-edit-panel{padding:8px;display:flex;flex-direction:column;gap:7px}
     .remark-edit-textarea{
-      width:100%;min-height:64px;border:1px solid #f0c869;border-radius:9px;padding:10px 11px;
-      font:inherit;font-size:12px;line-height:1.5;color:#4c3a16;resize:vertical;box-sizing:border-box;background:#fff;
+      width:100%;min-height:58px;border:1px solid #f0c869;border-radius:8px;padding:8px 9px;
+      font:inherit;font-size:11px;line-height:1.5;color:#4c3a16;resize:vertical;box-sizing:border-box;background:#fff;
     }
     .remark-edit-textarea:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.12);outline:0}
-    .remark-edit-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}
-    .remark-char-count{margin-right:auto;color:#a68858;font-size:9px;font-variant-numeric:tabular-nums}
-    .remark-edit-actions button{min-height:31px;padding:0 13px;border-radius:7px;font-size:10px;font-weight:800}
+    .remark-edit-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+    .remark-char-count{margin-right:auto;color:#a68858;font-size:8.5px;font-variant-numeric:tabular-nums}
+    .remark-edit-actions button{min-height:27px;padding:0 10px;border-radius:6px;font-size:9px;font-weight:800}
     .subject-wrap{display:flex;align-items:flex-start;gap:9px}
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
     .subject-title-main{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.003em;color:#1b3357}
@@ -1176,7 +1174,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.54</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.55</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2052,7 +2050,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.54 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.55 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2341,22 +2339,18 @@
         return;
       }
 
-      const fullColspan=offices.length+1+(isAdmin?1:0);
       const headers=offices.map(o=>'<th scope="col">'+escapeHtml(o.name)+'</th>').join('');
       const rows=subjects.map((s,index)=>{
         const disabled=s.submissionEnabled===false;
         const urgent=s.urgent===true;
         const overdue=isUrgentOverdue(s);
         const timeBound=s.timeBound===true;
-        const masterId=s.masterId||s.id;
-        const editingRemark=isAdmin&&state.remarkEditingSubjectId===masterId;
         return '<tr class="'+(disabled?'disabled-subject-row':'')+(urgent?' urgent-subject-row':'')+(overdue?' overdue-subject-row':'')+(timeBound?' time-bound-subject-row':'')+'"'+
           (disabled?' aria-disabled="true"':'')+'><th scope="row"><span class="subject-wrap"><span class="subject-number">'+
           (urgent?'<span class="urgent-star" title="Marked urgent">★</span>':'')+
           String(index+1).padStart(2,'0')+'</span><span class="subject-title-column">'+renderSubjectTitle(s)+urgentDueDateChip(s)+timeBoundBadge(s)+'</span></span></th>'+
           offices.map(o=>renderDesktopCell(s,o)).join('')+
-          (isAdmin?renderNoteCell(s):'')+'</tr>'+
-          (editingRemark?renderRemarkEditRow(s,fullColspan):'');
+          (isAdmin?renderNoteCell(s):'')+'</tr>';
       }).join('');
 
       const cards=subjects.map((s,index)=>{
@@ -2383,40 +2377,36 @@
     }
 
     /*
-     * V17.7.54: replaces the earlier modal (#remarkBackdrop) with an
-     * inline, expanding row -- "in its place," per feedback, rather than
-     * a separate popup -- while still giving a genuinely spacious
-     * textarea (spans the full table width via colspan, not squeezed
-     * into the narrow Remark column itself). One subject editable at a
-     * time, tracked via state.remarkEditingSubjectId; renderMatrix
-     * inserts this row directly below that subject's own row when set.
+     * V17.7.55: editing now happens directly WITHIN the subject's own
+     * Remark cell -- not a separate row below it (that still visually
+     * read as disconnected from the subject, per feedback: "in its place
+     * of that subject row"), and not a modal either. The cell simply
+     * grows taller to fit the textarea, exactly like the mobile card
+     * version already did correctly. One subject editable at a time,
+     * tracked via state.remarkEditingSubjectId.
      */
     function renderNoteCell(subject){
       const masterId=subject.masterId||subject.id;
       const remark=String(subject.adminNote||'');
       const editing=state.remarkEditingSubjectId===masterId;
 
-      return '<td class="note-cell'+(editing?' note-cell-active':'')+'">'+
+      if(editing){
+        return '<td class="note-cell note-cell-active">'+
+          '<div class="remark-edit-panel">'+
+            '<textarea class="remark-edit-textarea" data-remark-input="'+escapeAttr(masterId)+'" maxlength="500" rows="3" placeholder="e.g. Compiled report sent to ADG on 5 Sep">'+escapeHtml(remark)+'</textarea>'+
+            '<div class="remark-edit-actions">'+
+              '<small class="remark-char-count"><span data-remark-count="'+escapeAttr(masterId)+'">'+remark.length+'</span>/500</small>'+
+              '<button type="button" class="cancel" data-cancel-remark="'+escapeAttr(masterId)+'">Cancel</button>'+
+              '<button type="button" class="submit" data-save-remark="'+escapeAttr(masterId)+'">Save</button>'+
+            '</div>'+
+          '</div></td>';
+      }
+
+      return '<td class="note-cell">'+
         '<div class="note-cell-display">'+
           (remark?'<span class="note-text">'+escapeHtml(remark)+'</span>':'<span class="note-text note-text-empty">No remark</span>')+
-          '<button type="button" class="note-edit-btn" data-toggle-remark="'+escapeAttr(masterId)+'" title="'+(remark?'Edit remark':'Add remark')+'">'+(editing?'▲ Close':(remark?'✎ Edit':'+ Remark'))+'</button>'+
+          '<button type="button" class="note-edit-btn" data-toggle-remark="'+escapeAttr(masterId)+'" title="'+(remark?'Edit remark':'Add remark')+'">'+(remark?'✎ Edit':'+ Remark')+'</button>'+
         '</div></td>';
-    }
-
-    function renderRemarkEditRow(subject,colspan){
-      const masterId=subject.masterId||subject.id;
-      const remark=String(subject.adminNote||'');
-
-      return '<tr class="remark-edit-row"><td colspan="'+colspan+'">'+
-        '<div class="remark-edit-panel">'+
-          '<span class="remark-edit-label">📝 Remark for '+escapeHtml(subject.baseName||subject.name||'')+'</span>'+
-          '<textarea class="remark-edit-textarea" data-remark-input="'+escapeAttr(masterId)+'" maxlength="500" rows="3" placeholder="e.g. Compiled report sent to ADG on 5 Sep. SE&amp;PD called regarding pending audit para.">'+escapeHtml(remark)+'</textarea>'+
-          '<div class="remark-edit-actions">'+
-            '<small class="remark-char-count"><span data-remark-count="'+escapeAttr(masterId)+'">'+remark.length+'</span>/500</small>'+
-            '<button type="button" class="cancel" data-cancel-remark="'+escapeAttr(masterId)+'">Cancel</button>'+
-            '<button type="button" class="submit" data-save-remark="'+escapeAttr(masterId)+'">Save remark</button>'+
-          '</div>'+
-        '</div></td></tr>';
     }
 
     function renderNoteCard(subject){
@@ -2795,10 +2785,10 @@
     }
 
     /*
-     * V17.7.54: "in its place" per feedback -- no more modal. Editing now
-     * happens inline, in an expanding row/card right where the subject
-     * already is (see renderRemarkEditRow / renderNoteCard's editing
-     * branch above), tracked via state.remarkEditingSubjectId.
+     * V17.7.55: genuinely "in its place" now -- editing happens directly
+     * within the subject's own Remark cell/card (see renderNoteCell /
+     * renderNoteCard's editing branch above), not a separate row below it
+     * and not a modal, tracked via state.remarkEditingSubjectId.
      *
      * The earlier version's real bug -- "says saved, but not showing in
      * dashboard" -- was a save/read timing gap: even though the write
@@ -4321,7 +4311,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17754"></script>
-  <script src="sticky-v1767.js?v=17754"></script>
+  <script src="portal-v1767.js?v=17755"></script>
+  <script src="sticky-v1767.js?v=17755"></script>
 </body>
 </html>
