@@ -369,8 +369,11 @@
      */
     .note-cell{min-width:160px;max-width:220px;vertical-align:middle;background:#fffaf0}
     .note-cell-display{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px}
-    .note-text{font-size:10px;color:#4c3a16;line-height:1.4;overflow-wrap:anywhere;white-space:pre-wrap}
-    .note-text-empty{color:#b39868;font-style:italic}
+    .note-text{
+      font-size:10px;font-weight:800;color:#c0272c;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;
+      background:#fff6b0;padding:3px 6px;border-radius:5px;display:inline-block;
+    }
+    .note-text-empty{color:#b39868;font-style:italic;font-weight:600;background:none;padding:0}
     .note-edit-btn{border:1px solid #f0c869;background:#fff;color:#8a5a00;border-radius:6px;padding:2px 9px;font-size:8.5px;font-weight:800;cursor:pointer}
     .note-edit-btn:hover{background:#fef3dc}
 
@@ -1174,7 +1177,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.55</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.56</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2050,7 +2053,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.55 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.56 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -4311,7 +4314,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17755"></script>
-  <script src="sticky-v1767.js?v=17755"></script>
+  <script src="portal-v1767.js?v=17756"></script>
+  <script src="sticky-v1767.js?v=17756"></script>
 </body>
 </html>
