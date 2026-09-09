@@ -360,10 +360,11 @@
     tbody td{text-align:center;padding:4px}
 
     /*
-     * V17.7.46: admin-only "Note" column at the end of the matrix, plus
-     * its mobile-card equivalent. Warm amber tone (distinct from every
-     * other colour already used in this table) so it reads as a memo,
-     * not a status cell.
+     * V17.7.51: admin-only "Remark" column at the end of the matrix, plus
+     * its mobile-card equivalent -- a compact DISPLAY only now; editing
+     * happens in the #remarkBackdrop modal below, not inline in the cell.
+     * Warm amber tone (distinct from every other colour already used in
+     * this table) so it reads as a memo, not a status cell.
      */
     .note-cell{min-width:160px;max-width:220px;vertical-align:middle;background:#fffaf0}
     .note-cell-display{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px}
@@ -371,20 +372,18 @@
     .note-text-empty{color:#b39868;font-style:italic}
     .note-edit-btn{border:1px solid #f0c869;background:#fff;color:#8a5a00;border-radius:6px;padding:2px 9px;font-size:8.5px;font-weight:800;cursor:pointer}
     .note-edit-btn:hover{background:#fef3dc}
-    .note-cell-editing{display:flex;flex-direction:column;gap:6px;padding:7px 8px}
-    .note-edit-textarea{
-      width:100%;min-height:60px;border:1px solid #f0c869;border-radius:7px;padding:6px 7px;
-      font:inherit;font-size:10px;color:#4c3a16;resize:vertical;box-sizing:border-box;background:#fff;
-    }
-    .note-edit-actions{display:flex;justify-content:center;gap:6px}
-    .note-edit-actions button{min-height:25px;padding:0 9px;border-radius:6px;font-size:8.5px;font-weight:800;cursor:pointer}
-    .note-cancel-btn{border:1px solid #c6bddc;background:#fff;color:#344b65}
-    .note-save-btn{border:0;background:linear-gradient(135deg,#164d87,#0b7f72);color:#fff}
 
     .note-card{margin-top:9px;padding:8px 9px;border:1px solid #f4c453;border-radius:8px;background:#fffaf0;display:flex;flex-direction:column;gap:5px}
     .note-card-label{font-size:9px;font-weight:900;color:#8a5a00}
     .note-card .note-edit-btn{align-self:flex-start}
-    .note-card-editing{gap:7px}
+
+    .remark-subject-name{margin:-6px 0 14px;color:#5b6d84;font-size:12px;font-weight:700}
+    #remarkText{
+      width:100%;min-height:150px;border:1px solid #c9d3dc;border-radius:9px;padding:11px 12px;
+      font:inherit;font-size:13px;line-height:1.5;color:#17394f;resize:vertical;box-sizing:border-box;
+    }
+    #remarkText:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.12);outline:0}
+    #remarkCharCount{font-variant-numeric:tabular-nums}
     .subject-wrap{display:flex;align-items:flex-start;gap:9px}
     .subject-number{flex:0 0 auto;margin-top:3px;color:#8a97ab;font-size:8px;font-weight:850;letter-spacing:.03em}
     .subject-title-main{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.003em;color:#1b3357}
@@ -1165,7 +1164,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.49</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.51</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1237,6 +1236,28 @@
       <div class="modal-actions">
         <button class="cancel" data-close="history" type="button">Close</button>
       </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="remarkBackdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="remarkTitle">
+      <button class="modal-close" data-close="remark" type="button">×</button>
+      <span class="modal-kicker">ADMIN ONLY</span>
+      <h2 id="remarkTitle">Remark</h2>
+      <p id="remarkSubjectName" class="remark-subject-name"></p>
+
+      <form id="remarkForm">
+        <label class="field">
+          <span>Remark</span>
+          <textarea id="remarkText" maxlength="500" rows="7" placeholder="e.g. Compiled report sent to ADG on 5 Sep. SE&amp;PD called regarding pending audit para."></textarea>
+          <small><span id="remarkCharCount">0</span>/500</small>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel" data-close="remark">Cancel</button>
+          <button type="submit" class="submit" id="saveRemarkButton">Save remark</button>
+        </div>
+      </form>
     </section>
   </div>
 
@@ -1501,9 +1522,44 @@
 
     const state={
       offices:FALLBACK_OFFICES,subjects:FALLBACK_SUBJECTS,subjectMasters:FALLBACK_SUBJECTS,status:{},maxFileMb:8,
-      selected:null,adminCode:'',adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',adminTimeBoundSubjectId:'',recentStatusWrites:{},
-      connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:'',editingNoteSubjectId:''
+      selected:null,adminEditingSubjectId:'',adminRenamingSubjectId:'',adminSchedulingSubjectId:'',adminUrgentSubjectId:'',adminTimeBoundSubjectId:'',recentStatusWrites:{},
+      connected:false,supportsReceipts:false,statusFilter:'all',officeFilter:'',search:''
     };
+
+    /*
+     * V17.7.50 FIX: "note not saving" (and the same class of bug in any
+     * of the dozens of other admin actions that read state.adminCode
+     * directly) traced back to TIMING, not logic. syncAdminCodeFromSession()
+     * resolving state.adminCode via window.ADGB_AUTH.credentialFor (added
+     * in V17.7.49) is only ever CALLED from inside renderMatrix(), which
+     * runs once during the very first page render -- and if the OTHER
+     * session system hadn't finished its own async initialization by that
+     * exact moment, credentialFor() still returned empty right then, and
+     * nothing else was left to call it again until the next periodic
+     * auto-refresh, possibly minutes later.
+     *
+     * Rather than sprinkle a fresh sync call before each of the dozens of
+     * existing "if(!state.adminCode)return" checks throughout this file
+     * (error-prone at that scale, and each one missed reintroduces this
+     * exact bug), adminCode becomes a GETTER: every single existing read
+     * of state.adminCode anywhere in this file -- unchanged, none of them
+     * touched -- now transparently retries resolution from the session
+     * system on the spot if it's still empty, with no dependency on
+     * whichever render happened to run first.
+     */
+    let _adminCode='';
+    Object.defineProperty(state,'adminCode',{
+      get(){
+        if(!_adminCode){
+          try{
+            const sessionCredential=window.ADGB_AUTH?.credentialFor?.('HEAD_OFFICE','subjectManage');
+            if(sessionCredential)_adminCode=sessionCredential;
+          }catch{}
+        }
+        return _adminCode;
+      },
+      set(value){ _adminCode=String(value||''); }
+    });
 
     /*
      * V17.6.12 FIX:
@@ -1695,6 +1751,8 @@
       $('#renameSubjectForm')?.addEventListener('submit',renameSubject);
       $('#cancelRenameSubjectButton')?.addEventListener('click',closeRenameSubjectEditor);
       $('#subjectScheduleForm')?.addEventListener('submit',saveSubjectSchedule);
+      $('#remarkForm')?.addEventListener('submit',saveRemark);
+      $('#remarkText')?.addEventListener('input',updateRemarkCharCount);
       $('#cancelSubjectScheduleButton')?.addEventListener('click',closeSubjectScheduleEditor);
       $('#subjectUrgentForm')?.addEventListener('submit',saveSubjectUrgent);
       $('#cancelSubjectUrgentButton')?.addEventListener('click',closeSubjectUrgentEditor);
@@ -1767,24 +1825,9 @@
           return;
         }
 
-        const editNoteButton=event.target.closest('[data-edit-note]');
-        if(editNoteButton){
-          state.editingNoteSubjectId=editNoteButton.dataset.editNote;
-          renderMatrix();
-          setTimeout(()=>document.querySelector('[data-note-input="'+CSS.escape(state.editingNoteSubjectId)+'"]')?.focus(),30);
-          return;
-        }
-
-        const cancelNoteButton=event.target.closest('[data-cancel-note]');
-        if(cancelNoteButton){
-          state.editingNoteSubjectId='';
-          renderMatrix();
-          return;
-        }
-
-        const saveNoteButton=event.target.closest('[data-save-note]');
-        if(saveNoteButton){
-          saveSubjectNote(saveNoteButton.dataset.saveNote);
+        const openRemarkButton=event.target.closest('[data-open-remark]');
+        if(openRemarkButton){
+          openRemarkEditor(openRemarkButton.dataset.openRemark);
           return;
         }
 
@@ -2003,7 +2046,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.49 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.51 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2321,59 +2364,39 @@
 
       $('#matrixContent').innerHTML=
         '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
-        headers+(isAdmin?'<th scope="col">Note</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        headers+(isAdmin?'<th scope="col">Remark</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
     }
 
     /*
-     * V17.7.46: a short, admin-only note per subject -- e.g. "compiled
-     * report sent to ADG on 5 Sep" -- shown as one extra column at the
-     * end of the matrix, alongside the office columns (not a separate
-     * panel). Click-to-edit inline, one row editable at a time, tracked
-     * via state.editingNoteSubjectId so renderMatrix's normal re-render
-     * naturally shows the right cell in edit mode.
+     * V17.7.51: "Note" renamed to "Remark" throughout, and rebuilt around
+     * a proper modal (openRemarkEditor/#remarkBackdrop) instead of the
+     * cramped inline table-cell editor -- both for a genuinely better
+     * writing experience (a real full-size textarea, not a few cramped
+     * lines inside a table cell) and because a modal is far easier to
+     * reason about and debug than per-row inline edit state. The matrix
+     * cell/card below is now purely a compact DISPLAY plus one button
+     * that opens the editor -- no inline editing state here at all.
      */
     function renderNoteCell(subject){
       const masterId=subject.masterId||subject.id;
-      const editing=state.editingNoteSubjectId===masterId;
-      const note=String(subject.adminNote||'');
-
-      if(editing){
-        return '<td class="note-cell">'+
-          '<div class="note-cell-editing">'+
-            '<textarea class="note-edit-textarea" data-note-input="'+escapeAttr(masterId)+'" maxlength="500" placeholder="e.g. Compiled report sent to ADG on 5 Sep">'+escapeHtml(note)+'</textarea>'+
-            '<div class="note-edit-actions">'+
-              '<button type="button" class="note-cancel-btn" data-cancel-note="'+escapeAttr(masterId)+'">Cancel</button>'+
-              '<button type="button" class="note-save-btn" data-save-note="'+escapeAttr(masterId)+'">Save</button>'+
-            '</div>'+
-          '</div></td>';
-      }
+      const remark=String(subject.adminNote||'');
 
       return '<td class="note-cell">'+
         '<div class="note-cell-display">'+
-          (note?'<span class="note-text">'+escapeHtml(note)+'</span>':'<span class="note-text note-text-empty">No note</span>')+
-          '<button type="button" class="note-edit-btn" data-edit-note="'+escapeAttr(masterId)+'" title="Edit note">'+(note?'✎':'+ Add')+'</button>'+
+          (remark?'<span class="note-text">'+escapeHtml(remark)+'</span>':'<span class="note-text note-text-empty">No remark</span>')+
+          '<button type="button" class="note-edit-btn" data-open-remark="'+escapeAttr(masterId)+'" title="'+(remark?'Edit remark':'Add remark')+'">'+(remark?'✎ Edit':'+ Remark')+'</button>'+
         '</div></td>';
     }
 
     function renderNoteCard(subject){
       const masterId=subject.masterId||subject.id;
-      const editing=state.editingNoteSubjectId===masterId;
-      const note=String(subject.adminNote||'');
-
-      if(editing){
-        return '<div class="note-card note-card-editing">'+
-          '<textarea class="note-edit-textarea" data-note-input="'+escapeAttr(masterId)+'" maxlength="500" placeholder="e.g. Compiled report sent to ADG on 5 Sep">'+escapeHtml(note)+'</textarea>'+
-          '<div class="note-edit-actions">'+
-            '<button type="button" class="note-cancel-btn" data-cancel-note="'+escapeAttr(masterId)+'">Cancel</button>'+
-            '<button type="button" class="note-save-btn" data-save-note="'+escapeAttr(masterId)+'">Save</button>'+
-          '</div></div>';
-      }
+      const remark=String(subject.adminNote||'');
 
       return '<div class="note-card">'+
-        '<span class="note-card-label">📝 Note</span>'+
-        (note?'<span class="note-text">'+escapeHtml(note)+'</span>':'<span class="note-text note-text-empty">No note</span>')+
-        '<button type="button" class="note-edit-btn" data-edit-note="'+escapeAttr(masterId)+'" title="Edit note">'+(note?'✎ Edit':'+ Add note')+'</button>'+
+        '<span class="note-card-label">📝 Remark</span>'+
+        (remark?'<span class="note-text">'+escapeHtml(remark)+'</span>':'<span class="note-text note-text-empty">No remark</span>')+
+        '<button type="button" class="note-edit-btn" data-open-remark="'+escapeAttr(masterId)+'" title="'+(remark?'Edit remark':'Add remark')+'">'+(remark?'✎ Edit':'+ Add remark')+'</button>'+
         '</div>';
     }
 
@@ -2730,34 +2753,71 @@
     }
 
     /*
-     * V17.7.46: saves a subject's admin-only note (the extra "Note"
-     * column at the end of the matrix). subjectId here is always the
-     * MASTER subject id -- renderNoteCell/renderNoteCard deliberately use
-     * subject.masterId, not subject.id, since a matrix row's own id is
-     * the report INSTANCE id (e.g. "...__M"), and the backend's note
-     * handler looks the subject up by its master id.
+     * V17.7.51: "Note" is now "Remark" throughout, edited via a proper
+     * modal (openRemarkEditor/saveRemark) instead of inline per-row edit
+     * state -- both for a better writing experience (a real full-size
+     * textarea) and because the earlier inline version's save button was
+     * repeatedly, silently failing to save (state.adminCode not yet
+     * resolved -- see the V17.7.49/50 fixes to syncAdminCodeFromSession
+     * and the adminCode getter). Since that failure was SILENT before --
+     * no error shown at all -- this version deliberately surfaces a
+     * specific, actionable message if state.adminCode is somehow still
+     * unresolved at save time, instead of quietly doing nothing again.
+     *
+     * masterId is always the MASTER subject id, not a report instance id
+     * (a matrix row's own subject.id is the instance id, e.g. "...__M");
+     * renderNoteCell/renderNoteCard pass subject.masterId specifically,
+     * since the backend's remark handler looks the subject up by its
+     * master id.
      */
-    async function saveSubjectNote(subjectId){
-      const textarea=document.querySelector('[data-note-input="'+CSS.escape(subjectId)+'"]');
-      const button=document.querySelector('[data-save-note="'+CSS.escape(subjectId)+'"]');
-      if(!textarea||!state.adminCode)return;
+    let remarkSubjectId='';
 
-      const text=textarea.value.trim();
-      if(button)setBusy(button,true,'Saving…');
+    function openRemarkEditor(masterId){
+      const subject=state.subjects.find(s=>(s.masterId||s.id)===masterId);
+      if(!subject)return;
+
+      remarkSubjectId=masterId;
+      $('#remarkSubjectName').textContent=subject.baseName||subject.name||'';
+      $('#remarkText').value=String(subject.adminNote||'');
+      updateRemarkCharCount();
+      openModal('remark');
+      setTimeout(()=>$('#remarkText').focus(),40);
+    }
+
+    function updateRemarkCharCount(){
+      const counter=$('#remarkCharCount');
+      if(counter)counter.textContent=String($('#remarkText')?.value.length||0);
+    }
+
+    async function saveRemark(event){
+      event.preventDefault();
+      if(!remarkSubjectId)return;
+
+      const text=$('#remarkText').value.trim();
+      const securityCode=state.adminCode;
+
+      if(!securityCode){
+        showToast('Could not confirm Administrator access -- please sign in as Administrator and try again.','error');
+        return;
+      }
+
+      const button=$('#saveRemarkButton');
+      setBusy(button,true,'Saving…');
 
       try{
         await postToBackend({
           action:'adminSetSubjectNote',
-          securityCode:state.adminCode,
-          subjectId,
+          securityCode,
+          subjectId:remarkSubjectId,
           text
         });
-        state.editingNoteSubjectId='';
-        showToast(text?'Note saved.':'Note cleared.','success');
+        closeModal('remark');
+        showToast(text?'Remark saved.':'Remark cleared.','success');
         await loadPortal(true);
       }catch(error){
-        showToast(error.message||'Note could not be saved.','error');
-        if(button&&button.isConnected)setBusy(button,false,'Save');
+        showToast(error.message||'Remark could not be saved.','error');
+      }finally{
+        setBusy(button,false,'Save remark');
       }
     }
 
@@ -4205,7 +4265,7 @@ function renderAdminSubjects(){
     }
   </script>
 
-  <script src="portal-v1767.js?v=17749"></script>
-  <script src="sticky-v1767.js?v=17749"></script>
+  <script src="portal-v1767.js?v=17751"></script>
+  <script src="sticky-v1767.js?v=17751"></script>
 </body>
 </html>
