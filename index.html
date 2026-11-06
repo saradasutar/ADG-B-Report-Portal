@@ -1373,6 +1373,21 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.84 pre-publication office audience preview */
+.adgb-notice-preview{border:1px solid #e4d89d;background:#fffdf3;border-radius:10px;margin-top:13px;padding:12px}
+.adgb-notice-preview-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px}
+.adgb-notice-preview-heading strong{font-size:12px;color:#6f5017}
+.adgb-notice-preview-heading small{font-size:10px;color:#776e57}
+.adgb-notice-preview-state{font-size:11px;color:#5b6070;margin:8px 0}
+.adgb-notice-preview-ticker{display:flex;gap:9px;align-items:center;background:#fff4c4;border:1px solid #edda82;padding:10px;border-radius:8px;color:#b9232d;font-weight:850;font-size:13px;overflow-wrap:anywhere}
+.adgb-notice-preview-ticker strong{font-size:10px;letter-spacing:.06em}
+.adgb-notice-preview-audience{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:7px;margin-top:11px}
+.adgb-notice-preview-audience .preview-office{border:1px solid #d8e3ee;background:#fff;border-radius:8px;padding:9px;display:grid;gap:4px;font-size:11px}
+.adgb-notice-preview-audience .preview-office strong{color:#234e79}
+.adgb-notice-preview-audience .preview-office small{color:#566a7a;line-height:1.45}
+.adgb-notice-preview-audience .preview-office[data-included="yes"]{border-color:#9ccaaa;background:#f3fbf4}
+.adgb-notice-preview-help{font-size:10px;color:#776d61;line-height:1.55;margin:9px 0 0}
+@media(max-width:760px){.adgb-notice-preview{padding:9px}.adgb-notice-preview-ticker{font-size:12px}}
 /* V17.7.83 notice manager activity and schedule visibility */
 .adgb-notice-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:8px 12px}
 .adgb-notice-summary>div{background:#fff;border:1px solid #e5d8ac;border-radius:8px;padding:9px;display:grid;gap:3px}
@@ -1792,6 +1807,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <label>End (IST) <input id="adgbNoticeEnd" type="datetime-local"></label>
             <label class="adgb-notice-check"><input id="adgbNoticeEnabled" type="checkbox" checked> Enabled</label>
           </div>
+          <section class="adgb-notice-preview" aria-label="Office notice targeting preview">
+            <div class="adgb-notice-preview-heading"><strong>Preview before publishing</strong><small>Administrator-only simulation · does not send or publish the notice</small></div>
+            <p id="adgbNoticePreviewState" class="adgb-notice-preview-state" aria-live="polite"></p>
+            <div class="adgb-notice-preview-ticker"><strong>NOTICE</strong><span id="adgbNoticePreviewText">Enter your notice to preview its appearance.</span></div>
+            <div id="adgbNoticePreviewAudience" class="adgb-notice-preview-audience"></div>
+            <p class="adgb-notice-preview-help">Audience preview is based on the selected form settings. Actual delivery is restricted by the backend and portal access rules. Office pending counts are a separate setting.</p>
+          </section>
           <div class="adgb-insights-toolbar"><button id="adgbNoticeSave" type="button">Save scheduled notice</button><button id="adgbNoticeCancel" type="button">Reset form</button></div>
         </div>
         <div class="adgb-notice-pending-config">
@@ -3327,6 +3349,38 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         .formatToParts(new Date(Date.now()+offsetMs)).forEach(p=>{if(p.type!=='literal')parts[p.type]=p.value;});
       return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;
     }
+    function adgbNoticePreview_(){
+      if(!isRecognizedAsAdmin())return;
+      const text=String(document.getElementById('adgbNoticeText')?.value||'').trim();
+      const target=String(document.getElementById('adgbNoticeTarget')?.value||'ALL');
+      const enabled=document.getElementById('adgbNoticeEnabled')?.checked===true;
+      const start=String(document.getElementById('adgbNoticeStart')?.value||'');
+      const end=String(document.getElementById('adgbNoticeEnd')?.value||'');
+      const now=adgbNoticeTimeIST_();
+      let schedule='Choose valid start and end dates';
+      if(start&&end&&end>start){
+        schedule=!enabled?'Disabled — will not display':start>now?'Scheduled — starts '+start+' IST':
+          end<=now?'Expired — period already ended':'Active period — eligible to display now';
+      }
+      const stateLabel=document.getElementById('adgbNoticePreviewState');
+      if(stateLabel)stateLabel.textContent=schedule;
+      const ticker=document.getElementById('adgbNoticePreviewText');
+      if(ticker)ticker.textContent=text||'Enter your notice to preview its appearance.';
+      const audience=document.getElementById('adgbNoticePreviewAudience');
+      if(!audience)return;
+      const offices=state.offices.length?state.offices:FALLBACK_OFFICES;
+      const eligible=target==='ALL'?'All permitted portal viewers, subject to login/access mode':'Head Office Administrator and '+(offices.find(x=>String(x.id)===target)?.name||'selected office')+' only';
+      const cards=offices.map(office=>{
+        const isTarget=target==='ALL'||String(office.id)===target;
+        return '<div class="preview-office" data-included="'+(isTarget?'yes':'no')+'"><strong>'+
+          escapeHtml(office.name)+'</strong><small>'+(isTarget?'✓ Included for authorized office users':'— Not targeted')+'</small></div>';
+      });
+      audience.innerHTML='<div class="preview-office" data-included="yes"><strong>Head Office Admin</strong><small>✓ Can view authorized active notices</small></div>'+cards.join('')+
+        '<div class="preview-office" data-included="'+(target==='ALL'?'yes':'no')+'"><strong>Other viewers / guests</strong><small>'+
+        (target==='ALL'?'May see notice if portal access permits':'Not targeted')+'</small></div>';
+      const help=document.querySelector('.adgb-notice-preview-help');
+      if(help)help.textContent=eligible+'. These are expected audiences, not confirmations of actual account delivery. Office pending counts follow separate admin settings.';
+    }
     function adgbNoticeResetForm_(){
       adgbNoticeEditId_='';
       const text=document.getElementById('adgbNoticeText'),target=document.getElementById('adgbNoticeTarget');
@@ -3337,6 +3391,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(end)end.value=adgbNoticeTimeIST_(24*3600000);
       if(enabled)enabled.checked=true;
       const save=document.getElementById('adgbNoticeSave');if(save)save.textContent='Save scheduled notice';
+      adgbNoticePreview_();
     }
     function adgbNoticeRenderStrip_(){
       const strip=document.getElementById('adgbNoticeStrip'),track=document.getElementById('adgbNoticeTrack');
@@ -3476,6 +3531,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(audience)audience.innerHTML='<option value="ALL">Everyone permitted to view the portal</option>'+
         state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+' only</option>').join('');
       adgbNoticeResetForm_();
+      ['adgbNoticeText','adgbNoticeTarget','adgbNoticeStart','adgbNoticeEnd','adgbNoticeEnabled'].forEach(id=>{
+        const node=document.getElementById(id);
+        if(node){node.addEventListener('input',adgbNoticePreview_);node.addEventListener('change',adgbNoticePreview_);}
+      });
       document.getElementById('adgbNoticeSpeed')?.addEventListener('input',()=>{
         adgbNoticePreviewSpeed_=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
         adgbNoticeSpeedLabel_();
@@ -3504,6 +3563,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           document.getElementById('adgbNoticeEnd').value=item.end;
           document.getElementById('adgbNoticeEnabled').checked=item.enabled;
           document.getElementById('adgbNoticeSave').textContent='Update this notice';
+          adgbNoticePreview_();
           document.getElementById('adgbNoticeText')?.focus();
         }
         if(del){
