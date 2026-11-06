@@ -3071,11 +3071,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const d=new Date(current+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()-1);
       const previous=d.toISOString().slice(0,7);
       const checks=[
-        {name:'Live dashboard connection',detail:'Current portal data loaded',run:async()=>({ok:state.connected===true})},
-        {name:'Office Review load',detail:'Administrator review read route',run:async()=>postToBackend({action:'adminOfficeReviewList',securityCode:credential,cycleKey:current})},
-        {name:'Review audit history',detail:'Administrator audit read route',run:async()=>postToBackend({action:'adminOfficeReviewAuditList',securityCode:credential,cycleKey:current,offset:0,limit:1})},
-        {name:'Compliance trends',detail:'Administrator history read route',run:async()=>postToBackend({action:'adminComplianceTrends',securityCode:credential,months:1})},
-        {name:'Historical archive',detail:'Prior-cycle archive read route',run:async()=>postToBackend({action:'adminArchiveList',securityCode:credential,cycleKey:previous})}
+        {name:'Live dashboard connection',detail:'Current portal data loaded',run:async()=>({ok:state.connected===true}),validate:r=>r?.ok===true},
+        {name:'Office Review load',detail:'Current month review records readable',run:async()=>postToBackend({action:'adminOfficeReviewList',securityCode:credential,cycleKey:current}),
+          validate:r=>r?.ok===true&&Array.isArray(r.records)&&r.records.every(x=>typeof x.officeId==='string')},
+        {name:'Review audit history',detail:'Audit history records readable',run:async()=>postToBackend({action:'adminOfficeReviewAuditList',securityCode:credential,cycleKey:current,offset:0,limit:1}),
+          validate:r=>r?.ok===true&&Array.isArray(r.records)},
+        {name:'Compliance trends',detail:'Recorded monthly trends readable',run:async()=>postToBackend({action:'adminComplianceTrends',securityCode:credential,months:1}),
+          validate:r=>r?.ok===true&&Array.isArray(r.records)&&r.records.every(x=>typeof x.cycleKey==='string')},
+        {name:'Historical archive',detail:'Previous-cycle archive records readable',run:async()=>postToBackend({action:'adminArchiveList',securityCode:credential,cycleKey:previous}),
+          validate:r=>r?.ok===true&&Array.isArray(r.records)&&r.cycleKey===previous}
       ];
       adgbReadinessBusy=true;
       const button=document.getElementById('adgbReadinessCheck');if(button)button.disabled=true;
@@ -3086,8 +3090,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           let status='unknown',detail=check.detail;
           try{
             const res=await check.run();
-            status=res?.ok===true?'ok':'fail';
-            if(status==='fail')detail='Endpoint did not confirm availability; inspect Apps Script deployment.';
+            status=check.validate(res)?'ok':'fail';
+            if(status==='fail')detail='Expected records or response fields were not confirmed. Check the deployed Apps Script version.';
           }catch(error){
             status='fail';
             detail='Unavailable or permission denied. Check deployed backend version and administrator login.';
