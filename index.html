@@ -1109,7 +1109,10 @@
 .adgb-body-grid .matrix-tools{background:#fafcff}
 .adgb-body-grid .matrix-section table{font-size:11px}
 .adgb-body-grid .matrix-section table th,.adgb-body-grid .matrix-section table td{line-height:1.4}
-.adgb-shell .stats-grid{gap:10px;margin-bottom:12px}
+.adgb-shell .stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.adgb-shell .stat-card.due-today{background:#f4efff;border-color:#d9c9f7}.adgb-shell .stat-card.due-today::before{background:#8d65cb}
+@media(max-width:1250px){.adgb-shell .stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.adgb-shell .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .adgb-shell .stat-card{min-height:89px;border-radius:13px;background-image:none}
 .adgb-shell .stat-label{font-size:11px;letter-spacing:0;text-transform:none}
 .adgb-shell .stat-value{font-size:28px;margin-top:6px}
@@ -1211,6 +1214,11 @@
         <span class="stat-label">Pending</span>
         <strong class="stat-value" id="awaitingCount">0</strong>
         <small class="stat-note">Awaiting upload</small>
+      </article>
+      <article class="stat-card due-today">
+        <span class="stat-label">Due today</span>
+        <strong class="stat-value" id="adgbDueTodayCount">0</strong>
+        <small class="stat-note">Subjects with today's deadline</small>
       </article>
       <article class="stat-card completion">
         <span class="stat-label">Completion</span>
@@ -2454,6 +2462,13 @@
       const online=document.getElementById('adgbSidebarStatus');
       const dot=document.querySelector('.adgb-sidebar-dot');
       if(online)online.textContent=state.connected?'Connected':'Not connected';
+      const dueToday=document.getElementById('adgbDueTodayCount');
+      if(dueToday){
+        const indianParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',day:'2-digit',month:'2-digit',year:'numeric'}).formatToParts(new Date());
+        const bits={};indianParts.forEach(x=>{if(x.type!=='literal')bits[x.type]=x.value});
+        const today=bits.year+'-'+bits.month+'-'+bits.day;
+        dueToday.textContent=String(state.subjects.filter(x=>(x.timeBound===true&&String(x.timeBoundDueDate||'').slice(0,10)===today)||(x.urgent===true&&String(x.urgentDueDate||'').slice(0,10)===today)).length);
+      }
       if(dot)dot.classList.toggle('online',!!state.connected);
       const india=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date());
       if(timeline)timeline.innerHTML='<div class="adgb-line"><span class="adgb-line-icon">▣</span><span><strong>Current reporting cycle</strong><small>'+escapeHtml(document.getElementById('cycleName')?.textContent||india)+'</small></span></div>'+
