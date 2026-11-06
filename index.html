@@ -1653,8 +1653,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <label>Office <select id="adgbAuditOffice"><option value="">All offices</option></select></label>
             <button type="button" id="adgbAuditLoad">Load history</button>
             <button type="button" id="adgbAuditMore" hidden>Load more</button>
+            <button type="button" id="adgbAuditCsv" disabled>Export loaded CSV</button>
+            <button type="button" id="adgbAuditPrint" disabled>Print loaded history</button>
           </div>
-          <p class="adgb-insights-count" id="adgbAuditMessage" aria-live="polite">Select a month and load the administrator audit history.</p>
+          <p class="adgb-insights-count" id="adgbAuditMessage" aria-live="polite">Select a month and load the administrator audit history. Export and print include only the records loaded on this page.</p>
           <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>When (IST)</th><th>Office</th><th>Administrator</th><th>Fields changed</th><th>Before → After</th></tr></thead><tbody id="adgbAuditRows"><tr><td colspan="5">History not loaded</td></tr></tbody></table></div>
         </section>
       </section>
@@ -3067,9 +3069,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return state.offices.map(office=>({office,entry:adgbReviewDrafts.get(String(office.id))||{observation:'',action:'',followup:'',targetDate:''}}));
     }
     // V17.7.72 read-only audit viewer: no audit payload is editable from the browser.
-    let adgbAuditOffset=0,adgbAuditBusy=false,adgbAuditLastQuery='',adgbAuditHasMore=false;
+    let adgbAuditOffset=0,adgbAuditBusy=false,adgbAuditLastQuery='',adgbAuditHasMore=false,adgbAuditRecords=[];
     function adgbAuditReset_(){
-      adgbAuditOffset=0;adgbAuditHasMore=false;adgbAuditLastQuery='';
+      adgbAuditOffset=0;adgbAuditHasMore=false;adgbAuditLastQuery='';adgbAuditRecords=[];
+      adgbAuditExportControls_();
       const body=document.getElementById('adgbAuditRows');
       if(body)body.innerHTML='<tr><td colspan="5">Load history to see recorded changes.</td></tr>';
       const more=document.getElementById('adgbAuditMore');if(more)more.hidden=true;
@@ -3086,6 +3089,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       office?.addEventListener('change',adgbAuditReset_);
       document.getElementById('adgbAuditLoad')?.addEventListener('click',()=>adgbAuditLoad_(false));
       document.getElementById('adgbAuditMore')?.addEventListener('click',()=>adgbAuditLoad_(true));
+      document.getElementById('adgbAuditCsv')?.addEventListener('click',adgbAuditExportCsv_);
+      document.getElementById('adgbAuditPrint')?.addEventListener('click',adgbAuditPrintLoaded_);
     }
     function adgbAuditChanges_(row){
       let before={},after={};
@@ -3115,17 +3120,19 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(!res?.ok||!Array.isArray(res.records))throw Error('Compatible audit backend not available.');
         const body=document.getElementById('adgbAuditRows');
         if(!body)return;
-        if(!more)body.innerHTML='';
+        if(!more){body.innerHTML='';adgbAuditRecords=[];}
         for(const x of res.records){
           const tr=document.createElement('tr');
           const content='<td>'+escapeHtml(adgbFormatTimeIST(x.changedAt))+'</td><td>'+escapeHtml(x.officeName||x.officeId)+'</td><td>'+escapeHtml(x.actor)+'</td><td>'+escapeHtml(x.changedFields)+'</td><td><div class="adgb-audit-change">'+adgbAuditChanges_(x)+'</div></td>';
           tr.innerHTML=content;body.appendChild(tr);
+          adgbAuditRecords.push(x);
         }
         if(!body.children.length)body.innerHTML='<tr><td colspan="5">No recorded review changes for the selected month and office.</td></tr>';
         adgbAuditOffset=Number(res.nextOffset)||offset+res.records.length;
         adgbAuditHasMore=res.hasMore===true;adgbAuditLastQuery=key;
         if(button)button.hidden=!adgbAuditHasMore;
-        adgbAuditMessage_('Showing '+adgbAuditOffset+' audit event(s) for '+month+'. Records capture submitted changes; confirm current review values where necessary.');
+        adgbAuditExportControls_();
+        adgbAuditMessage_('Showing '+adgbAuditRecords.length+' loaded audit event(s) for '+month+'.'+(adgbAuditHasMore?' Additional records available via Load more.':' All matching records returned.')+' Export/print include only loaded records.');
       }catch(error){adgbAuditMessage_('Audit history unavailable: '+(error.message||'Please deploy V17.7.72 backend.'));}
       finally{adgbAuditBusy=false;if(load)load.disabled=false;if(button)button.disabled=false;}
     }
