@@ -2932,7 +2932,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const box=document.getElementById('adgbAnalyticsRows');
       if(box)box.innerHTML=state.offices.map(office=>{
         const list=rows.filter(x=>x.officeId===office.id),done=list.filter(x=>x.submitted).length,percent=list.length?Math.round(done*100/list.length):0;
-        return '<div class="adgb-analytics-row"><div><strong>'+escapeHtml(office.name)+'</strong><span>'+done+' of '+list.length+' submitted · '+(list.length-done)+' pending</span><b>'+percent+'%</b></div><div class="adgb-analytics-track"><span style="width:'+percent+'%"></span></div></div>';
+        const today=adgbTodayIST(),overdue=list.filter(x=>!x.submitted&&x.dueDate&&x.dueDate<today).length;
+        const dueToday=list.filter(x=>!x.submitted&&x.dueDate===today).length;
+        return '<div class="adgb-analytics-row"><div><strong>'+escapeHtml(office.name)+'</strong><span>'+done+' of '+list.length+' submitted · '+(list.length-done)+' pending'+(overdue?' · '+overdue+' overdue':'')+(dueToday?' · '+dueToday+' due today':'')+'</span><b>'+percent+'%</b></div><div class="adgb-analytics-track"><span style="width:'+percent+'%"></span></div></div>';
       }).join('');
     }
     function adgbRefreshInsights(){
