@@ -3228,7 +3228,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const today=adgbTodayIST(),all=adgbRegisterData().filter(x=>!x.submitted).map(x=>({...x,priority:adgbActionPriority_(x,today)}));
       const byPriority=key=>all.filter(x=>x.priority.kind===key).length;
       const summary=document.getElementById('adgbActionSummary');
-      if(summary)summary.innerHTML='<div><strong>'+all.length+'</strong><span>Pending across all offices</span></div><div><strong>'+byPriority('overdue')+'</strong><span>Overdue</span></div><div><strong>'+byPriority('today')+'</strong><span>Due today</span></div><div><strong>'+byPriority('review')+'</strong><span>Verify deadline</span></div>';
+      if(summary)summary.innerHTML='<div role="button" tabindex="0" data-priority="all" title="Show all pending"><strong>'+all.length+'</strong><span>Pending across all offices</span></div><div role="button" tabindex="0" data-priority="overdue" title="Filter overdue"><strong>'+byPriority('overdue')+'</strong><span>Overdue</span></div><div role="button" tabindex="0" data-priority="today" title="Filter due today"><strong>'+byPriority('today')+'</strong><span>Due today</span></div><div role="button" tabindex="0" data-priority="review" title="Filter verify date"><strong>'+byPriority('review')+'</strong><span>Verify deadline</span></div>';
       const q=search.value.trim().toLowerCase();
       adgbActionVisible_=all.filter(x=>(!office.value||x.officeId===office.value)&&
         (priority.value==='all'||priority.value===x.priority.kind)&&
@@ -3239,6 +3239,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const count=document.getElementById('adgbActionCount');
       if(count)count.textContent=adgbActionVisible_.length+' matching pending report(s) · current cycle as of '+today+' IST. No deadline is assumed where none is configured.';
       document.getElementById('adgbActionPrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+      document.getElementById('adgbActionCsv')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+    }
+    function adgbExportActionsCsv_(){
+      if(!isRecognizedAsAdmin())return;
+      adgbRenderActions_();
+      adgbNoticeDownloadCsv_(['Priority','Office','Report subject','Reporting type','Deadline','As of IST'],
+        adgbActionVisible_.map(x=>[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x),adgbTodayIST()]),
+        'ADGB-action-required-filtered-'+adgbTodayIST()+'.csv');
+      showToast('Exported '+adgbActionVisible_.length+' filtered pending reports.','success');
     }
     function adgbPrintActions_(){
       if(!isRecognizedAsAdmin()){showToast('Administrator permission required to print the action list.','error');return;}
@@ -4218,6 +4227,25 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         field?.addEventListener(id==='adgbActionSearch'?'input':'change',adgbRenderActions_);
       });
       document.getElementById('adgbActionPrint')?.addEventListener('click',adgbPrintActions_);
+      document.getElementById('adgbActionCsv')?.addEventListener('click',adgbExportActionsCsv_);
+      document.getElementById('adgbActionReset')?.addEventListener('click',()=>{
+        document.getElementById('adgbActionOffice').value='';
+        document.getElementById('adgbActionPriority').value='all';
+        document.getElementById('adgbActionSearch').value='';
+        adgbRenderActions_();
+      });
+      const actionSummary=document.getElementById('adgbActionSummary');
+      const applyPriority=event=>{
+        const control=event.target.closest('[data-priority]');
+        if(!control||!actionSummary?.contains(control))return;
+        const priority=control.getAttribute('data-priority');
+        const picker=document.getElementById('adgbActionPriority');
+        if(picker&&[...picker.options].some(x=>x.value===priority)){picker.value=priority;adgbRenderActions_();}
+      };
+      actionSummary?.addEventListener('click',applyPriority);
+      actionSummary?.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){event.preventDefault();applyPriority(event);}
+      });
       document.getElementById('adgbOfficeHighlights')?.addEventListener('click',event=>{
         const btn=event.target.closest('[data-adgb-office-pending]');
         if(btn&&!btn.disabled)adgbOpenOfficePending_(btn.getAttribute('data-adgb-office-pending'));
