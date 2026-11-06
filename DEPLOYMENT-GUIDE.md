@@ -601,3 +601,18 @@ Download the privately provided **ADGB_Code_gs_V17_7_86_Integrated.txt**, which 
 Open **Office Analytics → Moving Notice Board — Administrator → Load notices and settings**, choose the background, preview, then select **Save notice appearance & pending settings**. Reload to confirm persistence. Existing saved settings default to light yellow unless changed.
 
 **Storage:** Uses the existing `ADGB_NOTICE_CONFIG_V1` Script Property; no new spreadsheet, tab, Drive folder or trigger. The backend still authorizes settings changes using the Administrator session and checks both foreground and background colour. Backend and frontend syntax checks passed, and isolated settings/contrast tests passed. Live Apps Script deployment and browser checks remain outstanding.
+
+
+---
+
+## V17.7.87 — Safer notice appearance editing
+
+The **Moving Notice Board — Administrator** now includes **Preview default appearance**, **Discard unsaved changes**, and a clear **Preview only — changes are NOT saved** indicator. The warning is shown whenever the appearance or pending-display controls differ from the last loaded or saved settings.
+
+- **Preview default appearance** changes the administrator's current preview to Light Yellow background (`#fff7cc`), Dark Red text (`#bd1726`), 17px, Extra Bold (900), and speed 5. It does **not** change scheduled notices, current pending-office selections, or anything on the server. Select **Save notice appearance & pending settings** only if you intend to publish those defaults.
+- **Discard unsaved changes** restores the last successfully loaded or saved settings, including background, colour, size, weight, speed and pending display selections. It does not send data to Apps Script.
+- The status line says when settings match saved values versus when the changes are **preview only**.
+
+**Usage:** Open the portal, log in as Administrator, go to **Office Analytics → Moving Notice Board — Administrator**, and click **Load notices and settings** first. Adjust controls and review the warning. Click **Discard unsaved changes** to revert or **Save notice appearance & pending settings** to publish.
+
+**Deployment:** This is frontend-only and requires **no new Apps Script deployment** beyond the compatible V17.7.86 integrated backend for persistence. No spreadsheet, Sheet tab or additional script property is created. JavaScript syntax passed; live browser acceptance testing remains outstanding.
