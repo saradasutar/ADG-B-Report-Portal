@@ -1121,6 +1121,41 @@
 @media(max-width:1120px){.adgb-body-grid{grid-template-columns:minmax(0,1fr)}.adgb-right-panel{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-right-panel #adgbOfficePanelMount{grid-column:1/-1}.adgb-feature-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.adgb-shell{display:block}.adgb-sidebar{padding:6px 8px;position:relative}.adgb-side-nav{display:flex;overflow:auto;position:static;gap:5px;scrollbar-width:thin}.adgb-nav-item{width:auto;white-space:nowrap;min-height:36px;flex:none;padding:6px 10px}.adgb-sidebar-foot{display:none}.adgb-shell>.page{width:calc(100% - 16px)}.adgb-right-panel{grid-template-columns:1fr}.adgb-feature-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.adgb-feature-links button{min-height:56px;padding:8px;gap:5px}.adgb-feature-links strong{font-size:10px}.adgb-feature-links small{font-size:9px}}
 
+
+/* PREMIUM V17.7.61 — actual UI feature rollout */
+.adgb-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.adgb-clock{padding:7px 12px;border:1px solid rgba(255,255,255,.38);border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-weight:800;font-size:11px;white-space:nowrap}
+.adgb-shell .stat-card{min-height:104px;padding:12px 14px;box-shadow:0 6px 19px rgba(23,56,96,.09)}
+.adgb-shell .stat-card:before{display:none}
+.adgb-shell .stat-card.total{background:#eaf3ff;border-color:#b5d4f8}
+.adgb-shell .stat-card.submitted{background:#e5f8ec;border-color:#a6e4c2}
+.adgb-shell .stat-card.pending{background:#fff0f1;border-color:#f2c0c7}
+.adgb-shell .stat-card.due-today{background:#f1ecff;border-color:#d5c5f8}
+.adgb-shell .stat-card.completion{background:#fff4da;border-color:#f3d493}
+.adgb-shell .stat-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#1e6cbd;color:#fff;font-size:19px;margin-bottom:5px;font-weight:900}
+.adgb-shell .submitted .stat-icon{background:#0d9967}
+.adgb-shell .pending .stat-icon{background:#df5060}
+.adgb-shell .due-today .stat-icon{background:#8354d2}
+.adgb-shell .completion .stat-icon{background:#dfa01a}
+.adgb-shell .stat-note{font-size:10px}
+.adgb-body-grid .panel-head.matrix-top{background:#f8fbff;border-top-color:#2c79b8}
+.adgb-body-grid .matrix-section{box-shadow:0 7px 22px rgba(20,51,91,.09)}
+.adgb-heading-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px}
+.adgb-expand-matrix{border:1px solid #bdd3e9;border-radius:8px;background:#e9f3ff;color:#135393;font-weight:800;padding:7px 10px;font-size:11px}
+.adgb-expand-matrix[aria-pressed="true"]{background:#115b9c;color:#fff}
+.adgb-kind-filter{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.adgb-kind-filter button{min-height:31px;padding:6px 9px;border-radius:999px;border:1px solid #d4e1f1;background:#f3f7ff;color:#2c547b;font-weight:800;font-size:10px}
+.adgb-kind-filter button.active{background:#145a9d;color:#fff;border-color:#145a9d}
+.adgb-shell .matrix-tools{gap:9px}
+.adgb-recent-heading{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.adgb-recent-heading button{border:0;color:#0f5a9f;background:transparent;font-size:11px;text-decoration:underline;font-weight:800}
+.adgb-shell.matrix-expanded{grid-template-columns:0 minmax(0,1fr)}
+.adgb-shell.matrix-expanded .adgb-sidebar,.adgb-shell.matrix-expanded .adgb-right-panel,.adgb-shell.matrix-expanded .adgb-feature-links,.adgb-shell.matrix-expanded .stats-grid{display:none!important}
+.adgb-shell.matrix-expanded .adgb-body-grid{grid-template-columns:minmax(0,1fr)}
+.adgb-shell.matrix-expanded>.page{width:calc(100% - 24px)}
+@media(max-width:1200px){.adgb-shell .stat-card{min-height:90px}}
+@media(max-width:760px){.adgb-clock{font-size:9px;padding:5px 7px}.adgb-shell .stat-card{padding:9px}.adgb-shell .stat-icon{width:24px;height:24px;font-size:15px}.adgb-kind-filter{flex-wrap:nowrap;overflow-x:auto;max-width:100%}.adgb-kind-filter button{flex:none;white-space:nowrap}}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -1157,7 +1192,8 @@
           <small>O/o Additional Director General (B), CPWD, Bengaluru</small>
         </span>
       </a>
-      <nav aria-label="Portal navigation">
+      <nav class="adgb-header-actions" aria-label="Portal navigation">
+        <span id="adgbClock" class="adgb-clock" aria-label="Current India date and time"></span>
         <button class="admin-button" id="adminButton" type="button">
           <span aria-hidden="true">⚙</span> Administrator
         </button>
@@ -1170,6 +1206,7 @@
       <nav class="adgb-side-nav" aria-label="Main navigation">
         <button type="button" class="adgb-nav-item active" data-adgb-nav="dashboard">⌂ <span>Dashboard</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="matrix">▤ <span>Reports Matrix</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
@@ -1201,27 +1238,27 @@
 
     <section class="stats-grid" aria-label="Submission overview">
       <article class="stat-card total">
-        <span class="stat-label">Total reports</span>
+        <span class="stat-icon" aria-hidden="true">▤</span><span class="stat-label">Total reports</span>
         <strong class="stat-value" id="totalCount">0</strong>
         <small class="stat-note" id="totalNote">Across all offices</small>
       </article>
       <article class="stat-card submitted">
-        <span class="stat-label">Submitted</span>
+        <span class="stat-icon" aria-hidden="true">✓</span><span class="stat-label">Submitted</span>
         <strong class="stat-value" id="completeCount">0</strong>
         <small class="stat-note">Reports received</small>
       </article>
       <article class="stat-card pending">
-        <span class="stat-label">Pending</span>
+        <span class="stat-icon" aria-hidden="true">◷</span><span class="stat-label">Pending</span>
         <strong class="stat-value" id="awaitingCount">0</strong>
         <small class="stat-note">Awaiting upload</small>
       </article>
       <article class="stat-card due-today">
-        <span class="stat-label">Due today</span>
+        <span class="stat-icon" aria-hidden="true">▣</span><span class="stat-label">Due today</span>
         <strong class="stat-value" id="adgbDueTodayCount">0</strong>
         <small class="stat-note">Subjects with today's deadline</small>
       </article>
       <article class="stat-card completion">
-        <span class="stat-label">Completion</span>
+        <span class="stat-icon" aria-hidden="true">▥</span><span class="stat-label">Completion</span>
         <strong class="stat-value" id="progressPercent">0%</strong>
         <div class="mini-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
           <span id="progressFill"></span>
@@ -1253,11 +1290,11 @@
             <h2 id="matrixTitle">Report upload matrix</h2>
             <p>Select an Upload or Submitted button for the required subject and office.</p>
           </div>
-          <div class="legend">
+          <div class="adgb-heading-tools"><button type="button" id="adgbExpandMatrix" class="adgb-expand-matrix" aria-pressed="false">⛶ Expand</button><div class="legend">
             <span><i class="legend-await"></i>Awaiting upload</span>
             <span><i class="legend-done"></i>Submitted</span>
             <span><i class="legend-received"></i>Physically received</span>
-          </div>
+          </div></div>
         </div>
 
         <div class="matrix-tools">
@@ -1265,6 +1302,13 @@
             <button class="filter-button active" type="button" data-status-filter="all" aria-pressed="true">All</button>
             <button class="filter-button" type="button" data-status-filter="pending" aria-pressed="false">Pending</button>
             <button class="filter-button" type="button" data-status-filter="submitted" aria-pressed="false">Submitted</button>
+          </div>
+          <div class="adgb-kind-filter" role="group" aria-label="Report type filter">
+            <button type="button" data-adgb-kind="ALL" class="active" aria-pressed="true">All types</button>
+            <button type="button" data-adgb-kind="MONTHLY" aria-pressed="false">Monthly</button>
+            <button type="button" data-adgb-kind="QUARTERLY" aria-pressed="false">Quarterly</button>
+            <button type="button" data-adgb-kind="FORTNIGHTLY" aria-pressed="false">Fortnightly</button>
+            <button type="button" data-adgb-kind="ONE_TIME" aria-pressed="false">One-time</button>
           </div>
           <div class="tool-fields">
             <label class="tool-field">Office
@@ -1300,7 +1344,7 @@
           </div>
         </section>
         <section class="adgb-side-card">
-          <h2>◴ Recent submissions</h2>
+          <h2 class="adgb-recent-heading"><span>◴ Recent submissions</span><button type="button" id="adgbViewAllRecent">View all</button></h2>
           <div id="adgbRecentActivity"><p class="adgb-empty">Loading verified submission status…</p></div>
         </section>
         <div id="adgbOfficePanelMount"></div>
@@ -1326,7 +1370,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.60</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.61</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1817,6 +1861,7 @@
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
       adgbInitLayout();
+      adgbInitPremiumControls();
       loadRecentStatusWrites();
       const now=new Date();
       $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
@@ -2203,7 +2248,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.60 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.61 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2450,6 +2495,7 @@
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
         const nav=btn.getAttribute('data-adgb-nav');
         document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
+        if(nav==='recent'){adgbShowAllRecent=true;document.getElementById('adgbViewAllRecent').textContent='Show less';adgbRenderLivePanels();document.getElementById('adgbRecentActivity')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
         if(nav==='admin'||nav==='subjects'){document.getElementById('adminButton')?.click();return;}
         if(nav==='pending'){state.statusFilter='pending';document.querySelectorAll('[data-status-filter]').forEach(b=>{const active=b.getAttribute('data-status-filter')==='pending';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});renderMatrix();}
         if(nav==='print'){const btn=document.getElementById('printPendingButton');if(btn&&!btn.classList.contains('hidden')){btn.click();return;}showToast('Print pending status is available to authorised administrators.','info');return;}
@@ -2484,7 +2530,32 @@
       }));
       entries.sort((a,b)=>b.time-a.time);
       recent.innerHTML=!entries.length?'<p class="adgb-empty">No confirmed submissions for the currently displayed cycle.</p>':
-        entries.slice(0,4).map(item=>'<div class="adgb-line"><span class="adgb-line-icon">✓</span><span><strong>'+escapeHtml(item.office)+'</strong><small>'+escapeHtml(item.received?'Physically received: ':'Submitted: ')+escapeHtml(item.subject)+'</small>'+(item.time?'<small>'+escapeHtml(new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(item.time)))+'</small>':'')+'</span></div>').join('');
+        entries.slice(0,adgbShowAllRecent?25:4).map(item=>'<div class="adgb-line"><span class="adgb-line-icon">✓</span><span><strong>'+escapeHtml(item.office)+'</strong><small>'+escapeHtml(item.received?'Physically received: ':'Submitted: ')+escapeHtml(item.subject)+'</small>'+(item.time?'<small>'+escapeHtml(new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(item.time)))+'</small>':'')+'</span></div>').join('');
+    }
+
+
+    // V17.7.61 frontend improvements. No new backend APIs.
+    let adgbKindFilter='ALL',adgbShowAllRecent=false;
+    function adgbKindOf(subject){const k=String(subject?.reportKind||'MONTHLY').toUpperCase();return k==='QUARTERLY_ONLY'?'QUARTERLY':k;}
+    function adgbUpdateClock(){const el=document.getElementById('adgbClock');if(el)el.textContent=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date())+' IST';}
+    function adgbInitPremiumControls(){
+      document.querySelectorAll('[data-adgb-kind]').forEach(button=>button.addEventListener('click',()=>{
+        adgbKindFilter=button.dataset.adgbKind;
+        document.querySelectorAll('[data-adgb-kind]').forEach(x=>{let active=x===button;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active))});
+        renderMatrix();
+      }));
+      document.getElementById('adgbExpandMatrix')?.addEventListener('click',()=>{
+        const shell=document.querySelector('.adgb-shell'),btn=document.getElementById('adgbExpandMatrix');
+        const expanded=shell.classList.toggle('matrix-expanded');
+        btn.setAttribute('aria-pressed',String(expanded));btn.textContent=expanded?'⛶ Restore':'⛶ Expand';
+        document.getElementById('matrixTitle')?.scrollIntoView({block:'start',behavior:'smooth'});
+      });
+      document.getElementById('adgbViewAllRecent')?.addEventListener('click',()=>{
+        adgbShowAllRecent=!adgbShowAllRecent;
+        document.getElementById('adgbViewAllRecent').textContent=adgbShowAllRecent?'Show less':'View all';
+        adgbRenderLivePanels();
+      });
+      adgbUpdateClock();setInterval(adgbUpdateClock,60000);
     }
 
     function renderAll(lastUpdated){
@@ -2510,6 +2581,7 @@
     function getVisibleSubjects(){
       const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
       return state.subjects.filter(subject=>{
+        if(adgbKindFilter!=='ALL'&&adgbKindOf(subject)!==adgbKindFilter)return false;
         if(state.search&&!subject.name.toLowerCase().includes(state.search))return false;
         if(state.statusFilter==='all')return true;
         return offices.some(office=>{
