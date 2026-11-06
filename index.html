@@ -3050,6 +3050,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const button=document.getElementById('adgbReviewSave');if(button)button.disabled=true;
       adgbReviewStatus('Saving to the existing portal database…');
       try{
+        // Fail closed against older backends that save reviews without an audit trail.
+        const auditHealth=await postToBackend({action:'adminOfficeReviewAuditList',securityCode:code,cycleKey:adgbReviewCycle(),offset:0,limit:1});
+        if(!auditHealth?.ok||!Array.isArray(auditHealth.records))throw Error('V17.7.72 audit backend is required before saving.');
         const response=await postToBackend({action:'adminOfficeReviewSave',securityCode:code,cycleKey:adgbReviewCycle(),records});
         if(!response?.ok||response.savedCount!==records.length)throw Error('Backend did not confirm saving all '+records.length+' offices.');
         if(!response.versions||typeof response.versions!=='object')throw Error('Backend did not return version confirmations. Refresh and Load saved reviews.');
