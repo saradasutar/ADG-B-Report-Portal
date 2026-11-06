@@ -1073,6 +1073,51 @@
   }
   @media(prefers-reduced-motion:reduce){.stat-card{transition:none}.stat-card:hover{transform:none}}
 
+
+/* ADGB FULL DASHBOARD LAYOUT V17.7.59 - UI only. Backend/report permissions unchanged. */
+.adgb-shell{display:grid;grid-template-columns:202px minmax(0,1fr);gap:0;align-items:stretch;max-width:1920px;margin:0 auto;min-height:calc(100vh - 112px)}
+.adgb-sidebar{background:linear-gradient(180deg,#0b3569,#082c59 70%,#104b76);padding:18px 12px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.adgb-side-nav{display:grid;gap:6px;position:sticky;top:84px}
+.adgb-nav-item{display:flex;align-items:center;gap:11px;text-align:left;width:100%;min-height:43px;padding:9px 12px;color:#e1ecfb;border:1px solid transparent;border-radius:10px;background:transparent;font-weight:800;font-size:12px;cursor:pointer}
+.adgb-nav-item:hover,.adgb-nav-item.active{background:linear-gradient(100deg,#bfe7ff,#e0f0ff);color:#08376d;border-color:#86c8ef}
+.adgb-sidebar-foot{margin-top:auto;border:1px solid #3b709c;border-radius:12px;padding:12px;color:#e6f3ff;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.adgb-sidebar-foot strong{font-size:11px}.adgb-sidebar-foot small{display:block;flex-basis:100%;font-size:11px;padding-left:19px}
+.adgb-sidebar-dot{width:10px;height:10px;border-radius:50%;background:#fbbf24;display:inline-block}
+.adgb-sidebar-dot.online{background:#16da85}
+.adgb-shell>.page{width:calc(100% - 28px);max-width:none;margin:0 auto;padding:12px 0 18px;min-width:0}
+.adgb-body-grid{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:12px;align-items:start}
+.adgb-body-grid>.workspace{display:block;min-width:0}
+.adgb-body-grid .matrix-section{width:100%;background:#fff}
+.adgb-right-panel{display:grid;gap:11px;min-width:0}
+.adgb-side-card{background:#fff;border:1px solid #ccdcec;border-radius:13px;overflow:hidden;box-shadow:0 4px 15px rgba(23,56,96,.075)}
+.adgb-side-card h2{font-size:13px;color:#103c74;background:linear-gradient(110deg,#e1efff,#f1f7fd);margin:0;padding:12px;border-bottom:1px solid #d5e2f0}
+.adgb-side-card #adgbTimeline,.adgb-side-card #adgbRecentActivity{padding:11px;font-size:11px}
+.adgb-line{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #e7eef5;color:#233d5f;line-height:1.4}
+.adgb-line:last-child{border-bottom:0}.adgb-line strong{display:block;color:#173d71;font-size:11px}.adgb-line small{display:block;color:#60718a;font-size:10px;margin-top:2px}
+.adgb-line-icon{display:grid;place-items:center;border-radius:9px;width:29px;height:29px;background:#e9f3fd;color:#1666a7;flex:none;font-size:15px}
+.adgb-quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:11px}
+.adgb-quick-actions button{display:grid;gap:4px;place-items:center;background:#edf5ff;border:1px solid #cfdef0;color:#134b89;border-radius:10px;padding:8px 3px;font-weight:800;font-size:12px;cursor:pointer}
+.adgb-quick-actions button span{font-size:10px}
+.adgb-quick-actions button:hover,.adgb-feature-links button:hover{background:#ddecff}
+#adgbOfficePanelMount .office-panel{display:block;width:100%}
+#adgbOfficePanelMount .office-panel .office-cycle-list{grid-template-columns:1fr}
+.adgb-feature-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0}
+.adgb-feature-links button{border-radius:11px;border:1px solid #d3e1f0;background:#fff;padding:12px;display:flex;align-items:center;text-align:left;gap:10px;color:#18518a;font-size:20px;cursor:pointer;min-height:67px}
+.adgb-feature-links button span{display:grid;gap:4px;min-width:0}.adgb-feature-links strong{font-size:12px;color:#163d73}.adgb-feature-links small{font-size:10px;color:#65758a}
+.adgb-body-grid .matrix-top{background:linear-gradient(105deg,#f6faff,#edf5ff);border-top-color:#2477ba}
+.adgb-body-grid .panel-head h2{color:#143e78}
+.adgb-body-grid .matrix-tools{background:#fafcff}
+.adgb-body-grid .matrix-section table{font-size:11px}
+.adgb-body-grid .matrix-section table th,.adgb-body-grid .matrix-section table td{line-height:1.4}
+.adgb-shell .stats-grid{gap:10px;margin-bottom:12px}
+.adgb-shell .stat-card{min-height:89px;border-radius:13px;background-image:none}
+.adgb-shell .stat-label{font-size:11px;letter-spacing:0;text-transform:none}
+.adgb-shell .stat-value{font-size:28px;margin-top:6px}
+.adgb-empty{font-size:11px;color:#60728a;margin:4px 0}
+@media(max-width:1420px){.adgb-shell{grid-template-columns:168px minmax(0,1fr)}.adgb-body-grid{grid-template-columns:minmax(0,1fr) 218px}.adgb-nav-item{font-size:11px;padding:9px 7px}.adgb-shell>.page{width:calc(100% - 20px)}}
+@media(max-width:1120px){.adgb-body-grid{grid-template-columns:minmax(0,1fr)}.adgb-right-panel{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-right-panel #adgbOfficePanelMount{grid-column:1/-1}.adgb-feature-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.adgb-shell{display:block}.adgb-sidebar{padding:6px 8px;position:relative}.adgb-side-nav{display:flex;overflow:auto;position:static;gap:5px;scrollbar-width:thin}.adgb-nav-item{width:auto;white-space:nowrap;min-height:36px;flex:none;padding:6px 10px}.adgb-sidebar-foot{display:none}.adgb-shell>.page{width:calc(100% - 16px)}.adgb-right-panel{grid-template-columns:1fr}.adgb-feature-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.adgb-feature-links button{min-height:56px;padding:8px;gap:5px}.adgb-feature-links strong{font-size:10px}.adgb-feature-links small{font-size:9px}}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -1117,7 +1162,19 @@
     </div>
   </header>
 
-  <main class="page" id="top">
+  <div class="adgb-shell">
+    <aside class="adgb-sidebar" aria-label="Portal sections">
+      <nav class="adgb-side-nav" aria-label="Main navigation">
+        <button type="button" class="adgb-nav-item active" data-adgb-nav="dashboard">⌂ <span>Dashboard</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="matrix">▤ <span>Reports Matrix</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="admin">⚙ <span>Administration</span></button>
+      </nav>
+      <div class="adgb-sidebar-foot"><span class="adgb-sidebar-dot"></span><strong>Portal status</strong><small id="adgbSidebarStatus">Connecting…</small></div>
+    </aside>
+    <main class="page" id="top">
     <div class="notice hidden" id="connectionNotice">
       <span id="connectionMessage"></span>
       <button id="retryButton" type="button">Retry connection</button>
@@ -1165,7 +1222,8 @@
       </article>
     </section>
 
-    <div class="workspace">
+    <div class="adgb-body-grid">
+      <div class="workspace">
       <aside class="office-panel" aria-label="Submission status of sub-offices">
         <div class="panel-head">
           <div>
@@ -1218,6 +1276,34 @@
         <div class="result-count" id="resultCount">Loading report subjects…</div>
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
+      </div>
+      <aside class="adgb-right-panel" aria-label="Reporting tools">
+        <section class="adgb-side-card adgb-timeline">
+          <h2>▣ Reporting timeline</h2>
+          <div id="adgbTimeline">Checking reporting cycle…</div>
+        </section>
+        <section class="adgb-side-card">
+          <h2>✦ Quick actions</h2>
+          <div class="adgb-quick-actions">
+            <button type="button" data-adgb-nav="matrix">▤ <span>Reports</span></button>
+            <button type="button" data-adgb-nav="pending">◷ <span>Pending</span></button>
+            <button type="button" data-adgb-nav="print">▣ <span>Print</span></button>
+            <button type="button" data-adgb-nav="admin">⚙ <span>Admin</span></button>
+          </div>
+        </section>
+        <section class="adgb-side-card">
+          <h2>◴ Recent submissions</h2>
+          <div id="adgbRecentActivity"><p class="adgb-empty">Loading verified submission status…</p></div>
+        </section>
+        <div id="adgbOfficePanelMount"></div>
+      </aside>
+      </div>
+
+    <div class="adgb-feature-links" aria-label="Quick report navigation">
+      <button type="button" data-adgb-nav="pending">◷ <span><strong>Pending reports</strong><small>View remaining submissions</small></span></button>
+      <button type="button" data-adgb-nav="matrix">▤ <span><strong>Submission matrix</strong><small>View office-wise status</small></span></button>
+      <button type="button" data-adgb-nav="print">▣ <span><strong>Reports &amp; print</strong><small>Print pending status</small></span></button>
+      <button type="button" data-adgb-nav="admin">⚙ <span><strong>Administration</strong><small>Authorised controls</small></span></button>
     </div>
 
     <aside class="other-report-note">
@@ -1225,13 +1311,14 @@
       <a href="mailto:bngeepcsr2.cpwd@gov.in">bngeepcsr2.cpwd@gov.in</a>.
     </aside>
   </main>
+  </div>
 
   <footer>
     <div>
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.58</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.59</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1721,6 +1808,7 @@
 
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
+      adgbInitLayout();
       loadRecentStatusWrites();
       const now=new Date();
       $('#footerDate').textContent=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(now);
@@ -2107,7 +2195,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.58 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.59 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2345,10 +2433,51 @@
       });
     }
 
+
+    // V17.7.59 navigation and real-data sidebar: no fake statistics/activities.
+    function adgbInitLayout(){
+      const mount=document.getElementById('adgbOfficePanelMount');
+      const panel=document.querySelector('.office-panel');
+      if(mount&&panel&&!mount.contains(panel))mount.appendChild(panel);
+      document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
+        const nav=btn.getAttribute('data-adgb-nav');
+        document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
+        if(nav==='admin'||nav==='subjects'){document.getElementById('adminButton')?.click();return;}
+        if(nav==='pending'){state.statusFilter='pending';document.querySelectorAll('[data-status-filter]').forEach(b=>{const active=b.getAttribute('data-status-filter')==='pending';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});renderMatrix();}
+        if(nav==='print'){const btn=document.getElementById('printPendingButton');if(btn&&!btn.classList.contains('hidden')){btn.click();return;}showToast('Print pending status is available to authorised administrators.','info');return;}
+        (nav==='dashboard'?document.getElementById('top'):document.getElementById('matrixTitle'))?.scrollIntoView({behavior:'smooth',block:'start'});
+      }));
+    }
+    function adgbRenderLivePanels(){
+      const timeline=document.getElementById('adgbTimeline');
+      const recent=document.getElementById('adgbRecentActivity');
+      const online=document.getElementById('adgbSidebarStatus');
+      const dot=document.querySelector('.adgb-sidebar-dot');
+      if(online)online.textContent=state.connected?'Connected':'Not connected';
+      if(dot)dot.classList.toggle('online',!!state.connected);
+      const india=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date());
+      if(timeline)timeline.innerHTML='<div class="adgb-line"><span class="adgb-line-icon">▣</span><span><strong>Current reporting cycle</strong><small>'+escapeHtml(document.getElementById('cycleName')?.textContent||india)+'</small></span></div>'+
+        '<div class="adgb-line"><span class="adgb-line-icon">◷</span><span><strong>Submission deadlines</strong><small>See due dates beside individual report subjects</small></span></div>';
+      if(!recent)return;
+      const entries=[];
+      state.subjects.forEach(subject=>state.offices.forEach(office=>{
+        const status=reportStatusFor(subject,office);
+        if(!status?.submitted)return;
+        const raw=status.submittedAt||status.timestamp||'';
+        const time=new Date(raw);
+        entries.push({subject:subject.name,office:office.name,time:!isNaN(time.getTime())?time.getTime():0,received:status.receivedPhysically===true});
+      }));
+      entries.sort((a,b)=>b.time-a.time);
+      recent.innerHTML=!entries.length?'<p class="adgb-empty">No confirmed submissions for the currently displayed cycle.</p>':
+        entries.slice(0,4).map(item=>'<div class="adgb-line"><span class="adgb-line-icon">✓</span><span><strong>'+escapeHtml(item.office)+'</strong><small>'+escapeHtml(item.received?'Physically received: ':'Submitted: ')+escapeHtml(item.subject)+'</small>'+(item.time?'<small>'+escapeHtml(new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(item.time)))+'</small>':'')+'</span></div>').join('');
+    }
+
     function renderAll(lastUpdated){
+      adgbRenderLivePanels();
       populateOfficeFilter();
       renderMatrix();
       updateSummary();
+      adgbRenderLivePanels();
       renderAdminSubjects();
       setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated);
     }
