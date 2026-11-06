@@ -3296,6 +3296,164 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }catch(error){adgbTrendStatus_('Snapshot not confirmed: '+(error.message||'Check backend deployment'));}
       finally{if(button){button.disabled=false;button.textContent='Capture current-cycle snapshot';}}
     }
+    // V17.7.81 moving notice board: server decides the audience and returns only active notices.
+    let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false;
+    function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
+    function adgbNoticeTimeIST_(offsetMs=0){
+      const parts={};
+      new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
+        .formatToParts(new Date(Date.now()+offsetMs)).forEach(p=>{if(p.type!=='literal')parts[p.type]=p.value;});
+      return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;
+    }
+    function adgbNoticeResetForm_(){
+      adgbNoticeEditId_='';
+      const text=document.getElementById('adgbNoticeText'),target=document.getElementById('adgbNoticeTarget');
+      const start=document.getElementById('adgbNoticeStart'),end=document.getElementById('adgbNoticeEnd');
+      const enabled=document.getElementById('adgbNoticeEnabled');
+      if(text)text.value='';if(target)target.value='ALL';
+      if(start)start.value=adgbNoticeTimeIST_();
+      if(end)end.value=adgbNoticeTimeIST_(24*3600000);
+      if(enabled)enabled.checked=true;
+      const save=document.getElementById('adgbNoticeSave');if(save)save.textContent='Save scheduled notice';
+    }
+    function adgbNoticeRenderStrip_(){
+      const strip=document.getElementById('adgbNoticeStrip'),track=document.getElementById('adgbNoticeTrack');
+      if(!strip||!track)return;
+      const token=String(window.ADGB_AUTH?.token||'');
+      const feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
+      if(!feed||!state.connected){strip.hidden=true;track.replaceChildren();return;}
+      const pieces=Array.isArray(feed.notices)?feed.notices.map(x=>String(x.text||'').trim()).filter(Boolean):[];
+      if(Array.isArray(feed.pendingOfficeIds)){
+        const rows=adgbRegisterData();
+        for(const officeId of feed.pendingOfficeIds){
+          const office=state.offices.find(x=>String(x.id)===String(officeId));
+          if(!office)continue;
+          const waiting=rows.filter(x=>String(x.officeId)===String(officeId)&&!x.submitted);
+          const overdue=waiting.filter(x=>x.dueDate&&x.dueDate<adgbTodayIST()).length;
+          pieces.push(office.name+': '+waiting.length+' pending report'+(waiting.length===1?'':'s')+(overdue?' ('+overdue+' overdue)':'')+'.');
+        }
+      }
+      strip.hidden=!pieces.length;
+      track.replaceChildren();
+      if(!pieces.length)return;
+      for(const message of pieces){
+        const span=document.createElement('span');span.textContent='● '+message;track.appendChild(span);
+      }
+      track.classList.toggle('paused',adgbNoticePaused_);
+      track.style.animationDuration=Math.max(20,pieces.join(' ').length/9)+'s';
+    }
+    async function adgbNoticeLoad_(force=false){
+      if(!state.connected||!endpointReady()||adgbNoticeBusy_)return;
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!force&&adgbNoticeFeedToken_===token&&Date.now()-adgbNoticeLastFetch_<60000)return;
+      adgbNoticeBusy_=true;adgbNoticeLastFetch_=Date.now();
+      // Drop older authorization context as soon as user changes.
+      if(adgbNoticeFeedToken_!==token){adgbNoticeFeed_=null;adgbNoticeFeedToken_=token;adgbNoticeRenderStrip_();}
+      try{
+        const res=await jsonpRequest('noticeBoard',{sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        adgbNoticeFeed_=res?.ok&&Array.isArray(res.notices)?res:null;
+      }catch{adgbNoticeFeed_=null;}
+      finally{adgbNoticeBusy_=false;adgbNoticeRenderStrip_();}
+    }
+    function adgbNoticeAdminShow_(){
+      const section=document.getElementById('adgbNoticeAdmin');if(section)section.hidden=!isRecognizedAsAdmin();
+    }
+    function adgbNoticeRenderAdmin_(result){
+      adgbNoticeAdminRows_=Array.isArray(result.notices)?result.notices:[];
+      adgbNoticeAdminLoaded_=true;
+      const all=document.getElementById('adgbNoticeSavedList');
+      if(all)all.innerHTML=adgbNoticeAdminRows_.map(x=>
+        '<div class="adgb-notice-saved"><div><strong>'+escapeHtml(x.text)+'</strong><div><small>'+
+        escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · '+
+        escapeHtml(x.start)+' to '+escapeHtml(x.end)+' IST · '+(x.enabled?'Enabled':'Disabled')+
+        '</small></div></div><div class="adgb-notice-saved-actions"><button type="button" data-adgb-edit-notice="'+escapeAttr(x.id)+'">Edit</button>'+
+        '<button type="button" data-adgb-delete-notice="'+escapeAttr(x.id)+'">Delete</button></div></div>').join('')||
+        '<p class="adgb-insights-count">No scheduled notices. Create your first notice below.</p>';
+      const settings=result.settings||{};
+      const checkbox=document.getElementById('adgbNoticePendingEnabled');
+      if(checkbox)checkbox.checked=settings.showPending===true;
+      const selected=new Set(settings.pendingOfficeIds||[]);
+      const offices=document.getElementById('adgbNoticeOfficeChecks');
+      if(offices)offices.innerHTML=state.offices.map(o=>'<label><input type="checkbox" data-notice-office="'+escapeAttr(o.id)+'"'+(selected.has(o.id)?' checked':'')+'>'+escapeHtml(o.name)+'</label>').join('');
+    }
+    async function adgbNoticeAdminRequest_(payload){
+      const credential=adgbReviewCredential();
+      if(!isRecognizedAsAdmin()||!credential)throw Error('Administrator session required.');
+      const res=await postToBackend({action:'adminNoticeBoardManage',securityCode:credential,...payload});
+      if(!res?.ok||!Array.isArray(res.notices))throw Error('Compatible notice backend not yet deployed.');
+      adgbNoticeRenderAdmin_(res);
+      await adgbNoticeLoad_(true);
+      return res;
+    }
+    async function adgbNoticeAdminLoad_(){
+      adgbNoticeStatus_('Loading saved notices and pending-display settings…');
+      try{await adgbNoticeAdminRequest_({operation:'list'});adgbNoticeStatus_('Settings loaded. Times are interpreted as Asia/Kolkata (IST).');}
+      catch(error){adgbNoticeStatus_('Could not load notices: '+(error.message||'Check backend deployment'));}
+    }
+    async function adgbNoticeSave_(){
+      if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved notices before making changes.');return;}
+      const notice={
+        id:adgbNoticeEditId_,text:String(document.getElementById('adgbNoticeText')?.value||'').trim(),
+        target:document.getElementById('adgbNoticeTarget')?.value||'ALL',
+        start:document.getElementById('adgbNoticeStart')?.value||'',
+        end:document.getElementById('adgbNoticeEnd')?.value||'',
+        enabled:document.getElementById('adgbNoticeEnabled')?.checked===true};
+      if(!notice.text||notice.text.length>220||!notice.start||!notice.end||notice.end<=notice.start){
+        adgbNoticeStatus_('Enter notice text (1–220 characters) and a valid end after its start.');return;
+      }
+      const button=document.getElementById('adgbNoticeSave');if(button)button.disabled=true;
+      try{await adgbNoticeAdminRequest_({operation:'save',notice});adgbNoticeResetForm_();adgbNoticeStatus_('Scheduled notice saved successfully. Only authorized viewers will see it during its selected period.');}
+      catch(error){adgbNoticeStatus_('Notice NOT saved: '+(error.message||'Connection failed'));}
+      finally{if(button)button.disabled=false;}
+    }
+    async function adgbNoticeSettingsSave_(){
+      if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved settings before editing.');return;}
+      const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
+      const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
+      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds});
+        adgbNoticeStatus_('Pending report strip preferences saved. Office-specific counts are visible only after authorized login.');}
+      catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
+    }
+    function adgbNoticeInit_(){
+      const audience=document.getElementById('adgbNoticeTarget');
+      if(audience)audience.innerHTML='<option value="ALL">Everyone permitted to view the portal</option>'+
+        state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+' only</option>').join('');
+      adgbNoticeResetForm_();
+      document.getElementById('adgbNoticePause')?.addEventListener('click',()=>{
+        adgbNoticePaused_=!adgbNoticePaused_;const button=document.getElementById('adgbNoticePause');
+        if(button){button.textContent=adgbNoticePaused_?'▶':'Ⅱ';button.setAttribute('aria-pressed',String(adgbNoticePaused_));}
+        adgbNoticeRenderStrip_();
+      });
+      document.getElementById('adgbNoticeAdminLoad')?.addEventListener('click',adgbNoticeAdminLoad_);
+      document.getElementById('adgbNoticeNew')?.addEventListener('click',adgbNoticeResetForm_);
+      document.getElementById('adgbNoticeCancel')?.addEventListener('click',adgbNoticeResetForm_);
+      document.getElementById('adgbNoticeSave')?.addEventListener('click',adgbNoticeSave_);
+      document.getElementById('adgbNoticeSaveSettings')?.addEventListener('click',adgbNoticeSettingsSave_);
+      document.getElementById('adgbNoticeSavedList')?.addEventListener('click',async event=>{
+        const edit=event.target.closest('[data-adgb-edit-notice]');
+        const del=event.target.closest('[data-adgb-delete-notice]');
+        if(edit){
+          const item=adgbNoticeAdminRows_.find(x=>x.id===edit.getAttribute('data-adgb-edit-notice'));if(!item)return;
+          adgbNoticeEditId_=item.id;
+          document.getElementById('adgbNoticeText').value=item.text;
+          document.getElementById('adgbNoticeTarget').value=item.target;
+          document.getElementById('adgbNoticeStart').value=item.start;
+          document.getElementById('adgbNoticeEnd').value=item.end;
+          document.getElementById('adgbNoticeEnabled').checked=item.enabled;
+          document.getElementById('adgbNoticeSave').textContent='Update this notice';
+          document.getElementById('adgbNoticeText')?.focus();
+        }
+        if(del){
+          if(del.dataset.confirm!=='yes'){del.dataset.confirm='yes';del.textContent='Confirm deletion';return;}
+          del.disabled=true;
+          try{await adgbNoticeAdminRequest_({operation:'delete',id:del.getAttribute('data-adgb-delete-notice')});adgbNoticeResetForm_();adgbNoticeStatus_('Notice deleted.');}
+          catch(error){adgbNoticeStatus_('Delete failed: '+(error.message||'Connection failed'));del.disabled=false;}
+        }
+      });
+      setInterval(()=>{adgbNoticeLoad_();},60000);
+    }
     function adgbRenderAnalytics(){
       if(adgbInsightsView!=='analytics')return;
       const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length,pct=total?Math.round(submitted*100/total):0;
@@ -3328,7 +3486,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const note=document.getElementById('adgbComplianceNote');
       if(note)note.textContent='As of '+today+' (IST) · Current dashboard reporting cycle · Deadline counts apply to outstanding reports only. No deadline is assumed where none is recorded.';
       document.getElementById('adgbCompliancePrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
-      adgbTrendAdmin_();adgbReadinessShow_();
+      adgbTrendAdmin_();adgbReadinessShow_();adgbNoticeAdminShow_();
       adgbRenderReviewWorkspace();
       const box=document.getElementById('adgbAnalyticsRows');
       if(box)box.innerHTML=state.offices.map(office=>{
@@ -3630,6 +3788,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbRenderRegister();adgbRenderAnalytics();adgbRenderActions_();
     }
     function adgbInitInsights(){
+      adgbNoticeInit_();
       ['adgbActionOffice','adgbActionPriority','adgbActionSearch'].forEach(id=>{
         const field=document.getElementById(id);
         field?.addEventListener(id==='adgbActionSearch'?'input':'change',adgbRenderActions_);
@@ -3712,6 +3871,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }));
     }
     function adgbRenderLivePanels(){
+      adgbNoticeRenderStrip_();
+      adgbNoticeLoad_();
       const timeline=document.getElementById('adgbTimeline');
       const recent=document.getElementById('adgbRecentActivity');
       const online=document.getElementById('adgbSidebarStatus');
