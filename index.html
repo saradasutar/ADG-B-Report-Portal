@@ -1373,6 +1373,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.87 safe notice appearance editing */
+.adgb-notice-appearance-actions{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}
+.adgb-notice-appearance-actions button{background:#fff!important;color:#23466e!important;border:1px solid #c9d6e4!important}
+.adgb-notice-appearance-status{padding:7px 9px;border-radius:7px;background:#f4f7fa;font-size:11px!important;color:#445a73!important}
+.adgb-notice-appearance-status[data-dirty="yes"]{background:#fff1d9;color:#87530c!important}
+@media(max-width:760px){.adgb-notice-appearance-actions button{flex:1;min-height:37px}}
 /* V17.7.86 configurable banner background or no background */
 .adgb-notice-style-grid #adgbNoticeBackgroundMode{width:100%;background:white;color:#24364b;border:1px solid #ced9e4;border-radius:7px;padding:7px;min-height:37px}
 .adgb-notice-style-grid #adgbNoticeBackgroundColor{width:88px;height:39px}
@@ -1858,6 +1864,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           <p id="adgbNoticeContrast" class="adgb-notice-contrast" role="status" aria-live="polite">Text contrast: readable on light yellow.</p>
           <p>Speed, text colour, font size and boldness apply to scheduled notices and permitted office pending counts. Preview changes locally, then save them for all authorized viewers.</p>
           <div id="adgbNoticeOfficeChecks" class="adgb-notice-office-checks"></div>
+          <div class="adgb-notice-appearance-actions">
+            <button id="adgbNoticeRestoreDefaults" type="button">Preview default appearance</button>
+            <button id="adgbNoticeDiscardPreview" type="button">Discard unsaved changes</button>
+          </div>
+          <p id="adgbNoticeAppearanceStatus" class="adgb-notice-appearance-status" aria-live="polite">Load saved settings to start editing.</p>
           <button id="adgbNoticeSaveSettings" type="button">Save notice appearance &amp; pending settings</button>
         </div>
       </section>
@@ -3375,7 +3386,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
     function adgbNoticeContrast_(foreground,background='#fff7cc'){
       const fg=String(foreground||'').toLowerCase(),bg=String(background||'').toLowerCase();
@@ -3395,6 +3406,40 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         fontSize:Number(document.getElementById('adgbNoticeFontSize')?.value||17),
         fontWeight:Number(document.getElementById('adgbNoticeFontWeight')?.value||900)};
     }
+    function adgbNoticeCaptureControls_(){
+      return {...adgbNoticeStyleFromForm_(),
+        scrollSpeed:Number(document.getElementById('adgbNoticeSpeed')?.value||5),
+        showPending:document.getElementById('adgbNoticePendingEnabled')?.checked===true,
+        pendingOfficeIds:[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office')).sort()};
+    }
+    function adgbNoticeAppearanceIndicator_(){
+      const el=document.getElementById('adgbNoticeAppearanceStatus');if(!el)return;
+      if(!adgbNoticeAdminLoaded_||!adgbNoticeSavedSettings_){el.textContent='Load saved settings to begin.';el.dataset.dirty='no';return;}
+      const current=adgbNoticeCaptureControls_(),saved=adgbNoticeSavedSettings_;
+      const differs=JSON.stringify(current)!==JSON.stringify(saved);
+      el.dataset.dirty=differs?'yes':'no';
+      el.textContent=differs?'Preview only — changes are NOT saved for other viewers. Save settings to publish them.':'Settings match the last loaded or saved configuration.';
+    }
+    function adgbNoticeApplySavedControls_(settings){
+      if(!settings)return;
+      const background=String(settings.backgroundColor||'#fff7cc').toLowerCase();
+      const mode=background==='transparent'?'transparent':'solid';
+      document.getElementById('adgbNoticeBackgroundMode').value=mode;
+      document.getElementById('adgbNoticeBackgroundColor').value=mode==='transparent'?'#fff7cc':background;
+      document.getElementById('adgbNoticeTextColor').value=settings.textColor||'#bd1726';
+      document.getElementById('adgbNoticeFontSize').value=String(settings.fontSize||17);
+      document.getElementById('adgbNoticeFontWeight').value=String(settings.fontWeight||900);
+      document.getElementById('adgbNoticeSpeed').value=String(settings.scrollSpeed||5);
+      document.getElementById('adgbNoticePendingEnabled').checked=settings.showPending===true;
+      const selected=new Set(settings.pendingOfficeIds||[]);
+      document.querySelectorAll('[data-notice-office]').forEach(x=>{x.checked=selected.has(x.getAttribute('data-notice-office'));});
+      adgbNoticePreviewSpeed_=null;
+      adgbNoticeStylePreview_();
+      adgbNoticeSpeedLabel_();
+      adgbNoticePreviewStyle_=null;
+      adgbNoticeRenderStrip_();
+      adgbNoticeAppearanceIndicator_();
+    }
     function adgbNoticeStylePreview_(){
       const style=adgbNoticeStyleFromForm_(),contrast=adgbNoticeContrast_(style.textColor,style.backgroundColor);
       const bgPicker=document.getElementById('adgbNoticeBackgroundColor');
@@ -3408,6 +3453,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(previewBanner){previewBanner.style.backgroundColor=style.backgroundColor==='transparent'?'transparent':style.backgroundColor;previewBanner.style.borderColor=style.backgroundColor==='transparent'?'transparent':'#edda82';}
       adgbNoticePreviewStyle_=style;
       adgbNoticeRenderStrip_();
+      adgbNoticeAppearanceIndicator_();
     }
     function adgbNoticeTimeIST_(offsetMs=0){
       const parts={};
@@ -3569,6 +3615,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const selected=new Set(settings.pendingOfficeIds||[]);
       const offices=document.getElementById('adgbNoticeOfficeChecks');
       if(offices)offices.innerHTML=state.offices.map(o=>'<label><input type="checkbox" data-notice-office="'+escapeAttr(o.id)+'"'+(selected.has(o.id)?' checked':'')+'>'+escapeHtml(o.name)+'</label>').join('');
+      adgbNoticeSavedSettings_=adgbNoticeCaptureControls_();
+      adgbNoticeAppearanceIndicator_();
     }
     async function adgbNoticeAdminRequest_(payload){
       const credential=adgbReviewCredential();
@@ -3642,10 +3690,26 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         document.getElementById('adgbNoticeTextColor').value=colour;
         adgbNoticeStylePreview_();
       });
+      document.getElementById('adgbNoticeRestoreDefaults')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin()||!adgbNoticeAdminLoaded_)return;
+        const current=adgbNoticeCaptureControls_();
+        adgbNoticeApplySavedControls_({...current,backgroundColor:'#fff7cc',textColor:'#bd1726',fontSize:17,fontWeight:900,scrollSpeed:5});
+        adgbNoticePreviewStyle_=adgbNoticeStyleFromForm_();adgbNoticePreviewSpeed_=5;
+        adgbNoticeRenderStrip_();adgbNoticeAppearanceIndicator_();
+        adgbNoticeStatus_('Default appearance previewed. Nothing has been saved; choose Save notice appearance & pending settings to keep it.');
+      });
+      document.getElementById('adgbNoticeDiscardPreview')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin()||!adgbNoticeAdminLoaded_||!adgbNoticeSavedSettings_)return;
+        adgbNoticeApplySavedControls_(adgbNoticeSavedSettings_);
+        adgbNoticeStatus_('Unsaved settings discarded. Last loaded/saved configuration restored.');
+      });
+      document.getElementById('adgbNoticeOfficeChecks')?.addEventListener('change',adgbNoticeAppearanceIndicator_);
+      document.getElementById('adgbNoticePendingEnabled')?.addEventListener('change',adgbNoticeAppearanceIndicator_);
       document.getElementById('adgbNoticeSpeed')?.addEventListener('input',()=>{
         adgbNoticePreviewSpeed_=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
         adgbNoticeSpeedLabel_();
         adgbNoticeRenderStrip_();
+        adgbNoticeAppearanceIndicator_();
       });
       document.getElementById('adgbNoticePause')?.addEventListener('click',()=>{
         adgbNoticePaused_=!adgbNoticePaused_;const button=document.getElementById('adgbNoticePause');
