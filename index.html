@@ -1373,6 +1373,36 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.81 scheduled moving notices, office visibility, and scorecard */
+.adgb-notice-strip{display:flex;align-items:center;gap:9px;overflow:hidden;margin:7px 0 12px;border:1px solid #f0d779;border-radius:10px;background:#fff7cc;padding:8px 10px;min-height:43px}
+.adgb-notice-strip[hidden],.adgb-notice-admin[hidden]{display:none!important}
+.adgb-notice-heading{font-size:10px;color:#9a151a;font-weight:900;letter-spacing:.06em;flex:none}
+.adgb-notice-window{flex:1;overflow:hidden;min-width:0}
+.adgb-notice-track{display:inline-block;white-space:nowrap;width:max-content;color:#bd1726;font-weight:850;font-size:13px;animation:adgbNoticeMarquee 28s linear infinite}
+.adgb-notice-track.paused,.adgb-notice-track:hover{animation-play-state:paused}
+.adgb-notice-track span{margin-right:50px}
+#adgbNoticePause{border:1px solid #e6c562;background:#fff5bb;color:#7e2024;border-radius:6px;font-size:13px;cursor:pointer;flex:none;padding:5px 8px}
+@keyframes adgbNoticeMarquee{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+@media(prefers-reduced-motion:reduce){.adgb-notice-track{animation:none;white-space:normal;width:auto}.adgb-notice-window{overflow:auto}}
+.adgb-scorecard-section{margin:10px 14px;border:1px solid #dce8f1;border-radius:11px;overflow:hidden}
+.adgb-scorecard-section .adgb-compliance-heading{padding-bottom:10px}
+.adgb-scorecard-rank{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:50%;background:#eaf3ff;color:#174d86;font-weight:900}
+.adgb-notice-admin{border:1px solid #e6d898;background:#fffef4;border-radius:12px;margin:12px 14px;padding:11px}
+.adgb-notice-saved-list{display:grid;gap:7px;margin:8px 12px}
+.adgb-notice-saved{display:flex;gap:9px;justify-content:space-between;align-items:center;border:1px solid #e8dcad;border-radius:8px;background:#fff;padding:10px;flex-wrap:wrap}
+.adgb-notice-saved strong{font-size:12px;color:#8f2d34;overflow-wrap:anywhere}.adgb-notice-saved small{font-size:10px;color:#6e6473}
+.adgb-notice-saved-actions{display:flex;gap:5px}.adgb-notice-saved-actions button{border:1px solid #d7c99f;background:#fff;border-radius:6px;padding:6px 9px;font-size:11px}
+.adgb-notice-form{margin:9px;border:1px solid #ece0ba;border-radius:10px;background:#fff;padding:12px}
+.adgb-notice-form label{display:grid;gap:5px;font-weight:750;color:#4b5365;font-size:11px}
+.adgb-notice-form textarea,.adgb-notice-form input:not([type="checkbox"]),.adgb-notice-form select{width:100%;border:1px solid #ced9e4;border-radius:8px;padding:9px;font-size:12px;background:white;color:#25344a}
+.adgb-notice-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.adgb-notice-form .adgb-notice-check,.adgb-notice-check{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800}
+.adgb-notice-pending-config{margin:10px;background:#fff;border:1px solid #ece0ba;border-radius:10px;padding:12px;font-size:11px}
+.adgb-notice-pending-config p{font-size:10px;color:#6e7481}
+.adgb-notice-pending-config button{padding:8px 12px;border:none;border-radius:8px;background:#165c9e;color:white;font-size:11px;font-weight:800}
+.adgb-notice-office-checks{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0}
+.adgb-notice-office-checks label{display:flex;gap:5px;align-items:center;padding:6px 9px;border:1px solid #e5dfc7;border-radius:8px;background:#fff}
+@media(max-width:760px){.adgb-notice-strip{margin:6px 0;padding:7px}.adgb-notice-track{font-size:12px}.adgb-notice-form-grid{grid-template-columns:1fr}.adgb-scorecard-section{margin:9px}.adgb-notice-admin{margin:9px}}
 /* V17.7.80 consolidated action-required list */
 #adgbActionPanel .adgb-analytics-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
 .adgb-action-priority{display:inline-block;font-size:10px;font-weight:850;border-radius:6px;padding:4px 7px;background:#f1f4f8;color:#4b6278}
@@ -1541,6 +1571,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div class="adgb-sidebar-foot"><span class="adgb-sidebar-dot"></span><strong>Portal status</strong><small id="adgbSidebarStatus">Connecting…</small></div>
     </aside>
     <main class="page" id="top">
+      <section id="adgbNoticeStrip" class="adgb-notice-strip" hidden aria-label="Scheduled office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window"><div id="adgbNoticeTrack" class="adgb-notice-track"></div></div><button id="adgbNoticePause" type="button" aria-pressed="false" title="Pause moving notices">Ⅱ</button></section>
     <div class="notice hidden" id="connectionNotice">
       <span id="connectionMessage"></span>
       <button id="retryButton" type="button">Retry connection</button>
@@ -1727,6 +1758,32 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </section>
       <div class="adgb-compliance-heading"><div><h3>Office-wise compliance overview</h3><p>Current reporting cycle · live recorded statuses · not a historical trend</p></div><label>Sort offices <select id="adgbAnalyticsSort"><option value="pending">Most pending first</option><option value="overdue">Most overdue first</option><option value="completion">Highest completion first</option><option value="office">Office name</option></select></label></div>
       <div id="adgbOfficeHighlights" class="adgb-office-highlights"></div>
+      <section class="adgb-scorecard-section" aria-label="Office comparative performance">
+        <div class="adgb-compliance-heading"><div><h3>Office comparison scorecard</h3><p>Ranked by completion rate, then fewer overdue and pending items · current cycle</p></div></div>
+        <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Rank</th><th>Office</th><th>Completion</th><th>Submitted / Expected</th><th>Pending</th><th>Overdue</th><th>Due today</th></tr></thead><tbody id="adgbScorecardRows"></tbody></table></div>
+      </section>
+      <section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
+        <div class="adgb-compliance-heading"><div><h3>Moving Notice Board — Administrator</h3><p>Red text on light yellow · scheduled in India time · targeted to authorized offices</p></div></div>
+        <p id="adgbNoticeAdminStatus" class="adgb-insights-count" aria-live="polite">Load notices to manage the schedule and office visibility.</p>
+        <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button></div>
+        <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
+        <div class="adgb-notice-form">
+          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="2" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label>
+          <div class="adgb-notice-form-grid">
+            <label>Display to <select id="adgbNoticeTarget"><option value="ALL">Everyone permitted to view the portal</option></select></label>
+            <label>Start (IST) <input id="adgbNoticeStart" type="datetime-local"></label>
+            <label>End (IST) <input id="adgbNoticeEnd" type="datetime-local"></label>
+            <label class="adgb-notice-check"><input id="adgbNoticeEnabled" type="checkbox" checked> Enabled</label>
+          </div>
+          <div class="adgb-insights-toolbar"><button id="adgbNoticeSave" type="button">Save scheduled notice</button><button id="adgbNoticeCancel" type="button">Reset form</button></div>
+        </div>
+        <div class="adgb-notice-pending-config">
+          <label class="adgb-notice-check"><input id="adgbNoticePendingEnabled" type="checkbox"> Include live office-wise pending counts in moving strip</label>
+          <p>Office users see only their own office count; administrators see selected offices. Guests/viewers do not receive office-specific counts.</p>
+          <div id="adgbNoticeOfficeChecks" class="adgb-notice-office-checks"></div>
+          <button id="adgbNoticeSaveSettings" type="button">Save pending-display settings</button>
+        </div>
+      </section>
       <section id="adgbComplianceTrends" class="adgb-trends-panel" hidden aria-label="Administrator compliance trends">
         <div class="adgb-compliance-heading"><div><h3>Month-wise compliance evidence</h3><p>Administrator only · recorded submission outcomes and dated compliance snapshots</p></div></div>
         <div class="adgb-insights-toolbar">
