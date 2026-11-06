@@ -3481,6 +3481,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         '<div class="details">'+x.pending+' pending'+(x.overdue?' · '+x.overdue+' overdue':'')+
         (x.dueToday?' · '+x.dueToday+' due today':'')+'</div>'+
         '<button type="button" class="adgb-office-open" data-adgb-office-pending="'+escapeAttr(x.officeId)+'"'+(x.pending?'':' disabled')+'>View '+x.pending+' pending report'+(x.pending===1?'':'s')+'</button></div>').join('');
+      const ranking=compliance.filter(x=>x.total>0).sort((a,b)=>b.percent-a.percent||a.overdue-b.overdue||a.pending-b.pending||a.office.localeCompare(b.office));
+      const empty=compliance.filter(x=>!x.total).sort((a,b)=>a.office.localeCompare(b.office));
+      const scorecard=document.getElementById('adgbScorecardRows');
+      let lastRank=0;
+      const keyed=ranking.map((x,i)=>{
+        if(i===0||x.percent!==ranking[i-1].percent||x.overdue!==ranking[i-1].overdue||x.pending!==ranking[i-1].pending)lastRank=i+1;
+        return {...x,rank:lastRank};
+      });
+      if(scorecard)scorecard.innerHTML=[...keyed,...empty.map(x=>({...x,rank:'—'}))].map(x=>
+        '<tr><td><span class="adgb-scorecard-rank">'+x.rank+'</span></td><td><strong>'+escapeHtml(x.office)+'</strong></td>'+
+        '<td>'+(x.total?x.percent+'%':'Not applicable')+'</td><td>'+x.submitted+' / '+x.total+'</td><td>'+x.pending+'</td>'+
+        '<td>'+x.overdue+'</td><td>'+x.dueToday+'</td></tr>').join('');
       const table=document.getElementById('adgbComplianceRows');
       if(table)table.innerHTML=compliance.map(x=>'<tr><td>'+escapeHtml(x.office)+'</td><td>'+x.total+'</td><td>'+x.submitted+'</td><td>'+x.pending+'</td><td>'+x.overdue+'</td><td>'+x.dueToday+'</td><td>'+x.noDeadline+'</td><td>'+x.review+'</td><td>'+x.percent+'%</td></tr>').join('');
       const note=document.getElementById('adgbComplianceNote');
