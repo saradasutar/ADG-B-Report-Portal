@@ -529,3 +529,31 @@ Open **Office Analytics**, select **Load notices and settings**, then use the su
 
 **Deployment:** This change is GitHub-frontend only. Your existing V17.7.82 integrated Apps Script backend, once deployed, is sufficient. No new spreadsheet, Apps Script action, Script Property or trigger is required. Changes were syntax-checked but still need acceptance testing in the live browser.
 
+
+
+---
+
+## V17.7.84 — Preview which offices will receive a scheduled notice
+
+The **Moving Notice Board — Administrator** editor now has a live **Preview before publishing** section. As the administrator types the notice and selects an audience, start/end period, or Enabled setting, the preview shows:
+
+- The proposed notice text using the red-on-light-yellow notice appearance.
+- Whether the notice is **scheduled**, within its active display period, **expired**, or **disabled**, based on the India (Asia/Kolkata) clock.
+- An easy-to-read audience preview for **Head Office Administrator**, each of the five offices, and other viewers/guests. Included offices have a green-tinted border.
+- A reminder that moving office-specific pending counts have their own separate administrator visibility settings.
+
+Choose **All permitted portal viewers** for general announcements, or select **CE(B), CE(HAL), SE&PD, SE(Mysore), or SE(Hubli)** to target just one office (plus authorized Head Office administration).
+
+**Important:** This is a **simulation of the configured audience**, not proof of actual delivery or impersonation of individual accounts. The backend must enforce final permissions; the preview cannot grant access or override login rules. It does not persist changes, create a notice, or expose stored private messages to unauthorized viewers. Use **Save scheduled notice** to publish actual configuration.
+
+### How to check
+
+1. Open the portal as Administrator, then choose **Office Analytics → Moving Notice Board — Administrator**.
+2. Load saved settings, select **New notice**, and enter a harmless draft message.
+3. Change **Display to** between All permitted viewers and each office. Confirm green markers follow only selected offices.
+4. Change the start and end dates and disable/enable the notice. The status preview updates without any save.
+5. Test editing an existing notice: its fields populate and the preview updates. Click Reset form to cancel.
+6. If the backend is deployed, save a harmless targeted notice and confirm audience segregation with separate real office logins.
+
+This is a **frontend-only V17.7.84 change**. No new Apps Script deployment is required if the previous V17.7.82 notice backend is already installed. No new spreadsheet, Sheet tab or Drive file is created. JavaScript syntax passed; live account behavior still requires authorized manual testing.
+
