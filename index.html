@@ -1623,8 +1623,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div id="adgbAnalyticsRows" class="adgb-analytics-rows"></div>
       <section id="adgbReviewWorkspace" class="adgb-review-workspace" hidden aria-label="Administrator office follow-up drafts">
         <div class="adgb-insights-heading"><div><h3>Office review &amp; follow-up drafts</h3><p>Admin only · temporary in this browser tab · not saved to the backend</p></div></div>
-        <p class="adgb-insights-count">Add observations and action taken for the current cycle. Download a CSV or print before closing or refreshing this tab. No reminder is sent from this section.</p>
-        <div class="adgb-insights-toolbar"><button type="button" id="adgbReviewCsv">Export review CSV</button><button type="button" id="adgbReviewClear">Clear draft remarks</button></div>
+        <p class="adgb-insights-count">Add observations and action taken for the current cycle. Permanent saving requires the compatible private Apps Script backend. Until it is confirmed, export or print before refreshing.</p>
+        <p id="adgbReviewSaveStatus" class="adgb-insights-count" aria-live="polite">Unsaved drafts — not stored in Google Sheets.</p>
+        <div class="adgb-insights-toolbar"><button type="button" id="adgbReviewLoad">Load saved reviews</button><button type="button" id="adgbReviewSave">Save to Sheet</button><button type="button" id="adgbReviewCsv">Export review CSV</button><button type="button" id="adgbReviewClear">Clear draft remarks</button></div>
         <div id="adgbReviewEntries" class="adgb-review-grid"></div>
       </section>
     </section>
@@ -2975,6 +2976,54 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     // V17.7.69: draft remarks are memory-only, never stored in the public repository,
     // browser storage or sent to Apps Script. Download/print before refreshing.
     const adgbReviewDrafts=new Map();
+    let adgbReviewDirty=false,adgbReviewPersisted=false,adgbReviewLoadedCycle='';
+    function adgbReviewStatus(message){const el=document.getElementById('adgbReviewSaveStatus');if(el)el.textContent=message;}
+    function adgbReviewCycle(){return adgbCurrentCycleKeyIST();}
+    function adgbReviewCredential(){syncAdminCodeFromSession();return state.adminCode||'';}
+    function adgbCleanReviewEntry(entry){
+      const statuses=['','Open','In progress','Completed','For review'];
+      const followup=String(entry?.followup||'');
+      const date=String(entry?.targetDate||'');
+      return {observation:String(entry?.observation||'').slice(0,1000),action:String(entry?.action||'').slice(0,1000),
+        followup:statuses.includes(followup)?followup:'',targetDate:/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)?date:''};
+    }
+    async function adgbLoadSavedReviews(){
+      if(!isRecognizedAsAdmin())return;
+      if(adgbReviewDirty){adgbReviewStatus('Unsaved drafts exist. Export or clear them before loading saved reviews.');return;}
+      const code=adgbReviewCredential();if(!code){adgbReviewStatus('Administrator credential unavailable. Sign in again.');return;}
+      const button=document.getElementById('adgbReviewLoad');if(button)button.disabled=true;
+      adgbReviewStatus('Checking existing Google Sheet review records…');
+      try{
+        const cycleKey=adgbReviewCycle();
+        const response=await postToBackend({action:'adminOfficeReviewList',securityCode:code,cycleKey});
+        if(!response?.ok||!Array.isArray(response.records))throw Error('Compatible review backend is not yet available.');
+        const ids=new Set(state.offices.map(office=>String(office.id)));
+        const next=new Map();
+        for(const row of response.records){const id=String(row.officeId||'');if(ids.has(id))next.set(id,adgbCleanReviewEntry(row));}
+        adgbReviewDrafts.clear();for(const [id,entry] of next)adgbReviewDrafts.set(id,entry);
+        adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=cycleKey;
+        const container=document.getElementById('adgbReviewEntries');if(container)container.innerHTML='';
+        adgbRenderReviewWorkspace();adgbReviewStatus('Loaded '+next.size+' saved office reviews for '+cycleKey+'.');
+      }catch(error){adgbReviewStatus('Could not load saved reviews: '+(error.message||'Check backend deployment')+'. Existing drafts were preserved.');}
+      finally{if(button)button.disabled=false;}
+    }
+    async function adgbSaveReviews(){
+      if(!isRecognizedAsAdmin())return;
+      const code=adgbReviewCredential();if(!code){adgbReviewStatus('Administrator credential unavailable. Sign in again.');return;}
+      if(adgbReviewLoadedCycle&&adgbReviewLoadedCycle!==adgbReviewCycle()){
+        adgbReviewStatus('Reporting cycle changed. Export this draft before saving into a new cycle.');return;
+      }
+      const records=adgbReviewSnapshot().map(({office,entry})=>({officeId:String(office.id),...adgbCleanReviewEntry(entry)}));
+      const button=document.getElementById('adgbReviewSave');if(button)button.disabled=true;
+      adgbReviewStatus('Saving to the existing portal database…');
+      try{
+        const response=await postToBackend({action:'adminOfficeReviewSave',securityCode:code,cycleKey:adgbReviewCycle(),records});
+        if(!response?.ok||response.savedCount!==records.length)throw Error('Backend did not confirm saving all '+records.length+' offices.');
+        adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=adgbReviewCycle();
+        adgbReviewStatus('Saved '+response.savedCount+' office reviews in Google Sheets for '+adgbReviewLoadedCycle+'.');
+      }catch(error){adgbReviewStatus('Save NOT confirmed: '+(error.message||'Compatible backend is not deployed')+'. Export your draft before refreshing.');}
+      finally{if(button)button.disabled=false;}
+    }
     function adgbReviewSnapshot(){
       return state.offices.map(office=>({office,entry:adgbReviewDrafts.get(String(office.id))||{observation:'',action:'',followup:'',targetDate:''}}));
     }
@@ -3006,6 +3055,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!['observation','action','followup','targetDate'].includes(name))return;
       const entry=adgbReviewDrafts.get(id)||{observation:'',action:'',followup:'',targetDate:''};
       entry[name]=String(field.value||'').slice(0,1000);adgbReviewDrafts.set(id,entry);
+      adgbReviewDirty=true;adgbReviewPersisted=false;adgbReviewStatus('Unsaved changes — use Save to Sheet after backend installation, or export CSV.');
     }
     function adgbExportReviewCsv(){
       if(!isRecognizedAsAdmin())return;
@@ -3044,7 +3094,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         table+priorities+'<p class="print-report-footer">Snapshot from current-cycle portal data. Undated reports are not classified as overdue. Verify the underlying records before official circulation.</p>';
       const notes=adgbReviewSnapshot().filter(x=>x.entry.observation||x.entry.action||x.entry.followup||x.entry.targetDate);
       if(notes.length){
-        const noteTable='<h2 style="font-size:13px;margin:14px 0 7px">Administrator observations and follow-up (unsaved drafts)</h2>'+
+        const noteTable='<h2 style="font-size:13px;margin:14px 0 7px">Administrator observations and follow-up ('+(adgbReviewPersisted&&!adgbReviewDirty?'saved as confirmed':'unsaved draft')+')</h2>'+
           '<table class="print-matrix"><thead><tr><th>Office</th><th>Observation</th><th>Action taken</th><th>Follow-up</th><th>Target</th></tr></thead><tbody>'+
           notes.map(({office,entry})=>'<tr>'+[office.name,entry.observation,entry.action,entry.followup,entry.targetDate].map(v=>'<td style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapeHtml(v||'—')+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
         container.insertAdjacentHTML('beforeend',noteTable);
@@ -3059,6 +3109,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbReviewEntries')?.addEventListener('input',adgbUpdateReviewField);
       document.getElementById('adgbReviewEntries')?.addEventListener('change',adgbUpdateReviewField);
       document.getElementById('adgbReviewCsv')?.addEventListener('click',adgbExportReviewCsv);
+      document.getElementById('adgbReviewLoad')?.addEventListener('click',adgbLoadSavedReviews);
+      document.getElementById('adgbReviewSave')?.addEventListener('click',adgbSaveReviews);
       document.getElementById('adgbReviewClear')?.addEventListener('click',()=>{
         if(!isRecognizedAsAdmin())return;
         // Explicit second click confirmation to avoid accidental loss.
@@ -3066,7 +3118,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(button.dataset.confirm!=='yes'){
           button.dataset.confirm='yes';button.textContent='Confirm: discard all draft remarks';return;
         }
-        adgbReviewDrafts.clear();button.dataset.confirm='';button.textContent='Clear draft remarks';
+        adgbReviewDrafts.clear();adgbReviewDirty=true;adgbReviewPersisted=false;
+        adgbReviewStatus('Drafts cleared locally. Stored backend records, if any, are unchanged until explicitly saved.');
+        button.dataset.confirm='';button.textContent='Clear draft remarks';
         document.getElementById('adgbReviewEntries').innerHTML='';adgbRenderReviewWorkspace();
       });
       ['adgbRegisterSearch','adgbRegisterOffice','adgbRegisterStatus'].forEach(id=>{
