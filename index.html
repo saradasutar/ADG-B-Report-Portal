@@ -2928,7 +2928,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         document.getElementById('adminButton')?.click();
         return;
       }
-      ['adgbRegisterPanel','adgbAnalyticsPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true});
+      ['adgbRegisterPanel','adgbAnalyticsPanel','adgbActionPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true});
       adgbInsightsView='';
       document.getElementById('adgbArchivePanel').hidden=false;
       document.getElementById('adgbArchivePanel').scrollIntoView({block:'start',behavior:'smooth'});
@@ -2999,11 +2999,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbOpenInsights(view){
       adgbInsightsView=view;
       const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
-      const reg=document.getElementById('adgbRegisterPanel'),ana=document.getElementById('adgbAnalyticsPanel');
+      const reg=document.getElementById('adgbRegisterPanel'),ana=document.getElementById('adgbAnalyticsPanel'),actions=document.getElementById('adgbActionPanel');
       if(reg)reg.hidden=view!=='register';
       if(ana)ana.hidden=view!=='analytics';
+      if(actions)actions.hidden=view!=='actions';
       adgbRefreshInsights();
-      (view==='register'?reg:ana)?.scrollIntoView({block:'start',behavior:'smooth'});
+      (view==='register'?reg:view==='actions'?actions:ana)?.scrollIntoView({block:'start',behavior:'smooth'});
     }
     function adgbFormatTimeIST(value){
       if(!value)return '—';
@@ -3052,6 +3053,52 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         }
       }
       return rows;
+    }
+    function adgbActionPriority_(row,today){
+      if(row.deadlineReview)return {kind:'review',name:'Verify date',rank:3};
+      if(row.dueDate&&row.dueDate<today)return {kind:'overdue',name:'Overdue',rank:0};
+      if(row.dueDate===today)return {kind:'today',name:'Due today',rank:1};
+      if(row.dueDate)return {kind:'upcoming',name:'Upcoming',rank:2};
+      return {kind:'undated',name:'No deadline',rank:4};
+    }
+    let adgbActionVisible_=[];
+    function adgbRenderActions_(){
+      if(adgbInsightsView!=='actions')return;
+      const office=document.getElementById('adgbActionOffice'),priority=document.getElementById('adgbActionPriority'),search=document.getElementById('adgbActionSearch');
+      if(!office||!priority||!search)return;
+      const chosen=office.value;
+      if(office.options.length!==state.offices.length+1||state.offices.some((x,i)=>office.options[i+1]?.value!==String(x.id))){
+        office.innerHTML='<option value="">All offices</option>'+state.offices.map(x=>'<option value="'+escapeAttr(x.id)+'">'+escapeHtml(x.name)+'</option>').join('');
+        if(state.offices.some(x=>String(x.id)===chosen))office.value=chosen;
+      }
+      const today=adgbTodayIST(),all=adgbRegisterData().filter(x=>!x.submitted).map(x=>({...x,priority:adgbActionPriority_(x,today)}));
+      const byPriority=key=>all.filter(x=>x.priority.kind===key).length;
+      const summary=document.getElementById('adgbActionSummary');
+      if(summary)summary.innerHTML='<div><strong>'+all.length+'</strong><span>Pending across all offices</span></div><div><strong>'+byPriority('overdue')+'</strong><span>Overdue</span></div><div><strong>'+byPriority('today')+'</strong><span>Due today</span></div><div><strong>'+byPriority('review')+'</strong><span>Verify deadline</span></div>';
+      const q=search.value.trim().toLowerCase();
+      adgbActionVisible_=all.filter(x=>(!office.value||x.officeId===office.value)&&
+        (priority.value==='all'||priority.value===x.priority.kind)&&
+        (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q)))
+        .sort((a,b)=>a.priority.rank-b.priority.rank||(a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31')||a.office.localeCompare(b.office)||a.subject.localeCompare(b.subject));
+      const body=document.getElementById('adgbActionRows');
+      if(body)body.innerHTML=adgbActionVisible_.map(x=>'<tr><td><span class="adgb-action-priority" data-priority="'+escapeAttr(x.priority.kind)+'">'+escapeHtml(x.priority.name)+'</span></td><td>'+escapeHtml(x.office)+'</td><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td></tr>').join('')||'<tr><td colspan="5">No matching pending reports.</td></tr>';
+      const count=document.getElementById('adgbActionCount');
+      if(count)count.textContent=adgbActionVisible_.length+' matching pending report(s) · current cycle as of '+today+' IST. No deadline is assumed where none is configured.';
+      document.getElementById('adgbActionPrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+    }
+    function adgbPrintActions_(){
+      if(!isRecognizedAsAdmin()){showToast('Administrator permission required to print the action list.','error');return;}
+      adgbRenderActions_();
+      const rows=adgbActionVisible_,today=adgbTodayIST();
+      const office=document.getElementById('adgbActionOffice'),priority=document.getElementById('adgbActionPriority');
+      const officeName=office?.selectedOptions?.[0]?.textContent||'All offices',level=priority?.selectedOptions?.[0]?.textContent||'All pending';
+      const target=document.getElementById('printPendingReport');if(!target)return;
+      const table='<table class="print-matrix"><thead><tr><th>Priority</th><th>Office</th><th>Report</th><th>Type</th><th>Deadline</th></tr></thead><tbody>'+
+        (rows.length?rows.map(x=>'<tr>'+[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x)].map(v=>'<td>'+escapeHtml(String(v))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="5">No matching reports.</td></tr>')+'</tbody></table>';
+      target.innerHTML='<div class="print-report-header"><h1>O/o Additional Director General (B), CPWD, Bengaluru</h1><p>Action Required — Current Reporting Cycle</p>'+
+        '<div class="print-report-meta"><span>As of '+escapeHtml(today)+' (IST)</span><span>'+escapeHtml(officeName)+' · '+escapeHtml(level)+' · '+rows.length+' records</span></div></div>'+
+        table+'<p class="print-report-footer">Prepared from the current portal status. Only the currently filtered action list is printed. Missing deadlines are not estimated.</p>';
+      window.print();
     }
     function adgbOpenOfficePending_(officeId){
       if(!state.offices.some(x=>String(x.id)===String(officeId)))return;
@@ -3523,9 +3570,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       window.print();
     }
     function adgbRefreshInsights(){
-      adgbRenderRegister();adgbRenderAnalytics();
+      adgbRenderRegister();adgbRenderAnalytics();adgbRenderActions_();
     }
     function adgbInitInsights(){
+      ['adgbActionOffice','adgbActionPriority','adgbActionSearch'].forEach(id=>{
+        const field=document.getElementById(id);
+        field?.addEventListener(id==='adgbActionSearch'?'input':'change',adgbRenderActions_);
+      });
+      document.getElementById('adgbActionPrint')?.addEventListener('click',adgbPrintActions_);
       document.getElementById('adgbOfficeHighlights')?.addEventListener('click',event=>{
         const btn=event.target.closest('[data-adgb-office-pending]');
         if(btn&&!btn.disabled)adgbOpenOfficePending_(btn.getAttribute('data-adgb-office-pending'));
@@ -3565,6 +3617,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbInsightsView='';
         document.getElementById('adgbRegisterPanel').hidden=true;
         document.getElementById('adgbAnalyticsPanel').hidden=true;
+        document.getElementById('adgbActionPanel').hidden=true;
         document.getElementById('top')?.scrollIntoView({block:'start',behavior:'smooth'});
       }));
       document.getElementById('adgbRegisterExport')?.addEventListener('click',()=>{
@@ -3590,7 +3643,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const nav=btn.getAttribute('data-adgb-nav');
         document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
         if(nav==='archive'){adgbOpenArchive();return;}
-        if(nav==='register'||nav==='analytics'){
+        if(nav==='register'||nav==='analytics'||nav==='actions'){
           adgbOpenInsights(nav);
           return;
         }
