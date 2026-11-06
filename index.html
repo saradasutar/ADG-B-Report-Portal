@@ -3092,6 +3092,59 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbAuditCsv')?.addEventListener('click',adgbAuditExportCsv_);
       document.getElementById('adgbAuditPrint')?.addEventListener('click',adgbAuditPrintLoaded_);
     }
+    function adgbAuditExportControls_(){
+      const enabled=isRecognizedAsAdmin()&&adgbAuditRecords.length>0&&!adgbAuditBusy;
+      for(const id of ['adgbAuditCsv','adgbAuditPrint']){
+        const button=document.getElementById(id);
+        if(button)button.disabled=!enabled;
+      }
+    }
+    function adgbAuditCleanJson_(value){
+      try{
+        const x=JSON.parse(String(value||'{}'));
+        return x&&typeof x==='object'&&!Array.isArray(x)?x:{};
+      }catch{return {};}
+    }
+    function adgbAuditExportCsv_(){
+      if(!isRecognizedAsAdmin()||!adgbAuditRecords.length)return;
+      const quote=value=>{
+        const text=String(value??'');
+        // Excel/Sheets may evaluate formulas starting with =,+,-,@, even after whitespace.
+        const safe=/^[\\s]*[=+\\-@]/.test(text)?"'"+text:text;
+        return '"'+safe.replaceAll('"','""')+'"';
+      };
+      const header=['Timestamp (IST)','Reporting month','Office','Administrator','Changed fields','Before observation','After observation','Before action','After action','Before follow-up','After follow-up','Before target date','After target date','Audit event ID'];
+      const data=adgbAuditRecords.map(x=>{
+        const before=adgbAuditCleanJson_(x.before),after=adgbAuditCleanJson_(x.after);
+        return [adgbFormatTimeIST(x.changedAt),x.cycleKey,x.officeName||x.officeId,x.actor,x.changedFields,
+          before.observation,after.observation,before.action,after.action,before.followup,after.followup,
+          before.targetDate,after.targetDate,x.id];
+      });
+      const csv='\\uFEFF'+[header,...data].map(row=>row.map(quote).join(',')).join('\\r\\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url=URL.createObjectURL(blob),link=document.createElement('a');
+      const month=String(document.getElementById('adgbAuditMonth')?.value||adgbReviewCycle());
+      link.href=url;link.download='ADGB-review-audit-LOADED-'+month+'.csv';
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      adgbAuditMessage_('Exported '+data.length+' loaded audit event(s).'+(adgbAuditHasMore?' Load more to include additional history.':''));
+    }
+    function adgbAuditPrintLoaded_(){
+      if(!isRecognizedAsAdmin()||!adgbAuditRecords.length)return;
+      const month=String(document.getElementById('adgbAuditMonth')?.value||'');
+      const office=String(document.getElementById('adgbAuditOffice')?.selectedOptions?.[0]?.textContent||'All offices');
+      const cols=['When (IST)','Office','Administrator','Change details'];
+      const rows=adgbAuditRecords.map(x=>
+        '<tr><td>'+escapeHtml(adgbFormatTimeIST(x.changedAt))+'</td><td>'+escapeHtml(x.officeName||x.officeId)+'</td><td>'+escapeHtml(x.actor)+'</td><td><div style="white-space:pre-wrap;overflow-wrap:anywhere">'+adgbAuditChanges_(x)+'</div></td></tr>'
+      ).join('');
+      const printNode=document.getElementById('printPendingReport');if(!printNode)return;
+      printNode.innerHTML='<div class="print-report-header"><h1>O/o Additional Director General (B), CPWD, Bengaluru</h1>'+
+        '<p>Office Review Audit History · Administrator copy</p><div class="print-report-meta"><span>Month: '+escapeHtml(month)+' · '+escapeHtml(office)+'</span><span>Loaded records: '+adgbAuditRecords.length+'</span></div></div>'+
+        '<table class="print-matrix"><thead><tr>'+cols.map(x=>'<th>'+escapeHtml(x)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<p class="print-report-footer">Printed from the loaded history only. '+(adgbAuditHasMore?'Additional matching audit records were not loaded. ':'')+
+        'Audit describes submitted change attempts; verify final records in OfficeReviews. Handle as restricted office material.</p>';
+      window.print();
+    }
     function adgbAuditChanges_(row){
       let before={},after={};
       try{before=JSON.parse(row.before||'{}')||{};after=JSON.parse(row.after||'{}')||{};}catch{return '<span>Could not read change details</span>';}
