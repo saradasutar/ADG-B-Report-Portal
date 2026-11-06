@@ -399,3 +399,21 @@ Sign in as Head Office Administrator. Open **Historical Archive**, choose an ear
 
 **Limitations:** Old rows missing a trustworthy reporting month cannot always be reconstructed; the archive does not enumerate all replacement events, only the latest state of each office/report for that month. Viewing a PDF never makes the Drive file public. A short-lived viewer URL is still a bearer secret; do not share it. The backend files were syntax checked and tested using mocked APIs, but **real Apps Script authorization, Drive access and deployment are not verified until these acceptance tests pass**.
 
+
+
+---
+
+## V17.7.78 — Prevent false-positive System Readiness results
+
+The administrator-only **Office Analytics → System readiness → Check backend** now verifies each endpoint's **expected response structure**, not merely an `ok: true` flag.
+
+- Office Reviews must return an array of review records with office identifiers.
+- Audit History must return a record array.
+- Compliance Trends must return a record array with valid cycle keys.
+- Historical Archive must return the records for the **requested prior month**.
+- The dashboard connection must have completed successfully.
+
+A result can be **Unavailable** if the Apps Script deployment is older, the administrator login expired, or a route responds without the expected schema. Failed checks do **not** imply data loss. These are strictly read-only checks and do not prove actual upload, save, email or PDF-viewing functionality.
+
+**Upgrade:** V17.7.78 is a GitHub frontend-only change. No new spreadsheet, trigger or Apps Script redeployment is required solely for the checker. The complete integrated **V17.7.77** backend remains the required baseline for all five capabilities. Deploy and test it separately if your live backend is older.
+
