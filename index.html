@@ -1373,6 +1373,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.83 notice manager activity and schedule visibility */
+.adgb-notice-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:8px 12px}
+.adgb-notice-summary>div{background:#fff;border:1px solid #e5d8ac;border-radius:8px;padding:9px;display:grid;gap:3px}
+.adgb-notice-summary strong{font-size:19px;color:#9a2f32;font-variant-numeric:tabular-nums}
+.adgb-notice-summary small{font-size:10px;color:#665f58}
+.adgb-notice-state{display:inline-block;padding:3px 7px;border-radius:6px;background:#f2f3f5;font-size:10px;font-weight:850;color:#566577}
+.adgb-notice-state[data-state="active"]{background:#e0f3e6;color:#12613a}
+.adgb-notice-state[data-state="scheduled"]{background:#e8f0ff;color:#1c548e}
+.adgb-notice-state[data-state="expired"]{background:#fff0e3;color:#94561f}
+.adgb-notice-state[data-state="disabled"]{background:#f2edf2;color:#795c73}
+@media(max-width:760px){.adgb-notice-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V17.7.82 administrator moving text speed */
 .adgb-notice-speed-label{display:block;margin-top:12px;font-size:11px;color:#48556b;font-weight:750}
 #adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
@@ -1770,7 +1781,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
         <div class="adgb-compliance-heading"><div><h3>Moving Notice Board — Administrator</h3><p>Red text on light yellow · scheduled in India time · targeted to authorized offices</p></div></div>
         <p id="adgbNoticeAdminStatus" class="adgb-insights-count" aria-live="polite">Load notices to manage the schedule and office visibility.</p>
-        <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button></div>
+        <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button><label>Status <select id="adgbNoticeStatusFilter"><option value="all">All notices</option><option value="active">Active now</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select></label></div>
+        <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div>
         <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
         <div class="adgb-notice-form">
           <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="2" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label>
@@ -3372,17 +3384,36 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbNoticeAdminShow_(){
       const section=document.getElementById('adgbNoticeAdmin');if(section)section.hidden=!isRecognizedAsAdmin();
     }
+    function adgbNoticeState_(notice){
+      if(notice.enabled!==true)return 'disabled';
+      const now=adgbNoticeTimeIST_();
+      const from=String(notice.start||'').slice(0,16);
+      const until=String(notice.end||'').slice(0,16);
+      if(from>now)return 'scheduled';
+      if(until<=now)return 'expired';
+      return 'active';
+    }
+    function adgbNoticeRenderRows_(){
+      const all=document.getElementById('adgbNoticeSavedList');
+      const filter=String(document.getElementById('adgbNoticeStatusFilter')?.value||'all');
+      const rows=adgbNoticeAdminRows_.map(x=>({...x,noticeState:adgbNoticeState_(x)}));
+      const summary=document.getElementById('adgbNoticeSummary');
+      if(summary)summary.innerHTML=['active','scheduled','expired','disabled'].map(key=>
+        '<div><strong>'+rows.filter(x=>x.noticeState===key).length+'</strong><small>'+escapeHtml(key[0].toUpperCase()+key.slice(1))+'</small></div>').join('');
+      const selected=rows.filter(x=>filter==='all'||x.noticeState===filter)
+        .sort((a,b)=>a.start.localeCompare(b.start)||String(a.id).localeCompare(String(b.id)));
+      if(all)all.innerHTML=selected.map(x=>
+        '<div class="adgb-notice-saved"><div><span class="adgb-notice-state" data-state="'+escapeAttr(x.noticeState)+'">'+escapeHtml(x.noticeState.toUpperCase())+'</span> <strong>'+escapeHtml(x.text)+'</strong><div><small>'+
+        escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · '+
+        escapeHtml(x.start)+' to '+escapeHtml(x.end)+' IST</small></div></div>'+
+        '<div class="adgb-notice-saved-actions"><button type="button" data-adgb-edit-notice="'+escapeAttr(x.id)+'">Edit</button>'+
+        '<button type="button" data-adgb-delete-notice="'+escapeAttr(x.id)+'">Delete</button></div></div>').join('')||
+        '<p class="adgb-insights-count">No notices match this status. Choose All notices or create a new notice.</p>';
+    }
     function adgbNoticeRenderAdmin_(result){
       adgbNoticeAdminRows_=Array.isArray(result.notices)?result.notices:[];
       adgbNoticeAdminLoaded_=true;
-      const all=document.getElementById('adgbNoticeSavedList');
-      if(all)all.innerHTML=adgbNoticeAdminRows_.map(x=>
-        '<div class="adgb-notice-saved"><div><strong>'+escapeHtml(x.text)+'</strong><div><small>'+
-        escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · '+
-        escapeHtml(x.start)+' to '+escapeHtml(x.end)+' IST · '+(x.enabled?'Enabled':'Disabled')+
-        '</small></div></div><div class="adgb-notice-saved-actions"><button type="button" data-adgb-edit-notice="'+escapeAttr(x.id)+'">Edit</button>'+
-        '<button type="button" data-adgb-delete-notice="'+escapeAttr(x.id)+'">Delete</button></div></div>').join('')||
-        '<p class="adgb-insights-count">No scheduled notices. Create your first notice below.</p>';
+      adgbNoticeRenderRows_();
       const settings=result.settings||{};
       const checkbox=document.getElementById('adgbNoticePendingEnabled');
       if(checkbox)checkbox.checked=settings.showPending===true;
@@ -3455,6 +3486,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(button){button.textContent=adgbNoticePaused_?'▶':'Ⅱ';button.setAttribute('aria-pressed',String(adgbNoticePaused_));}
         adgbNoticeRenderStrip_();
       });
+      document.getElementById('adgbNoticeStatusFilter')?.addEventListener('change',adgbNoticeRenderRows_);
       document.getElementById('adgbNoticeAdminLoad')?.addEventListener('click',adgbNoticeAdminLoad_);
       document.getElementById('adgbNoticeNew')?.addEventListener('click',adgbNoticeResetForm_);
       document.getElementById('adgbNoticeCancel')?.addEventListener('click',adgbNoticeResetForm_);
@@ -3481,7 +3513,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           catch(error){adgbNoticeStatus_('Delete failed: '+(error.message||'Connection failed'));del.disabled=false;}
         }
       });
-      setInterval(()=>{adgbNoticeLoad_();},60000);
+      setInterval(()=>{adgbNoticeLoad_();if(adgbNoticeAdminLoaded_&&isRecognizedAsAdmin())adgbNoticeRenderRows_();},60000);
     }
     function adgbRenderAnalytics(){
       if(adgbInsightsView!=='analytics')return;
