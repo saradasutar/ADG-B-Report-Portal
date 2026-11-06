@@ -3512,6 +3512,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(end)end.value=adgbNoticeTimeIST_(24*3600000);
       if(enabled)enabled.checked=true;
       const save=document.getElementById('adgbNoticeSave');if(save)save.textContent='Save scheduled notice';
+      adgbNoticeDraftFormSnapshot_={text:'',target:'ALL',start:start?.value||'',end:end?.value||'',enabled:true};
       adgbNoticePreview_();
     }
     function adgbNoticeRenderStrip_(){
@@ -3582,23 +3583,67 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbNoticeRenderRows_(){
       const all=document.getElementById('adgbNoticeSavedList');
       const filter=String(document.getElementById('adgbNoticeStatusFilter')?.value||'all');
+      const audienceFilter=String(document.getElementById('adgbNoticeAudienceFilter')?.value||'all');
+      const query=String(document.getElementById('adgbNoticeSearch')?.value||'').trim().toLowerCase();
+      const sort=String(document.getElementById('adgbNoticeSort')?.value||'startAsc');
       const rows=adgbNoticeAdminRows_.map(x=>({...x,noticeState:adgbNoticeState_(x)}));
       const summary=document.getElementById('adgbNoticeSummary');
       if(summary)summary.innerHTML=['active','scheduled','expired','disabled'].map(key=>
         '<div><strong>'+rows.filter(x=>x.noticeState===key).length+'</strong><small>'+escapeHtml(key[0].toUpperCase()+key.slice(1))+'</small></div>').join('');
-      const selected=rows.filter(x=>filter==='all'||x.noticeState===filter)
-        .sort((a,b)=>a.start.localeCompare(b.start)||String(a.id).localeCompare(String(b.id)));
+      const selected=rows.filter(x=>(filter==='all'||x.noticeState===filter)&&
+        (audienceFilter==='all'||x.target===audienceFilter)&&
+        (!query||(String(x.text||'')+' '+String(x.target||'')+' '+String(state.offices.find(o=>String(o.id)===String(x.target))?.name||'')).toLowerCase().includes(query)))
+        .sort((a,b)=>(sort==='startDesc'?b.start.localeCompare(a.start):sort==='endAsc'?a.end.localeCompare(b.end):a.start.localeCompare(b.start))||String(a.id).localeCompare(String(b.id)));
+      const visible=document.getElementById('adgbNoticeFilteredCount');
+      if(visible)visible.textContent=selected.length+' of '+rows.length+' notices shown · filtering does not delete or change notices.';
       if(all)all.innerHTML=selected.map(x=>
         '<div class="adgb-notice-saved"><div><span class="adgb-notice-state" data-state="'+escapeAttr(x.noticeState)+'">'+escapeHtml(x.noticeState.toUpperCase())+'</span> <strong>'+escapeHtml(x.text)+'</strong><div><small>'+
         escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · '+
         escapeHtml(x.start)+' to '+escapeHtml(x.end)+' IST</small></div></div>'+
         '<div class="adgb-notice-saved-actions"><button type="button" data-adgb-edit-notice="'+escapeAttr(x.id)+'">Edit</button>'+
+        '<button type="button" data-adgb-duplicate-notice="'+escapeAttr(x.id)+'">Duplicate draft</button>'+
+        '<button type="button" data-adgb-copy-notice="'+escapeAttr(x.id)+'">Copy text</button>'+
         '<button type="button" data-adgb-delete-notice="'+escapeAttr(x.id)+'">Delete</button></div></div>').join('')||
         '<p class="adgb-insights-count">No notices match this status. Choose All notices or create a new notice.</p>';
+    }
+    function adgbNoticeFiltered_(){
+      const filter=String(document.getElementById('adgbNoticeStatusFilter')?.value||'all');
+      const audience=String(document.getElementById('adgbNoticeAudienceFilter')?.value||'all');
+      const q=String(document.getElementById('adgbNoticeSearch')?.value||'').trim().toLowerCase();
+      return adgbNoticeAdminRows_.filter(x=>(filter==='all'||adgbNoticeState_(x)===filter)&&
+        (audience==='all'||String(x.target)===audience)&&
+        (!q||(String(x.text||'')+' '+String(x.target||'')+' '+String(state.offices.find(o=>String(o.id)===String(x.target))?.name||'')).toLowerCase().includes(q)));
+    }
+    function adgbNoticeCsvSafe_(value){
+      const raw=String(value??'');
+      const safe=/^[\s]*[=+\-@]/.test(raw)?"'"+raw:raw;
+      return '"'+safe.replaceAll('"','""')+'"';
+    }
+    function adgbNoticeDownloadCsv_(header,rows,filename){
+      const csv='\uFEFF'+[header,...rows].map(row=>row.map(adgbNoticeCsvSafe_).join(',')).join('\r\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    function adgbNoticeExportFiltered_(){
+      if(!isRecognizedAsAdmin()||!adgbNoticeAdminLoaded_)return;
+      const rows=adgbNoticeFiltered_();
+      adgbNoticeDownloadCsv_(['Text','Audience','Start IST','End IST','Enabled','Status'],rows.map(x=>
+        [x.text,x.target,x.start,x.end,x.enabled?'Yes':'No',adgbNoticeState_(x)]),
+        'ADGB-notices-filtered-'+adgbTodayIST()+'.csv');
+      adgbNoticeStatus_('Exported '+rows.length+' filtered notices (administrator copy).');
     }
     function adgbNoticeRenderAdmin_(result){
       adgbNoticeAdminRows_=Array.isArray(result.notices)?result.notices:[];
       adgbNoticeAdminLoaded_=true;
+      const audience=document.getElementById('adgbNoticeAudienceFilter');
+      if(audience){
+        const old=audience.value;
+        audience.innerHTML='<option value="all">All audiences</option><option value="ALL">General notices</option>'+
+          state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+'</option>').join('');
+        if([...audience.options].some(x=>x.value===old))audience.value=old;
+      }
       adgbNoticeRenderRows_();
       const settings=result.settings||{};
       const checkbox=document.getElementById('adgbNoticePendingEnabled');
