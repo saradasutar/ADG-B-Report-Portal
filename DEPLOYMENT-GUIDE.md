@@ -316,3 +316,32 @@ The existing administrator-only **Office Review & Follow-up** section retains it
 4. On a phone, verify that cards stack neatly and the review form remains readable.
 5. For persisted review remarks and audit history, ensure the previously prepared **V17.7.72 backend** has been deployed and tested. No new backend deployment is required for V17.7.74 itself.
 
+
+
+---
+
+## V17.7.75 — Month-wise compliance evidence and snapshots
+
+**What is new:** Office Analytics includes an administrator-only month-wise chart and table. The **Recorded submissions** column is reconstructed from the final logged event for each office/report/month in the existing `Submissions` tab. This number is **not** a compliance percentage or total expected reports.
+
+The **Capture current-cycle snapshot** button records a dated, server-calculated expected and submitted total, with office breakdown, in a new tab `Compliance_Snapshots` **inside the existing ADG(B) Portal Database spreadsheet**. It does **not** create another spreadsheet.
+
+### Easiest backend installation (required once for V17.7.75)
+
+1. Download **ADGB_Code_gs_V17_7_75_Integrated.txt** from the ChatGPT response. It is a complete backend, based on the earlier integrated V17.7.72 file.
+2. Back up your existing Apps Script `Code.gs` and the database spreadsheet before replacing anything. Verify that your live backend matches the previous V17.7.72 integrated version. If it has newer independent changes, merge them rather than overwriting.
+3. Open the **existing** Apps Script project and replace only `Code.gs` with the new integrated content. Preserve unrelated files and all script properties. If you also pasted a separate older Office Review add-on containing duplicate functions, remove that duplicate.
+4. Save, then use **Deploy → Manage deployments → Edit → New version → Deploy**, keeping the current `/exec` URL. **Do not run `setupPortal()` or `setPortalSecurityCodes()`.**
+5. Log into the portal as Administrator, choose **Office Analytics → Load verified trends**. Select 6, 12 or 24 months.
+6. Click **Capture current-cycle snapshot**, then click again to confirm. Check that the new `Compliance_Snapshots` tab is created in the **existing** spreadsheet.
+7. Reload trends. The current month shows a dated as-of percentage; older months with no captured denominator show only recorded final submissions, with compliance marked **Not available**.
+
+### Important interpretation and testing
+
+- **Snapshot percent** is the percentage when the snapshot was taken, **not necessarily the end-of-month value**. A new capture later in the month can update the latest shown point, but previous captures stay in the same tab.
+- Historic submission event counts are **distinct recorded final report/office outcomes**; they cannot by themselves tell how many reports should have been submitted that month.
+- The historical record may not include every older obligation or offline submission. Never relabel these data as certified month-end compliance.
+- Only logged-in Administrator sessions can read or capture these history data; backend enforcement is required. Public and office-only accounts cannot call these endpoints successfully.
+- Verify one known month against the `Submissions` sheet, one month without a snapshot, and one current-cycle snapshot. Also verify normal uploading, removal, login, and archive actions still work.
+- No background capture trigger or automatic emails are enabled in this upgrade.
+
