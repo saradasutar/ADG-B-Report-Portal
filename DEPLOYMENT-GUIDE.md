@@ -645,3 +645,29 @@ Open **Office Analytics → Moving Notice Board — Administrator → Load notic
 
 **Acceptance check:** Sign in as Administrator, load notices, test text search/audience/status combinations, copy and duplicate a harmless notice, apply 24h/7-day shortcuts, and export filtered CSV. Verify unsaved draft warnings and that duplicated notices are disabled. In Action Required, click Overdue, reset filters and export. Confirm normal submissions, login, portal navigation and archive still operate. JavaScript syntax validation passed; live browser and backend acceptance still need authorized verification.
 
+
+
+---
+
+## V17.7.89 — Ten upgrades together: Action Required deadline monitoring
+
+This GitHub frontend release improves the **Action Required** page across the five offices, using the existing **current-cycle** submission register and configured subject deadlines. It is deliberately **not** a historical certification or a change to report submission data.
+
+### Ten changes
+
+1. **Next 7 days:** the Priority filter offers **Due in next 7 days**, including today, excluding already-overdue or unverified deadlines.
+2. **Next 30 days:** a second forward-looking time window for upcoming dated obligations.
+3. **Days remaining column:** displays days left, due today, or days overdue for pending records.
+4. **No invented dates:** invalid/missing dates remain **Not specified**; inconsistent dates remain **Date to verify**, not misleading countdowns.
+5. **Sorting controls:** urgency (default), office name, report subject, or earliest deadline.
+6. **Office workload mini-cards:** one card per office shows pending, overdue, and due-today totals with comparative bars.
+7. **One-click office drill-down:** select an office mini-card to filter; click it again to return to all offices.
+8. **Scoped matching totals:** shows how many reports match the current filters out of all currently pending reports, including the overdue total within the selected results.
+9. **Expanded administrator outputs:** CSV export and printed action list include the same **Days remaining** information displayed in the table; other existing filters are respected.
+10. **Responsive compact presentation:** office workload cards arrange in two columns on smaller screens and remain keyboard accessible through native buttons.
+
+### Acceptance checklist
+
+Open **Action Required** on the portal after GitHub Pages refreshes. Compare totals with the Submission Register. Try **Due in next 7 days** and **Due in next 30 days** against known deadlines. Click an office workload card, change sorting, and confirm the days-remaining labels use India dates. In Administrator login, export CSV and print the filtered table. Check narrow mobile screens for clipping, and verify normal uploads, login, archives and notice editor remain unaffected.
+
+This is a **frontend-only** release: no Apps Script code, Drive files, new spreadsheet, Sheet tabs, triggers or login permissions are changed. Use the previously compatible backend for existing portal features. JavaScript syntax was validated on the final GitHub source; live browser acceptance has not yet been confirmed.
