@@ -372,3 +372,30 @@ Each result clearly shows **passed** or **unavailable / access denied**. The che
 
 No new Sheet, script deployment, or scheduled trigger is needed for this **frontend-only** update. Do not rerun `setupPortal()` or `setPortalSecurityCodes()`.
 
+
+
+---
+
+## V17.7.77 — Historical Archive Backend Completed (deployment required)
+
+The historical archive frontend now has a matching private Apps Script backend in the **complete integrated file** `ADGB_Code_gs_V17_7_77_Integrated.txt`, supplied in the accompanying ChatGPT conversation. This full file builds on the V17.7.75 integrated backend. **It is intentionally not committed to this public GitHub repository.**
+
+The two routes are:
+
+- `adminArchiveList` — administrator-only list for an earlier reporting month. Reads the existing `Submissions` event log and returns only the **final recorded status per office/report**. Never includes a Drive file ID or an unrestricted Drive URL.
+- `adminArchiveView` — administrator-only PDF lookup for a precise historical cycle and current final submission ID. Rejects removed reports, physical-only receipts without PDFs, missing/trashed files, non-PDFs, and files exceeding the established viewer limit. Returns a **temporary, single-use, approximately 90-second** secure-viewer link using the portal's existing PDF viewer.
+
+### Easy installation
+
+1. Back up the existing Apps Script `Code.gs` and existing portal spreadsheet.
+2. Open the existing Apps Script project. If its Code.gs is the previously issued **V17.7.75 integrated backend**, replace that file's contents with the complete **V17.7.77 integrated backend**. If the live project has independent changes, merge those changes instead of overwriting.
+3. If an older separate Office Review add-on duplicates functions already incorporated in Code.gs, remove only that duplicate; leave unrelated project files untouched.
+4. Save, then **Deploy → Manage deployments → Edit → New version → Deploy**. Keep the existing deployment and `/exec` URL.
+5. Do **not** run `setupPortal()` or `setPortalSecurityCodes()`.
+
+### Acceptance tests
+
+Sign in as Head Office Administrator. Open **Historical Archive**, choose an earlier month, and select **Load archive**. Check that (a) the rows agree with the final status in the Submissions log, (b) PDF View opens only for a currently recorded submitted PDF, and (c) old/removed/physical-only/trashed files cannot be viewed. Try the same operations without an ADMIN login and verify they are rejected. Recheck new report uploads, Office Reviews, audit history, and compliance trends. The **System readiness** check can be run as an additional **read-only** confirmation.
+
+**Limitations:** Old rows missing a trustworthy reporting month cannot always be reconstructed; the archive does not enumerate all replacement events, only the latest state of each office/report for that month. Viewing a PDF never makes the Drive file public. A short-lived viewer URL is still a bearer secret; do not share it. The backend files were syntax checked and tested using mocked APIs, but **real Apps Script authorization, Drive access and deployment are not verified until these acceptance tests pass**.
+
