@@ -1598,11 +1598,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div class="adgb-insights-toolbar">
         <label>Search report <input id="adgbRegisterSearch" type="search" placeholder="Subject or office"></label>
         <label>Office <select id="adgbRegisterOffice"><option value="">All offices</option></select></label>
-        <label>Status <select id="adgbRegisterStatus"><option value="all">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option></select></label>
+        <label>Status <select id="adgbRegisterStatus"><option value="all">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option><option value="overdue">Overdue</option><option value="dueToday">Due today</option><option value="noDueDate">Pending · no due date</option><option value="reviewDate">Review due date</option></select></label>
         <button type="button" id="adgbRegisterExport" class="hidden">Export CSV (admin)</button>
       </div>
       <p id="adgbRegisterCount" class="adgb-insights-count" aria-live="polite"></p>
-      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Deadline</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
     </section>
     <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
@@ -2852,12 +2852,32 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const date=new Date(value);
       return Number.isNaN(date.getTime())?'—':new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
     }
+    // Deadline indicators are calculated only from existing subject flags and their dates.
+    // No deadline is assumed for subjects that have none. Today's date uses India time.
+    function adgbDeadlineForSubject(subject){
+      const raw=[];
+      if(subject.urgent===true && subject.urgentDueDate)raw.push(String(subject.urgentDueDate).slice(0,10));
+      if(subject.timeBound===true && subject.timeBoundDueDate)raw.push(String(subject.timeBoundDueDate).slice(0,10));
+      if(!raw.length)return {date:'',review:false};
+      if(raw.some(date=>!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||reportingDeadlineMismatch(subject,date)))return {date:'',review:true};
+      return {date:raw.sort()[0],review:false};
+    }
+    function adgbDeadlineLabel(row){
+      if(row.deadlineReview)return 'Verify date';
+      if(!row.dueDate)return 'Not set';
+      if(row.submitted)return row.dueDate;
+      const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      return (row.dueDate<today?'Overdue · ':row.dueDate===today?'Due today · ':'Due · ')+row.dueDate;
+    }
     function adgbRegisterData(){
       const rows=[];
       for(const subject of state.subjects){
         for(const office of state.offices){
           const status=reportStatusFor(subject,office);
+          const deadline=adgbDeadlineForSubject(subject);
           rows.push({
+            dueDate:deadline.date,
+            deadlineReview:deadline.review,
             subject:String(subject.name||''),
             kind:String(subject.reportKind||'—'),
             office:String(office.name||''),
@@ -2883,13 +2903,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(expected.includes(selected))office.value=selected;
       }
       const q=search.value.trim().toLowerCase();
+      const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
       const rows=adgbRegisterData().filter(x=>(!office.value||x.officeId===office.value)&&
-        (filter.value==='all'||(filter.value==='submitted')===x.submitted)&&
+        (filter.value==='all'||filter.value==='submitted'&&x.submitted||filter.value==='pending'&&!x.submitted||
+        filter.value==='overdue'&&!x.submitted&&!!x.dueDate&&x.dueDate<today||
+        filter.value==='dueToday'&&!x.submitted&&x.dueDate===today||
+        filter.value==='noDueDate'&&!x.submitted&&!x.dueDate&&!x.deadlineReview||
+        filter.value==='reviewDate'&&x.deadlineReview)&&
         (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q)));
       adgbRegisterSnapshot=rows;
       const body=document.getElementById('adgbRegisterRows');
-      if(body)body.innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.office)+'</td><td><span class="'+(x.submitted?'adgb-status-good':'adgb-status-wait')+'">'+(x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending')+'</span></td><td>'+escapeHtml(x.submitted?adgbFormatTimeIST(x.submittedAt):'—')+'</td></tr>').join('')||
-        '<tr><td colspan="5">No matching reports</td></tr>';
+      if(body)body.innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.office)+'</td><td><span class="'+(x.submitted?'adgb-status-good':'adgb-status-wait')+'">'+(x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending')+'</span></td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td><td>'+escapeHtml(x.submitted?adgbFormatTimeIST(x.submittedAt):'—')+'</td></tr>').join('')||
+        '<tr><td colspan="6">No matching reports</td></tr>';
       const counter=document.getElementById('adgbRegisterCount');
       if(counter)counter.textContent=rows.length+' records · '+rows.filter(x=>x.submitted).length+' submitted · '+rows.filter(x=>!x.submitted).length+' pending';
       document.getElementById('adgbRegisterExport')?.classList.toggle('hidden',!isRecognizedAsAdmin());
@@ -2924,7 +2949,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';
         // Neutralize spreadsheet formula injection for exported text.
         const cell=v=>quote(/^[=+\-@\t\r]/.test(String(v??''))?"'"+String(v):v);
-        const fields=[['Report subject','Reporting type','Office','Status','Submitted at IST'],...adgbRegisterSnapshot.map(x=>[x.subject,x.kind,x.office,x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending',x.submitted?adgbFormatTimeIST(x.submittedAt):''])];
+        const fields=[['Report subject','Reporting type','Office','Status','Deadline','Submitted at IST'],...adgbRegisterSnapshot.map(x=>[x.subject,x.kind,x.office,x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending',adgbDeadlineLabel(x),x.submitted?adgbFormatTimeIST(x.submittedAt):''])];
         const csv='\uFEFF'+fields.map(row=>row.map(cell).join(',')).join('\r\n');
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
         const url=URL.createObjectURL(blob),a=document.createElement('a');
