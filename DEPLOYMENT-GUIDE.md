@@ -497,3 +497,17 @@ The strip has a **Pause/Resume** button and respects reduced-motion accessibilit
 
 The integrated backend passed JavaScript syntax and isolated access/scheduling tests. The GitHub frontend passed JavaScript syntax validation. **Live Google Apps Script deployment and browser acceptance remain pending.** Avoid committing the private integrated Code.gs to this public repository.
 
+
+
+---
+
+## V17.7.82 — Administrator controls moving notice speed
+
+In **Office Analytics → Moving Notice Board — Administrator**, load the existing notices/settings and use the new **Moving text speed** slider, with values **1 (slowest) to 10 (fastest)**. The default is **5 (normal)**. The slider previews the speed immediately on the current administrator's banner; select **Save pending-display settings** to persist the speed for other viewers and subsequent sessions.
+
+The speed controls the complete moving notice strip, including scheduled announcements and the viewer's permitted office-wise pending counts. The backend stores `scrollSpeed` alongside existing notice configuration in the same `ADGB_NOTICE_CONFIG_V1` Script Properties record. Older saved notice settings without this field default to speed 5. The server validates the saved speed as a whole number from 1 to 10 and requires an authenticated Administrator session to modify it.
+
+**Deployment required:** Download the privately supplied **ADGB_Code_gs_V17_7_82_Integrated.txt** file and follow the accompanying easy guide. It is a complete Code.gs replacement based on the previous **V17.7.81** integrated backend, so first back up your current Apps Script project and merge any additional live changes rather than overwriting them. Save, then update the **existing web-app deployment** with a new version. Do not run `setupPortal()` or `setPortalSecurityCodes()`.
+
+**Test:** Save speed 2, reload settings and confirm 2 remains; then try speed 9 and compare the banner movement on both desktop and mobile. The pause control still works. A viewer with a reduced-motion preference may see no animation regardless of speed. No spreadsheet, Sheet tab, trigger or Drive change is needed.
+
