@@ -296,3 +296,23 @@ The **Review History & Audit Trail** section under **Office Analytics** now offe
 
 **Deployment:** This upgrade changes only GitHub `index.html`. **No new Google Apps Script backend deployment is needed if the V17.7.72 backend is already installed and operating.** If V17.7.72 is not yet installed, first complete its existing-backend deployment and test audit history. Do not rerun `setupPortal()` or `setPortalSecurityCodes()`.
 
+
+
+---
+
+## V17.7.74 — Office Analytics usability and mobile layout
+
+This frontend-only update adds a compact **office-wise compliance overview** in Office Analytics. Administrators and authorized viewers can sort office cards by **most pending**, **most overdue**, **highest completion**, or **office name**. The cards calculate percentage submitted from the same *current-cycle* statuses already shown in the portal. They clearly distinguish pending and overdue counts.
+
+The existing administrator-only **Office Review & Follow-up** section retains its current-cycle review status and target-date summaries. The presentation is more compact on phones and uses larger editable fields for easier entry. This change does **not** alter Apps Script routes, send emails, or create a Google Sheet.
+
+**Important historical limitation:** The current backend snapshot is not sufficient to establish full prior-month expected counts reliably. The page deliberately does **not** invent historic completion percentages or call the current-cycle data a month-on-month trend. Adding verified historical trends later requires a suitable archived expected/submitted dataset.
+
+### To see the changes
+
+1. Open the existing Report Portal URL and refresh the page.
+2. Select **Office Analytics** and view the new office cards.
+3. Use **Sort offices** to change the order; the compliance figures remain unchanged.
+4. On a phone, verify that cards stack neatly and the review form remains readable.
+5. For persisted review remarks and audit history, ensure the previously prepared **V17.7.72 backend** has been deployed and tested. No new backend deployment is required for V17.7.74 itself.
+
