@@ -1373,6 +1373,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.82 administrator moving text speed */
+.adgb-notice-speed-label{display:block;margin-top:12px;font-size:11px;color:#48556b;font-weight:750}
+#adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
+.adgb-notice-speed-ends{width:min(100%,410px);display:flex;justify-content:space-between;font-size:10px;color:#68748a}
+@media(prefers-reduced-motion:reduce){#adgbNoticeSpeed{opacity:.7}}
 /* V17.7.81 scheduled moving notices, office visibility, and scorecard */
 .adgb-notice-strip{display:flex;align-items:center;gap:9px;overflow:hidden;margin:7px 0 12px;border:1px solid #f0d779;border-radius:10px;background:#fff7cc;padding:8px 10px;min-height:43px}
 .adgb-notice-strip[hidden],.adgb-notice-admin[hidden]{display:none!important}
@@ -1780,6 +1785,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div class="adgb-notice-pending-config">
           <label class="adgb-notice-check"><input id="adgbNoticePendingEnabled" type="checkbox"> Include live office-wise pending counts in moving strip</label>
           <p>Office users see only their own office count; administrators see selected offices. Guests/viewers do not receive office-specific counts.</p>
+          <label class="adgb-notice-speed-label" for="adgbNoticeSpeed">Moving text speed: <strong id="adgbNoticeSpeedLabel">Normal (5/10)</strong></label>
+          <input id="adgbNoticeSpeed" type="range" min="1" max="10" step="1" value="5" aria-label="Moving text speed">
+          <div class="adgb-notice-speed-ends"><span>Slow</span><span>Fast</span></div>
+          <p>The selected speed applies to all notices and permitted office pending information. Change the slider, then select Save pending-display settings.</p>
           <div id="adgbNoticeOfficeChecks" class="adgb-notice-office-checks"></div>
           <button id="adgbNoticeSaveSettings" type="button">Save pending-display settings</button>
         </div>
@@ -3298,7 +3307,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
     function adgbNoticeTimeIST_(offsetMs=0){
       const parts={};
@@ -3341,7 +3350,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const span=document.createElement('span');span.textContent='● '+message;track.appendChild(span);
       }
       track.classList.toggle('paused',adgbNoticePaused_);
-      track.style.animationDuration=Math.max(20,pieces.join(' ').length/9)+'s';
+      const rawSpeed=adgbNoticePreviewSpeed_??feed.scrollSpeed;
+      const speed=Number.isInteger(Number(rawSpeed))&&Number(rawSpeed)>=1&&Number(rawSpeed)<=10?Number(rawSpeed):5;
+      const baseline=Math.max(20,pieces.join(' ').length/9);
+      track.style.animationDuration=Math.max(8,Math.min(240,baseline*5/speed))+'s';
     }
     async function adgbNoticeLoad_(force=false){
       if(!state.connected||!endpointReady()||adgbNoticeBusy_)return;
@@ -3374,6 +3386,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const settings=result.settings||{};
       const checkbox=document.getElementById('adgbNoticePendingEnabled');
       if(checkbox)checkbox.checked=settings.showPending===true;
+      const speed=Number.isInteger(Number(settings.scrollSpeed))&&Number(settings.scrollSpeed)>=1&&Number(settings.scrollSpeed)<=10?Number(settings.scrollSpeed):5;
+      const slider=document.getElementById('adgbNoticeSpeed');
+      if(slider)slider.value=String(speed);
+      adgbNoticePreviewSpeed_=null;
+      adgbNoticeSpeedLabel_();
+      adgbNoticeRenderStrip_();
       const selected=new Set(settings.pendingOfficeIds||[]);
       const offices=document.getElementById('adgbNoticeOfficeChecks');
       if(offices)offices.innerHTML=state.offices.map(o=>'<label><input type="checkbox" data-notice-office="'+escapeAttr(o.id)+'"'+(selected.has(o.id)?' checked':'')+'>'+escapeHtml(o.name)+'</label>').join('');
@@ -3408,12 +3426,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       catch(error){adgbNoticeStatus_('Notice NOT saved: '+(error.message||'Connection failed'));}
       finally{if(button)button.disabled=false;}
     }
+    function adgbNoticeSpeedLabel_(){
+      const speed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
+      const label=document.getElementById('adgbNoticeSpeedLabel');
+      if(label)label.textContent=(speed<=3?'Slow':speed>=8?'Fast':'Normal')+' ('+speed+'/10)';
+    }
     async function adgbNoticeSettingsSave_(){
       if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved settings before editing.');return;}
       const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
       const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
-      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds});
-        adgbNoticeStatus_('Pending report strip preferences saved. Office-specific counts are visible only after authorized login.');}
+      const scrollSpeed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
+      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed});
+        adgbNoticeStatus_('Pending display settings and moving text speed saved for authorized viewers.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
     function adgbNoticeInit_(){
@@ -3421,6 +3445,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(audience)audience.innerHTML='<option value="ALL">Everyone permitted to view the portal</option>'+
         state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+' only</option>').join('');
       adgbNoticeResetForm_();
+      document.getElementById('adgbNoticeSpeed')?.addEventListener('input',()=>{
+        adgbNoticePreviewSpeed_=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
+        adgbNoticeSpeedLabel_();
+        adgbNoticeRenderStrip_();
+      });
       document.getElementById('adgbNoticePause')?.addEventListener('click',()=>{
         adgbNoticePaused_=!adgbNoticePaused_;const button=document.getElementById('adgbNoticePause');
         if(button){button.textContent=adgbNoticePaused_?'▶':'Ⅱ';button.setAttribute('aria-pressed',String(adgbNoticePaused_));}
