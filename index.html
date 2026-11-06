@@ -3820,8 +3820,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbNoticeOneDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(1));
       document.getElementById('adgbNoticeSevenDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(7));
       document.getElementById('adgbNoticeAdminLoad')?.addEventListener('click',adgbNoticeAdminLoad_);
-      document.getElementById('adgbNoticeNew')?.addEventListener('click',adgbNoticeResetForm_);
-      document.getElementById('adgbNoticeCancel')?.addEventListener('click',adgbNoticeResetForm_);
+      const discardNoticeDraft=()=>{
+        if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
+           !window.confirm('Discard unsaved notice edits?'))return;
+        adgbNoticeResetForm_();
+      };
+      document.getElementById('adgbNoticeNew')?.addEventListener('click',discardNoticeDraft);
+      document.getElementById('adgbNoticeCancel')?.addEventListener('click',discardNoticeDraft);
       document.getElementById('adgbNoticeSave')?.addEventListener('click',adgbNoticeSave_);
       document.getElementById('adgbNoticeSaveSettings')?.addEventListener('click',adgbNoticeSettingsSave_);
       document.getElementById('adgbNoticeSavedList')?.addEventListener('click',async event=>{
@@ -3855,6 +3860,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         }
         if(edit){
           const item=adgbNoticeAdminRows_.find(x=>x.id===edit.getAttribute('data-adgb-edit-notice'));if(!item)return;
+          if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
+             !window.confirm('Discard current unsaved draft and edit this notice?'))return;
           adgbNoticeEditId_=item.id;
           document.getElementById('adgbNoticeText').value=item.text;
           document.getElementById('adgbNoticeTarget').value=item.target;
