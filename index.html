@@ -4283,17 +4283,19 @@ function renderAdminSubjects(){
         const dueDateText=subject.urgentDueDate
           ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.urgentDueDate+'T00:00:00'))
           :'';
-        const overdue=urgent&&subject.urgentDueDate&&subject.urgentDueDate<new Date().toISOString().slice(0,10);
+        const urgentDateMismatch=reportingDeadlineMismatch(subject,subject.urgentDueDate);
+        const overdue=isUrgentOverdue(subject);
 
         const timeBoundDueDateText=subject.timeBoundDueDate
           ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.timeBoundDueDate+'T00:00:00'))
           :'';
-        const timeBoundOverdue=timeBound&&subject.timeBoundDueDate&&subject.timeBoundDueDate<new Date().toISOString().slice(0,10);
+        const timeBoundDateMismatch=reportingDeadlineMismatch(subject,subject.timeBoundDueDate);
+        const timeBoundOverdue=isTimeBoundOverdue(subject);
 
         return '<div class="subject-admin-row '+(!enabled?'disabled-subject-admin ':'')+(!visible?'hidden-subject-admin':'')+(urgent?' urgent-subject-admin':'')+(overdue?' overdue-subject-admin':'')+(timeBound?' time-bound-subject-admin':'')+'"><span class="subject-admin-info">'+
           '<strong>'+escapeHtml(subject.name)+'</strong>'+
-          (urgent?'<span class="subject-urgent-badge'+(overdue?' overdue':'')+'">★ Urgent'+(dueDateText?(' · '+(overdue?'Overdue ':'Due ')+dueDateText):'')+'</span>':'')+
-          (timeBound?'<span class="subject-time-bound-badge'+(timeBoundOverdue?' overdue':'')+'">🕓 Time Bound'+(timeBoundDueDateText?(' · '+(timeBoundOverdue?'Overdue ':'Due ')+timeBoundDueDateText):'')+'</span>':'')+
+          (urgent?'<span class="subject-urgent-badge'+(overdue?' overdue':'')+'">★ Urgent'+(dueDateText?(' · '+(urgentDateMismatch?'Verify date ':overdue?'Overdue ':'Due ')+dueDateText):'')+'</span>':'')+
+          (timeBound?'<span class="subject-time-bound-badge'+(timeBoundOverdue?' overdue':'')+'">🕓 Time Bound'+(timeBoundDueDateText?(' · '+(timeBoundDateMismatch?'Verify date ':timeBoundOverdue?'Overdue ':'Due ')+timeBoundDueDateText):'')+'</span>':'')+
           (!visible?'<span class="subject-hidden-badge">Hidden from dashboard</span>':'')+
           '<span class="subject-schedule-badge '+(combo?'combo':once?'once':'')+'">'+escapeHtml(scheduleText)+'</span>'+
           '<small>'+linkInfo+'</small>'+
