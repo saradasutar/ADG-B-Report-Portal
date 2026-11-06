@@ -3395,7 +3395,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
     function adgbNoticeContrast_(foreground,background='#fff7cc'){
       const fg=String(foreground||'').toLowerCase(),bg=String(background||'').toLowerCase();
@@ -3470,8 +3470,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         .formatToParts(new Date(Date.now()+offsetMs)).forEach(p=>{if(p.type!=='literal')parts[p.type]=p.value;});
       return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;
     }
+    function adgbNoticeDraftForm_(){
+      return {text:String(document.getElementById('adgbNoticeText')?.value||''),
+        target:String(document.getElementById('adgbNoticeTarget')?.value||'ALL'),
+        start:String(document.getElementById('adgbNoticeStart')?.value||''),
+        end:String(document.getElementById('adgbNoticeEnd')?.value||''),
+        enabled:document.getElementById('adgbNoticeEnabled')?.checked===true};
+    }
+    function adgbNoticeDraftChanged_(){
+      return JSON.stringify(adgbNoticeDraftForm_())!==JSON.stringify(adgbNoticeDraftFormSnapshot_);
+    }
+    function adgbNoticeDraftIndicator_(){
+      const count=document.getElementById('adgbNoticeTextCounter'),status=document.getElementById('adgbNoticeDraftStatus');
+      const now=adgbNoticeDraftForm_();
+      if(count)count.textContent=now.text.length+' / 220 characters'+(now.text.length>200?' · near limit':'');
+      if(status)status.textContent=(adgbNoticeEditId_?'Editing existing notice':'New notice')+
+        (adgbNoticeDraftChanged_()?' · unsaved changes':' · no unsaved changes')+
+        ' · not published until saved';
+    }
     function adgbNoticePreview_(){
       if(!isRecognizedAsAdmin())return;
+      adgbNoticeDraftIndicator_();
       const text=String(document.getElementById('adgbNoticeText')?.value||'').trim();
       const target=String(document.getElementById('adgbNoticeTarget')?.value||'ALL');
       const enabled=document.getElementById('adgbNoticeEnabled')?.checked===true;
@@ -3718,6 +3737,20 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbNoticeStatus_('Notice background, text colour, font size, weight, speed and pending display settings saved.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
+    function adgbNoticeSetDuration_(days){
+      if(!isRecognizedAsAdmin())return;
+      const startInput=document.getElementById('adgbNoticeStart'),endInput=document.getElementById('adgbNoticeEnd');
+      if(!startInput||!endInput)return;
+      if(!startInput.value)startInput.value=adgbNoticeTimeIST_();
+      const start=startInput.value;
+      const date=new Date(start+':00+05:30');
+      if(Number.isNaN(date.getTime())){adgbNoticeStatus_('Choose a valid start date first.');return;}
+      const parts={};
+      new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
+        .formatToParts(new Date(date.getTime()+days*86400000)).forEach(p=>{if(p.type!=='literal')parts[p.type]=p.value;});
+      endInput.value=parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;
+      adgbNoticePreview_();
+    }
     function adgbNoticeInit_(){
       const audience=document.getElementById('adgbNoticeTarget');
       if(audience)audience.innerHTML='<option value="ALL">Everyone permitted to view the portal</option>'+
@@ -3771,6 +3804,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbNoticeRenderStrip_();
       });
       document.getElementById('adgbNoticeStatusFilter')?.addEventListener('change',adgbNoticeRenderRows_);
+      document.getElementById('adgbNoticeSearch')?.addEventListener('input',adgbNoticeRenderRows_);
+      document.getElementById('adgbNoticeAudienceFilter')?.addEventListener('change',adgbNoticeRenderRows_);
+      document.getElementById('adgbNoticeSort')?.addEventListener('change',adgbNoticeRenderRows_);
+      document.getElementById('adgbNoticeExport')?.addEventListener('click',adgbNoticeExportFiltered_);
+      document.getElementById('adgbNoticeOneDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(1));
+      document.getElementById('adgbNoticeSevenDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(7));
       document.getElementById('adgbNoticeAdminLoad')?.addEventListener('click',adgbNoticeAdminLoad_);
       document.getElementById('adgbNoticeNew')?.addEventListener('click',adgbNoticeResetForm_);
       document.getElementById('adgbNoticeCancel')?.addEventListener('click',adgbNoticeResetForm_);
@@ -3778,7 +3817,33 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbNoticeSaveSettings')?.addEventListener('click',adgbNoticeSettingsSave_);
       document.getElementById('adgbNoticeSavedList')?.addEventListener('click',async event=>{
         const edit=event.target.closest('[data-adgb-edit-notice]');
+        const duplicate=event.target.closest('[data-adgb-duplicate-notice]');
+        const copy=event.target.closest('[data-adgb-copy-notice]');
         const del=event.target.closest('[data-adgb-delete-notice]');
+        if(copy){
+          const item=adgbNoticeAdminRows_.find(x=>String(x.id)===copy.getAttribute('data-adgb-copy-notice'));
+          if(!item)return;
+          try{await navigator.clipboard.writeText(String(item.text||''));
+            adgbNoticeStatus_('Notice text copied. No notice was changed.');}
+          catch{adgbNoticeStatus_('Clipboard permission unavailable. Select and copy the notice text manually.');}
+          return;
+        }
+        if(duplicate){
+          const item=adgbNoticeAdminRows_.find(x=>String(x.id)===duplicate.getAttribute('data-adgb-duplicate-notice'));
+          if(!item)return;
+          if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
+             !window.confirm('Replace your unsaved notice draft with this duplicate?'))return;
+          adgbNoticeResetForm_();
+          document.getElementById('adgbNoticeText').value=item.text;
+          document.getElementById('adgbNoticeTarget').value=item.target;
+          document.getElementById('adgbNoticeStart').value=adgbNoticeTimeIST_();
+          document.getElementById('adgbNoticeEnd').value=adgbNoticeTimeIST_(86400000);
+          document.getElementById('adgbNoticeEnabled').checked=false;
+          adgbNoticePreview_();
+          adgbNoticeStatus_('Copied as a NEW DISABLED draft, with a fresh 24-hour period. Review and explicitly save to publish.');
+          document.getElementById('adgbNoticeText').focus();
+          return;
+        }
         if(edit){
           const item=adgbNoticeAdminRows_.find(x=>x.id===edit.getAttribute('data-adgb-edit-notice'));if(!item)return;
           adgbNoticeEditId_=item.id;
@@ -3788,6 +3853,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           document.getElementById('adgbNoticeEnd').value=item.end;
           document.getElementById('adgbNoticeEnabled').checked=item.enabled;
           document.getElementById('adgbNoticeSave').textContent='Update this notice';
+          adgbNoticeDraftFormSnapshot_=adgbNoticeDraftForm_();
           adgbNoticePreview_();
           document.getElementById('adgbNoticeText')?.focus();
         }
