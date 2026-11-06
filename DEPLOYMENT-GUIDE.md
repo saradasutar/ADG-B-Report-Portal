@@ -345,3 +345,30 @@ The **Capture current-cycle snapshot** button records a dated, server-calculated
 - Verify one known month against the `Submissions` sheet, one month without a snapshot, and one current-cycle snapshot. Also verify normal uploading, removal, login, and archive actions still work.
 - No background capture trigger or automatic emails are enabled in this upgrade.
 
+
+
+---
+
+## V17.7.76 — Check backend readiness (no data changes)
+
+The GitHub frontend now includes **Office Analytics → System readiness → Check backend**, visible to recognized administrators. This checks five capabilities using **read requests only**:
+
+- Current portal dashboard connection.
+- Current-cycle Office Review loading.
+- Current-cycle administrator review audit history.
+- Compliance trend retrieval.
+- Earlier-cycle historical archive listing.
+
+Each result clearly shows **passed** or **unavailable / access denied**. The check does **not** submit or remove PDFs, send reminder emails, capture compliance snapshots, save review remarks, edit records, or change security settings. It also does not establish that those write functions are working: perform separately authorized functional tests.
+
+### Easy test
+
+1. Open the live portal after GitHub Pages refreshes.
+2. Log in as Administrator and select **Office Analytics**.
+3. Select **Check backend** under **System readiness**.
+4. Review all five results. If Review, Audit, or Trends fails, confirm that the **V17.7.75 integrated Apps Script backend** was deployed to a new version of the **existing** web app.
+5. If **Historical archive** fails, note that the prepared V17.7.75 integrated backend may lack the separate `adminArchiveList` route. Do not declare archive operational without deploying and testing a compatible backend archive implementation. Preserve the existing database and authentication settings when fixing it.
+6. Test a small authorized PDF upload and normal office login separately: these are intentionally **not** exercised by this read-only checker.
+
+No new Sheet, script deployment, or scheduled trigger is needed for this **frontend-only** update. Do not rerun `setupPortal()` or `setPortalSecurityCodes()`.
+
