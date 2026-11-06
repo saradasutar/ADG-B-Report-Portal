@@ -3230,10 +3230,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(row.dueDate)return {kind:'upcoming',name:'Upcoming',rank:2};
       return {kind:'undated',name:'No deadline',rank:4};
     }
-    let adgbActionVisible_=[];
     // Current-cycle priorities only. Never infer an unset or inconsistent deadline.
     function adgbDaysUntil_(date,today){
-      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(date||'')))return null;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return null;
       const utc=value=>{const [year,month,day]=value.split('-').map(Number);return Date.UTC(year,month-1,day);};
       const start=utc(today),finish=utc(date);
       if(!Number.isFinite(start)||!Number.isFinite(finish))return null;
