@@ -207,3 +207,34 @@ Record the test date, frontend GitHub commit, Apps Script deployment version, te
 
 Implement pending-report deadlines and reminders only after the above acceptance tests pass. Define due dates per subject/reporting frequency, keep reminder recipients in the private backend, prevent duplicate reminders, and add a dry-run mode before scheduling production triggers.
 
+
+
+---
+
+## V17.7.70 — Persist Office Review records in the existing Sheet (integration required)
+
+The frontend now includes **Load saved reviews** and **Save to Sheet** in Office Analytics. **They are not operational until a compatible, private backend has been installed and deployed.** The frontend requires a successful load before save, so unsynchronized drafts cannot overwrite existing reviews by accident.
+
+A proposed Apps Script add-on is in `backend/OfficeReviewBackendV17770.gs` (repository code only; no secrets). **Do not paste it into a live deployment unreviewed.** It deliberately fails closed until connected to two existing backend functions.
+
+### Required steps, in order
+
+1. Back up the live Apps Script code, project configuration and existing portal database. Do not reset or re-create the spreadsheet.
+2. Read `backend/OfficeReviewBackendV17770.gs`; copy it into a **new .gs file inside the existing Apps Script project**, not as a replacement for `Code.gs`.
+3. Implement **`adgbReviewRequireAdmin_`** using the current backend's real HEAD_OFFICE session/code validation. It must reject a forged or expired token, including one sent from public GitHub Pages.
+4. Implement **`adgbReviewSpreadsheet_`** using the existing portal database spreadsheet accessor/ID, not `SpreadsheetApp.create`.
+5. Before production, validate each `officeId` against the existing office registry on the server. The supplied add-on validates syntax and batch duplicates but cannot know your backend's actual office registry.
+6. Add two cases in the live request router, adapting your router's request/response conventions:
+   - `adminOfficeReviewList` → `adgbOfficeReviewList_(request)`
+   - `adminOfficeReviewSave` → `adgbOfficeReviewSave_(request)`
+7. Test in an isolated copy/test backend. Verify invalid credentials, forged office IDs, mismatched reporting cycles, simultaneous saves, reload after saving, and duplicate entries.
+8. Only then deploy a **new version of the existing Apps Script Web app**, preserving its /exec URL. On first authorized read/write, the add-on creates **one new tab called OfficeReviews** inside the **existing spreadsheet**. It does not create a new spreadsheet.
+9. Sign in as admin, open Office Analytics, click **Load saved reviews**, edit a remark, then **Save to Sheet**. Verify the confirmation count, refresh, and load again. Use Export CSV as a backup before refresh if any request fails.
+
+### Security and scope
+
+- Office review data is sensitive operational information. Do not add it to GitHub, URL query parameters or localStorage.
+- Do not equate a visible Administrator label with verified backend authorization; the private backend must enforce it for every request.
+- The add-on writes current-cycle office-level reviews only. It does not yet provide per-report remarks, multi-user conflict resolution, or a historical review edit UI.
+- Existing report uploads, archive actions, emails and submissions must continue passing regression tests. Roll back the deployment version if any fail.
+
