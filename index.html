@@ -1032,6 +1032,8 @@
     }
 
 
+  /* V17.7.58 deadline review indicator */
+  .time-bound-chip.review-date,.urgent-due-chip.review-date{background:#fff4d5!important;color:#7c4b00!important;border:1px solid #e4a82d!important;box-shadow:none!important}
   /* ADGB PREMIUM SAFE VISUAL PATCH 2026-11-06 */
   :root{--navy:#092e61;--navy2:#15529c;--ink:#1b304d;--muted:#53677f;--line:#d6e1ed;--shadow:0 6px 20px rgba(22,52,93,.075)}
   html{background:#f1f5fa}
@@ -1229,7 +1231,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.57</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.58</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2105,7 +2107,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.57 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.58 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2487,17 +2489,31 @@
         '</div>';
     }
 
+    // V17.7.58: warn about deadlines dated before the named reporting month.
+    // Do not mutate official deadline data from frontend code.
+    function reportingDeadlineMismatch(subject,dueDate){
+      const date=String(dueDate||'').slice(0,10);
+      if(date.length!==10)return false;
+      const title=String(subject?.name||'');
+      const re=new RegExp('Month\\s+of\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\s*,?\\s*(20[0-9]{2})','i');
+      const m=title.match(re);
+      if(!m)return false;
+      const month=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[1].slice(0,3).toLowerCase())+1;
+      return month>0 && date < m[2]+'-'+String(month).padStart(2,'0')+'-01';
+    }
     function isUrgentOverdue(subject){
       return subject?.urgent===true && !!subject?.urgentDueDate &&
+        !reportingDeadlineMismatch(subject,subject.urgentDueDate) &&
         subject.urgentDueDate < new Date().toISOString().slice(0,10);
     }
 
     function urgentDueDateChip(subject){
       if(subject?.urgent!==true || !subject?.urgentDueDate)return '';
+      const mismatch=reportingDeadlineMismatch(subject,subject.urgentDueDate);
       const overdue=isUrgentOverdue(subject);
       const text=new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'})
         .format(new Date(subject.urgentDueDate+'T00:00:00'));
-      return '<span class="urgent-due-chip'+(overdue?' overdue':'')+'">'+(overdue?'Overdue ':'Due ')+escapeHtml(text)+'</span>';
+      return '<span class="urgent-due-chip'+(overdue?' overdue':'')+(mismatch?' review-date':'')+'">'+(mismatch?'Verify date ':overdue?'Overdue ':'Due ')+escapeHtml(text)+'</span>';
     }
 
     /*
@@ -2508,16 +2524,18 @@
      */
     function isTimeBoundOverdue(subject){
       return subject?.timeBound===true && !!subject?.timeBoundDueDate &&
+        !reportingDeadlineMismatch(subject,subject.timeBoundDueDate) &&
         subject.timeBoundDueDate < new Date().toISOString().slice(0,10);
     }
 
     function timeBoundBadge(subject){
       if(subject?.timeBound!==true)return '';
+      const mismatch=reportingDeadlineMismatch(subject,subject.timeBoundDueDate);
       const overdue=isTimeBoundOverdue(subject);
       const dueText=subject.timeBoundDueDate
         ?new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(subject.timeBoundDueDate+'T00:00:00'))
         :'';
-      return '<span class="time-bound-chip'+(overdue?' overdue':'')+'">🕓 Time Bound'+(dueText?(' · '+(overdue?'Overdue ':'Due ')+escapeHtml(dueText)):'')+'</span>';
+      return '<span class="time-bound-chip'+(overdue?' overdue':'')+(mismatch?' review-date':'')+'">🕓 Time Bound'+(dueText?(' · '+(mismatch?'Verify date ':overdue?'Overdue ':'Due ')+escapeHtml(dueText)):'')+'</span>';
     }
 
     function renderSubjectTitle(subject){
