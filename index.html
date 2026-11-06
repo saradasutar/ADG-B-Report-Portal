@@ -3367,8 +3367,33 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
+    function adgbNoticeContrast_(hex){
+      if(!/^#[0-9a-fA-F]{6}$/.test(hex))return 0;
+      const luminance=colour=>{
+        const channels=[1,3,5].map(i=>parseInt(colour.slice(i,i+2),16)/255)
+          .map(v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+        return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;
+      };
+      const a=luminance(hex),b=luminance('#fff7cc');
+      return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+    }
+    function adgbNoticeStyleFromForm_(){
+      return {textColor:String(document.getElementById('adgbNoticeTextColor')?.value||'#bd1726'),
+        fontSize:Number(document.getElementById('adgbNoticeFontSize')?.value||17),
+        fontWeight:Number(document.getElementById('adgbNoticeFontWeight')?.value||900)};
+    }
+    function adgbNoticeStylePreview_(){
+      const style=adgbNoticeStyleFromForm_(),contrast=adgbNoticeContrast_(style.textColor);
+      const message=document.getElementById('adgbNoticeContrast');
+      if(message){message.textContent=contrast>=4.5?'Text contrast: readable ('+contrast.toFixed(1)+':1).':'Text contrast is too low ('+contrast.toFixed(1)+':1); choose a darker colour to save.';message.style.color=contrast>=4.5?'#165b43':'#ae2634';}
+      const label=document.getElementById('adgbNoticeFontSizeLabel');if(label)label.textContent=style.fontSize+'px';
+      const preview=document.getElementById('adgbNoticePreviewText');
+      if(preview){preview.style.color=style.textColor;preview.style.fontSize=style.fontSize+'px';preview.style.fontWeight=String(style.fontWeight);}
+      adgbNoticePreviewStyle_=style;
+      adgbNoticeRenderStrip_();
+    }
     function adgbNoticeTimeIST_(offsetMs=0){
       const parts={};
       new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
@@ -3443,6 +3468,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const span=document.createElement('span');span.textContent='● '+message;track.appendChild(span);
       }
       track.classList.toggle('paused',adgbNoticePaused_);
+      const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
+      const colour=String(style.textColor||'#bd1726'),size=Number(style.fontSize||17),weight=Number(style.fontWeight||900);
+      track.style.color=/^#[0-9a-fA-F]{6}$/.test(colour)&&adgbNoticeContrast_(colour)>=4.5?colour:'#bd1726';
+      track.style.fontSize=Math.max(12,Math.min(24,size))+'px';
+      track.style.fontWeight=weight===700?'700':'900';
       const rawSpeed=adgbNoticePreviewSpeed_??feed.scrollSpeed;
       const speed=Number.isInteger(Number(rawSpeed))&&Number(rawSpeed)>=1&&Number(rawSpeed)<=10?Number(rawSpeed):5;
       const baseline=Math.max(20,pieces.join(' ').length/9);
@@ -3501,7 +3531,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const speed=Number.isInteger(Number(settings.scrollSpeed))&&Number(settings.scrollSpeed)>=1&&Number(settings.scrollSpeed)<=10?Number(settings.scrollSpeed):5;
       const slider=document.getElementById('adgbNoticeSpeed');
       if(slider)slider.value=String(speed);
+      const styleColor=/^#[0-9a-fA-F]{6}$/.test(String(settings.textColor||''))?settings.textColor:'#bd1726';
+      const styleSize=Number(settings.fontSize),styleWeight=Number(settings.fontWeight);
+      document.getElementById('adgbNoticeTextColor').value=adgbNoticeContrast_(styleColor)>=4.5?styleColor:'#bd1726';
+      document.getElementById('adgbNoticeFontSize').value=String(Number.isInteger(styleSize)&&styleSize>=12&&styleSize<=24?styleSize:17);
+      document.getElementById('adgbNoticeFontWeight').value=String(styleWeight===700?700:900);
       adgbNoticePreviewSpeed_=null;
+      adgbNoticeStylePreview_();
+      adgbNoticePreviewStyle_=null;
       adgbNoticeSpeedLabel_();
       adgbNoticeRenderStrip_();
       const selected=new Set(settings.pendingOfficeIds||[]);
@@ -3548,8 +3585,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
       const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
       const scrollSpeed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
-      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed});
-        adgbNoticeStatus_('Pending display settings and moving text speed saved for authorized viewers.');}
+      const style=adgbNoticeStyleFromForm_();
+      if(adgbNoticeContrast_(style.textColor)<4.5){adgbNoticeStatus_('Choose a darker notice text colour for readable contrast on light yellow.');return;}
+      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,...style});
+        adgbNoticeStatus_('Notice colour, font size, weight, speed and pending display settings saved.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
     function adgbNoticeInit_(){
@@ -3560,6 +3599,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       ['adgbNoticeText','adgbNoticeTarget','adgbNoticeStart','adgbNoticeEnd','adgbNoticeEnabled'].forEach(id=>{
         const node=document.getElementById(id);
         if(node){node.addEventListener('input',adgbNoticePreview_);node.addEventListener('change',adgbNoticePreview_);}
+      });
+      ['adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
+        document.getElementById(id)?.addEventListener('input',adgbNoticeStylePreview_);
+        document.getElementById(id)?.addEventListener('change',adgbNoticeStylePreview_);
+      });
+      document.querySelector('.adgb-notice-colour-presets')?.addEventListener('click',event=>{
+        const colour=event.target.closest('[data-notice-colour]')?.getAttribute('data-notice-colour');
+        if(!colour)return;
+        document.getElementById('adgbNoticeTextColor').value=colour;
+        adgbNoticeStylePreview_();
       });
       document.getElementById('adgbNoticeSpeed')?.addEventListener('input',()=>{
         adgbNoticePreviewSpeed_=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
