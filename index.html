@@ -1373,6 +1373,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.86 configurable banner background or no background */
+.adgb-notice-style-grid #adgbNoticeBackgroundMode{width:100%;background:white;color:#24364b;border:1px solid #ced9e4;border-radius:7px;padding:7px;min-height:37px}
+.adgb-notice-style-grid #adgbNoticeBackgroundColor{width:88px;height:39px}
+.adgb-notice-strip.no-background{border-color:transparent;background:transparent;box-shadow:none}
+.adgb-notice-strip.no-background #adgbNoticePause{background:transparent}
+@media(max-width:760px){.adgb-notice-style-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V17.7.85 administrator notice typography and colour controls */
 .adgb-notice-style-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:13px}
 .adgb-notice-style-grid label{display:grid;align-content:start;gap:6px;font-size:11px;font-weight:800;color:#46566b}
@@ -1835,10 +1841,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           <input id="adgbNoticeSpeed" type="range" min="1" max="10" step="1" value="5" aria-label="Moving text speed">
           <div class="adgb-notice-speed-ends"><span>Slow</span><span>Fast</span></div>
           <div class="adgb-notice-style-grid">
+            <label>Background <select id="adgbNoticeBackgroundMode" aria-label="Moving notice background"><option value="solid">Coloured background</option><option value="transparent">No Background (transparent)</option></select><input type="color" id="adgbNoticeBackgroundColor" value="#fff7cc" aria-label="Moving notice background colour"></label>
             <label>Text colour <input id="adgbNoticeTextColor" type="color" value="#bd1726" aria-label="Moving notice text colour"></label>
             <label>Font size: <strong id="adgbNoticeFontSizeLabel">17px</strong><input id="adgbNoticeFontSize" type="range" min="12" max="24" step="1" value="17" aria-label="Moving notice font size"></label>
             <label>Font weight <select id="adgbNoticeFontWeight" aria-label="Moving notice font weight"><option value="700">Bold</option><option value="900" selected>Extra Bold</option></select></label>
           </div>
+          <div class="adgb-notice-colour-presets" aria-label="Suggested background colours"><span>Background presets:</span><button type="button" data-notice-bg="#fff7cc">Light yellow</button><button type="button" data-notice-bg="#ffffff">White</button><button type="button" data-notice-bg="#e8f2ff">Light blue</button><button type="button" data-notice-bg="#e6f6e9">Light green</button><button type="button" data-notice-bg="#fff0f2">Light pink</button><button type="button" data-notice-bg="transparent">No background</button></div>
           <div class="adgb-notice-colour-presets" aria-label="Suggested readable text colours">
             <span>Quick colours:</span>
             <button type="button" data-notice-colour="#bd1726" aria-label="Dark red text">Dark red</button>
@@ -3369,28 +3377,35 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
     let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
-    function adgbNoticeContrast_(hex){
-      if(!/^#[0-9a-fA-F]{6}$/.test(hex))return 0;
+    function adgbNoticeContrast_(foreground,background='#fff7cc'){
+      const fg=String(foreground||'').toLowerCase(),bg=String(background||'').toLowerCase();
+      if(!/^#[0-9a-f]{6}$/.test(fg)||bg!=='transparent'&&!/^#[0-9a-f]{6}$/.test(bg))return 0;
       const luminance=colour=>{
         const channels=[1,3,5].map(i=>parseInt(colour.slice(i,i+2),16)/255)
           .map(v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4));
         return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;
       };
-      const a=luminance(hex),b=luminance('#fff7cc');
-      return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+      const ratio=(a,b)=>{const x=luminance(a),y=luminance(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
+      return bg==='transparent'?Math.min(ratio(fg,'#ffffff'),ratio(fg,'#edf4ff')):ratio(fg,bg);
     }
     function adgbNoticeStyleFromForm_(){
-      return {textColor:String(document.getElementById('adgbNoticeTextColor')?.value||'#bd1726'),
+      const mode=String(document.getElementById('adgbNoticeBackgroundMode')?.value||'solid');
+      return {backgroundColor:mode==='transparent'?'transparent':String(document.getElementById('adgbNoticeBackgroundColor')?.value||'#fff7cc'),
+        textColor:String(document.getElementById('adgbNoticeTextColor')?.value||'#bd1726'),
         fontSize:Number(document.getElementById('adgbNoticeFontSize')?.value||17),
         fontWeight:Number(document.getElementById('adgbNoticeFontWeight')?.value||900)};
     }
     function adgbNoticeStylePreview_(){
-      const style=adgbNoticeStyleFromForm_(),contrast=adgbNoticeContrast_(style.textColor);
+      const style=adgbNoticeStyleFromForm_(),contrast=adgbNoticeContrast_(style.textColor,style.backgroundColor);
+      const bgPicker=document.getElementById('adgbNoticeBackgroundColor');
+      if(bgPicker)bgPicker.disabled=style.backgroundColor==='transparent';
       const message=document.getElementById('adgbNoticeContrast');
       if(message){message.textContent=contrast>=4.5?'Text contrast: readable ('+contrast.toFixed(1)+':1).':'Text contrast is too low ('+contrast.toFixed(1)+':1); choose a darker colour to save.';message.style.color=contrast>=4.5?'#165b43':'#ae2634';}
       const label=document.getElementById('adgbNoticeFontSizeLabel');if(label)label.textContent=style.fontSize+'px';
       const preview=document.getElementById('adgbNoticePreviewText');
       if(preview){preview.style.color=style.textColor;preview.style.fontSize=style.fontSize+'px';preview.style.fontWeight=String(style.fontWeight);}
+      const previewBanner=document.querySelector('.adgb-notice-preview-ticker');
+      if(previewBanner){previewBanner.style.backgroundColor=style.backgroundColor==='transparent'?'transparent':style.backgroundColor;previewBanner.style.borderColor=style.backgroundColor==='transparent'?'transparent':'#edda82';}
       adgbNoticePreviewStyle_=style;
       adgbNoticeRenderStrip_();
     }
@@ -3469,8 +3484,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }
       track.classList.toggle('paused',adgbNoticePaused_);
       const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
+      const bg=String(style.backgroundColor||'#fff7cc').toLowerCase();
+      const background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
       const colour=String(style.textColor||'#bd1726'),size=Number(style.fontSize||17),weight=Number(style.fontWeight||900);
-      track.style.color=/^#[0-9a-fA-F]{6}$/.test(colour)&&adgbNoticeContrast_(colour)>=4.5?colour:'#bd1726';
+      strip.classList.toggle('no-background',background==='transparent');
+      strip.style.backgroundColor=background==='transparent'?'transparent':background;
+      track.style.color=/^#[0-9a-fA-F]{6}$/.test(colour)&&adgbNoticeContrast_(colour,background)>=4.5?colour:
+        (adgbNoticeContrast_('#ffffff',background)>=4.5?'#ffffff':'#111827');
       track.style.fontSize=Math.max(12,Math.min(24,size))+'px';
       track.style.fontWeight=weight===700?'700':'900';
       const rawSpeed=adgbNoticePreviewSpeed_??feed.scrollSpeed;
@@ -3531,9 +3551,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const speed=Number.isInteger(Number(settings.scrollSpeed))&&Number(settings.scrollSpeed)>=1&&Number(settings.scrollSpeed)<=10?Number(settings.scrollSpeed):5;
       const slider=document.getElementById('adgbNoticeSpeed');
       if(slider)slider.value=String(speed);
+      const bg=String(settings.backgroundColor||'#fff7cc').toLowerCase();
+      const background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
+      document.getElementById('adgbNoticeBackgroundMode').value=background==='transparent'?'transparent':'solid';
+      document.getElementById('adgbNoticeBackgroundColor').value=background==='transparent'?'#fff7cc':background;
       const styleColor=/^#[0-9a-fA-F]{6}$/.test(String(settings.textColor||''))?settings.textColor:'#bd1726';
       const styleSize=Number(settings.fontSize),styleWeight=Number(settings.fontWeight);
-      document.getElementById('adgbNoticeTextColor').value=adgbNoticeContrast_(styleColor)>=4.5?styleColor:'#bd1726';
+      document.getElementById('adgbNoticeTextColor').value=adgbNoticeContrast_(styleColor,background)>=4.5?styleColor:
+        (adgbNoticeContrast_('#ffffff',background)>=4.5?'#ffffff':'#111827');
       document.getElementById('adgbNoticeFontSize').value=String(Number.isInteger(styleSize)&&styleSize>=12&&styleSize<=24?styleSize:17);
       document.getElementById('adgbNoticeFontWeight').value=String(styleWeight===700?700:900);
       adgbNoticePreviewSpeed_=null;
@@ -3586,9 +3611,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
       const scrollSpeed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
       const style=adgbNoticeStyleFromForm_();
-      if(adgbNoticeContrast_(style.textColor)<4.5){adgbNoticeStatus_('Choose a darker notice text colour for readable contrast on light yellow.');return;}
+      if(adgbNoticeContrast_(style.textColor,style.backgroundColor)<4.5){adgbNoticeStatus_('Choose a notice text colour with sufficient contrast against the selected background.');return;}
       try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,...style});
-        adgbNoticeStatus_('Notice colour, font size, weight, speed and pending display settings saved.');}
+        adgbNoticeStatus_('Notice background, text colour, font size, weight, speed and pending display settings saved.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
     function adgbNoticeInit_(){
@@ -3600,11 +3625,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const node=document.getElementById(id);
         if(node){node.addEventListener('input',adgbNoticePreview_);node.addEventListener('change',adgbNoticePreview_);}
       });
-      ['adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
+      ['adgbNoticeBackgroundMode','adgbNoticeBackgroundColor','adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
         document.getElementById(id)?.addEventListener('input',adgbNoticeStylePreview_);
         document.getElementById(id)?.addEventListener('change',adgbNoticeStylePreview_);
       });
-      document.querySelector('.adgb-notice-colour-presets')?.addEventListener('click',event=>{
+      document.querySelector('[aria-label="Suggested background colours"]')?.addEventListener('click',event=>{
+        const bg=event.target.closest('[data-notice-bg]')?.getAttribute('data-notice-bg');
+        if(!bg)return;
+        document.getElementById('adgbNoticeBackgroundMode').value=bg==='transparent'?'transparent':'solid';
+        if(bg!=='transparent')document.getElementById('adgbNoticeBackgroundColor').value=bg;
+        adgbNoticeStylePreview_();
+      });
+      document.querySelector('[aria-label="Suggested readable text colours"]')?.addEventListener('click',event=>{
         const colour=event.target.closest('[data-notice-colour]')?.getAttribute('data-notice-colour');
         if(!colour)return;
         document.getElementById('adgbNoticeTextColor').value=colour;
