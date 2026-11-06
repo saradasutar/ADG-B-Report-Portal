@@ -3110,7 +3110,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const quote=value=>{
         const text=String(value??'');
         // Excel/Sheets may evaluate formulas starting with =,+,-,@, even after whitespace.
-        const safe=/^[\\s]*[=+\\-@]/.test(text)?"'"+text:text;
+        const safe=/^[\s]*[=+\-@]/.test(text)?"'"+text:text;
         return '"'+safe.replaceAll('"','""')+'"';
       };
       const header=['Timestamp (IST)','Reporting month','Office','Administrator','Changed fields','Before observation','After observation','Before action','After action','Before follow-up','After follow-up','Before target date','After target date','Audit event ID'];
@@ -3120,7 +3120,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           before.observation,after.observation,before.action,after.action,before.followup,after.followup,
           before.targetDate,after.targetDate,x.id];
       });
-      const csv='\\uFEFF'+[header,...data].map(row=>row.map(quote).join(',')).join('\\r\\n');
+      const csv='\uFEFF'+[header,...data].map(row=>row.map(quote).join(',')).join('\r\n');
       const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
       const url=URL.createObjectURL(blob),link=document.createElement('a');
       const month=String(document.getElementById('adgbAuditMonth')?.value||adgbReviewCycle());
