@@ -2883,7 +2883,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
 
 
-    // V17.7.65 — historical submission archive (admin read-only). Backend v17.7.58 required.
+    // V17.7.77 — historical submission archive (admin read-only). Compatible backend V17.7.77 required.
     let adgbArchiveRecords=[],adgbArchiveLoadedCycle='';
     function adgbCurrentCycleKeyIST(){
       const bits={};
@@ -2915,7 +2915,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const rows=adgbArchiveRecords.filter(x=>(!q||(x.subjectName+' '+x.officeName+' '+x.reportKind).toLowerCase().includes(q))&&(!office||office===x.officeId)&&(status==='all'||status===x.status));
       document.getElementById('adgbArchiveRows').innerHTML=rows.map(x=>
         '<tr><td>'+escapeHtml(x.subjectName)+'</td><td>'+escapeHtml(x.reportKind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.officeName)+'</td><td><span class="'+(x.status==='SUBMITTED'?'adgb-status-good':'adgb-status-wait')+'">'+(x.status==='SUBMITTED'?(x.receivedPhysically?'Physically received':'Submitted'):'Removed')+'</span></td><td>'+escapeHtml(adgbFormatTimeIST(x.submittedAt))+'</td><td>'+(x.hasPdf?'<button type="button" class="adgb-archive-view" data-archive-view="'+escapeAttr(x.submissionId)+'">View PDF</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">No matching submissions in this cycle.</td></tr>';
-      adgbArchiveMessage(adgbArchiveLoadedCycle+': '+rows.length+' displayed of '+adgbArchiveRecords.length+' recorded office/report combinations. A record may include earlier replacement events.');
+      adgbArchiveMessage(adgbArchiveLoadedCycle+': '+rows.length+' displayed of '+adgbArchiveRecords.length+' recorded office/report combinations. Only the final logged event per office/report is shown; earlier replacement events are not listed here.');
     }
     async function adgbLoadArchive(){
       const cycle=String(document.getElementById('adgbArchiveMonth')?.value||'');
@@ -2934,7 +2934,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbArchiveLoadedCycle=cycle;
         adgbArchiveRecords=res.records;
         adgbRenderArchive();
-      }catch(e){adgbArchiveRecords=[];adgbArchiveLoadedCycle='';document.getElementById('adgbArchiveRows').innerHTML='<tr><td colspan="6">Historical records could not be loaded.</td></tr>';adgbArchiveMessage('Archive unavailable: '+(e.message||'Please deploy compatible backend V17.7.58.'));}
+      }catch(e){adgbArchiveRecords=[];adgbArchiveLoadedCycle='';document.getElementById('adgbArchiveRows').innerHTML='<tr><td colspan="6">Historical records could not be loaded.</td></tr>';adgbArchiveMessage('Archive unavailable: '+(e.message||'Please deploy compatible backend V17.7.77.'));}
       finally{if(button)button.disabled=false;}
     }
     async function adgbViewArchivedPdf(submissionId){
