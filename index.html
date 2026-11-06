@@ -1326,7 +1326,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.59</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.60</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2203,7 +2203,7 @@
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.59 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.7.60 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -2755,7 +2755,8 @@
       const receivedPhysically=submitted&&!!item?.receivedPhysically;
       const enabled=subject.submissionEnabled!==false;
 
-      if(!cellMatchesFilter(submitted))return '<td class="filtered-cell">—</td>';
+      // Status filters select REPORT ROWS, not individual office cells.
+      // Always show the actual status of all offices in each visible row.
 
       if(!enabled&&!submitted){
         return '<td class="closed-cell"><div class="cell-status"><button type="button" class="upload-button closed" disabled>Closed</button><small class="submitted-time">By Head Office</small></div></td>';
@@ -2780,7 +2781,7 @@
       const receivedPhysically=submitted&&!!item?.receivedPhysically;
       const enabled=subject.submissionEnabled!==false;
 
-      if(!cellMatchesFilter(submitted))return '';
+      // Preserve all office statuses in mobile view when filtering report rows.
       if(!enabled&&!submitted){
         return '<div class="closed-office"><span class="office-name">'+escapeHtml(office.name)+'</span><span class="office-action"><button type="button" class="closed" disabled>Closed</button><small>By Head Office</small></span></div>';
       }
