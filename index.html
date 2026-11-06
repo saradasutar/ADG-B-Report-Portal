@@ -1373,6 +1373,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.79 office drill-down action */
+.adgb-office-open{justify-self:start;border:1px solid #bad2e5;background:#f1f8ff;color:#174e84;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+.adgb-office-open:hover,.adgb-office-open:focus-visible{background:#e1f0ff;outline:2px solid #8cb8de;outline-offset:1px}
+.adgb-office-open:disabled{opacity:.5;cursor:default}
+@media(max-width:760px){.adgb-office-open{width:100%;min-height:36px}}
 /* V17.7.76 read-only deployment readiness check */
 .adgb-readiness-panel{margin:12px 14px;border:1px solid #cbddec;border-radius:12px;background:#f8fbff;padding:12px}
 .adgb-readiness-panel[hidden]{display:none!important}
@@ -3027,6 +3032,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }
       return rows;
     }
+    function adgbOpenOfficePending_(officeId){
+      if(!state.offices.some(x=>String(x.id)===String(officeId)))return;
+      adgbOpenInsights('register');
+      const office=document.getElementById('adgbRegisterOffice');
+      const status=document.getElementById('adgbRegisterStatus');
+      const search=document.getElementById('adgbRegisterSearch');
+      if(office)office.value=String(officeId);
+      if(status)status.value='pending';
+      if(search)search.value='';
+      adgbRenderRegister();
+      document.getElementById('adgbRegisterPanel')?.scrollIntoView({block:'start',behavior:'smooth'});
+    }
     function adgbRenderRegister(){
       if(adgbInsightsView!=='register')return;
       const office=document.getElementById('adgbRegisterOffice');
@@ -3050,6 +3067,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q)));
       adgbRegisterSnapshot=rows;
       const body=document.getElementById('adgbRegisterRows');
+      if(['pending','overdue','dueToday'].includes(filter.value))rows.sort((a,b)=>{
+        const priority=x=>x.dueDate&&x.dueDate<today?0:x.dueDate===today?1:x.dueDate?2:x.deadlineReview?3:4;
+        return priority(a)-priority(b)||(a.dueDate||'9999').localeCompare(b.dueDate||'9999')||a.subject.localeCompare(b.subject);
+      });
       if(body)body.innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.office)+'</td><td><span class="'+(x.submitted?'adgb-status-good':'adgb-status-wait')+'">'+(x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending')+'</span></td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td><td>'+escapeHtml(x.submitted?adgbFormatTimeIST(x.submittedAt):'—')+'</td></tr>').join('')||
         '<tr><td colspan="6">No matching reports</td></tr>';
       const counter=document.getElementById('adgbRegisterCount');
@@ -3158,7 +3179,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const today=adgbTodayIST();
       const compliance=state.offices.map(office=>{
         const list=rows.filter(x=>x.officeId===office.id),pending=list.filter(x=>!x.submitted);
-        return {office:office.name,total:list.length,submitted:list.length-pending.length,pending:pending.length,
+        return {office:office.name,officeId:String(office.id),total:list.length,submitted:list.length-pending.length,pending:pending.length,
           overdue:pending.filter(x=>x.dueDate&&x.dueDate<today).length,
           dueToday:pending.filter(x=>x.dueDate===today).length,
           noDeadline:pending.filter(x=>!x.dueDate&&!x.deadlineReview).length,
@@ -3175,7 +3196,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         '<div class="numbers"><b>'+x.percent+'%</b><span>'+x.submitted+' / '+x.total+' submitted</span></div>'+
         '<div class="track"><i style="width:'+x.percent+'%"></i></div>'+
         '<div class="details">'+x.pending+' pending'+(x.overdue?' · '+x.overdue+' overdue':'')+
-        (x.dueToday?' · '+x.dueToday+' due today':'')+'</div></div>').join('');
+        (x.dueToday?' · '+x.dueToday+' due today':'')+'</div>'+
+        '<button type="button" class="adgb-office-open" data-adgb-office-pending="'+escapeAttr(x.officeId)+'"'+(x.pending?'':' disabled')+'>View '+x.pending+' pending report'+(x.pending===1?'':'s')+'</button></div>').join('');
       const table=document.getElementById('adgbComplianceRows');
       if(table)table.innerHTML=compliance.map(x=>'<tr><td>'+escapeHtml(x.office)+'</td><td>'+x.total+'</td><td>'+x.submitted+'</td><td>'+x.pending+'</td><td>'+x.overdue+'</td><td>'+x.dueToday+'</td><td>'+x.noDeadline+'</td><td>'+x.review+'</td><td>'+x.percent+'%</td></tr>').join('');
       const note=document.getElementById('adgbComplianceNote');
@@ -3483,6 +3505,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbRenderRegister();adgbRenderAnalytics();
     }
     function adgbInitInsights(){
+      document.getElementById('adgbOfficeHighlights')?.addEventListener('click',event=>{
+        const btn=event.target.closest('[data-adgb-office-pending]');
+        if(btn&&!btn.disabled)adgbOpenOfficePending_(btn.getAttribute('data-adgb-office-pending'));
+      });
       document.getElementById('adgbCompliancePrint')?.addEventListener('click',adgbPrintComplianceReview);
       document.getElementById('adgbAnalyticsSort')?.addEventListener('change',adgbRenderAnalytics);
       document.getElementById('adgbTrendLoad')?.addEventListener('click',adgbLoadTrends_);
