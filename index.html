@@ -1373,6 +1373,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.88 ten coordinated notice and pending-workflow enhancements */
+.adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
+.adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
+#adgbNoticeAdmin .adgb-insights-toolbar input[type="search"]{max-width:190px}
+#adgbNoticeSavedList .adgb-notice-saved-actions{flex-wrap:wrap}
+#adgbActionSummary>div[data-priority]{cursor:pointer;transition:background .15s,border .15s}
+#adgbActionSummary>div[data-priority]:hover,#adgbActionSummary>div[data-priority]:focus-visible{background:#e3f1ff;border-color:#92b8da;outline:2px solid #a9c9e7}
+#adgbActionPanel .adgb-insights-toolbar button{min-height:35px}
+@media(max-width:760px){#adgbNoticeAdmin .adgb-insights-toolbar input[type="search"]{max-width:100%;width:100%}}
 /* V17.7.87 safe notice appearance editing */
 .adgb-notice-appearance-actions{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}
 .adgb-notice-appearance-actions button{background:#fff!important;color:#23466e!important;border:1px solid #c9d6e4!important}
@@ -1798,7 +1807,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <label>Office <select id="adgbActionOffice"><option value="">All offices</option></select></label>
         <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
         <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label>
-        <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button>
+        <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button><button type="button" id="adgbActionCsv" class="hidden">Export filtered CSV (admin)</button><button type="button" id="adgbActionReset">Clear filters</button>
       </div>
       <p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p>
       <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="5">No data loaded.</td></tr></tbody></table></div>
@@ -1820,11 +1829,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
         <div class="adgb-compliance-heading"><div><h3>Moving Notice Board — Administrator</h3><p>Red text on light yellow · scheduled in India time · targeted to authorized offices</p></div></div>
         <p id="adgbNoticeAdminStatus" class="adgb-insights-count" aria-live="polite">Load notices to manage the schedule and office visibility.</p>
-        <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button><label>Status <select id="adgbNoticeStatusFilter"><option value="all">All notices</option><option value="active">Active now</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select></label></div>
-        <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div>
+        <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button><label>Status <select id="adgbNoticeStatusFilter"><option value="all">All notices</option><option value="active">Active now</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select></label><label>Find notice <input type="search" id="adgbNoticeSearch" placeholder="Search message or office"></label><label>Audience <select id="adgbNoticeAudienceFilter"><option value="all">All audiences</option><option value="ALL">General notices</option></select></label><label>Sort <select id="adgbNoticeSort"><option value="startAsc">Earliest start</option><option value="startDesc">Latest start</option><option value="endAsc">Ending soonest</option></select></label><button type="button" id="adgbNoticeExport">Export filtered notices CSV (admin)</button></div>
+        <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div><p id="adgbNoticeFilteredCount" class="adgb-insights-count" aria-live="polite"></p>
         <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
         <div class="adgb-notice-form">
-          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="2" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label>
+          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="2" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label><p id="adgbNoticeTextCounter" class="adgb-notice-charcount">0 / 220 characters</p><p id="adgbNoticeDraftStatus" class="adgb-notice-draft-status" aria-live="polite">New notice · not published</p>
           <div class="adgb-notice-form-grid">
             <label>Display to <select id="adgbNoticeTarget"><option value="ALL">Everyone permitted to view the portal</option></select></label>
             <label>Start (IST) <input id="adgbNoticeStart" type="datetime-local"></label>
@@ -1838,7 +1847,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <div id="adgbNoticePreviewAudience" class="adgb-notice-preview-audience"></div>
             <p class="adgb-notice-preview-help">Audience preview is based on the selected form settings. Actual delivery is restricted by the backend and portal access rules. Office pending counts are a separate setting.</p>
           </section>
-          <div class="adgb-insights-toolbar"><button id="adgbNoticeSave" type="button">Save scheduled notice</button><button id="adgbNoticeCancel" type="button">Reset form</button></div>
+          <div class="adgb-insights-toolbar"><button id="adgbNoticeSave" type="button">Save scheduled notice</button><button id="adgbNoticeCancel" type="button">Reset form</button><button id="adgbNoticeOneDay" type="button">Set 24-hour period</button><button id="adgbNoticeSevenDay" type="button">Set 7-day period</button></div>
         </div>
         <div class="adgb-notice-pending-config">
           <label class="adgb-notice-check"><input id="adgbNoticePendingEnabled" type="checkbox"> Include live office-wise pending counts in moving strip</label>
