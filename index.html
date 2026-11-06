@@ -3011,10 +3011,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!isRecognizedAsAdmin())return;
       const today=adgbTodayIST();
       const quote=value=>'"'+String(value??'').replaceAll('"','""')+'"';
-      const safe=value=>quote(/^[=+\\-@\\t\\r]/.test(String(value??''))?"'"+String(value):value);
+      const safe=value=>quote(/^[=+\-@\t\r]/.test(String(value??''))?"'"+String(value):value);
       const data=[['As of (IST)','Office','Observation (draft)','Action taken (draft)','Follow-up status (draft)','Target date (draft)'],
         ...adgbReviewSnapshot().map(({office,entry})=>[today,office.name,entry.observation,entry.action,entry.followup,entry.targetDate])];
-      const blob=new Blob(['\\uFEFF'+data.map(row=>row.map(safe).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'});
+      const blob=new Blob(['\uFEFF'+data.map(row=>row.map(safe).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
       const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ADGB-office-review-DRAFT-'+today+'.csv';
       document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
     }
