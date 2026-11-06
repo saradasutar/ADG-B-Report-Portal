@@ -582,3 +582,22 @@ The backend now validates text colour and its contrast on the yellow background,
 
 **Test:** Set the colour to Navy, size 22px and Bold; save; refresh and load the settings to verify persistence. Try a pale colour and verify it is rejected. Check the strip from an authorized office login and on mobile, without exposing other offices' private pending counts. Frontend syntax checks and isolated backend style tests passed; live Apps Script acceptance testing remains pending.
 
+
+
+---
+
+## V17.7.86 — Choose a notice background colour or No Background
+
+The **Moving Notice Board — Administrator** now provides a **Background** selector and colour picker, alongside Text colour, Font size (12–24px), Bold/Extra Bold and Moving speed (1–10).
+
+Background options include **Light yellow (default), White, Light blue, Light green, Light pink**, any valid colour from the colour picker, and **No Background (transparent)**. In transparent mode, no coloured strip fill appears; the banner text remains visible over the portal page. The Pause button and scheduled notice/office-targeted display continue operating.
+
+The on-page preview updates immediately. The text-colour validator checks readability against the selected background. Transparent mode is checked against white and pale blue page surfaces; combinations lacking adequate contrast cannot be saved.
+
+### Installation required to persist the setting
+
+Download the privately provided **ADGB_Code_gs_V17_7_86_Integrated.txt**, which is based on V17.7.85 integrated Code.gs. Back up existing Code.gs and the portal database first. **Only replace the full file if your live code matches V17.7.85; otherwise merge independent changes.** Save and select **Deploy → Manage deployments → Edit → New version → Deploy**, retaining the original URL. Do not run `setupPortal()` or `setPortalSecurityCodes()`.
+
+Open **Office Analytics → Moving Notice Board — Administrator → Load notices and settings**, choose the background, preview, then select **Save notice appearance & pending settings**. Reload to confirm persistence. Existing saved settings default to light yellow unless changed.
+
+**Storage:** Uses the existing `ADGB_NOTICE_CONFIG_V1` Script Property; no new spreadsheet, tab, Drive folder or trigger. The backend still authorizes settings changes using the Administrator session and checks both foreground and background colour. Backend and frontend syntax checks passed, and isolated settings/contrast tests passed. Live Apps Script deployment and browser checks remain outstanding.
