@@ -1225,6 +1225,8 @@
         <span class="cycle-label">Reporting cycle</span>
         <strong id="cycleName">Current month</strong>
         <span class="active-badge">Active</span>
+        <button class="adgb-cycle-tab active" type="button" data-adgb-nav="matrix">▤ Reports</button>
+        <button class="adgb-cycle-tab" type="button" data-adgb-nav="subjects">▧ Subjects</button>
       </div>
       <div class="cycle-side">
         <span class="system-line">
@@ -1236,7 +1238,9 @@
       </div>
     </section>
 
-    <section class="stats-grid" aria-label="Submission overview">
+    <div class="adgb-dashboard-grid">
+      <div class="adgb-primary-column">
+      <section class="stats-grid" aria-label="Submission overview">
       <article class="stat-card total">
         <span class="stat-icon" aria-hidden="true">▤</span><span class="stat-label">Total reports</span>
         <strong class="stat-value" id="totalCount">0</strong>
@@ -1267,8 +1271,7 @@
       </article>
     </section>
 
-    <div class="adgb-body-grid">
-      <div class="workspace">
+    <div class="workspace">
       <aside class="office-panel" aria-label="Submission status of sub-offices">
         <div class="panel-head">
           <div>
@@ -1287,7 +1290,7 @@
         <div class="panel-head matrix-top">
           <div class="matrix-heading-copy">
             <span class="panel-kicker">SUBMISSION STATUS</span>
-            <h2 id="matrixTitle">Report upload matrix</h2>
+            <h2 id="matrixTitle"><span class="adgb-matrix-title-icon" aria-hidden="true">▤</span> Report submission matrix</h2>
             <p>Select an Upload or Submitted button for the required subject and office.</p>
           </div>
           <div class="adgb-heading-tools"><button type="button" id="adgbExpandMatrix" class="adgb-expand-matrix" aria-pressed="false">⛶ Expand</button><div class="legend">
@@ -1329,6 +1332,7 @@
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
       </div>
+      </div>
       <aside class="adgb-right-panel" aria-label="Reporting tools">
         <section class="adgb-side-card adgb-timeline">
           <h2>▣ Reporting timeline</h2>
@@ -1337,10 +1341,10 @@
         <section class="adgb-side-card">
           <h2>✦ Quick actions</h2>
           <div class="adgb-quick-actions">
-            <button type="button" data-adgb-nav="matrix">▤ <span>Reports</span></button>
-            <button type="button" data-adgb-nav="pending">◷ <span>Pending</span></button>
-            <button type="button" data-adgb-nav="print">▣ <span>Print</span></button>
-            <button type="button" data-adgb-nav="admin">⚙ <span>Admin</span></button>
+            <button type="button" data-adgb-nav="subjects"><span class="adgb-action-icon">✚</span><span>Add subject</span></button>
+            <button type="button" data-adgb-nav="matrix"><span class="adgb-action-icon">◉</span><span>View reports</span></button>
+            <button type="button" data-adgb-nav="print"><span class="adgb-action-icon">▣</span><span>Print</span></button>
+            <button type="button" data-adgb-nav="admin"><span class="adgb-action-icon">⚙</span><span>Admin</span></button>
           </div>
         </section>
         <section class="adgb-side-card">
@@ -1370,7 +1374,7 @@
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.61</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.62</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -1861,6 +1865,7 @@
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
       adgbInitLayout();
+      adgbAlignPreviewLayout();
       adgbInitPremiumControls();
       loadRecentStatusWrites();
       const now=new Date();
@@ -2533,6 +2538,19 @@
         entries.slice(0,adgbShowAllRecent?25:4).map(item=>'<div class="adgb-line"><span class="adgb-line-icon">✓</span><span><strong>'+escapeHtml(item.office)+'</strong><small>'+escapeHtml(item.received?'Physically received: ':'Submitted: ')+escapeHtml(item.subject)+'</small>'+(item.time?'<small>'+escapeHtml(new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(item.time)))+'</small>':'')+'</span></div>').join('');
     }
 
+
+
+// V17.7.62: preview-aligned UI; keep existing backend/API unchanged.
+function adgbAlignPreviewLayout(){
+  const headerSide=document.querySelector('.cycle-side');
+  const field=document.querySelector('.tool-field:has(#officeFilter)');
+  if(headerSide&&field&&!headerSide.contains(field)){
+    field.classList.add('adgb-top-office-filter');
+    headerSide.insertBefore(field,headerSide.querySelector('.refresh-button'));
+  }
+  const menu=document.querySelector('.adgb-cycle-tab[data-adgb-nav="matrix"]');
+  if(menu)menu.classList.toggle('active',true);
+}
 
     // V17.7.61 frontend improvements. No new backend APIs.
     let adgbKindFilter='ALL',adgbShowAllRecent=false;
