@@ -1340,6 +1340,38 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
   .adgb-shell .adgb-dashboard-grid{display:block!important}
 }
 
+
+/* V17.7.64: Current cycle register and analytics */
+.adgb-insights-panel[hidden]{display:none!important}
+.adgb-insights-panel{margin:14px 0;background:#fff;border:1px solid #d1e0ef;border-radius:13px;box-shadow:0 5px 18px rgba(20,55,97,.08);overflow:hidden;scroll-margin-top:88px}
+.adgb-insights-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;background:#eaf4ff;border-bottom:1px solid #d2e3f5}
+.adgb-insights-heading h2{font-size:19px;margin:0;color:#113f78}
+.adgb-insights-heading p{font-size:11px;margin:3px 0 0;color:#4e6786}
+.adgb-insights-heading button{background:#fff;border:1px solid #c0d5e9;border-radius:8px;color:#1a508d;font-size:11px;font-weight:800;padding:7px 10px}
+.adgb-insights-toolbar{display:flex;align-items:end;gap:9px;flex-wrap:wrap;padding:12px 15px}
+.adgb-insights-toolbar label{display:grid;gap:4px;font-size:10px;font-weight:850;color:#3c5674}
+.adgb-insights-toolbar input,.adgb-insights-toolbar select{min-height:35px;min-width:130px;max-width:220px;border:1px solid #c7d9ed;border-radius:8px;background:#fff;padding:5px 10px;font-size:11px}
+.adgb-insights-toolbar button{min-height:35px;background:#165c9e;color:#fff;border:0;border-radius:8px;font-size:11px;font-weight:800;padding:7px 12px}
+.adgb-insights-count{padding:0 15px;font-size:11px;color:#57708d}
+.adgb-insights-scroll{overflow:auto;max-height:480px}
+.adgb-register-table{width:100%;min-width:700px;table-layout:auto;border-collapse:collapse}
+.adgb-register-table th{background:#0c477f!important;color:#fff!important;position:sticky!important;top:0!important;left:auto!important;font-size:11px!important;padding:10px!important;text-align:left!important}
+.adgb-register-table td{padding:9px 10px;border-bottom:1px solid #e5edf5;font-size:11px;vertical-align:top;background:#fff!important}
+.adgb-status-good{color:#078452;font-weight:850}.adgb-status-wait{color:#bc3b4d;font-weight:850}
+.adgb-analytics-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:14px}
+.adgb-analytics-summary>div{display:grid;gap:4px;background:#f2f7fe;border:1px solid #d6e4f5;border-radius:10px;padding:12px}
+.adgb-analytics-summary strong{font-size:23px;color:#153f79}
+.adgb-analytics-summary span{font-size:10px;color:#53708c}
+.adgb-analytics-rows{padding:0 14px 15px;display:grid;gap:9px}
+.adgb-analytics-row{padding:12px;border:1px solid #dce7f1;border-radius:10px}
+.adgb-analytics-row>div:first-child{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.adgb-analytics-row strong{font-size:12px;color:#183f71}
+.adgb-analytics-row span{font-size:11px;color:#61758b}
+.adgb-analytics-row b{margin-left:auto;color:#086a51}
+.adgb-analytics-track{height:7px;border-radius:30px;background:#e5edf4;margin-top:10px;overflow:hidden}
+.adgb-analytics-track span{display:block;background:linear-gradient(90deg,#1676b5,#0f9f74);height:100%;border-radius:inherit}
+@media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -1391,6 +1423,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item active" data-adgb-nav="dashboard">⌂ <span>Dashboard</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="matrix">▤ <span>Reports Matrix</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
@@ -1539,10 +1573,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </aside>
       </div>
 
+    <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div class="adgb-insights-toolbar">
+        <label>Search report <input id="adgbRegisterSearch" type="search" placeholder="Subject or office"></label>
+        <label>Office <select id="adgbRegisterOffice"><option value="">All offices</option></select></label>
+        <label>Status <select id="adgbRegisterStatus"><option value="all">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option></select></label>
+        <button type="button" id="adgbRegisterExport" class="hidden">Export CSV (admin)</button>
+      </div>
+      <p id="adgbRegisterCount" class="adgb-insights-count" aria-live="polite"></p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
+    </section>
+    <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
+      <div id="adgbAnalyticsRows" class="adgb-analytics-rows"></div>
+    </section>
+
     <div class="adgb-feature-links" aria-label="Quick report navigation">
       <button type="button" data-adgb-nav="pending">◷ <span><strong>Pending reports</strong><small>View remaining submissions</small></span></button>
-      <button type="button" data-adgb-nav="matrix">▤ <span><strong>Submission matrix</strong><small>View office-wise status</small></span></button>
-      <button type="button" data-adgb-nav="print">▣ <span><strong>Reports &amp; print</strong><small>Print pending status</small></span></button>
+      <button type="button" data-adgb-nav="register">▦ <span><strong>Submission Register</strong><small>Current cycle and office status</small></span></button>
+      <button type="button" data-adgb-nav="analytics">▥ <span><strong>Office Analytics</strong><small>Live completion by office</small></span></button>
       <button type="button" data-adgb-nav="admin">⚙ <span><strong>Administration</strong><small>Authorised controls</small></span></button>
     </div>
 
@@ -1558,7 +1609,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.63</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.64</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2049,6 +2100,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
       adgbInitLayout();
+      adgbInitInsights();
       adgbAlignPreviewLayout();
       adgbInitPremiumControls();
       loadRecentStatusWrites();
@@ -2676,6 +2728,103 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
 
 
+
+    // V17.7.64 — current-cycle register and office analytics.
+    // Never claim historical event data: backend bootstrap returns current statuses.
+    let adgbInsightsView='',adgbRegisterSnapshot=[];
+    function adgbOpenInsights(view){
+      adgbInsightsView=view;
+      const reg=document.getElementById('adgbRegisterPanel'),ana=document.getElementById('adgbAnalyticsPanel');
+      if(reg)reg.hidden=view!=='register';
+      if(ana)ana.hidden=view!=='analytics';
+      adgbRefreshInsights();
+      (view==='register'?reg:ana)?.scrollIntoView({block:'start',behavior:'smooth'});
+    }
+    function adgbFormatTimeIST(value){
+      if(!value)return '—';
+      const date=new Date(value);
+      return Number.isNaN(date.getTime())?'—':new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+    }
+    function adgbRegisterData(){
+      const rows=[];
+      for(const subject of state.subjects){
+        for(const office of state.offices){
+          const status=reportStatusFor(subject,office);
+          rows.push({
+            subject:String(subject.name||''),
+            kind:String(subject.reportKind||'—'),
+            office:String(office.name||''),
+            officeId:String(office.id||''),
+            submitted:!!status?.submitted,
+            receivedPhysically:status?.receivedPhysically===true,
+            submittedAt:status?.submittedAt||''
+          });
+        }
+      }
+      return rows;
+    }
+    function adgbRenderRegister(){
+      if(adgbInsightsView!=='register')return;
+      const office=document.getElementById('adgbRegisterOffice');
+      const search=document.getElementById('adgbRegisterSearch');
+      const filter=document.getElementById('adgbRegisterStatus');
+      if(!office||!filter||!search)return;
+      const selected=office.value;
+      const expected=state.offices.map(x=>x.id);
+      if(office.options.length!==expected.length+1 || expected.some((id,i)=>office.options[i+1]?.value!==id)){
+        office.innerHTML='<option value="">All offices</option>'+state.offices.map(x=>'<option value="'+escapeAttr(x.id)+'">'+escapeHtml(x.name)+'</option>').join('');
+        if(expected.includes(selected))office.value=selected;
+      }
+      const q=search.value.trim().toLowerCase();
+      const rows=adgbRegisterData().filter(x=>(!office.value||x.officeId===office.value)&&
+        (filter.value==='all'||(filter.value==='submitted')===x.submitted)&&
+        (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q)));
+      adgbRegisterSnapshot=rows;
+      const body=document.getElementById('adgbRegisterRows');
+      if(body)body.innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.office)+'</td><td><span class="'+(x.submitted?'adgb-status-good':'adgb-status-wait')+'">'+(x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending')+'</span></td><td>'+escapeHtml(x.submitted?adgbFormatTimeIST(x.submittedAt):'—')+'</td></tr>').join('')||
+        '<tr><td colspan="5">No matching reports</td></tr>';
+      const counter=document.getElementById('adgbRegisterCount');
+      if(counter)counter.textContent=rows.length+' records · '+rows.filter(x=>x.submitted).length+' submitted · '+rows.filter(x=>!x.submitted).length+' pending';
+      document.getElementById('adgbRegisterExport')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+    }
+    function adgbRenderAnalytics(){
+      if(adgbInsightsView!=='analytics')return;
+      const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length,pct=total?Math.round(submitted*100/total):0;
+      const summary=document.getElementById('adgbAnalyticsSummary');
+      if(summary)summary.innerHTML='<div><strong>'+total+'</strong><span>Expected reports</span></div><div><strong>'+submitted+'</strong><span>Submitted</span></div><div><strong>'+(total-submitted)+'</strong><span>Pending</span></div><div><strong>'+pct+'%</strong><span>Completion</span></div>';
+      const box=document.getElementById('adgbAnalyticsRows');
+      if(box)box.innerHTML=state.offices.map(office=>{
+        const list=rows.filter(x=>x.officeId===office.id),done=list.filter(x=>x.submitted).length,percent=list.length?Math.round(done*100/list.length):0;
+        return '<div class="adgb-analytics-row"><div><strong>'+escapeHtml(office.name)+'</strong><span>'+done+' of '+list.length+' submitted · '+(list.length-done)+' pending</span><b>'+percent+'%</b></div><div class="adgb-analytics-track"><span style="width:'+percent+'%"></span></div></div>';
+      }).join('');
+    }
+    function adgbRefreshInsights(){
+      adgbRenderRegister();adgbRenderAnalytics();
+    }
+    function adgbInitInsights(){
+      ['adgbRegisterSearch','adgbRegisterOffice','adgbRegisterStatus'].forEach(id=>{
+        const el=document.getElementById(id);if(el)el.addEventListener(id==='adgbRegisterSearch'?'input':'change',adgbRenderRegister);
+      });
+      document.querySelectorAll('[data-adgb-close-insights]').forEach(button=>button.addEventListener('click',()=>{
+        adgbInsightsView='';
+        document.getElementById('adgbRegisterPanel').hidden=true;
+        document.getElementById('adgbAnalyticsPanel').hidden=true;
+        document.getElementById('top')?.scrollIntoView({block:'start',behavior:'smooth'});
+      }));
+      document.getElementById('adgbRegisterExport')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin()){showToast('Administrator permission required for export.','error');return}
+        const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+        // Neutralize spreadsheet formula injection for exported text.
+        const cell=v=>quote(/^[=+\-@\t\r]/.test(String(v??''))?"'"+String(v):v);
+        const fields=[['Report subject','Reporting type','Office','Status','Submitted at IST'],...adgbRegisterSnapshot.map(x=>[x.subject,x.kind,x.office,x.submitted?(x.receivedPhysically?'Physically received':'Submitted'):'Pending',x.submitted?adgbFormatTimeIST(x.submittedAt):''])];
+        const csv='\uFEFF'+fields.map(row=>row.map(cell).join(',')).join('\r\n');
+        const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download='ADGB-current-cycle-register-'+new Date().toISOString().slice(0,10)+'.csv';
+        document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      });
+    }
+
     // V17.7.59 navigation and real-data sidebar: no fake statistics/activities.
     function adgbInitLayout(){
       const mount=document.getElementById('adgbOfficePanelMount');
@@ -2684,6 +2833,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
         const nav=btn.getAttribute('data-adgb-nav');
         document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
+        if(nav==='register'||nav==='analytics'){
+          adgbOpenInsights(nav);
+          return;
+        }
         if(nav==='recent'){adgbShowAllRecent=true;document.getElementById('adgbViewAllRecent').textContent='Show less';adgbRenderLivePanels();document.getElementById('adgbRecentActivity')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
         if(nav==='admin'||nav==='subjects'){document.getElementById('adminButton')?.click();return;}
         if(nav==='pending'){state.statusFilter='pending';document.querySelectorAll('[data-status-filter]').forEach(b=>{const active=b.getAttribute('data-status-filter')==='pending';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});renderMatrix();}
@@ -2766,6 +2919,7 @@ function adgbAlignPreviewLayout(){
       renderMatrix();
       updateSummary();
       adgbRenderLivePanels();
+      adgbRefreshInsights();
       renderAdminSubjects();
       setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated);
     }
