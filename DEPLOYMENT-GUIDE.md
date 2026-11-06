@@ -431,3 +431,31 @@ Pending items in that register now sort by action priority: **overdue first**, t
 
 **Deployment:** GitHub frontend-only. No new Apps Script version, spreadsheet, or backend route required. This code was checked for JavaScript syntax, but live browser acceptance testing is still needed.
 
+
+
+---
+
+## V17.7.80 — Consolidated Action Required view
+
+The frontend adds a **⚑ Action Required** item in both navigation areas. It opens a **single current-cycle pending-report register across all five offices**, based on the portal's existing verified submission statuses.
+
+The new view displays an all-offices pending summary and supports these filters:
+
+- **Office:** all offices or CE(B), CE(HAL), SE&PD, SE(Mysore), SE(Hubli).
+- **Priority:** all pending, overdue, due today, upcoming dated deadline, verify deadline, or no deadline.
+- **Search:** report subject, reporting type, or office.
+
+Rows are sorted automatically: **overdue first → due today → upcoming deadline → verify date → no deadline**. Within a priority, dated items come first. **No deadline is invented when none has been recorded**.
+
+Only recognized administrators see **Print action list (admin)**. It prints exactly the current filtered rows, with reporting-cycle date, office and priority, using the portal's existing secure print region. The view itself follows the portal's existing dashboard access policy. It does not grant access to hidden data or create any new backend route.
+
+### Quick check
+
+1. Open the Report Portal and choose **⚑ Action Required** from either navigation area.
+2. Confirm the pending total, overdue count and due-today count match the current Submission Register.
+3. Filter an office, change the priority, and search a known report name. The table should immediately update.
+4. If logged in as Administrator, choose **Print action list (admin)** and verify that the printout contains only matching rows.
+5. Open and close **Submission Register**, **Office Analytics**, and **Historical Archive** to confirm the panels do not overlap.
+
+**Deployment:** GitHub frontend only. No new spreadsheet, Apps Script code, trigger or Drive change. JavaScript syntax was checked on the committed source; live browser acceptance testing is still required.
+
