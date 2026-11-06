@@ -616,3 +616,32 @@ The **Moving Notice Board — Administrator** now includes **Preview default app
 **Usage:** Open the portal, log in as Administrator, go to **Office Analytics → Moving Notice Board — Administrator**, and click **Load notices and settings** first. Adjust controls and review the warning. Click **Discard unsaved changes** to revert or **Save notice appearance & pending settings** to publish.
 
 **Deployment:** This is frontend-only and requires **no new Apps Script deployment** beyond the compatible V17.7.86 integrated backend for persistence. No spreadsheet, Sheet tab or additional script property is created. JavaScript syntax passed; live browser acceptance testing remains outstanding.
+
+
+---
+
+## V17.7.88 — Ten coordinated upgrades in one permission (GitHub frontend only)
+
+The following **10 improvements** were added together without changing Google Apps Script, Google Sheets, Drive, report submissions or security settings:
+
+1. **Notice search:** search saved notice text and office names from the Administrator notice manager.
+2. **Audience filter:** show general notices or notices targeted to one of the five offices.
+3. **Notice ordering:** order by earliest start, latest start or earliest end.
+4. **Visible-record count:** show how many notices match filters out of the saved total; existing active/scheduled/expired/disabled cards remain.
+5. **Draft safety and counter:** show the 220-character text count, flag unsaved changes, and ask before discarding a nonempty draft when switching or resetting the editor.
+6. **24-hour / 7-day period shortcuts:** use the chosen IST start time to set an accurate end time quickly (the administrator must still save the notice).
+7. **Duplicate draft:** copy a saved notice into a **new, disabled, unsaved** draft with a fresh 24-hour period; this cannot publish without an explicit save.
+8. **Copy message text:** one-click clipboard copy from the saved notice list. This does not change stored records.
+9. **Administrator notice CSV:** export **only the currently filtered notices** with audience, schedule and status; spreadsheet-formula injection safeguards are applied to text.
+10. **Action Required workflow:** click priority summary cards to filter all-office pending reports, clear filters in one click, and export the filtered action list to CSV (Administrator only).
+
+### Where to find the changes
+
+Open **Office Analytics → Moving Notice Board — Administrator → Load notices and settings** for improvements 1–9. Use **Action Required** from either navigation area for improvement 10. The Administrator can inspect existing scheduled notices, create or safely duplicate a notice, and download a filtered CSV.
+
+**Security and compatibility:** All stored notice visibility continues to be enforced by the existing Apps Script backend; frontend filtering is a display aid, not an authorization boundary. Only an authorized administrator can load/manage the complete notice collection or export restricted data. The new controls do not require new backend routes and must not be used to infer that an older backend supports scheduled notices.
+
+**Deployment:** GitHub frontend-only. The currently compatible **V17.7.86 Apps Script backend** remains the baseline for existing notice settings. Do not replace `Code.gs` for this ten-feature release; no new spreadsheet, Script Property or scheduled trigger is created.
+
+**Acceptance check:** Sign in as Administrator, load notices, test text search/audience/status combinations, copy and duplicate a harmless notice, apply 24h/7-day shortcuts, and export filtered CSV. Verify unsaved draft warnings and that duplicated notices are disabled. In Action Required, click Overdue, reset filters and export. Confirm normal submissions, login, portal navigation and archive still operate. JavaScript syntax validation passed; live browser and backend acceptance still need authorized verification.
+
