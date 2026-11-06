@@ -1373,6 +1373,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.80 consolidated action-required list */
+#adgbActionPanel .adgb-analytics-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+.adgb-action-priority{display:inline-block;font-size:10px;font-weight:850;border-radius:6px;padding:4px 7px;background:#f1f4f8;color:#4b6278}
+.adgb-action-priority[data-priority="overdue"]{background:#fde8e8;color:#a92f41}
+.adgb-action-priority[data-priority="today"]{background:#fff1d6;color:#88570b}
+.adgb-action-priority[data-priority="review"]{background:#f1eafd;color:#6949a0}
+@media(max-width:760px){#adgbActionPanel .adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V17.7.79 office drill-down action */
 .adgb-office-open{justify-self:start;border:1px solid #bad2e5;background:#f1f8ff;color:#174e84;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
 .adgb-office-open:hover,.adgb-office-open:focus-visible{background:#e1f0ff;outline:2px solid #8cb8de;outline-offset:1px}
@@ -1523,6 +1530,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="matrix">▤ <span>Reports Matrix</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="actions">⚑ <span>Action Required</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
@@ -1697,6 +1705,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <p id="adgbRegisterCount" class="adgb-insights-count" aria-live="polite"></p>
       <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Deadline</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
     </section>
+    <section id="adgbActionPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbActionTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbActionTitle">⚑ Action Required</h2><p>Current reporting cycle · all five offices · deadlines only where configured</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div id="adgbActionSummary" class="adgb-analytics-summary"></div>
+      <div class="adgb-insights-toolbar">
+        <label>Office <select id="adgbActionOffice"><option value="">All offices</option></select></label>
+        <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
+        <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label>
+        <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button>
+      </div>
+      <p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="5">No data loaded.</td></tr></tbody></table></div>
+    </section>
     <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
@@ -1750,6 +1770,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     <div class="adgb-feature-links" aria-label="Quick report navigation">
       <button type="button" data-adgb-nav="pending">◷ <span><strong>Pending reports</strong><small>View remaining submissions</small></span></button>
       <button type="button" data-adgb-nav="register">▦ <span><strong>Submission Register</strong><small>Current cycle and office status</small></span></button>
+      <button type="button" data-adgb-nav="actions">⚑ <span><strong>Action Required</strong><small>All offices · pending and overdue</small></span></button>
       <button type="button" data-adgb-nav="analytics">▥ <span><strong>Office Analytics</strong><small>Live completion by office</small></span></button>
       <button type="button" data-adgb-nav="archive">▣ <span><strong>Historical Archive</strong><small>Past submission cycles</small></span></button>
     </div>
