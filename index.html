@@ -3231,36 +3231,94 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return {kind:'undated',name:'No deadline',rank:4};
     }
     let adgbActionVisible_=[];
+    // Current-cycle priorities only. Never infer an unset or inconsistent deadline.
+    function adgbDaysUntil_(date,today){
+      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(date||'')))return null;
+      const utc=value=>{const [year,month,day]=value.split('-').map(Number);return Date.UTC(year,month-1,day);};
+      const start=utc(today),finish=utc(date);
+      if(!Number.isFinite(start)||!Number.isFinite(finish))return null;
+      return Math.round((finish-start)/86400000);
+    }
+    function adgbActionDayText_(row,today){
+      if(row.deadlineReview)return 'Date to verify';
+      const days=adgbDaysUntil_(row.dueDate,today);
+      if(days===null)return 'Not specified';
+      if(days<0)return Math.abs(days)+' day'+(days===-1?'':'s')+' overdue';
+      if(days===0)return 'Due today';
+      return days+' day'+(days===1?'':'s')+' left';
+    }
+    let adgbActionVisible_=[];
     function adgbRenderActions_(){
       if(adgbInsightsView!=='actions')return;
-      const office=document.getElementById('adgbActionOffice'),priority=document.getElementById('adgbActionPriority'),search=document.getElementById('adgbActionSearch');
-      if(!office||!priority||!search)return;
+      const office=document.getElementById('adgbActionOffice'),
+        priority=document.getElementById('adgbActionPriority'),
+        search=document.getElementById('adgbActionSearch'),
+        sorting=document.getElementById('adgbActionSort');
+      if(!office||!priority||!search||!sorting)return;
       const chosen=office.value;
       if(office.options.length!==state.offices.length+1||state.offices.some((x,i)=>office.options[i+1]?.value!==String(x.id))){
         office.innerHTML='<option value="">All offices</option>'+state.offices.map(x=>'<option value="'+escapeAttr(x.id)+'">'+escapeHtml(x.name)+'</option>').join('');
         if(state.offices.some(x=>String(x.id)===chosen))office.value=chosen;
       }
-      const today=adgbTodayIST(),all=adgbRegisterData().filter(x=>!x.submitted).map(x=>({...x,priority:adgbActionPriority_(x,today)}));
+      const today=adgbTodayIST();
+      const all=adgbRegisterData().filter(x=>!x.submitted).map(x=>({...x,priority:adgbActionPriority_(x,today)}));
       const byPriority=key=>all.filter(x=>x.priority.kind===key).length;
       const summary=document.getElementById('adgbActionSummary');
-      if(summary)summary.innerHTML='<div role="button" tabindex="0" data-priority="all" title="Show all pending"><strong>'+all.length+'</strong><span>Pending across all offices</span></div><div role="button" tabindex="0" data-priority="overdue" title="Filter overdue"><strong>'+byPriority('overdue')+'</strong><span>Overdue</span></div><div role="button" tabindex="0" data-priority="today" title="Filter due today"><strong>'+byPriority('today')+'</strong><span>Due today</span></div><div role="button" tabindex="0" data-priority="review" title="Filter verify date"><strong>'+byPriority('review')+'</strong><span>Verify deadline</span></div>';
+      if(summary)summary.innerHTML='<div role="button" tabindex="0" data-priority="all" title="Show all pending"><strong>'+all.length+'</strong><span>Pending across all offices</span></div>'+
+        '<div role="button" tabindex="0" data-priority="overdue" title="Filter overdue"><strong>'+byPriority('overdue')+'</strong><span>Overdue</span></div>'+
+        '<div role="button" tabindex="0" data-priority="today" title="Filter due today"><strong>'+byPriority('today')+'</strong><span>Due today</span></div>'+
+        '<div role="button" tabindex="0" data-priority="review" title="Filter verify date"><strong>'+byPriority('review')+'</strong><span>Verify deadline</span></div>';
+      const breakdown=document.getElementById('adgbActionOfficeBreakdown');
+      if(breakdown){
+        const max=Math.max(1,...state.offices.map(o=>all.filter(x=>String(x.officeId)===String(o.id)).length));
+        breakdown.innerHTML=state.offices.map(o=>{
+          const group=all.filter(x=>String(x.officeId)===String(o.id));
+          const overdue=group.filter(x=>x.priority.kind==='overdue').length;
+          const selected=office.value===String(o.id);
+          return '<button type="button" data-action-office="'+escapeAttr(o.id)+'" aria-pressed="'+selected+'" title="Show pending reports for '+escapeAttr(o.name)+'">'+
+            '<span class="office-name">'+escapeHtml(o.name)+'</span><span class="office-count">'+group.length+'</span>'+
+            '<span class="office-meter"><i style="width:'+Math.round(group.length/max*100)+'%"></i></span>'+
+            '<span class="office-metrics">'+overdue+' overdue · '+group.filter(x=>x.priority.kind==='today').length+' due today</span></button>';
+        }).join('');
+      }
       const q=search.value.trim().toLowerCase();
-      adgbActionVisible_=all.filter(x=>(!office.value||x.officeId===office.value)&&
-        (priority.value==='all'||priority.value===x.priority.kind)&&
-        (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q)))
-        .sort((a,b)=>a.priority.rank-b.priority.rank||(a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31')||a.office.localeCompare(b.office)||a.subject.localeCompare(b.subject));
+      const matches=x=>{
+        const days=x.deadlineReview?null:adgbDaysUntil_(x.dueDate,today);
+        return (!office.value||String(x.officeId)===office.value)&&
+          (priority.value==='all'||priority.value===x.priority.kind||
+            priority.value==='next7'&&days!==null&&days>=0&&days<=7||
+            priority.value==='next30'&&days!==null&&days>=0&&days<=30)&&
+          (!q||(x.subject+' '+x.office+' '+x.kind).toLowerCase().includes(q));
+      };
+      const comparator=(a,b)=>{
+        const byOffice=a.office.localeCompare(b.office);
+        const bySubject=a.subject.localeCompare(b.subject);
+        const byDue=(a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31');
+        if(sorting.value==='office')return byOffice||byDue||bySubject;
+        if(sorting.value==='subject')return bySubject||byOffice;
+        if(sorting.value==='due')return byDue||a.priority.rank-b.priority.rank||byOffice||bySubject;
+        return a.priority.rank-b.priority.rank||byDue||byOffice||bySubject;
+      };
+      adgbActionVisible_=all.filter(matches).sort(comparator);
       const body=document.getElementById('adgbActionRows');
-      if(body)body.innerHTML=adgbActionVisible_.map(x=>'<tr><td><span class="adgb-action-priority" data-priority="'+escapeAttr(x.priority.kind)+'">'+escapeHtml(x.priority.name)+'</span></td><td>'+escapeHtml(x.office)+'</td><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td></tr>').join('')||'<tr><td colspan="5">No matching pending reports.</td></tr>';
+      if(body)body.innerHTML=adgbActionVisible_.map(x=>{
+        const status=x.priority.kind;
+        return '<tr><td><span class="adgb-action-priority" data-priority="'+escapeAttr(status)+'">'+escapeHtml(x.priority.name)+'</span></td>'+
+          '<td>'+escapeHtml(x.office)+'</td><td>'+escapeHtml(x.subject)+'</td>'+
+          '<td>'+escapeHtml(x.kind.replaceAll('_',' '))+'</td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td>'+
+          '<td><span class="adgb-days-indicator" data-status="'+escapeAttr(status)+'">'+escapeHtml(adgbActionDayText_(x,today))+'</span></td></tr>';
+      }).join('')||'<tr><td colspan="6">No matching pending reports. Try clearing the office or deadline filters.</td></tr>';
       const count=document.getElementById('adgbActionCount');
-      if(count)count.textContent=adgbActionVisible_.length+' matching pending report(s) · current cycle as of '+today+' IST. No deadline is assumed where none is configured.';
+      if(count)count.textContent=adgbActionVisible_.length+' of '+all.length+' pending reports shown · as of '+today+
+        ' IST · '+adgbActionVisible_.filter(x=>x.priority.kind==='overdue').length+' overdue in selection.';
       document.getElementById('adgbActionPrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
       document.getElementById('adgbActionCsv')?.classList.toggle('hidden',!isRecognizedAsAdmin());
     }
     function adgbExportActionsCsv_(){
       if(!isRecognizedAsAdmin())return;
       adgbRenderActions_();
-      adgbNoticeDownloadCsv_(['Priority','Office','Report subject','Reporting type','Deadline','As of IST'],
-        adgbActionVisible_.map(x=>[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x),adgbTodayIST()]),
+      adgbNoticeDownloadCsv_(['Priority','Office','Report subject','Reporting type','Deadline','Days remaining','As of IST'],
+        adgbActionVisible_.map(x=>[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x),adgbActionDayText_(x,adgbTodayIST()),adgbTodayIST()]),
         'ADGB-action-required-filtered-'+adgbTodayIST()+'.csv');
       showToast('Exported '+adgbActionVisible_.length+' filtered pending reports.','success');
     }
@@ -3271,8 +3329,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const office=document.getElementById('adgbActionOffice'),priority=document.getElementById('adgbActionPriority');
       const officeName=office?.selectedOptions?.[0]?.textContent||'All offices',level=priority?.selectedOptions?.[0]?.textContent||'All pending';
       const target=document.getElementById('printPendingReport');if(!target)return;
-      const table='<table class="print-matrix"><thead><tr><th>Priority</th><th>Office</th><th>Report</th><th>Type</th><th>Deadline</th></tr></thead><tbody>'+
-        (rows.length?rows.map(x=>'<tr>'+[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x)].map(v=>'<td>'+escapeHtml(String(v))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="5">No matching reports.</td></tr>')+'</tbody></table>';
+      const table='<table class="print-matrix"><thead><tr><th>Priority</th><th>Office</th><th>Report</th><th>Type</th><th>Deadline</th><th>Days remaining</th></tr></thead><tbody>'+
+        (rows.length?rows.map(x=>'<tr>'+[x.priority.name,x.office,x.subject,x.kind.replaceAll('_',' '),adgbDeadlineLabel(x),adgbActionDayText_(x,today)].map(v=>'<td>'+escapeHtml(String(v))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="6">No matching reports.</td></tr>')+'</tbody></table>';
       target.innerHTML='<div class="print-report-header"><h1>O/o Additional Director General (B), CPWD, Bengaluru</h1><p>Action Required — Current Reporting Cycle</p>'+
         '<div class="print-report-meta"><span>As of '+escapeHtml(today)+' (IST)</span><span>'+escapeHtml(officeName)+' · '+escapeHtml(level)+' · '+rows.length+' records</span></div></div>'+
         table+'<p class="print-report-footer">Prepared from the current portal status. Only the currently filtered action list is printed. Missing deadlines are not estimated.</p>';
@@ -4244,9 +4302,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     function adgbInitInsights(){
       adgbNoticeInit_();
-      ['adgbActionOffice','adgbActionPriority','adgbActionSearch'].forEach(id=>{
+      ['adgbActionOffice','adgbActionPriority','adgbActionSearch','adgbActionSort'].forEach(id=>{
         const field=document.getElementById(id);
         field?.addEventListener(id==='adgbActionSearch'?'input':'change',adgbRenderActions_);
+      });
+      document.getElementById('adgbActionOfficeBreakdown')?.addEventListener('click',event=>{
+        const control=event.target.closest('[data-action-office]');
+        if(!control)return;
+        const office=document.getElementById('adgbActionOffice');
+        office.value=office.value===control.getAttribute('data-action-office')?'':control.getAttribute('data-action-office');
+        adgbRenderActions_();
       });
       document.getElementById('adgbActionPrint')?.addEventListener('click',adgbPrintActions_);
       document.getElementById('adgbActionCsv')?.addEventListener('click',adgbExportActionsCsv_);
@@ -4254,6 +4319,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         document.getElementById('adgbActionOffice').value='';
         document.getElementById('adgbActionPriority').value='all';
         document.getElementById('adgbActionSearch').value='';
+        document.getElementById('adgbActionSort').value='urgent';
         adgbRenderActions_();
       });
       const actionSummary=document.getElementById('adgbActionSummary');
