@@ -1373,6 +1373,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.75 evidence-first month-wise trends */
+.adgb-trends-panel{margin:14px;border:1px solid #d7e3ef;border-radius:12px;background:#f9fbff;padding:10px}
+.adgb-trends-panel[hidden]{display:none!important}
+.adgb-trend-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,76px),1fr));gap:9px;align-items:end;margin:12px;padding:10px;background:#fff;border:1px solid #e0e8f1;border-radius:10px}
+.adgb-trend-item{display:grid;grid-template-rows:110px auto auto;align-items:end;text-align:center;gap:4px;min-width:0}
+.adgb-trend-bar-track{height:110px;display:flex;align-items:end;justify-content:center;border-bottom:1px solid #d0dce8}
+.adgb-trend-bar{display:block;width:65%;min-height:2px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#2598a4,#175c9d)}
+.adgb-trend-item strong{font-size:11px;color:#1e466d}
+.adgb-trend-item small{font-size:9px;color:#61768a}
+.adgb-trend-item .adgb-trend-verified{font-size:9px;color:#087a58;font-weight:800}
+@media(max-width:760px){.adgb-trends-panel{margin:9px;padding:8px}.adgb-trend-bars{grid-template-columns:repeat(6,minmax(0,1fr));overflow-x:auto;gap:4px;margin:8px;padding:6px}.adgb-trend-item{min-width:42px;grid-template-rows:95px auto auto}.adgb-trend-bar-track{height:95px}}
 /* V17.7.74 compact compliance overview and mobile-safe review layout */
 .adgb-compliance-heading{display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px;padding:10px 14px 0}
 .adgb-compliance-heading h3{margin:0;color:#173f70;font-size:15px}
@@ -1671,7 +1682,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
       <div class="adgb-compliance-heading"><div><h3>Office-wise compliance overview</h3><p>Current reporting cycle · live recorded statuses · not a historical trend</p></div><label>Sort offices <select id="adgbAnalyticsSort"><option value="pending">Most pending first</option><option value="overdue">Most overdue first</option><option value="completion">Highest completion first</option><option value="office">Office name</option></select></label></div>
       <div id="adgbOfficeHighlights" class="adgb-office-highlights"></div>
-      <div id="adgbCycleTrendInfo" class="adgb-trend-note">Historical completion trends require verified previous-cycle expected-report counts. No historical percentage is estimated from this month's data.</div>
+      <section id="adgbComplianceTrends" class="adgb-trends-panel" hidden aria-label="Administrator compliance trends">
+        <div class="adgb-compliance-heading"><div><h3>Month-wise compliance evidence</h3><p>Administrator only · recorded submission outcomes and dated compliance snapshots</p></div></div>
+        <div class="adgb-insights-toolbar">
+          <label>Period <select id="adgbTrendMonths"><option value="6">Last 6 months</option><option value="12" selected>Last 12 months</option><option value="24">Last 24 months</option></select></label>
+          <button type="button" id="adgbTrendLoad">Load verified trends</button>
+          <button type="button" id="adgbTrendCapture" title="Record expected and submitted counts for the current reporting cycle as of now">Capture current-cycle snapshot</button>
+        </div>
+        <p class="adgb-insights-count" id="adgbTrendMessage" aria-live="polite">Load trends after installing the compatible V17.7.75 backend. Historical months without a captured expected total will show recorded submissions only.</p>
+        <div id="adgbTrendBars" class="adgb-trend-bars"></div>
+        <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Reporting month</th><th>Recorded submissions</th><th>Snapshot submitted</th><th>Snapshot expected</th><th>Compliance at capture</th><th>Captured at (IST)</th></tr></thead><tbody id="adgbTrendRows"><tr><td colspan="6">No trend data loaded</td></tr></tbody></table></div>
+        <p class="adgb-trend-note">Recorded submissions are the final logged status of each report/office for that month, not the number expected. Snapshot percentages are dated as-of figures and may not represent month-end compliance.</p>
+      </section>
       <div class="adgb-insights-toolbar"><button type="button" id="adgbCompliancePrint" class="hidden">🖨 Print compliance review (admin)</button></div>
       <div id="adgbComplianceNote" class="adgb-insights-count"></div>
       <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Office</th><th>Expected</th><th>Submitted</th><th>Pending</th><th>Overdue</th><th>Due today</th><th>Deadline not set</th><th>Review dates</th><th>Completion</th></tr></thead><tbody id="adgbComplianceRows"></tbody></table></div>
@@ -3014,6 +3036,52 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(counter)counter.textContent=rows.length+' records · '+rows.filter(x=>x.submitted).length+' submitted · '+rows.filter(x=>!x.submitted).length+' pending';
       document.getElementById('adgbRegisterExport')?.classList.toggle('hidden',!isRecognizedAsAdmin());
     }
+    // V17.7.75 reads only server-verified archive facts; never infers historical denominators.
+    let adgbTrendLoaded=[];
+    function adgbTrendStatus_(message){const el=document.getElementById('adgbTrendMessage');if(el)el.textContent=message;}
+    function adgbTrendAdmin_(){const panel=document.getElementById('adgbComplianceTrends');if(panel)panel.hidden=!isRecognizedAsAdmin();}
+    async function adgbLoadTrends_(){
+      if(!isRecognizedAsAdmin())return;
+      const credential=adgbReviewCredential();
+      if(!credential){adgbTrendStatus_('Administrator session required.');return;}
+      const months=Number(document.getElementById('adgbTrendMonths')?.value||12);
+      const button=document.getElementById('adgbTrendLoad');
+      if(button)button.disabled=true;
+      adgbTrendStatus_('Loading historical submissions and captured compliance snapshots…');
+      try{
+        const res=await postToBackend({action:'adminComplianceTrends',securityCode:credential,months});
+        if(!res?.ok||!Array.isArray(res.records))throw Error('V17.7.75 backend is not available.');
+        adgbTrendLoaded=res.records;
+        const body=document.getElementById('adgbTrendRows');
+        if(body)body.innerHTML=res.records.map(x=>'<tr><td>'+escapeHtml(x.cycleKey)+'</td><td>'+Number(x.recordedFinalSubmissions||0)+'</td><td>'+(x.snapshotSubmitted==null?'—':Number(x.snapshotSubmitted))+'</td><td>'+(x.snapshotExpected==null?'Not captured':Number(x.snapshotExpected))+'</td><td>'+(x.snapshotPercent==null?'Not available':Number(x.snapshotPercent).toFixed(1)+'%')+'</td><td>'+escapeHtml(adgbFormatTimeIST(x.snapshotCapturedAt))+'</td></tr>').join('')||'<tr><td colspan="6">No records available.</td></tr>';
+        const max=Math.max(1,...res.records.map(x=>Number(x.recordedFinalSubmissions)||0));
+        const bars=document.getElementById('adgbTrendBars');
+        if(bars)bars.innerHTML=res.records.map(x=>{
+          const value=Number(x.recordedFinalSubmissions)||0,percent=Math.round(value/max*100);
+          return '<div class="adgb-trend-item" title="'+escapeAttr(x.cycleKey+': '+value+' recorded final submissions')+'"><div class="adgb-trend-bar-track"><span class="adgb-trend-bar" style="height:'+percent+'%"></span></div><strong>'+value+'</strong><small>'+escapeHtml(x.cycleKey.slice(2))+'</small>'+(x.snapshotPercent==null?'':'<span class="adgb-trend-verified">'+Number(x.snapshotPercent).toFixed(1)+'% as of capture</span>')+'</div>';
+        }).join('');
+        adgbTrendStatus_(res.records.length+' months loaded · '+res.records.filter(x=>x.snapshotPercent!=null).length+' have verified as-of compliance snapshots. These are not certified month-end totals.');
+      }catch(error){adgbTrendStatus_('Trend data unavailable: '+(error.message||'Check the backend deployment')+'. Existing report data is unchanged.');}
+      finally{if(button)button.disabled=false;}
+    }
+    async function adgbCaptureTrend_(){
+      if(!isRecognizedAsAdmin())return;
+      const credential=adgbReviewCredential();if(!credential){adgbTrendStatus_('Administrator session required.');return;}
+      const button=document.getElementById('adgbTrendCapture');
+      if(button?.dataset.confirm!=='yes'){
+        if(button){button.dataset.confirm='yes';button.textContent='Confirm capture for '+adgbReviewCycle();}
+        adgbTrendStatus_('Click Confirm to record current reporting requirements and submission counts as of now.');
+        return;
+      }
+      if(button){button.dataset.confirm='';button.disabled=true;button.textContent='Capturing…';}
+      try{
+        const res=await postToBackend({action:'adminComplianceCapture',securityCode:credential,cycleKey:adgbReviewCycle()});
+        if(!res?.ok)throw Error('Capture was not confirmed.');
+        adgbTrendStatus_('Recorded '+Number(res.submitted)+' submitted of '+Number(res.expected)+' expected as of '+adgbFormatTimeIST(res.capturedAt)+'.');
+        await adgbLoadTrends_();
+      }catch(error){adgbTrendStatus_('Snapshot not confirmed: '+(error.message||'Check backend deployment'));}
+      finally{if(button){button.disabled=false;button.textContent='Capture current-cycle snapshot';}}
+    }
     function adgbRenderAnalytics(){
       if(adgbInsightsView!=='analytics')return;
       const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length,pct=total?Math.round(submitted*100/total):0;
@@ -3045,6 +3113,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const note=document.getElementById('adgbComplianceNote');
       if(note)note.textContent='As of '+today+' (IST) · Current dashboard reporting cycle · Deadline counts apply to outstanding reports only. No deadline is assumed where none is recorded.';
       document.getElementById('adgbCompliancePrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
+      adgbTrendAdmin_();
       adgbRenderReviewWorkspace();
       const box=document.getElementById('adgbAnalyticsRows');
       if(box)box.innerHTML=state.offices.map(office=>{
@@ -3348,6 +3417,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbInitInsights(){
       document.getElementById('adgbCompliancePrint')?.addEventListener('click',adgbPrintComplianceReview);
       document.getElementById('adgbAnalyticsSort')?.addEventListener('change',adgbRenderAnalytics);
+      document.getElementById('adgbTrendLoad')?.addEventListener('click',adgbLoadTrends_);
+      document.getElementById('adgbTrendCapture')?.addEventListener('click',adgbCaptureTrend_);
       adgbAuditInit_();
       document.getElementById('adgbReviewEntries')?.addEventListener('input',adgbUpdateReviewField);
       document.getElementById('adgbReviewEntries')?.addEventListener('change',adgbUpdateReviewField);
