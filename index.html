@@ -1373,6 +1373,21 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.76 read-only deployment readiness check */
+.adgb-readiness-panel{margin:12px 14px;border:1px solid #cbddec;border-radius:12px;background:#f8fbff;padding:12px}
+.adgb-readiness-panel[hidden]{display:none!important}
+.adgb-readiness-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.adgb-readiness-top h3{font-size:14px;color:#173e71;margin:0}
+.adgb-readiness-top p{font-size:10px;color:#59718a;margin:3px 0}
+.adgb-readiness-top button{border:0;background:#165b97;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:800}
+.adgb-readiness-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px;margin-top:10px}
+.adgb-readiness-result{border:1px solid #d7e2ee;border-radius:9px;background:#fff;padding:10px;display:grid;gap:4px}
+.adgb-readiness-result strong{font-size:12px;color:#23466f}
+.adgb-readiness-result small{font-size:10px;color:#61768b;overflow-wrap:anywhere}
+.adgb-readiness-result[data-status="ok"]{border-left:4px solid #17855e}
+.adgb-readiness-result[data-status="fail"]{border-left:4px solid #bc5656}
+.adgb-readiness-result[data-status="unknown"]{border-left:4px solid #a68b57}
+@media(max-width:760px){.adgb-readiness-panel{margin:9px;padding:9px}.adgb-readiness-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V17.7.75 evidence-first month-wise trends */
 .adgb-trends-panel{margin:14px;border:1px solid #d7e3ef;border-radius:12px;background:#f9fbff;padding:10px}
 .adgb-trends-panel[hidden]{display:none!important}
@@ -1680,6 +1695,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
+      <section id="adgbReadinessPanel" class="adgb-readiness-panel" hidden aria-label="Administrator deployment readiness">
+        <div class="adgb-readiness-top"><div><h3>System readiness</h3><p>Read checks only · no test uploads, emails or report changes</p></div><button type="button" id="adgbReadinessCheck">Check backend</button></div>
+        <p class="adgb-insights-count" id="adgbReadinessSummary" aria-live="polite">Run this check after deploying the integrated Apps Script backend. Checks do not prove email delivery or upload permissions.</p>
+        <div class="adgb-readiness-results" id="adgbReadinessResults"></div>
+      </section>
       <div class="adgb-compliance-heading"><div><h3>Office-wise compliance overview</h3><p>Current reporting cycle · live recorded statuses · not a historical trend</p></div><label>Sort offices <select id="adgbAnalyticsSort"><option value="pending">Most pending first</option><option value="overdue">Most overdue first</option><option value="completion">Highest completion first</option><option value="office">Office name</option></select></label></div>
       <div id="adgbOfficeHighlights" class="adgb-office-highlights"></div>
       <section id="adgbComplianceTrends" class="adgb-trends-panel" hidden aria-label="Administrator compliance trends">
@@ -3036,6 +3056,50 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(counter)counter.textContent=rows.length+' records · '+rows.filter(x=>x.submitted).length+' submitted · '+rows.filter(x=>!x.submitted).length+' pending';
       document.getElementById('adgbRegisterExport')?.classList.toggle('hidden',!isRecognizedAsAdmin());
     }
+    // V17.7.76 administrator-only read checks. Every route still enforces backend auth.
+    let adgbReadinessBusy=false;
+    function adgbReadinessShow_(){
+      const panel=document.getElementById('adgbReadinessPanel');
+      if(panel)panel.hidden=!isRecognizedAsAdmin();
+    }
+    async function adgbRunReadiness_(){
+      if(adgbReadinessBusy||!isRecognizedAsAdmin())return;
+      const credential=adgbReviewCredential();
+      const summary=document.getElementById('adgbReadinessSummary'),box=document.getElementById('adgbReadinessResults');
+      if(!credential){if(summary)summary.textContent='Administrator session unavailable. Sign in again.';return;}
+      const current=adgbReviewCycle();
+      const d=new Date(current+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()-1);
+      const previous=d.toISOString().slice(0,7);
+      const checks=[
+        {name:'Live dashboard connection',detail:'Current portal data loaded',run:async()=>({ok:state.connected===true})},
+        {name:'Office Review load',detail:'Administrator review read route',run:async()=>postToBackend({action:'adminOfficeReviewList',securityCode:credential,cycleKey:current})},
+        {name:'Review audit history',detail:'Administrator audit read route',run:async()=>postToBackend({action:'adminOfficeReviewAuditList',securityCode:credential,cycleKey:current,offset:0,limit:1})},
+        {name:'Compliance trends',detail:'Administrator history read route',run:async()=>postToBackend({action:'adminComplianceTrends',securityCode:credential,months:1})},
+        {name:'Historical archive',detail:'Prior-cycle archive read route',run:async()=>postToBackend({action:'adminArchiveList',securityCode:credential,cycleKey:previous})}
+      ];
+      adgbReadinessBusy=true;
+      const button=document.getElementById('adgbReadinessCheck');if(button)button.disabled=true;
+      if(summary)summary.textContent='Checking '+checks.length+' capabilities. This does not save, upload or email anything.';
+      const results=[];
+      try{
+        for(const check of checks){
+          let status='unknown',detail=check.detail;
+          try{
+            const res=await check.run();
+            status=res?.ok===true?'ok':'fail';
+            if(status==='fail')detail='Endpoint did not confirm availability; inspect Apps Script deployment.';
+          }catch(error){
+            status='fail';
+            detail='Unavailable or permission denied. Check deployed backend version and administrator login.';
+          }
+          results.push({name:check.name,status,detail});
+          if(box)box.innerHTML=results.map(item=>
+            '<div class="adgb-readiness-result" data-status="'+item.status+'"><strong>'+escapeHtml((item.status==='ok'?'✓ ':item.status==='fail'?'! ':'? ')+item.name)+'</strong><small>'+escapeHtml(item.detail)+'</small></div>').join('');
+        }
+        const pass=results.filter(x=>x.status==='ok').length;
+        if(summary)summary.textContent=pass+' of '+checks.length+' read checks passed. These checks do not verify actual uploads, reminder delivery or write permissions. Failed checks are not proof that stored data is lost.';
+      }finally{adgbReadinessBusy=false;if(button)button.disabled=false;}
+    }
     // V17.7.75 reads only server-verified archive facts; never infers historical denominators.
     let adgbTrendLoaded=[];
     function adgbTrendStatus_(message){const el=document.getElementById('adgbTrendMessage');if(el)el.textContent=message;}
@@ -3113,7 +3177,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const note=document.getElementById('adgbComplianceNote');
       if(note)note.textContent='As of '+today+' (IST) · Current dashboard reporting cycle · Deadline counts apply to outstanding reports only. No deadline is assumed where none is recorded.';
       document.getElementById('adgbCompliancePrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
-      adgbTrendAdmin_();
+      adgbTrendAdmin_();adgbReadinessShow_();
       adgbRenderReviewWorkspace();
       const box=document.getElementById('adgbAnalyticsRows');
       if(box)box.innerHTML=state.offices.map(office=>{
@@ -3419,6 +3483,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbAnalyticsSort')?.addEventListener('change',adgbRenderAnalytics);
       document.getElementById('adgbTrendLoad')?.addEventListener('click',adgbLoadTrends_);
       document.getElementById('adgbTrendCapture')?.addEventListener('click',adgbCaptureTrend_);
+      document.getElementById('adgbReadinessCheck')?.addEventListener('click',adgbRunReadiness_);
       adgbAuditInit_();
       document.getElementById('adgbReviewEntries')?.addEventListener('input',adgbUpdateReviewField);
       document.getElementById('adgbReviewEntries')?.addEventListener('change',adgbUpdateReviewField);
