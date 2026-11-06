@@ -1373,6 +1373,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.71 office follow-up overview, calculated from current loaded records and drafts. */
+.adgb-review-pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
+.adgb-review-pulse>div{display:grid;gap:4px;border:1px solid #d8e5f1;background:#fff;border-radius:10px;padding:10px}
+.adgb-review-pulse strong{font-size:22px;color:#183f71;font-variant-numeric:tabular-nums}
+.adgb-review-pulse small{font-size:10px;color:#536e88;font-weight:750}
+.adgb-review-pulse .adgb-review-alert strong{color:#af3b4c}
+.adgb-review-entry .adgb-review-due{font-size:11px;color:#8f3d43;font-weight:850}
+@media(max-width:760px){.adgb-review-pulse{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V17.7.69 temporary administrator review drafts: deliberately not persisted on public frontend. */
 .adgb-review-workspace{margin:12px 14px 16px;border:1px solid #d4e1ef;border-radius:12px;background:#f9fbfe;padding:12px}
 .adgb-review-workspace[hidden]{display:none!important}
@@ -1626,6 +1634,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <p class="adgb-insights-count">Add observations and action taken for the current cycle. Permanent saving requires the compatible private Apps Script backend. Until it is confirmed, export or print before refreshing.</p>
         <p id="adgbReviewSaveStatus" class="adgb-insights-count" aria-live="polite">Unsaved drafts — not stored in Google Sheets.</p>
         <div class="adgb-insights-toolbar"><button type="button" id="adgbReviewLoad">Load saved reviews</button><button type="button" id="adgbReviewSave">Save to Sheet</button><button type="button" id="adgbReviewCsv">Export review CSV</button><button type="button" id="adgbReviewClear">Clear draft remarks</button></div>
+        <div id="adgbReviewPulse" class="adgb-review-pulse" aria-live="polite"></div>
+        <div class="adgb-insights-toolbar"><label>Follow-up view <select id="adgbReviewFilter"><option value="all">All offices</option><option value="active">Open / In progress / For review</option><option value="overdue">Target overdue</option><option value="soon">Due within 7 days</option><option value="completed">Completed</option><option value="unmarked">Not marked</option></select></label></div>
         <div id="adgbReviewEntries" class="adgb-review-grid"></div>
       </section>
     </section>
@@ -3028,22 +3038,44 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbReviewSnapshot(){
       return state.offices.map(office=>({office,entry:adgbReviewDrafts.get(String(office.id))||{observation:'',action:'',followup:'',targetDate:''}}));
     }
+    function adgbReviewDateOffset_(date){
+      const d=new Date(String(date)+'T12:00:00Z');return isNaN(d.getTime())?NaN:d.getTime();
+    }
+    function adgbReviewViewData_(){
+      const today=adgbTodayIST(),seven=new Date(adgbReviewDateOffset_(today)+7*86400000).toISOString().slice(0,10);
+      return adgbReviewSnapshot().map(item=>{
+        const e=item.entry,active=['Open','In progress','For review'].includes(e.followup),completed=e.followup==='Completed';
+        return {...item,active,completed,overdue:!!e.targetDate&&e.targetDate<today&&!completed,
+          soon:!!e.targetDate&&e.targetDate>=today&&e.targetDate<=seven&&!completed,
+          unmarked:!e.followup};
+      });
+    }
+    function adgbReviewPulse_(){
+      const node=document.getElementById('adgbReviewPulse');if(!node)return;
+      const items=adgbReviewViewData_();
+      const totals=[['Active follow-ups',items.filter(x=>x.active).length],['Overdue targets',items.filter(x=>x.overdue).length],['Due within 7 days',items.filter(x=>x.soon).length],['Completed',items.filter(x=>x.completed).length]];
+      node.innerHTML=totals.map(([label,count],i)=>'<div'+(i===1&&count?' class="adgb-review-alert"':'')+'><strong>'+count+'</strong><small>'+escapeHtml(label)+'</small></div>').join('');
+    }
     function adgbRenderReviewWorkspace(){
       const panel=document.getElementById('adgbReviewWorkspace');
       if(!panel)return;
       panel.hidden=!isRecognizedAsAdmin();
       if(panel.hidden)return;
       const container=document.getElementById('adgbReviewEntries');if(!container)return;
+      adgbReviewPulse_();
+      const mode=String(document.getElementById('adgbReviewFilter')?.value||'all');
+      const filtered=adgbReviewViewData_().filter(x=>mode==='all'||!!x[mode]);
       const current=[...container.querySelectorAll('[data-review-office]')].map(x=>x.getAttribute('data-review-office'));
-      const expected=state.offices.map(x=>String(x.id));
-      // Do not rebuild an editing form on every background status refresh.
+      const expected=filtered.map(x=>String(x.office.id));
+      // Preserve in-progress edits when the same office cards remain visible.
       if(current.length===expected.length&&current.every((x,i)=>x===expected[i]))return;
-      container.innerHTML=adgbReviewSnapshot().map(({office,entry})=>
+      container.innerHTML=filtered.map(({office,entry,overdue,soon})=>
         '<div class="adgb-review-entry" data-review-office="'+escapeAttr(office.id)+'"><strong>'+escapeHtml(office.name)+'</strong>'+
+        (overdue?'<span class="adgb-review-due">Target overdue: '+escapeHtml(entry.targetDate)+'</span>':soon?'<span class="adgb-review-due">Target due soon: '+escapeHtml(entry.targetDate)+'</span>':'')+
         '<label>Observation<textarea maxlength="1000" data-review-field="observation" placeholder="Current-cycle observation">'+escapeHtml(entry.observation)+'</textarea></label>'+
         '<label>Action taken<textarea maxlength="1000" data-review-field="action" placeholder="Action already taken">'+escapeHtml(entry.action)+'</textarea></label>'+
         '<label>Follow-up status<select data-review-field="followup"><option value="">Not set</option>'+['Open','In progress','Completed','For review'].map(x=>'<option value="'+x+'"'+(entry.followup===x?' selected':'')+'>'+x+'</option>').join('')+'</select></label>'+
-        '<label>Target date (optional)<input data-review-field="targetDate" type="date" value="'+escapeAttr(entry.targetDate)+'"></label></div>').join('');
+        '<label>Target date (optional)<input data-review-field="targetDate" type="date" value="'+escapeAttr(entry.targetDate)+'"></label></div>').join('')||'<p class="adgb-empty">No office reviews match this filter.</p>';
     }
     function adgbUpdateReviewField(event){
       if(!isRecognizedAsAdmin())return;
@@ -3057,6 +3089,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const entry=adgbReviewDrafts.get(id)||{observation:'',action:'',followup:'',targetDate:''};
       entry[name]=String(field.value||'').slice(0,1000);adgbReviewDrafts.set(id,entry);
       adgbReviewDirty=true;adgbReviewPersisted=false;adgbReviewStatus('Unsaved changes — use Save to Sheet after backend installation, or export CSV.');
+      adgbReviewPulse_();
+      if(event.type==='change'&&['followup','targetDate'].includes(name)){
+        // Filters are views only: all offices are still included in Save to Sheet.
+        if(document.getElementById('adgbReviewFilter')?.value!=='all'){
+          const container=document.getElementById('adgbReviewEntries');if(container)container.innerHTML='';
+          adgbRenderReviewWorkspace();
+        }
+      }
     }
     function adgbExportReviewCsv(){
       if(!isRecognizedAsAdmin())return;
@@ -3112,6 +3152,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbReviewCsv')?.addEventListener('click',adgbExportReviewCsv);
       document.getElementById('adgbReviewLoad')?.addEventListener('click',adgbLoadSavedReviews);
       document.getElementById('adgbReviewSave')?.addEventListener('click',adgbSaveReviews);
+      document.getElementById('adgbReviewFilter')?.addEventListener('change',()=>{
+        const container=document.getElementById('adgbReviewEntries');if(container)container.innerHTML='';
+        adgbRenderReviewWorkspace();
+      });
       document.getElementById('adgbReviewClear')?.addEventListener('click',()=>{
         if(!isRecognizedAsAdmin())return;
         // Explicit second click confirmation to avoid accidental loss.
