@@ -3063,6 +3063,69 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbReviewSnapshot(){
       return state.offices.map(office=>({office,entry:adgbReviewDrafts.get(String(office.id))||{observation:'',action:'',followup:'',targetDate:''}}));
     }
+    // V17.7.72 read-only audit viewer: no audit payload is editable from the browser.
+    let adgbAuditOffset=0,adgbAuditBusy=false,adgbAuditLastQuery='',adgbAuditHasMore=false;
+    function adgbAuditReset_(){
+      adgbAuditOffset=0;adgbAuditHasMore=false;adgbAuditLastQuery='';
+      const body=document.getElementById('adgbAuditRows');
+      if(body)body.innerHTML='<tr><td colspan="5">Load history to see recorded changes.</td></tr>';
+      const more=document.getElementById('adgbAuditMore');if(more)more.hidden=true;
+    }
+    function adgbAuditMessage_(message){
+      const target=document.getElementById('adgbAuditMessage');if(target)target.textContent=message;
+    }
+    function adgbAuditInit_(){
+      const month=document.getElementById('adgbAuditMonth');
+      const office=document.getElementById('adgbAuditOffice');
+      if(month){month.value=adgbReviewCycle();month.max=adgbReviewCycle();}
+      if(office)office.innerHTML='<option value="">All offices</option>'+state.offices.map(x=>'<option value="'+escapeAttr(x.id)+'">'+escapeHtml(x.name)+'</option>').join('');
+      month?.addEventListener('change',adgbAuditReset_);
+      office?.addEventListener('change',adgbAuditReset_);
+      document.getElementById('adgbAuditLoad')?.addEventListener('click',()=>adgbAuditLoad_(false));
+      document.getElementById('adgbAuditMore')?.addEventListener('click',()=>adgbAuditLoad_(true));
+    }
+    function adgbAuditChanges_(row){
+      let before={},after={};
+      try{before=JSON.parse(row.before||'{}')||{};after=JSON.parse(row.after||'{}')||{};}catch{return '<span>Could not read change details</span>';}
+      const labels={observation:'Observation',action:'Action taken',followup:'Follow-up',targetDate:'Target date'};
+      const fields=['observation','action','followup','targetDate'].filter(key=>String(before[key]||'')!==String(after[key]||''));
+      return fields.map(key=>'<div><strong>'+escapeHtml(labels[key])+'</strong><div class="adgb-audit-before">Before: '+escapeHtml(String(before[key]||'—'))+'</div><div class="adgb-audit-after">After: '+escapeHtml(String(after[key]||'—'))+'</div></div>').join('')||'No field differences';
+    }
+    async function adgbAuditLoad_(more){
+      if(!isRecognizedAsAdmin()||adgbAuditBusy)return;
+      const month=String(document.getElementById('adgbAuditMonth')?.value||'');
+      const office=String(document.getElementById('adgbAuditOffice')?.value||'');
+      if(!/^20[0-9]{2}-(0[1-9]|1[0-2])$/.test(month)||month>adgbReviewCycle()){
+        adgbAuditMessage_('Choose a valid current or past reporting month.');return;
+      }
+      const credential=adgbReviewCredential();
+      if(!credential){adgbAuditMessage_('Administrator login required.');return;}
+      const key=month+'|'+office;
+      if(more&&(!adgbAuditHasMore||key!==adgbAuditLastQuery))return;
+      const offset=more?adgbAuditOffset:0;
+      adgbAuditBusy=true;
+      const load=document.getElementById('adgbAuditLoad'),button=document.getElementById('adgbAuditMore');
+      if(load)load.disabled=true;if(button)button.disabled=true;
+      adgbAuditMessage_('Loading audit history…');
+      try{
+        const res=await postToBackend({action:'adminOfficeReviewAuditList',securityCode:credential,cycleKey:month,officeId:office,offset,limit:30});
+        if(!res?.ok||!Array.isArray(res.records))throw Error('Compatible audit backend not available.');
+        const body=document.getElementById('adgbAuditRows');
+        if(!body)return;
+        if(!more)body.innerHTML='';
+        for(const x of res.records){
+          const tr=document.createElement('tr');
+          const content='<td>'+escapeHtml(adgbFormatTimeIST(x.changedAt))+'</td><td>'+escapeHtml(x.officeName||x.officeId)+'</td><td>'+escapeHtml(x.actor)+'</td><td>'+escapeHtml(x.changedFields)+'</td><td><div class="adgb-audit-change">'+adgbAuditChanges_(x)+'</div></td>';
+          tr.innerHTML=content;body.appendChild(tr);
+        }
+        if(!body.children.length)body.innerHTML='<tr><td colspan="5">No recorded review changes for the selected month and office.</td></tr>';
+        adgbAuditOffset=Number(res.nextOffset)||offset+res.records.length;
+        adgbAuditHasMore=res.hasMore===true;adgbAuditLastQuery=key;
+        if(button)button.hidden=!adgbAuditHasMore;
+        adgbAuditMessage_('Showing '+adgbAuditOffset+' audit event(s) for '+month+'. Records capture submitted changes; confirm current review values where necessary.');
+      }catch(error){adgbAuditMessage_('Audit history unavailable: '+(error.message||'Please deploy V17.7.72 backend.'));}
+      finally{adgbAuditBusy=false;if(load)load.disabled=false;if(button)button.disabled=false;}
+    }
     function adgbReviewDateOffset_(date){
       const d=new Date(String(date)+'T12:00:00Z');return isNaN(d.getTime())?NaN:d.getTime();
     }
@@ -3172,6 +3235,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     function adgbInitInsights(){
       document.getElementById('adgbCompliancePrint')?.addEventListener('click',adgbPrintComplianceReview);
+      adgbAuditInit_();
       document.getElementById('adgbReviewEntries')?.addEventListener('input',adgbUpdateReviewField);
       document.getElementById('adgbReviewEntries')?.addEventListener('change',adgbUpdateReviewField);
       document.getElementById('adgbReviewCsv')?.addEventListener('click',adgbExportReviewCsv);
