@@ -155,3 +155,55 @@ Run `setupPortal()` once from the Apps Script editor and authorize the correct G
 - If an office code is exposed, change that code immediately and redeploy only if `Code.gs` itself was changed.
 - Keep the Head Office code restricted to portal administrators.
 
+
+
+---
+
+## V17.7.65+ — Existing installation upgrade and historical archive verification
+
+> This section is for an **already deployed** portal. Do not re-run initial setup, reset office codes, recreate the database, or publish a new Web app URL merely to upgrade the frontend. Preserve the active Google Sheet and Drive records.
+
+### 1. Confirm your current deployment
+
+1. Open the live GitHub Pages portal and check that the report matrix, Submission Register, analytics, and recent submissions are visible.
+2. In Google Apps Script, open the **existing** portal backend project. Back up its full code, script properties, deployment details, and the spreadsheet ID before editing.
+3. Confirm the existing Web app **/exec** deployment matches the URL configured in the frontend. Do not paste or share security codes in GitHub or public issue reports.
+4. The archive frontend added in V17.7.65 expects backend actions named `adminArchiveList` and `adminArchiveView`. They must be implemented and deployed in the existing backend. The backend implementation was **not verified from the public repository**, so these actions must be checked before claiming archive access works.
+5. If compatible backend changes have already been installed, edit the **existing** Web app deployment, select **New version**, and deploy. Keep the same Web app deployment and URL.
+6. If the backend lacks these routes, do not replace it with an older sample Code.gs: obtain and review a compatible backend patch, test it against a backup or test environment, then deploy it.
+
+### 2. Administrator-only historical archive acceptance test
+
+Use test submissions or non-sensitive records, and avoid sharing security codes, protected URLs, or PDF contents outside the authorized office.
+
+| Test | Expected result |
+|---|---|
+| Open Historical Archive without administrator authentication | Archive must not open or expose records |
+| Open it after administrator authentication | Archive panel is available |
+| Load an earlier reporting month | `adminArchiveList` returns that cycle's authorized records, without disclosing records from other cycles |
+| Search and filter by office/status | Displayed rows and counts match the returned dataset |
+| Click View PDF | `adminArchiveView` issues an authorized short-lived link, and the PDF opens only for authorized access |
+| Attempt expired/reused archive link | The authorization expires as designed; no permanent public file sharing is introduced |
+| Supply an invalid submission ID or different cycle | Backend rejects the request |
+| Log out and try opening an old archive link | Access remains controlled by the backend, not merely hidden in the frontend |
+| Submit a new current-month test PDF | Submission still records correctly in Drive, Sheet and matrix |
+| Open Submission Register and download CSV as admin | Current-cycle records, totals, and access control remain correct |
+
+**Important:** Merely hiding a button in a public GitHub Pages frontend is not an authorization control. Every archive action must validate administrator credentials and scope on the server. Do not return unrestricted Drive sharing URLs, tokens or credentials in public page source.
+
+### 3. Record test outcomes before enabling office-wide use
+
+Record the test date, frontend GitHub commit, Apps Script deployment version, test month, tester, pass/fail for each test, and any issue found. Keep this operational verification record in a restricted location, **not** in the public GitHub repository if it contains office or document details.
+
+### 4. Troubleshooting
+
+- **Archive unavailable / unsupported**: confirm `adminArchiveList` exists in the deployed backend, that the backend returns an `ok` response with a `records` array, and that the existing Web app was redeployed to a new version.
+- **Archive rows load but PDFs do not open**: verify `adminArchiveView` authorizes the specified `cycleKey` and `submissionId`, returns a valid authorized viewer URL, and that the user explicitly clicks the provided secure link.
+- **Wrong month / missing records**: verify the reporting cycle is computed in **Asia/Kolkata**, and confirm whether the backend uses submission month or reporting month. Never relabel current-cycle snapshot data as historical event records.
+- **Admin access fails**: confirm backend authentication and deployment permissions; do not insert the administrator code into `index.html`.
+- **Regression after deployment**: restore the previous Web app version using deployment management, then investigate against the backed-up code and data.
+
+### 5. Next development after archive passes
+
+Implement pending-report deadlines and reminders only after the above acceptance tests pass. Define due dates per subject/reporting frequency, keep reminder recipients in the private backend, prevent duplicate reminders, and add a dry-run mode before scheduling production triggers.
+
