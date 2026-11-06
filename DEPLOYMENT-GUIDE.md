@@ -238,3 +238,39 @@ A proposed Apps Script add-on is in `backend/OfficeReviewBackendV17770.gs` (repo
 - The add-on writes current-cycle office-level reviews only. It does not yet provide per-report remarks, multi-user conflict resolution, or a historical review edit UI.
 - Existing report uploads, archive actions, emails and submissions must continue passing regression tests. Roll back the deployment version if any fail.
 
+
+
+---
+
+## V17.7.72 — Office Review History & Audit Trail
+
+The administrator review screen now has a read-only **Review History & Audit Trail** panel with a reporting-month selector, office filter, time, administrator, and before/after details. Saving a review requires a deployed V17.7.72 backend. The frontend refuses to save with older backend releases that cannot record audit events.
+
+### Upgrade an existing installation safely
+
+1. Back up your **existing Apps Script project**, plus the existing ADG(B) Portal Database spreadsheet. Keep a copy of your current working Code.gs.
+2. Use the private integrated backend file supplied in this ChatGPT conversation, named **ADGB_Code_gs_V17_7_72_Integrated.txt**. Do not substitute an older repository sample backend.
+3. In the **existing Apps Script project**, replace only the contents of Code.gs with that entire integrated file, **after confirming your working project matches the supplied V17.7.70 baseline**.
+4. **Remove any separately pasted OfficeReviewBackendV17770.gs add-on** before redeployment, to avoid duplicate global functions. Leave unrelated working project files alone.
+5. Click **Save**. Do **not** run `setupPortal()` or `setPortalSecurityCodes()`; the existing database and existing configured login settings must be preserved.
+6. Choose **Deploy → Manage deployments → Edit (pencil) → New version → Deploy**. Update the **existing** deployment; do not create a new one.
+7. Sign in to the portal with an Administrator login, then open **Office Analytics → Load saved reviews**. Make a small test change, select **Save to Sheet**, and confirm the success message reports one changed office.
+8. Select the new **Review History & Audit Trail → Load history**. Verify the administrator, timestamp, changed field, old value, and new value. Save an unchanged review again and confirm no additional history event is created.
+9. Refresh, reload saved reviews, and verify your changes still appear. Test that an office-only account cannot view review history or save Office Reviews.
+
+### Where data is kept
+
+The same existing database spreadsheet is used. There are **two tabs**, not two spreadsheets:
+
+- `OfficeReviews` — latest Office Review per office and reporting cycle (already used by V17.7.70).
+- `OfficeReviewAudit` — appended change-event records with before/after values, verified administrator identity, and time (new).
+
+### Important limits
+
+- Audit entries are appended **before** updating the current review sheet. Google Sheets cannot atomically commit to both tabs, so an audit event can reflect an attempted change if the subsequent update fails. Confirm the current record when reviewing incidents.
+- Old review changes made **before** this feature was deployed are not retroactively available as audit history.
+- The review feature is **office-level** for the current month; it is not a per-report audit.
+- The history panel can view previous months, but the editor allows updates only to the current reporting month.
+- If Save reports an expired or conflicting version, **export your draft**, refresh, and load saved reviews before retrying.
+- Never commit the complete private Apps Script backend or employee/office review content to this public GitHub repository.
+
