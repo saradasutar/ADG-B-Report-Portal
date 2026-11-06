@@ -1373,6 +1373,21 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.89 action-required deadline insights and office workload comparison */
+.adgb-action-office-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:8px;margin:0 14px 12px}
+.adgb-action-office-breakdown button{display:grid;gap:6px;text-align:left;padding:10px 11px;border-radius:10px;border:1px solid #d4e3f1;background:#f7faff;color:#244e78;cursor:pointer;min-width:0}
+.adgb-action-office-breakdown button[aria-pressed="true"]{background:#e4f1ff;border-color:#5b9dce;box-shadow:inset 0 0 0 1px #5b9dce}
+.adgb-action-office-breakdown button:focus-visible{outline:2px solid #285d9d;outline-offset:2px}
+.adgb-action-office-breakdown .office-name{font-size:11px;font-weight:850}
+.adgb-action-office-breakdown .office-metrics{font-size:10px;color:#526b82}
+.adgb-action-office-breakdown .office-count{font-size:21px;line-height:1;color:#195b97;font-weight:900}
+.adgb-action-office-breakdown .office-meter{height:5px;background:#dce8f2;border-radius:10px;overflow:hidden}
+.adgb-action-office-breakdown .office-meter>i{display:block;height:100%;background:#1d89a8}
+.adgb-days-indicator{font-weight:850;font-size:11px;color:#355b82;white-space:nowrap}
+.adgb-days-indicator[data-status="overdue"]{color:#b53549}
+.adgb-days-indicator[data-status="today"]{color:#935b10}
+@media(max-width:760px){.adgb-action-office-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 9px 9px;gap:7px}.adgb-action-office-breakdown button{padding:9px}.adgb-action-office-breakdown .office-count{font-size:18px}}
+@media(max-width:440px){.adgb-action-office-breakdown{grid-template-columns:1fr 1fr}.adgb-action-office-breakdown .office-name{font-size:10px}}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -1805,12 +1820,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div id="adgbActionSummary" class="adgb-analytics-summary"></div>
       <div class="adgb-insights-toolbar">
         <label>Office <select id="adgbActionOffice"><option value="">All offices</option></select></label>
-        <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
-        <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label>
+        <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="next7">Due in next 7 days</option><option value="next30">Due in next 30 days</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
+        <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label><label>Sort <select id="adgbActionSort"><option value="urgent">Urgency / earliest deadline</option><option value="office">Office name</option><option value="subject">Report subject</option><option value="due">Deadline (earliest)</option></select></label>
         <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button><button type="button" id="adgbActionCsv" class="hidden">Export filtered CSV (admin)</button><button type="button" id="adgbActionReset">Clear filters</button>
       </div>
-      <p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p>
-      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="5">No data loaded.</td></tr></tbody></table></div>
+      <div id="adgbActionOfficeBreakdown" class="adgb-action-office-breakdown" aria-label="Office pending workload"></div><p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p><p class="adgb-insights-count">Days remaining are calculated in India time; an unconfigured or disputed deadline is never guessed.</p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th><th>Days remaining</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="6">No data loaded.</td></tr></tbody></table></div>
     </section>
     <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
