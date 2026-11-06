@@ -1372,6 +1372,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-analytics-track span{display:block;background:linear-gradient(90deg,#1676b5,#0f9f74);height:100%;border-radius:inherit}
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
+
+/* V17.7.65 Archive is always hidden unless admin opens it. */
+#adgbArchivePanel[hidden]{display:none!important}
+#adgbArchivePanel .adgb-insights-toolbar{align-items:end}
+.adgb-archive-view{background:#e7f2ff;color:#175994;border:1px solid #b8d5ee;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800}
+.adgb-archive-view:disabled{opacity:.5}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -1425,6 +1431,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
@@ -1573,6 +1580,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </aside>
       </div>
 
+    <section id="adgbArchivePanel" class="adgb-insights-panel" hidden aria-labelledby="adgbArchiveTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbArchiveTitle">▣ Historical Submission Archive</h2><p>Administrator-only · read-only · previous submission cycles and latest recorded office status</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div class="adgb-insights-toolbar">
+        <label>Submission cycle <input id="adgbArchiveMonth" type="month" aria-label="Submission cycle month"></label>
+        <label>Search <input id="adgbArchiveSearch" type="search" placeholder="Subject or office"></label>
+        <label>Office <select id="adgbArchiveOffice"><option value="">All offices</option></select></label>
+        <label>Status <select id="adgbArchiveStatus"><option value="all">All recorded</option><option value="SUBMITTED">Submitted</option><option value="REMOVED">Removed</option></select></label>
+        <button type="button" id="adgbArchiveLoad">Load archive</button>
+      </div>
+      <p id="adgbArchiveMessage" class="adgb-insights-count" aria-live="polite">Select a past month and load the archive. Administrator access is required.</p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Kind</th><th>Office</th><th>Latest state</th><th>Submitted at (IST)</th><th>Document</th></tr></thead><tbody id="adgbArchiveRows"><tr><td colspan="6">No archive loaded</td></tr></tbody></table></div>
+    </section>
     <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div class="adgb-insights-toolbar">
@@ -1594,7 +1613,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <button type="button" data-adgb-nav="pending">◷ <span><strong>Pending reports</strong><small>View remaining submissions</small></span></button>
       <button type="button" data-adgb-nav="register">▦ <span><strong>Submission Register</strong><small>Current cycle and office status</small></span></button>
       <button type="button" data-adgb-nav="analytics">▥ <span><strong>Office Analytics</strong><small>Live completion by office</small></span></button>
-      <button type="button" data-adgb-nav="admin">⚙ <span><strong>Administration</strong><small>Authorised controls</small></span></button>
+      <button type="button" data-adgb-nav="archive">▣ <span><strong>Historical Archive</strong><small>Past submission cycles</small></span></button>
     </div>
 
     <aside class="other-report-note">
@@ -1609,7 +1628,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.64</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.65</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -2101,6 +2120,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       bindEvents();
       adgbInitLayout();
       adgbInitInsights();
+      adgbInitArchive();
       adgbAlignPreviewLayout();
       adgbInitPremiumControls();
       loadRecentStatusWrites();
@@ -2729,11 +2749,86 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
 
 
+
+    // V17.7.65 — historical submission archive (admin read-only). Backend v17.7.58 required.
+    let adgbArchiveRecords=[],adgbArchiveLoadedCycle='';
+    function adgbCurrentCycleKeyIST(){
+      const bits={};
+      new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit'}).formatToParts(new Date()).forEach(p=>{if(p.type!=='literal')bits[p.type]=p.value});
+      return bits.year+'-'+bits.month;
+    }
+    function adgbArchiveMessage(text){const node=document.getElementById('adgbArchiveMessage');if(node)node.textContent=text;}
+    function adgbArchiveCredential(){
+      syncAdminCodeFromSession();
+      if(!isRecognizedAsAdmin())return '';
+      return String(state.adminCode||window.ADGB_AUTH?.credentialFor?.('HEAD_OFFICE','subjectManage')||'').trim();
+    }
+    function adgbOpenArchive(){
+      if(!adgbArchiveCredential()){
+        showToast('Sign in as Head Office Administrator to open historical archive.','error');
+        document.getElementById('adminButton')?.click();
+        return;
+      }
+      ['adgbRegisterPanel','adgbAnalyticsPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true});
+      adgbInsightsView='';
+      document.getElementById('adgbArchivePanel').hidden=false;
+      document.getElementById('adgbArchivePanel').scrollIntoView({block:'start',behavior:'smooth'});
+      adgbArchiveMessage('Select an earlier submission cycle and click Load archive.');
+    }
+    function adgbRenderArchive(){
+      const q=String(document.getElementById('adgbArchiveSearch')?.value||'').trim().toLowerCase();
+      const office=String(document.getElementById('adgbArchiveOffice')?.value||'');
+      const status=String(document.getElementById('adgbArchiveStatus')?.value||'all');
+      const rows=adgbArchiveRecords.filter(x=>(!q||(x.subjectName+' '+x.officeName+' '+x.reportKind).toLowerCase().includes(q))&&(!office||office===x.officeId)&&(status==='all'||status===x.status));
+      document.getElementById('adgbArchiveRows').innerHTML=rows.map(x=>
+        '<tr><td>'+escapeHtml(x.subjectName)+'</td><td>'+escapeHtml(x.reportKind.replaceAll('_',' '))+'</td><td>'+escapeHtml(x.officeName)+'</td><td><span class="'+(x.status==='SUBMITTED'?'adgb-status-good':'adgb-status-wait')+'">'+(x.status==='SUBMITTED'?(x.receivedPhysically?'Physically received':'Submitted'):'Removed')+'</span></td><td>'+escapeHtml(adgbFormatTimeIST(x.submittedAt))+'</td><td>'+(x.hasPdf?'<button type="button" class="adgb-archive-view" data-archive-view="'+escapeAttr(x.submissionId)+'">View PDF</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">No matching submissions in this cycle.</td></tr>';
+      adgbArchiveMessage(adgbArchiveLoadedCycle+': '+rows.length+' displayed of '+adgbArchiveRecords.length+' recorded office/report combinations. A record may include earlier replacement events.');
+    }
+    async function adgbLoadArchive(){
+      const cycle=String(document.getElementById('adgbArchiveMonth')?.value||'');
+      if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(cycle)||cycle>adgbCurrentCycleKeyIST()){
+        adgbArchiveMessage('Select a valid month up to the current reporting cycle.');return;
+      }
+      const credential=adgbArchiveCredential();
+      if(!credential){adgbArchiveMessage('Administrator login required.');return;}
+      const button=document.getElementById('adgbArchiveLoad');
+      if(button)button.disabled=true;
+      adgbArchiveMessage('Reading historical submission records…');
+      try{
+        const res=await postToBackend({action:'adminArchiveList',securityCode:credential,cycleKey:cycle});
+        if(!res?.ok||!Array.isArray(res.records))throw Error('Archive response is unavailable or unsupported.');
+        adgbArchiveLoadedCycle=cycle;
+        adgbArchiveRecords=res.records;
+        adgbRenderArchive();
+      }catch(e){adgbArchiveRecords=[];adgbArchiveLoadedCycle='';document.getElementById('adgbArchiveRows').innerHTML='<tr><td colspan="6">Historical records could not be loaded.</td></tr>';adgbArchiveMessage('Archive unavailable: '+(e.message||'Please deploy compatible backend V17.7.58.'));}
+      finally{if(button)button.disabled=false;}
+    }
+    async function adgbViewArchivedPdf(submissionId){
+      const credential=adgbArchiveCredential();if(!credential)return;
+      const button=[...document.querySelectorAll('[data-archive-view]')].find(b=>b.dataset.archiveView===submissionId);
+      if(button)button.disabled=true;
+      try{
+        const res=await postToBackend({action:'adminArchiveView',securityCode:credential,cycleKey:adgbArchiveLoadedCycle,submissionId});
+        if(!res?.viewUrl||!/^https:\/\/script\.google\.com\//.test(res.viewUrl))throw Error('Secure archive viewer URL is unavailable.');
+        const link=document.createElement('a');link.href=res.viewUrl;link.target='_blank';link.rel='noopener noreferrer';document.body.appendChild(link);link.click();link.remove();
+      }catch(e){showToast(e.message||'Archived PDF could not be opened.','error')}
+      finally{if(button)button.disabled=false;}
+    }
+    function adgbInitArchive(){
+      const input=document.getElementById('adgbArchiveMonth');
+      if(input){const key=adgbCurrentCycleKeyIST();input.max=key;const date=new Date(key+'-01T12:00:00');date.setMonth(date.getMonth()-1);input.value=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')}
+      const office=document.getElementById('adgbArchiveOffice');
+      if(office)office.innerHTML='<option value="">All offices</option>'+FALLBACK_OFFICES.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+'</option>').join('');
+      document.getElementById('adgbArchiveLoad')?.addEventListener('click',adgbLoadArchive);
+      ['adgbArchiveSearch','adgbArchiveOffice','adgbArchiveStatus'].forEach(id=>document.getElementById(id)?.addEventListener(id==='adgbArchiveSearch'?'input':'change',adgbRenderArchive));
+      document.getElementById('adgbArchiveRows')?.addEventListener('click',event=>{const button=event.target.closest('[data-archive-view]');if(button)adgbViewArchivedPdf(button.dataset.archiveView)});
+    }
     // V17.7.64 — current-cycle register and office analytics.
     // Never claim historical event data: backend bootstrap returns current statuses.
     let adgbInsightsView='',adgbRegisterSnapshot=[];
     function adgbOpenInsights(view){
       adgbInsightsView=view;
+      const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
       const reg=document.getElementById('adgbRegisterPanel'),ana=document.getElementById('adgbAnalyticsPanel');
       if(reg)reg.hidden=view!=='register';
       if(ana)ana.hidden=view!=='analytics';
@@ -2806,6 +2901,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const el=document.getElementById(id);if(el)el.addEventListener(id==='adgbRegisterSearch'?'input':'change',adgbRenderRegister);
       });
       document.querySelectorAll('[data-adgb-close-insights]').forEach(button=>button.addEventListener('click',()=>{
+        const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
         adgbInsightsView='';
         document.getElementById('adgbRegisterPanel').hidden=true;
         document.getElementById('adgbAnalyticsPanel').hidden=true;
@@ -2833,6 +2929,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
         const nav=btn.getAttribute('data-adgb-nav');
         document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
+        if(nav==='archive'){adgbOpenArchive();return;}
         if(nav==='register'||nav==='analytics'){
           adgbOpenInsights(nav);
           return;
