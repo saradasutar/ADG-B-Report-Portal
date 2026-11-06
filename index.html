@@ -1373,6 +1373,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.85 administrator notice typography and colour controls */
+.adgb-notice-style-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:13px}
+.adgb-notice-style-grid label{display:grid;align-content:start;gap:6px;font-size:11px;font-weight:800;color:#46566b}
+.adgb-notice-style-grid input[type="color"]{border:1px solid #ced9e4;border-radius:8px;width:88px;height:39px;background:white;padding:3px;cursor:pointer}
+.adgb-notice-style-grid input[type="range"]{width:100%;accent-color:#a42b3a;cursor:pointer}
+.adgb-notice-style-grid select{width:100%;min-height:37px;background:white;color:#24364b;border:1px solid #ced9e4;border-radius:7px;padding:7px}
+.adgb-notice-colour-presets{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
+.adgb-notice-colour-presets span{font-size:10px;color:#5d6878;font-weight:800}
+.adgb-notice-colour-presets button{border:1px solid #cfd8e4;background:#fff;padding:6px 9px;font-size:10px;font-weight:800;color:#33455a;border-radius:6px}
+.adgb-notice-colour-presets button:focus-visible{outline:2px solid #1b6cb0;outline-offset:2px}
+.adgb-notice-contrast{font-size:11px;font-weight:800;line-height:1.4}
+@media(max-width:760px){.adgb-notice-style-grid{grid-template-columns:1fr 1fr}.adgb-notice-style-grid label:last-child{grid-column:1/-1}}
 /* V17.7.84 pre-publication office audience preview */
 .adgb-notice-preview{border:1px solid #e4d89d;background:#fffdf3;border-radius:10px;margin-top:13px;padding:12px}
 .adgb-notice-preview-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px}
@@ -1822,9 +1834,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           <label class="adgb-notice-speed-label" for="adgbNoticeSpeed">Moving text speed: <strong id="adgbNoticeSpeedLabel">Normal (5/10)</strong></label>
           <input id="adgbNoticeSpeed" type="range" min="1" max="10" step="1" value="5" aria-label="Moving text speed">
           <div class="adgb-notice-speed-ends"><span>Slow</span><span>Fast</span></div>
-          <p>The selected speed applies to all notices and permitted office pending information. Change the slider, then select Save pending-display settings.</p>
+          <div class="adgb-notice-style-grid">
+            <label>Text colour <input id="adgbNoticeTextColor" type="color" value="#bd1726" aria-label="Moving notice text colour"></label>
+            <label>Font size: <strong id="adgbNoticeFontSizeLabel">17px</strong><input id="adgbNoticeFontSize" type="range" min="12" max="24" step="1" value="17" aria-label="Moving notice font size"></label>
+            <label>Font weight <select id="adgbNoticeFontWeight" aria-label="Moving notice font weight"><option value="700">Bold</option><option value="900" selected>Extra Bold</option></select></label>
+          </div>
+          <div class="adgb-notice-colour-presets" aria-label="Suggested readable text colours">
+            <span>Quick colours:</span>
+            <button type="button" data-notice-colour="#bd1726" aria-label="Dark red text">Dark red</button>
+            <button type="button" data-notice-colour="#003366" aria-label="Navy blue text">Navy</button>
+            <button type="button" data-notice-colour="#06634d" aria-label="Dark green text">Green</button>
+            <button type="button" data-notice-colour="#5e2885" aria-label="Dark violet text">Violet</button>
+            <button type="button" data-notice-colour="#2b2b2b" aria-label="Almost black text">Black</button>
+          </div>
+          <p id="adgbNoticeContrast" class="adgb-notice-contrast" role="status" aria-live="polite">Text contrast: readable on light yellow.</p>
+          <p>Speed, text colour, font size and boldness apply to scheduled notices and permitted office pending counts. Preview changes locally, then save them for all authorized viewers.</p>
           <div id="adgbNoticeOfficeChecks" class="adgb-notice-office-checks"></div>
-          <button id="adgbNoticeSaveSettings" type="button">Save pending-display settings</button>
+          <button id="adgbNoticeSaveSettings" type="button">Save notice appearance &amp; pending settings</button>
         </div>
       </section>
       <section id="adgbComplianceTrends" class="adgb-trends-panel" hidden aria-label="Administrator compliance trends">
