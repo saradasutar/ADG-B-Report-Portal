@@ -274,3 +274,25 @@ The same existing database spreadsheet is used. There are **two tabs**, not two 
 - If Save reports an expired or conflicting version, **export your draft**, refresh, and load saved reviews before retrying.
 - Never commit the complete private Apps Script backend or employee/office review content to this public GitHub repository.
 
+
+
+---
+
+## V17.7.73 — Export and print the loaded Office Review Audit History
+
+The **Review History & Audit Trail** section under **Office Analytics** now offers **Export loaded CSV** and **Print loaded history**.
+
+### Usage
+
+1. Sign in with an active Administrator account.
+2. Open **Office Analytics → Review History & Audit Trail**.
+3. Choose the reporting month and optional office, then select **Load history**.
+4. If **Load more** appears, use it to retrieve additional matching records before exporting.
+5. Select **Export loaded CSV** or **Print loaded history**.
+
+**Scope:** Both outputs include **only records actually loaded on the page**, not an unseen entire month or the whole database. The filenames and print heading distinguish this. CSV uses formula-injection protection and correctly quotes multiline text. The printed history shows old and new values for each changed field.
+
+**Security:** Audit data remains in memory in the browser while the page is open, rather than being stored in GitHub or browser local storage. Treat downloaded/printed files as restricted office records. Server-side authorization is still required for history retrieval.
+
+**Deployment:** This upgrade changes only GitHub `index.html`. **No new Google Apps Script backend deployment is needed if the V17.7.72 backend is already installed and operating.** If V17.7.72 is not yet installed, first complete its existing-backend deployment and test audit history. Do not rerun `setupPortal()` or `setPortalSecurityCodes()`.
+
