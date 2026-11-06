@@ -1590,6 +1590,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" id="adgbArchiveLoad">Load archive</button>
       </div>
       <p id="adgbArchiveMessage" class="adgb-insights-count" aria-live="polite">Select a past month and load the archive. Administrator access is required.</p>
+      <p class="adgb-insights-count"><a id="adgbArchiveReadyLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open authorised archived PDF (link expires shortly)</a></p>
       <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Kind</th><th>Office</th><th>Latest state</th><th>Submitted at (IST)</th><th>Document</th></tr></thead><tbody id="adgbArchiveRows"><tr><td colspan="6">No archive loaded</td></tr></tbody></table></div>
     </section>
     <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
@@ -2793,6 +2794,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!credential){adgbArchiveMessage('Administrator login required.');return;}
       const button=document.getElementById('adgbArchiveLoad');
       if(button)button.disabled=true;
+      const ready=document.getElementById('adgbArchiveReadyLink');if(ready){ready.hidden=true;ready.removeAttribute('href');}
       adgbArchiveMessage('Reading historical submission records…');
       try{
         const res=await postToBackend({action:'adminArchiveList',securityCode:credential,cycleKey:cycle});
@@ -2810,7 +2812,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       try{
         const res=await postToBackend({action:'adminArchiveView',securityCode:credential,cycleKey:adgbArchiveLoadedCycle,submissionId});
         if(!res?.viewUrl||!/^https:\/\/script\.google\.com\//.test(res.viewUrl))throw Error('Secure archive viewer URL is unavailable.');
-        const link=document.createElement('a');link.href=res.viewUrl;link.target='_blank';link.rel='noopener noreferrer';document.body.appendChild(link);link.click();link.remove();
+        const link=document.getElementById('adgbArchiveReadyLink');if(!link)throw Error('Archive link control missing.');
+        link.href=res.viewUrl;link.hidden=false;link.focus();
+        showToast('PDF ready. Select the Open authorised archived PDF link.','success');
       }catch(e){showToast(e.message||'Archived PDF could not be opened.','error')}
       finally{if(button)button.disabled=false;}
     }
