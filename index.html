@@ -1300,6 +1300,46 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
   .adgb-primary-column .table-wrap{max-height:none!important}
 }
 
+
+/* V17.7.63 — FIX COLLAPSED MATRIX FROM LEGACY .workspace GRID.
+   The office panel is moved into the right sidebar at runtime; the old
+   190px+1fr workspace grid must not remain on the matrix's parent. */
+.adgb-shell{display:grid!important;grid-template-columns:202px minmax(0,1fr)!important;width:100%!important;max-width:1920px!important;margin:0 auto!important}
+.adgb-shell>.page{display:block!important;min-width:0!important;width:calc(100% - 24px)!important;max-width:none!important;margin:0 auto!important}
+.adgb-shell .adgb-dashboard-grid{display:grid!important;grid-template-columns:minmax(0,1fr) 260px!important;gap:12px!important;align-items:start!important;min-width:0!important;width:100%!important}
+.adgb-shell .adgb-primary-column{display:block!important;min-width:0!important;width:100%!important;max-width:100%!important}
+.adgb-shell .adgb-primary-column .workspace{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;grid-template-columns:none!important;grid-auto-columns:auto!important}
+.adgb-shell .adgb-primary-column .matrix-section{display:block!important;min-width:0!important;width:100%!important;max-width:100%!important;margin:0!important}
+.adgb-shell .adgb-primary-column .matrix-tools{width:100%!important;max-width:100%!important}
+.adgb-shell .adgb-primary-column .stats-grid{width:100%!important;min-width:0!important;max-width:100%!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;overflow:visible!important}
+.adgb-shell .adgb-primary-column .stat-card{min-width:0!important}
+.adgb-shell .adgb-primary-column .table-wrap{max-width:100%!important;width:100%!important;overflow-x:auto!important}
+.adgb-shell .adgb-right-panel{min-width:0!important;width:100%!important;max-width:100%!important}
+.adgb-shell .adgb-feature-links{width:100%!important}
+.adgb-shell.matrix-expanded{grid-template-columns:minmax(0,1fr)!important}
+.adgb-shell.matrix-expanded .adgb-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}
+@media(max-width:1500px){
+  .adgb-shell{grid-template-columns:174px minmax(0,1fr)!important}
+  .adgb-shell .adgb-dashboard-grid{grid-template-columns:minmax(0,1fr) 225px!important}
+}
+@media(max-width:1250px){
+  .adgb-shell .adgb-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}
+  .adgb-shell .adgb-right-panel{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .adgb-shell .adgb-primary-column .stats-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+}
+@media(max-width:900px){
+  .adgb-shell{display:block!important}
+  .adgb-shell .adgb-primary-column .stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .adgb-shell .adgb-primary-column .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .adgb-shell .adgb-right-panel{display:grid!important;grid-template-columns:1fr!important}
+}
+@media print{
+  .adgb-shell{display:block!important}
+  .adgb-shell .adgb-dashboard-grid{display:block!important}
+}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -1518,7 +1558,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.62</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.63</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
