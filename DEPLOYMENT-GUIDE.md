@@ -459,3 +459,41 @@ Only recognized administrators see **Print action list (admin)**. It prints exac
 
 **Deployment:** GitHub frontend only. No new spreadsheet, Apps Script code, trigger or Drive change. JavaScript syntax was checked on the committed source; live browser acceptance testing is still required.
 
+
+---
+
+## V17.7.81 — Office Scorecard & Scheduled Moving Notice Board
+
+The GitHub frontend includes a ranked five-office comparison scorecard in **Office Analytics**, and a moving red-text notice banner on a pale-yellow background at the top of the dashboard. The scorecard ranks offices with active expected reports by **highest completion percentage, fewer overdue items, then fewer pending items**. Exact ties share the same rank; zero-obligation offices show no rank. These rankings reflect only the **current** reporting cycle.
+
+### Administrator notices and targeted pending information
+
+The new **Office Analytics → Moving Notice Board — Administrator** manager allows up to **12** scheduled notices. The administrator can specify notice text (up to 220 characters), whether it is enabled, display start/end in **Asia/Kolkata (IST)**, and the audience: Everyone permitted to view the portal or one of the five offices. Administrators can edit/delete existing notices; deleting uses confirmation.
+
+A separate **Include live office-wise pending counts** toggle and five checkboxes permit the administrator to select which offices' pending totals run in the moving strip. Each authenticated **OFFICE** account receives only its own permitted office count and targeted messages; an **ADMIN** account may receive counts for all selected offices. VIEWER and guest sessions never receive office-specific counts or private targeted notices. Only server-authorized notices are delivered; the browser does not determine its own permissions.
+
+The strip has a **Pause/Resume** button and respects reduced-motion accessibility preferences. Counts are calculated from the *currently loaded* status register, not from guesswork.
+
+### Deployment (backend REQUIRED for notices)
+
+1. Back up your existing live Google Apps Script `Code.gs` and database spreadsheet.
+2. Use the complete private backend file **ADGB_Code_gs_V17_7_81_Integrated.txt** from the accompanying ChatGPT response. It is based on **V17.7.77**. **If your live backend has separate new changes, merge rather than overwrite.**
+3. In the **same existing Apps Script project**, replace Code.gs with the complete integrated code. Remove only any older separately pasted add-on that duplicates functions included in the integrated file.
+4. Save, then **Deploy → Manage deployments → Edit → New version → Deploy**. Keep the original `/exec` URL.
+5. **Do not run** `setupPortal()` or `setPortalSecurityCodes()`.
+6. Refresh the Portal, log in as Administrator and open **Office Analytics**. The scorecard itself is frontend-only.
+7. Under **Moving Notice Board — Administrator**, select **Load notices and settings**. Create a test notice scheduled for the current time, choose an office audience, and save. It appears near the top of the dashboard for the authorized audience.
+8. Activate pending-display settings if desired, save, and test by signing in separately as two different office accounts. Neither should see another office's *targeted* notices or pending counts. Verify guest and VIEWER accounts do not see office-specific counts.
+9. Test expiration, pause/resume, notice edits and deletes. Also verify normal submissions, archive view, user login, review/audit and compliance trends.
+
+### Storage and limits
+
+- Notice configuration uses **existing Apps Script Script Properties** key `ADGB_NOTICE_CONFIG_V1` (not a new spreadsheet, tab or Drive file).
+- New backend routes: GET `action=noticeBoard` (audience-filtered read), POST `action=adminNoticeBoardManage` (server-authorized list/save/delete/settings).
+- Administrator changes require an active **ADMIN session**, not a public office PIN. Office and guest sessions cannot administer notices.
+- **Everyone** announcements may be visible to the public when the portal is configured for PUBLIC_VIEW. Do not include confidential or personnel-specific information in general notices.
+- The frontend may briefly show no notices before the new backend has been deployed or when login is unavailable; it never invents announcements.
+- The moving pending counts are a live awareness aid and are not a certified historical compliance report.
+
+The integrated backend passed JavaScript syntax and isolated access/scheduling tests. The GitHub frontend passed JavaScript syntax validation. **Live Google Apps Script deployment and browser acceptance remain pending.** Avoid committing the private integrated Code.gs to this public repository.
+
