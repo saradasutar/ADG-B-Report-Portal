@@ -511,3 +511,21 @@ The speed controls the complete moving notice strip, including scheduled announc
 
 **Test:** Save speed 2, reload settings and confirm 2 remains; then try speed 9 and compare the banner movement on both desktop and mobile. The pause control still works. A viewer with a reduced-motion preference may see no animation regardless of speed. No spreadsheet, Sheet tab, trigger or Drive change is needed.
 
+
+
+---
+
+## V17.7.83 — Moving Notice Board administration: scheduled and active notices
+
+The existing **Office Analytics → Moving Notice Board — Administrator** page now includes a compact breakdown of notices into **Active**, **Scheduled**, **Expired**, and **Disabled**, plus a **Status** filter. The notices are classified from their saved `start`, `end` and `enabled` fields, using the current **Asia/Kolkata** clock.
+
+- **Active** means enabled, already started, and not yet expired.
+- **Scheduled** means enabled with a start time in the future.
+- **Expired** means enabled but the end time has passed.
+- **Disabled** means manually disabled, regardless of scheduled date.
+- Rows retain the original Edit and Delete actions. The filter only changes visibility; it never deletes or changes a notice.
+
+Open **Office Analytics**, select **Load notices and settings**, then use the summary counts or choose a filter to locate the desired notice. The classifications update periodically while the administrator page is open.
+
+**Deployment:** This change is GitHub-frontend only. Your existing V17.7.82 integrated Apps Script backend, once deployed, is sufficient. No new spreadsheet, Apps Script action, Script Property or trigger is required. Changes were syntax-checked but still need acceptance testing in the live browser.
+
