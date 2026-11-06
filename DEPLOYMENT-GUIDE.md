@@ -557,3 +557,28 @@ Choose **All permitted portal viewers** for general announcements, or select **C
 
 This is a **frontend-only V17.7.84 change**. No new Apps Script deployment is required if the previous V17.7.82 notice backend is already installed. No new spreadsheet, Sheet tab or Drive file is created. JavaScript syntax passed; live account behavior still requires authorized manual testing.
 
+
+
+---
+
+## V17.7.85 — Administrator notice colour, font size, and boldness
+
+The Administrator can now control the **Moving Notice Board** text appearance without editing GitHub CSS.
+
+In **Office Analytics → Moving Notice Board — Administrator → Load notices and settings**, the appearance settings include:
+
+- **Text colour:** a colour picker plus quick Dark Red, Navy, Dark Green, Violet and Black choices.
+- **Font size:** slider from **12 to 24 pixels** (default 17px).
+- **Font weight:** **Bold** (700) or **Extra Bold** (900; default).
+- **Moving speed:** existing slider 1–10 remains.
+
+Colour, font size, weight and speed preview immediately in the Administrator's current tab; the Save button now reads **Save notice appearance & pending settings**. The settings affect the banner's scheduled notices and permitted office-wise pending counts for all authorized viewers after they are saved. The pale-yellow background remains unchanged. Both frontend and server refuse text colours with insufficient contrast against that background.
+
+### Backend installation required for persistent appearance settings
+
+The **private complete Apps Script backend V17.7.85** is provided in ChatGPT as `ADGB_Code_gs_V17_7_85_Integrated.txt`. It is based on the earlier **V17.7.82** integrated backend. **Back up your current Code.gs and existing spreadsheet before replacement**, and merge independent changes if the live Code.gs has changed since that version. Deploy via **Deploy → Manage deployments → Edit → New version → Deploy**, preserving the existing deployment URL. Do not run `setupPortal()` or `setPortalSecurityCodes()`.
+
+The backend now validates text colour and its contrast on the yellow background, font size (12–24) and font weight (700 or 900), using the existing Administrator session. It saves those settings alongside existing notice settings in **`ADGB_NOTICE_CONFIG_V1` Script Properties**, not in another spreadsheet or Sheet tab. Existing scheduled notices are preserved. Older saved settings without appearance values automatically use dark red, 17px, Extra Bold.
+
+**Test:** Set the colour to Navy, size 22px and Bold; save; refresh and load the settings to verify persistence. Try a pale colour and verify it is rejected. Check the strip from an authorized office login and on mobile, without exposing other offices' private pending counts. Frontend syntax checks and isolated backend style tests passed; live Apps Script acceptance testing remains pending.
+
