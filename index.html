@@ -2787,8 +2787,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     async function adgbLoadArchive(){
       const cycle=String(document.getElementById('adgbArchiveMonth')?.value||'');
-      if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(cycle)||cycle>adgbCurrentCycleKeyIST()){
-        adgbArchiveMessage('Select a valid month up to the current reporting cycle.');return;
+      if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(cycle)||cycle>=adgbCurrentCycleKeyIST()){
+        adgbArchiveMessage('Select a valid historical month before the current reporting cycle.');return;
       }
       const credential=adgbArchiveCredential();
       if(!credential){adgbArchiveMessage('Administrator login required.');return;}
@@ -2820,9 +2820,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     function adgbInitArchive(){
       const input=document.getElementById('adgbArchiveMonth');
-      if(input){const key=adgbCurrentCycleKeyIST();input.max=key;const date=new Date(key+'-01T12:00:00');date.setMonth(date.getMonth()-1);input.value=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')}
+      if(input){const key=adgbCurrentCycleKeyIST();const date=new Date(key+'-01T12:00:00');date.setMonth(date.getMonth()-1);const previous=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');input.max=previous;input.value=previous}
       const office=document.getElementById('adgbArchiveOffice');
       if(office)office.innerHTML='<option value="">All offices</option>'+FALLBACK_OFFICES.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+'</option>').join('');
+      input?.addEventListener('change',()=>{
+        adgbArchiveRecords=[];adgbArchiveLoadedCycle='';
+        const ready=document.getElementById('adgbArchiveReadyLink');
+        if(ready){ready.hidden=true;ready.removeAttribute('href');}
+        const rows=document.getElementById('adgbArchiveRows');
+        if(rows)rows.innerHTML='<tr><td colspan="6">Select Load archive to view this cycle.</td></tr>';
+        adgbArchiveMessage('Month changed. Load the selected historical cycle.');
+      });
       document.getElementById('adgbArchiveLoad')?.addEventListener('click',adgbLoadArchive);
       ['adgbArchiveSearch','adgbArchiveOffice','adgbArchiveStatus'].forEach(id=>document.getElementById(id)?.addEventListener(id==='adgbArchiveSearch'?'input':'change',adgbRenderArchive));
       document.getElementById('adgbArchiveRows')?.addEventListener('click',event=>{const button=event.target.closest('[data-archive-view]');if(button)adgbViewArchivedPdf(button.dataset.archiveView)});
