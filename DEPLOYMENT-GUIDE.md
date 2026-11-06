@@ -417,3 +417,17 @@ A result can be **Unavailable** if the Apps Script deployment is older, the admi
 
 **Upgrade:** V17.7.78 is a GitHub frontend-only change. No new spreadsheet, trigger or Apps Script redeployment is required solely for the checker. The complete integrated **V17.7.77** backend remains the required baseline for all five capabilities. Deploy and test it separately if your live backend is older.
 
+
+
+---
+
+## V17.7.79 — One-click office pending report drill-down
+
+In **Office Analytics**, each office's compliance card now has a **View N pending reports** button. It opens the existing **Submission Register** already filtered to that specific office and **Pending**, with the search box cleared. It preserves all existing dashboard data and permissions, and does not create, edit, remove, or submit reports.
+
+Pending items in that register now sort by action priority: **overdue first**, then **due today**, then other dated pending items, then pending reports needing date review or without a due date. No deadline is invented for a report with no configured deadline.
+
+**How to check:** Open the portal, select Office Analytics, click **View pending reports** for CE(B), CE(HAL), SE&PD, SE(Mysore), or SE(Hubli). Confirm the Submission Register opens for the selected office, displays only its pending items, and puts overdue items first. For an office with zero pending reports, the action is disabled. On mobile, the button uses the card width.
+
+**Deployment:** GitHub frontend-only. No new Apps Script version, spreadsheet, or backend route required. This code was checked for JavaScript syntax, but live browser acceptance testing is still needed.
+
