@@ -1031,6 +1031,46 @@
       color:#fff!important;
     }
 
+
+  /* ADGB PREMIUM SAFE VISUAL PATCH 2026-11-06 */
+  :root{--navy:#092e61;--navy2:#15529c;--ink:#1b304d;--muted:#53677f;--line:#d6e1ed;--shadow:0 6px 20px rgba(22,52,93,.075)}
+  html{background:#f1f5fa}
+  body{background:linear-gradient(180deg,#eef4fb 0%,#f8fafc 55%,#f3f7fb 100%);color:var(--ink)}
+  .top-stripe{height:3px;background:linear-gradient(90deg,#d6a34b,#2c76b7 55%,#168b78)}
+  header{background:linear-gradient(105deg,#082f63,#145398 68%,#0b617c);box-shadow:0 4px 14px rgba(15,44,83,.18)}
+  .header-inner,.page{width:min(1580px,calc(100% - 32px))}
+  .brand-copy strong{font-size:clamp(17px,1.7vw,23px);letter-spacing:0;text-shadow:none}
+  .brand-copy small{font-size:11px}
+  .page{padding-top:12px}
+  .cycle-bar{border:1px solid #d6e3f0;border-left:4px solid #2876b7;background:#fff;box-shadow:var(--shadow);border-radius:12px}
+  .cycle-label{font-size:11px}
+  .cycle-main strong{font-size:15px}
+  .active-badge{font-size:10px;background:#e4f7ee;color:#0d7053}
+  .stats-grid{gap:10px}
+  .stat-card{border-radius:14px;box-shadow:var(--shadow);transition:box-shadow .18s ease,transform .18s ease}
+  .stat-card:hover{box-shadow:0 9px 24px rgba(22,52,93,.12);transform:translateY(-1px)}
+  .stat-label{font-size:clamp(11px,1vw,13px);font-weight:800}
+  .stat-value{font-variant-numeric:tabular-nums}
+  .matrix-section,.matrix-panel,.report-panel,.dashboard-card{border-radius:14px;box-shadow:var(--shadow)}
+  table th{font-size:clamp(11px,.92vw,13px);line-height:1.35}
+  table td{font-size:clamp(11px,.92vw,13px);line-height:1.45}
+  button,input,select{min-height:30px}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f2ae42;outline-offset:2px}
+  .refresh-button,.admin-button{font-size:12px;font-weight:800}
+  @media(max-width:700px){
+    .header-inner,.page{width:calc(100% - 18px)}
+    .header-inner{gap:8px;min-height:58px}
+    .brand-mark{width:36px;height:36px}
+    .brand-copy strong{font-size:15px;line-height:1.2}
+    .brand-copy small{font-size:9px}
+    .admin-button{padding:0 9px;font-size:11px}
+    .cycle-bar{gap:6px}
+    .stats-grid{gap:7px}
+    .stat-card{border-radius:11px}
+    table th,table td{font-size:11px}
+  }
+  @media(prefers-reduced-motion:reduce){.stat-card{transition:none}.stat-card:hover{transform:none}}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
