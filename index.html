@@ -1373,6 +1373,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.72 administrator audit history */
+.adgb-audit-panel{margin-top:16px;border-top:1px solid #d4e1ef;padding-top:12px}
+.adgb-audit-panel h3{font-size:15px;margin:0;color:#173c6c}
+.adgb-audit-change{display:grid;gap:4px;min-width:150px}
+.adgb-audit-change>div{font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+.adgb-audit-before{color:#8f4a52}
+.adgb-audit-after{color:#146953}
+#adgbAuditRows td{vertical-align:top}
+@media(max-width:760px){.adgb-audit-panel .adgb-insights-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-audit-panel .adgb-insights-toolbar button{width:100%}}
 /* V17.7.71 office follow-up overview, calculated from current loaded records and drafts. */
 .adgb-review-pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
 .adgb-review-pulse>div{display:grid;gap:4px;border:1px solid #d8e5f1;background:#fff;border-radius:10px;padding:10px}
@@ -1637,6 +1646,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="adgbReviewPulse" class="adgb-review-pulse" aria-live="polite"></div>
         <div class="adgb-insights-toolbar"><label>Follow-up view <select id="adgbReviewFilter"><option value="all">All offices</option><option value="active">Open / In progress / For review</option><option value="overdue">Target overdue</option><option value="soon">Due within 7 days</option><option value="completed">Completed</option><option value="unmarked">Not marked</option></select></label></div>
         <div id="adgbReviewEntries" class="adgb-review-grid"></div>
+        <section class="adgb-audit-panel" aria-label="Administrator review audit history">
+          <div class="adgb-insights-heading"><div><h3>Review History &amp; Audit Trail</h3><p>Administrator-only · change attempts recorded in the existing portal database</p></div></div>
+          <div class="adgb-insights-toolbar">
+            <label>Reporting month <input type="month" id="adgbAuditMonth" aria-label="Audit month"></label>
+            <label>Office <select id="adgbAuditOffice"><option value="">All offices</option></select></label>
+            <button type="button" id="adgbAuditLoad">Load history</button>
+            <button type="button" id="adgbAuditMore" hidden>Load more</button>
+          </div>
+          <p class="adgb-insights-count" id="adgbAuditMessage" aria-live="polite">Select a month and load the administrator audit history.</p>
+          <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>When (IST)</th><th>Office</th><th>Administrator</th><th>Fields changed</th><th>Before → After</th></tr></thead><tbody id="adgbAuditRows"><tr><td colspan="5">History not loaded</td></tr></tbody></table></div>
+        </section>
       </section>
     </section>
 
@@ -2986,6 +3006,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     // V17.7.69: draft remarks are memory-only, never stored in the public repository,
     // browser storage or sent to Apps Script. Download/print before refreshing.
     const adgbReviewDrafts=new Map();
+    const adgbReviewVersions=new Map();
     let adgbReviewDirty=false,adgbReviewPersisted=false,adgbReviewLoadedCycle='',adgbReviewHasLoaded=false;
     function adgbReviewStatus(message){const el=document.getElementById('adgbReviewSaveStatus');if(el)el.textContent=message;}
     function adgbReviewCycle(){return adgbCurrentCycleKeyIST();}
@@ -3008,9 +3029,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const response=await postToBackend({action:'adminOfficeReviewList',securityCode:code,cycleKey});
         if(!response?.ok||!Array.isArray(response.records))throw Error('Compatible review backend is not yet available.');
         const ids=new Set(state.offices.map(office=>String(office.id)));
-        const next=new Map();
-        for(const row of response.records){const id=String(row.officeId||'');if(ids.has(id))next.set(id,adgbCleanReviewEntry(row));}
+        const next=new Map(),versions=new Map();
+        for(const row of response.records){const id=String(row.officeId||'');if(ids.has(id)){next.set(id,adgbCleanReviewEntry(row));versions.set(id,String(row.updatedAt||''));}}
         adgbReviewDrafts.clear();for(const [id,entry] of next)adgbReviewDrafts.set(id,entry);
+        adgbReviewVersions.clear();for(const [id,version] of versions)adgbReviewVersions.set(id,version);
         adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=cycleKey;adgbReviewHasLoaded=true;
         const container=document.getElementById('adgbReviewEntries');if(container)container.innerHTML='';
         adgbRenderReviewWorkspace();adgbReviewStatus('Loaded '+next.size+' saved office reviews for '+cycleKey+'.');
@@ -3024,14 +3046,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(adgbReviewLoadedCycle&&adgbReviewLoadedCycle!==adgbReviewCycle()){
         adgbReviewStatus('Reporting cycle changed. Export this draft before saving into a new cycle.');return;
       }
-      const records=adgbReviewSnapshot().map(({office,entry})=>({officeId:String(office.id),...adgbCleanReviewEntry(entry)}));
+      const records=adgbReviewSnapshot().map(({office,entry})=>({officeId:String(office.id),...adgbCleanReviewEntry(entry),expectedUpdatedAt:adgbReviewVersions.get(String(office.id))||''}));
       const button=document.getElementById('adgbReviewSave');if(button)button.disabled=true;
       adgbReviewStatus('Saving to the existing portal database…');
       try{
         const response=await postToBackend({action:'adminOfficeReviewSave',securityCode:code,cycleKey:adgbReviewCycle(),records});
         if(!response?.ok||response.savedCount!==records.length)throw Error('Backend did not confirm saving all '+records.length+' offices.');
+        if(!response.versions||typeof response.versions!=='object')throw Error('Backend did not return version confirmations. Refresh and Load saved reviews.');
+        for(const office of state.offices)adgbReviewVersions.set(String(office.id),String(response.versions[String(office.id)]||''));
         adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=adgbReviewCycle();
-        adgbReviewStatus('Saved '+response.savedCount+' office reviews in Google Sheets for '+adgbReviewLoadedCycle+'.');
+        adgbReviewStatus('Saved '+response.savedCount+' office reviews in Google Sheets for '+adgbReviewLoadedCycle+'. '+(response.auditCount||0)+' changed office(s) recorded in audit history.');
+        adgbAuditReset_();
       }catch(error){adgbReviewStatus('Save NOT confirmed: '+(error.message||'Compatible backend is not deployed')+'. Export your draft before refreshing.');}
       finally{if(button)button.disabled=false;}
     }
