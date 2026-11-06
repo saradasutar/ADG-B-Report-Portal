@@ -1607,6 +1607,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
+      <div class="adgb-insights-toolbar"><button type="button" id="adgbCompliancePrint" class="hidden">🖨 Print compliance review (admin)</button></div>
+      <div id="adgbComplianceNote" class="adgb-insights-count"></div>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Office</th><th>Expected</th><th>Submitted</th><th>Pending</th><th>Overdue</th><th>Due today</th><th>Deadline not set</th><th>Review dates</th><th>Completion</th></tr></thead><tbody id="adgbComplianceRows"></tbody></table></div>
       <div id="adgbAnalyticsRows" class="adgb-analytics-rows"></div>
     </section>
 
@@ -2929,6 +2932,21 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length,pct=total?Math.round(submitted*100/total):0;
       const summary=document.getElementById('adgbAnalyticsSummary');
       if(summary)summary.innerHTML='<div><strong>'+total+'</strong><span>Expected reports</span></div><div><strong>'+submitted+'</strong><span>Submitted</span></div><div><strong>'+(total-submitted)+'</strong><span>Pending</span></div><div><strong>'+pct+'%</strong><span>Completion</span></div>';
+      const today=adgbTodayIST();
+      const compliance=state.offices.map(office=>{
+        const list=rows.filter(x=>x.officeId===office.id),pending=list.filter(x=>!x.submitted);
+        return {office:office.name,total:list.length,submitted:list.length-pending.length,pending:pending.length,
+          overdue:pending.filter(x=>x.dueDate&&x.dueDate<today).length,
+          dueToday:pending.filter(x=>x.dueDate===today).length,
+          noDeadline:pending.filter(x=>!x.dueDate&&!x.deadlineReview).length,
+          review:pending.filter(x=>x.deadlineReview).length,
+          percent:list.length?Math.round((list.length-pending.length)*100/list.length):0};
+      });
+      const table=document.getElementById('adgbComplianceRows');
+      if(table)table.innerHTML=compliance.map(x=>'<tr><td>'+escapeHtml(x.office)+'</td><td>'+x.total+'</td><td>'+x.submitted+'</td><td>'+x.pending+'</td><td>'+x.overdue+'</td><td>'+x.dueToday+'</td><td>'+x.noDeadline+'</td><td>'+x.review+'</td><td>'+x.percent+'%</td></tr>').join('');
+      const note=document.getElementById('adgbComplianceNote');
+      if(note)note.textContent='As of '+today+' (IST) · Current dashboard reporting cycle · Deadline counts apply to outstanding reports only. No deadline is assumed where none is recorded.';
+      document.getElementById('adgbCompliancePrint')?.classList.toggle('hidden',!isRecognizedAsAdmin());
       const box=document.getElementById('adgbAnalyticsRows');
       if(box)box.innerHTML=state.offices.map(office=>{
         const list=rows.filter(x=>x.officeId===office.id),done=list.filter(x=>x.submitted).length,percent=list.length?Math.round(done*100/list.length):0;
@@ -2937,10 +2955,37 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         return '<div class="adgb-analytics-row"><div><strong>'+escapeHtml(office.name)+'</strong><span>'+done+' of '+list.length+' submitted · '+(list.length-done)+' pending'+(overdue?' · '+overdue+' overdue':'')+(dueToday?' · '+dueToday+' due today':'')+'</span><b>'+percent+'%</b></div><div class="adgb-analytics-track"><span style="width:'+percent+'%"></span></div></div>';
       }).join('');
     }
+    // Print-only, current-cycle management review. No historical assertions or automatic email.
+    function adgbPrintComplianceReview(){
+      if(!isRecognizedAsAdmin()){showToast('Administrator permission required to print the compliance review.','error');return;}
+      const rows=adgbRegisterData(),today=adgbTodayIST();
+      const officeRows=state.offices.map(office=>{
+        const list=rows.filter(x=>x.officeId===office.id),pending=list.filter(x=>!x.submitted);
+        return {office:office.name,expected:list.length,submitted:list.length-pending.length,pending:pending.length,
+          overdue:pending.filter(x=>x.dueDate&&x.dueDate<today).length,
+          dueToday:pending.filter(x=>x.dueDate===today).length,
+          notSet:pending.filter(x=>!x.dueDate&&!x.deadlineReview).length,
+          review:pending.filter(x=>x.deadlineReview).length};
+      });
+      const columns=['Office','Expected','Submitted','Pending','Overdue','Due today','No deadline','Review date'];
+      const table='<table class="print-matrix"><thead><tr>'+columns.map(x=>'<th>'+escapeHtml(x)+'</th>').join('')+'</tr></thead><tbody>'+
+        officeRows.map(x=>'<tr>'+[x.office,x.expected,x.submitted,x.pending,x.overdue,x.dueToday,x.notSet,x.review].map(y=>'<td>'+escapeHtml(String(y))+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+      const priority=rows.filter(x=>!x.submitted&&(x.deadlineReview||x.dueDate&&x.dueDate<=today)).sort((a,b)=>
+        (a.deadlineReview?'0':a.dueDate).localeCompare(b.deadlineReview?'0':b.dueDate)||a.office.localeCompare(b.office));
+      const priorities=priority.length?'<h2 style="font-size:13px;margin:15px 0 7px">Action required — overdue, due today and dates needing review</h2>'+
+        '<table class="print-matrix"><thead><tr><th>Office</th><th>Subject</th><th>Priority</th></tr></thead><tbody>'+
+        priority.map(x=>'<tr><td>'+escapeHtml(x.office)+'</td><td>'+escapeHtml(x.subject)+'</td><td>'+escapeHtml(adgbDeadlineLabel(x))+'</td></tr>').join('')+'</tbody></table>':'';
+      const container=document.getElementById('printPendingReport');if(!container)return;
+      container.innerHTML='<div class="print-report-header"><h1>O/o Additional Director General (B), CPWD, Bengaluru</h1><p>Current-cycle Office Compliance Review</p>'+
+        '<div class="print-report-meta"><span>As of '+escapeHtml(today)+' (IST)</span><span>Expected '+rows.length+' · Submitted '+rows.filter(x=>x.submitted).length+' · Pending '+rows.filter(x=>!x.submitted).length+'</span></div></div>'+
+        table+priorities+'<p class="print-report-footer">Snapshot from current-cycle portal data. Undated reports are not classified as overdue. Verify the underlying records before official circulation.</p>';
+      window.print();
+    }
     function adgbRefreshInsights(){
       adgbRenderRegister();adgbRenderAnalytics();
     }
     function adgbInitInsights(){
+      document.getElementById('adgbCompliancePrint')?.addEventListener('click',adgbPrintComplianceReview);
       ['adgbRegisterSearch','adgbRegisterOffice','adgbRegisterStatus'].forEach(id=>{
         const el=document.getElementById(id);if(el)el.addEventListener(id==='adgbRegisterSearch'?'input':'change',adgbRenderRegister);
       });
