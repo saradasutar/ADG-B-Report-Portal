@@ -2976,7 +2976,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     // V17.7.69: draft remarks are memory-only, never stored in the public repository,
     // browser storage or sent to Apps Script. Download/print before refreshing.
     const adgbReviewDrafts=new Map();
-    let adgbReviewDirty=false,adgbReviewPersisted=false,adgbReviewLoadedCycle='';
+    let adgbReviewDirty=false,adgbReviewPersisted=false,adgbReviewLoadedCycle='',adgbReviewHasLoaded=false;
     function adgbReviewStatus(message){const el=document.getElementById('adgbReviewSaveStatus');if(el)el.textContent=message;}
     function adgbReviewCycle(){return adgbCurrentCycleKeyIST();}
     function adgbReviewCredential(){syncAdminCodeFromSession();return state.adminCode||'';}
@@ -3001,7 +3001,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const next=new Map();
         for(const row of response.records){const id=String(row.officeId||'');if(ids.has(id))next.set(id,adgbCleanReviewEntry(row));}
         adgbReviewDrafts.clear();for(const [id,entry] of next)adgbReviewDrafts.set(id,entry);
-        adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=cycleKey;
+        adgbReviewDirty=false;adgbReviewPersisted=true;adgbReviewLoadedCycle=cycleKey;adgbReviewHasLoaded=true;
         const container=document.getElementById('adgbReviewEntries');if(container)container.innerHTML='';
         adgbRenderReviewWorkspace();adgbReviewStatus('Loaded '+next.size+' saved office reviews for '+cycleKey+'.');
       }catch(error){adgbReviewStatus('Could not load saved reviews: '+(error.message||'Check backend deployment')+'. Existing drafts were preserved.');}
@@ -3009,6 +3009,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     async function adgbSaveReviews(){
       if(!isRecognizedAsAdmin())return;
+      if(!adgbReviewHasLoaded){adgbReviewStatus('Load saved reviews first to prevent overwriting existing Sheet entries. Export your draft before loading.');return;}
       const code=adgbReviewCredential();if(!code){adgbReviewStatus('Administrator credential unavailable. Sign in again.');return;}
       if(adgbReviewLoadedCycle&&adgbReviewLoadedCycle!==adgbReviewCycle()){
         adgbReviewStatus('Reporting cycle changed. Export this draft before saving into a new cycle.');return;
