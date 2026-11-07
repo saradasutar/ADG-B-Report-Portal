@@ -1,3 +1,5 @@
+> ⚠️ **Existing production portal: do not use the first-time setup steps below.** This historical guide describes a new installation, not a safe upgrade of an existing ADG(B) portal. Do not run `setupPortal()` or `setPortalSecurityCodes()` on the working system, create a new database, or paste private backend code into public GitHub. For the V17.7.99+ platform expansion project, first read [the platform readiness audit](docs/PLATFORM_READINESS_AUDIT_2026-11.md) and [the Drive/multi-office migration design](docs/DRIVE_CONSOLIDATION_AND_MULTI_OFFICE.md). Back up and verify current IDs/configuration before any migration.
+
 # ADG(B) Report Submission Portal — Deployment Guide
 
 This guide is written for a non-coder. Nothing needs to be installed on your computer.
