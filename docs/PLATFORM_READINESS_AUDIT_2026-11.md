@@ -136,3 +136,10 @@ The integrated private backend, test harness and release guide are supplied as a
 - Offline Node tests passed for successful removal, repeat removal, status write failure and Trash failure. JavaScript syntax passed.
 - **BLOCKERS**: no durable cleanup ledger/reconciliation UI; no fully durable upload deduplication; PDF sharing risk remains; no authorized staging Drive integration tests.
 - No live production report, spreadsheet, Drive folder, Apps Script deployment or frontend was modified.
+
+## V17.8.5 private staging PDF open refinement
+- Private Apps Script `Code.gs` package prepared outside the public repository, based on V17.8.4-staging.
+- Secure PDF landing page attempts **one** automatic `window.open` of the existing one-time token's validated PDF blob. It does not weaken office code checks or change Drive sharing.
+- Chrome may block automatic popups; existing manual Open PDF and Download PDF remain as fallback. Intermediate tab may remain open even when auto-open succeeds.
+- Offline tests: browser permits popup, browser blocks popup, popup throws exception, token consumption, invalid PDF and expired token — six local tests passed. JavaScript syntax passed.
+- No live Apps Script deployment or browser verification performed. Do not consider this a production-security release.
