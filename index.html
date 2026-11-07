@@ -1646,6 +1646,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-archive-view{background:#e7f2ff;color:#175994;border:1px solid #b8d5ee;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800}
 .adgb-archive-view:disabled{opacity:.5}
 
+/* V17.7.97 — accessible sideways office navigation while retaining compact right panel */
+.adgb-matrix-travel{display:flex;align-items:center;gap:4px;background:#e8f3fc;border:1px solid #c4dcef;border-radius:9px;padding:3px}
+.adgb-matrix-travel button{height:29px;min-width:32px;border:0;border-radius:7px;background:#fff;color:#0a4d83;font-size:23px;font-weight:800;line-height:1}
+.adgb-matrix-travel button:hover{background:#d3eaf9}
+.adgb-matrix-travel span{font-size:10px;color:#2e587c;font-weight:800;white-space:nowrap;padding:0 5px}
+.adgb-matrix-scroll-hint{font-size:11px;color:#3f6286;background:#f0f7fd;border-bottom:1px solid #d7e6f1;padding:6px 12px;margin:0}
+.adgb-primary-column .table-wrap{overscroll-behavior-x:contain;scrollbar-width:auto}
+.adgb-primary-column .table-wrap thead th:first-child{position:sticky;left:0;z-index:7;background:#0b487f;box-shadow:2px 0 3px rgba(12,44,78,.15)}
+.adgb-primary-column .table-wrap tbody th:first-child{position:sticky;left:0;z-index:3;box-shadow:2px 0 3px rgba(12,44,78,.12)}
+@media(max-width:760px){.adgb-matrix-travel,.adgb-matrix-scroll-hint{display:none}}
+@media print{.adgb-matrix-travel,.adgb-matrix-scroll-hint{display:none!important}}
 /* V17.7.96 — keep office comparison in a compact right column on desktop.
    Preserve mobile stacking and the expanded-matrix full-width mode. */
 @media (min-width:1051px){
@@ -1833,7 +1844,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <h2 id="matrixTitle"><span class="adgb-matrix-title-icon" aria-hidden="true">▤</span> Report submission matrix</h2>
             <p>Select an Upload or Submitted button for the required subject and office.</p>
           </div>
-          <div class="adgb-heading-tools"><button type="button" id="adgbExpandMatrix" class="adgb-expand-matrix" aria-pressed="false">⛶ Expand</button><div class="legend">
+          <div class="adgb-heading-tools"><div class="adgb-matrix-travel" role="group" aria-label="Navigate report office columns"><button type="button" id="adgbMatrixPrev" title="Scroll to previous office columns" aria-label="Previous office columns">‹</button><span>Scroll offices</span><button type="button" id="adgbMatrixNext" title="Scroll to next office columns" aria-label="Next office columns">›</button></div><button type="button" id="adgbExpandMatrix" class="adgb-expand-matrix" aria-pressed="false">⛶ Expand</button><div class="legend">
             <span><i class="legend-await"></i>Awaiting upload</span>
             <span><i class="legend-done"></i>Submitted</span>
             <span><i class="legend-received"></i>Physically received</span>
@@ -1868,7 +1879,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           </div>
         </div>
 
-        <div class="result-count" id="resultCount">Loading report subjects…</div>
+        <div class="result-count" id="resultCount">Loading report subjects…</div><p class="adgb-matrix-scroll-hint" id="adgbMatrixScrollHint">All five office columns are available. Use ‹ › above or scroll the table sideways to view them.</p>
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
       </div>
@@ -4868,6 +4879,14 @@ function adgbAlignPreviewLayout(){
         document.querySelectorAll('[data-adgb-kind]').forEach(x=>{let active=x===button;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active))});
         renderMatrix();
       }));
+      function adgbMatrixMove_(direction){
+        const box=document.querySelector('#matrixContent .table-wrap');
+        if(!box)return;
+        const amount=Math.max(180,Math.min(330,Math.round(box.clientWidth*.38)));
+        box.scrollBy({left:direction*amount,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+      }
+      document.getElementById('adgbMatrixPrev')?.addEventListener('click',()=>adgbMatrixMove_(-1));
+      document.getElementById('adgbMatrixNext')?.addEventListener('click',()=>adgbMatrixMove_(1));
       document.getElementById('adgbExpandMatrix')?.addEventListener('click',()=>{
         const shell=document.querySelector('.adgb-shell'),btn=document.getElementById('adgbExpandMatrix');
         const expanded=shell.classList.toggle('matrix-expanded');
