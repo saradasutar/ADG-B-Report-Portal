@@ -1397,6 +1397,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-recovery-audit p,.adgb-recovery-audit #adgbRecoveryResults{font-size:12px;color:#45637e}
 .adgb-recovery-audit button{padding:9px 13px;border:0;border-radius:8px;background:#165d94;color:white;font-weight:750}
 .adgb-recovery-audit button:disabled{opacity:.6}
+/* V17.8.8 staging administrator PDF-sharing audit */
+.adgb-security-audit{padding:14px;margin:14px 0;border:1px solid #d4e2ef;border-radius:11px;background:#fff}
+.adgb-security-audit h3{font-size:15px;color:#164d7a;margin:0 0 6px}
+.adgb-security-audit p,.adgb-security-audit #adgbSharingAuditResults{font-size:12px;color:#45637e}
+.adgb-security-audit button{padding:9px 13px;border:0;border-radius:8px;background:#165d94;color:white;font-weight:750}
+.adgb-security-audit button:disabled{opacity:.6}
 /* V17.7.93 clearer office and administrator presentation */
 [data-adgb-health-entry][hidden],#adgbHealthPanel[hidden]{display:none!important}
 .adgb-health-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -2012,6 +2018,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
   <button type="button" id="adgbRecoveryRun">Check consistency</button>
   <p id="adgbRecoveryMessage" role="status" aria-live="polite">Requires V17.8.6-staging backend.</p>
   <div id="adgbRecoveryResults"></div>
+    <div class="adgb-security-audit">
+      <h3>PDF sharing audit — read-only</h3>
+      <p>Checks subject-linked PDFs for public-link access. Administrator-only; makes no sharing changes. Uploaded-report PDF permissions are not included.</p>
+      <button type="button" id="adgbSharingAuditRun">Audit linked PDF access</button>
+      <p id="adgbSharingAuditMessage" role="status" aria-live="polite">Requires the private V17.8.8 backend.</p>
+      <div id="adgbSharingAuditResults"></div>
+    </div>
   </section>
 </section>
 <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
@@ -3612,6 +3625,33 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }catch(error){if(msg)msg.textContent='Recovery audit unavailable: '+String(error?.message||error)+'. Deploy V17.8.6 in a separate test project first.';}
       finally{btn.disabled=false;}
     }
+    async function adgbRunSharingAudit_(){
+      const button=document.getElementById('adgbSharingAuditRun');
+      const message=document.getElementById('adgbSharingAuditMessage');
+      const resultNode=document.getElementById('adgbSharingAuditResults');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){message.textContent='Administrator login required.';return;}
+      button.disabled=true;message.textContent='Checking PDF-sharing permissions…';resultNode.textContent='';
+      try{
+        const data=await postToBackend({action:'adminPdfSharingAudit',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!data?.ok||data.readOnly!==true)throw Error(data?.message||'Audit response invalid.');
+        const m=data.metrics||{};
+        const publicCount=Number(m.publicLinkAccess||0);
+        message.textContent=data.limited?'Partial audit — some linked files were not scanned.':
+          publicCount>0?'Public-link PDFs found — administrator review is recommended.':
+          'No public-link PDFs were identified in the scanned subject references.';
+        resultNode.textContent='Linked PDF references: '+String(m.linkedPdfReferences??'—')+
+          ' · Anyone-with-link: '+String(m.publicLinkAccess??'—')+
+          ' · Private: '+String(m.restrictedAccess??'—')+
+          ' · Other sharing: '+String(m.otherAccess??'—')+
+          ' · Inaccessible: '+String(m.inaccessible??'—')+
+          ' · Not scanned: '+String(m.notScanned??'—')+
+          '. No permissions were changed.';
+      }catch(e){message.textContent='Audit unavailable: '+String(e.message||e)+'. Verify V17.8.8 staging backend.';}
+      finally{button.disabled=false;}
+    }
+    document.getElementById('adgbSharingAuditRun')?.addEventListener('click',adgbRunSharingAudit_);
     document.getElementById('adgbRecoveryRun')?.addEventListener('click',adgbRunRecoveryAudit_);
 
     document.getElementById('adgbHealthRefresh')?.addEventListener('click',adgbHealthLoad_);
