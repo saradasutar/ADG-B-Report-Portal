@@ -1373,6 +1373,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.90 20-feature role-based Administrator Control Centre */
+[data-adgb-disabled="true"]{display:none!important}
+#adgbControlPanel[hidden]{display:none!important}
+.adgb-control-intro{background:#f1f7ff;color:#244969;border:1px solid #cddff2;padding:12px 14px;border-radius:9px;margin:12px 14px;font-size:12px;line-height:1.55}
+.adgb-control-table{min-width:730px}
+.adgb-control-table td:first-child{min-width:185px;font-weight:750;color:#2d4e6c}
+.adgb-control-table td:not(:first-child),.adgb-control-table th:not(:first-child){text-align:center}
+.adgb-control-table input[type="checkbox"]{width:19px;height:19px;accent-color:#176fab;cursor:pointer}
+.adgb-control-table input:disabled{opacity:.45;cursor:not-allowed}
+.adgb-control-table .locked{font-size:10px;color:#84909b;display:block}
+.adgb-control-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 14px}
+.adgb-control-summary>div{background:#fff;border:1px solid #d7e3ef;border-radius:9px;padding:10px;display:grid;gap:3px}
+.adgb-control-summary strong{font-size:21px;color:#165f96}
+.adgb-control-summary small{font-size:10px;color:#667a8f}
+#adgbControlStatus[data-dirty="yes"]{color:#995416;background:#fff5e3;padding:9px}
+#adgbControlSave:disabled{opacity:.55}
+@media(max-width:760px){.adgb-control-summary{grid-template-columns:repeat(2,minmax(0,1fr));margin:9px}.adgb-control-intro{margin:9px;padding:10px}}
 /* V17.7.89 action-required deadline insights and office workload comparison */
 .adgb-action-office-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:8px;margin:0 14px 12px}
 .adgb-action-office-breakdown button{display:grid;gap:6px;text-align:left;padding:10px 11px;border-radius:10px;border:1px solid #d4e3f1;background:#f7faff;color:#244e78;cursor:pointer;min-width:0}
@@ -1641,6 +1658,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="actions">⚑ <span>Action Required</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="control" data-adgb-control-entry hidden>⚙ <span>Admin Control Centre</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
@@ -1791,6 +1809,31 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </aside>
       </div>
 
+    <section id="adgbControlPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbControlTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbControlTitle">⚙ Administrator Control Centre</h2><p>Manage availability of 20 portal features by audience · existing permissions remain in force</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div class="adgb-control-intro">
+        <strong>Security first:</strong> switches can restrict features but never grant upload, Drive, administrator or data permissions that an account does not already have.
+        The dashboard/matrix views share bootstrap data, so their switches control navigation and presentation; backend-protected routes are also enforced server-side.
+      </div>
+      <div class="adgb-insights-toolbar">
+        <button type="button" id="adgbControlLoad">Load live settings</button>
+        <button type="button" id="adgbControlPresetRestricted" disabled>Restricted public preset</button>
+        <button type="button" id="adgbControlPresetDefault" disabled>Preview defaults</button>
+        <button type="button" id="adgbControlDiscard" disabled>Discard edits</button>
+        <button type="button" id="adgbControlSave" disabled>Save feature settings</button>
+      </div>
+      <div class="adgb-insights-toolbar">
+        <label>Find feature <input id="adgbControlSearch" type="search" placeholder="Search 20 features"></label>
+        <label>Group <select id="adgbControlGroup"><option value="all">All groups</option><option value="display">Views and navigation</option><option value="read">Read features</option><option value="write">Report actions</option><option value="admin">Administrator only</option></select></label>
+      </div>
+      <p id="adgbControlStatus" class="adgb-insights-count" aria-live="polite">Sign in with an Administrator account and load settings. No changes are made until you save.</p>
+      <div id="adgbControlSummary" class="adgb-control-summary"></div>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table adgb-control-table">
+        <thead><tr><th>Feature</th><th>Public / Guest</th><th>Viewer</th><th>Office users</th><th>Administrator</th></tr></thead>
+        <tbody id="adgbControlRows"><tr><td colspan="5">Live controls not loaded yet.</td></tr></tbody>
+      </table></div>
+      <p class="adgb-insights-count">Saved settings apply to everyone after refresh. Administrator Control Centre access cannot be disabled. An account must still pass its existing server-side login and per-action permission checks.</p>
+    </section>
     <section id="adgbArchivePanel" class="adgb-insights-panel" hidden aria-labelledby="adgbArchiveTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbArchiveTitle">▣ Historical Submission Archive</h2><p>Administrator-only · read-only · previous submission cycles and latest recorded office status</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div class="adgb-insights-toolbar">
