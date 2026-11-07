@@ -178,3 +178,13 @@ The integrated private backend, test harness and release guide are supplied as a
 - **11 isolated local tests passed**, plus full backend JS syntax passed. Browser and Apps Script end-to-end tests have not been performed.
 - Require independent Drive/Sheet identity in staging before enabling; the source retains a live root reference. Do not deploy private mode into production from a standalone backend paste without the corresponding frontend changes.
 - Residual concerns: account/role accessibility under non-public mode, rollback of newly private links, mobile popup policies, endpoint access audit, and data-retention/permissions certification.
+
+## V17.9.0 coordinated release-readiness staging (private backend + frontend)
+- Private complete `Code.gs` based on V17.8.9, retaining direct submitted-PDF opening and earlier read-only diagnostics; label `17.9.0-staging`. Backend remains outside public GitHub.
+- New administrator-session-only `adminReleaseReadiness` POST: existing database/sheet access, configured root access, recovery discrepancies, linked PDF sharing, and known manual release gates. It reports **NOT production ready**, never claims safety based on local tests, and performs no Drive/Sheet changes.
+- Removed fixed default-password account seeding for fresh runs of existing ADG(B) backend; existing stored credentials remain unchanged. **Administrator must review/rotate legacy credentials.**
+- Isolated new-office *pilot template* has no current live root identifier, requires explicit independent config, and fails closed without a recorded spreadsheet. However this is **not a certified independent installer**: legacy hardcoded office assumptions remain in some workflows.
+- Separate private folder-migration manifest and staged batch plan included. No bulk move, backup restore or sharing mutation was executed.
+- Thirteen isolated mocked readiness tests passed, and JS syntax checked for both backends. Live Google Drive/Apps Script integration, role security and recovery tests are outstanding.
+- Staging `index.html` adds an Administrator Release Preflight section to System Health. This must not be merged independently of the matching backend.
+- **Release blocked:** opt-in private PDF mode requires coordinated frontend; existing public Drive links may remain, default-credential rotations unverified; missing verified backup/restore, complete backend authorization tests, full Drive manifest and independent-office pilot.
