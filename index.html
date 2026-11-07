@@ -3322,7 +3322,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!adgbFeatureManageReady_)return;
       adgbFeatureCatalog_.forEach(f=>adgbFeatureRoles_.forEach(role=>{
         const allowed=adgbFeatureHard_(f.id,role);
-        adgbFeatureFlags_[f.id][role]=allowed&&(mode==='restricted'&&role==='PUBLIC'?false:adgbFeatureDefault_(f.id,role));
+        if(mode==='restricted'&&role!=='PUBLIC')return; // Public preset must not erase other audiences' edits.
+        adgbFeatureFlags_[f.id][role]=allowed&&(mode==='restricted'?false:adgbFeatureDefault_(f.id,role));
       }));
       adgbFeatureDraw_();
       adgbFeatureStatus_(mode==='restricted'?'Restricted public preset PREVIEW. All public switches off until saved.':'Default role settings PREVIEW. Nothing changes until saved.',true);
@@ -3335,6 +3336,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return response;
     }
     async function adgbFeatureLoadAdmin_(){
+      if(adgbFeatureManageReady_&&adgbFeatureDirty_()&&!window.confirm('Discard unsaved feature settings and reload the server configuration?'))return;
       adgbFeatureStatus_('Loading live role settings…',false);
       try{
         const response=await adgbFeatureManage_('list');
