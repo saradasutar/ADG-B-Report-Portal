@@ -143,3 +143,12 @@ The integrated private backend, test harness and release guide are supplied as a
 - Chrome may block automatic popups; existing manual Open PDF and Download PDF remain as fallback. Intermediate tab may remain open even when auto-open succeeds.
 - Offline tests: browser permits popup, browser blocks popup, popup throws exception, token consumption, invalid PDF and expired token — six local tests passed. JavaScript syntax passed.
 - No live Apps Script deployment or browser verification performed. Do not consider this a production-security release.
+
+## V17.8.6 (staging only) — read-only recovery diagnostics
+- Complete private backend code was prepared from the existing V17.8.5 source and is **not published on GitHub**.
+- Added an `adminRecoveryAudit` POST endpoint behind `requirePortalAdminSession_`; uses the existing recorded database ID, existing Submissions and Current_Status tables, and **never** invokes setup or database creation.
+- Compares same-cycle event log and status index, returns only mismatch counts and up to 20 **row-number** hints, without PDF URLs, file IDs, credentials or user data.
+- Limits audits to 20,000 rows per table. Does not scan historical cross-month fortnightly records.
+- Node syntax passed and seven mock tests passed: anonymous denied, empty, matching, mismatched, missing status, orphan status, safety row bound.
+- **Still outstanding:** Durable transaction journal, authoritative reconciliation & cleanup queue, per-action live security tests, PDF sharing, Drive master-folder inventory, and deployment of an independent example office.
+- Production unchanged and no Drive/Sheet changes made. This audit alone does not warrant 9.8/10 certification.
