@@ -3140,7 +3140,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         document.getElementById('adminButton')?.click();
         return;
       }
-      ['adgbRegisterPanel','adgbAnalyticsPanel','adgbActionPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true});
+      ['adgbRegisterPanel','adgbAnalyticsPanel','adgbActionPanel','adgbControlPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true});
       adgbInsightsView='';
       document.getElementById('adgbArchivePanel').hidden=false;
       document.getElementById('adgbArchivePanel').scrollIntoView({block:'start',behavior:'smooth'});
@@ -3208,6 +3208,170 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     // V17.7.64 — current-cycle register and office analytics.
     // Never claim historical event data: backend bootstrap returns current statuses.
     let adgbInsightsView='',adgbRegisterSnapshot=[];
+    // V17.7.90: role-based feature availability. The server remains the authority.
+    const adgbFeatureRoles_=['PUBLIC','VIEWER','OFFICE','ADMIN'];
+    let adgbFeatureEffective_=null,adgbFeatureToken_='',adgbFeatureLastRead_=0,adgbFeatureReadBusy_=false;
+    let adgbFeatureCatalog_=[],adgbFeatureFlags_=null,adgbFeatureSaved_=null,adgbFeatureVersion_=null,adgbFeatureManageReady_=false;
+    const adgbFeatureNav_={dashboard:'dashboard',matrix:'matrix',recent:'recent',pending:'pending',
+      register:'register',actions:'actions',analytics:'analytics',archive:'archive',subjects:'subjectList',print:'reportsPrint'};
+    function adgbFeatureAllowedClient_(id){
+      return !adgbFeatureEffective_||adgbFeatureEffective_[id]!==false;
+    }
+    function adgbFeatureApply_(){
+      const enabled=adgbFeatureEffective_||{};
+      document.querySelectorAll('[data-adgb-nav]').forEach(el=>{
+        const feature=adgbFeatureNav_[el.getAttribute('data-adgb-nav')];
+        if(!feature)return;
+        const disabled=enabled[feature]===false;
+        el.dataset.adgbDisabled=disabled?'true':'false';
+        if(disabled)el.setAttribute('aria-disabled','true');else el.removeAttribute('aria-disabled');
+      });
+      const control=document.querySelector('[data-adgb-control-entry]');
+      if(control){control.hidden=!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token;}
+      const recent=document.getElementById('adgbRecentActivity');
+      if(recent)recent.dataset.adgbDisabled=enabled.recent===false?'true':'false';
+      const notice=document.getElementById('adgbNoticeStrip');
+      if(notice&&enabled.notices===false)notice.hidden=true;
+      const features={adgbReviewWorkspace:'reviewWorkspace',adgbComplianceTrends:'trends',
+        adgbAuditRows:'auditTrail'};
+      Object.keys(features).forEach(id=>{
+        const node=document.getElementById(id);
+        if(!node)return;
+        const section=id==='adgbAuditRows'?node.closest('.adgb-audit-panel'):node;
+        if(section)section.dataset.adgbDisabled=enabled[features[id]]===false?'true':'false';
+      });
+      const upload=document.getElementById('uploadSubmit');
+      if(upload&&enabled.reportUpload===false)upload.dataset.adgbDisabled='true';
+      else if(upload)upload.dataset.adgbDisabled='false';
+    }
+    async function adgbFeatureRead_(force=false){
+      if(!endpointReady()||!state.connected||adgbFeatureReadBusy_)return;
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(adgbFeatureToken_!==token){
+        adgbFeatureEffective_=null;adgbFeatureToken_=token;adgbFeatureLastRead_=0;
+        adgbFeatureApply_();
+      }
+      if(!force&&Date.now()-adgbFeatureLastRead_<60000)return;
+      adgbFeatureReadBusy_=true;adgbFeatureLastRead_=Date.now();
+      try{
+        const response=await jsonpRequest('featureAccess',{sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(response?.ok&&response.enabled&&typeof response.enabled==='object'){
+          adgbFeatureEffective_=response.enabled;
+          adgbFeatureApply_();
+        }
+      }catch{
+        // Old backend: retain legacy navigation rather than claim new policy is saved.
+        adgbFeatureEffective_=null;adgbFeatureApply_();
+      }finally{adgbFeatureReadBusy_=false;}
+    }
+    function adgbFeatureStatus_(message,dirty){
+      const node=document.getElementById('adgbControlStatus');
+      if(node){node.textContent=message;node.dataset.dirty=dirty?'yes':'no';}
+    }
+    function adgbFeatureHard_(id,role){
+      if(['archive','reviewWorkspace','auditTrail','trends'].includes(id))return role==='ADMIN';
+      if(role==='PUBLIC')return ['dashboard','matrix','recent','pending','register','actions','analytics','notices','reportsPrint','subjectList'].includes(id);
+      if(role==='VIEWER')return ['dashboard','matrix','recent','pending','register','actions','analytics','notices','rawData','stickyNotes','reportsPrint','subjectList','reportView'].includes(id);
+      return true;
+    }
+    function adgbFeatureDefault_(id,role){
+      if(!adgbFeatureHard_(id,role))return false;
+      if(role==='PUBLIC')return ['dashboard','matrix','recent','pending','register','actions','notices','subjectList'].includes(id);
+      return true;
+    }
+    function adgbFeatureClone_(object){return JSON.parse(JSON.stringify(object));}
+    function adgbFeatureDirty_(){
+      return !!adgbFeatureSaved_&&JSON.stringify(adgbFeatureFlags_)!==JSON.stringify(adgbFeatureSaved_);
+    }
+    function adgbFeatureDraw_(){
+      if(!adgbFeatureManageReady_)return;
+      const q=String(document.getElementById('adgbControlSearch')?.value||'').toLowerCase().trim();
+      const group=String(document.getElementById('adgbControlGroup')?.value||'all');
+      const visible=adgbFeatureCatalog_.filter(f=>(group==='all'||f.type===group)&&
+        (!q||(f.label+' '+f.id).toLowerCase().includes(q)));
+      const body=document.getElementById('adgbControlRows');
+      if(body)body.innerHTML=visible.map(f=>'<tr><td>'+escapeHtml(f.label)+
+        '<span class="locked">'+escapeHtml(f.type==='admin'?'Administrator-only operation':f.type==='display'?'Display / navigation':'Backend-protected feature')+'</span></td>'+
+        adgbFeatureRoles_.map(role=>{
+          const hard=adgbFeatureHard_(f.id,role);
+          const checked=hard&&adgbFeatureFlags_[f.id]?.[role]===true;
+          return '<td><input type="checkbox" data-feature-id="'+escapeAttr(f.id)+'" data-feature-role="'+escapeAttr(role)+'"'+
+            (checked?' checked':'')+(hard?'':' disabled title="Not permitted by server role policy"')+
+            ' aria-label="'+escapeAttr(f.label+' for '+role)+'">'+(!hard?'<span class="locked">Locked</span>':'')+'</td>';
+        }).join('')+'</tr>').join('')||'<tr><td colspan="5">No matching features.</td></tr>';
+      const summary=document.getElementById('adgbControlSummary');
+      if(summary)summary.innerHTML=adgbFeatureRoles_.map(role=>{
+        const n=adgbFeatureCatalog_.filter(f=>adgbFeatureFlags_[f.id]?.[role]===true).length;
+        return '<div><strong>'+n+' / '+adgbFeatureCatalog_.length+'</strong><small>'+escapeHtml(role==='PUBLIC'?'Public / Guest':role==='OFFICE'?'Office users':role)+'</small></div>';
+      }).join('');
+      const dirty=adgbFeatureDirty_();
+      if(document.getElementById('adgbControlSave'))document.getElementById('adgbControlSave').disabled=!dirty;
+      if(document.getElementById('adgbControlDiscard'))document.getElementById('adgbControlDiscard').disabled=!dirty;
+      adgbFeatureStatus_(dirty?'Unsaved changes — use Save feature settings to apply to users.':'Saved settings loaded. Version '+adgbFeatureVersion_+'.',dirty);
+    }
+    function adgbFeaturePreset_(mode){
+      if(!adgbFeatureManageReady_)return;
+      adgbFeatureCatalog_.forEach(f=>adgbFeatureRoles_.forEach(role=>{
+        const allowed=adgbFeatureHard_(f.id,role);
+        adgbFeatureFlags_[f.id][role]=allowed&&(mode==='restricted'&&role==='PUBLIC'?false:adgbFeatureDefault_(f.id,role));
+      }));
+      adgbFeatureDraw_();
+      adgbFeatureStatus_(mode==='restricted'?'Restricted public preset PREVIEW. All public switches off until saved.':'Default role settings PREVIEW. Nothing changes until saved.',true);
+    }
+    async function adgbFeatureManage_(operation,extra={}){
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin())throw Error('Administrator login is required.');
+      const response=await postToBackend({action:'adminFeatureAccess',operation,sessionToken:token,...extra});
+      if(!response?.ok)throw Error(response?.message||'Compatible V17.7.90 backend is required.');
+      return response;
+    }
+    async function adgbFeatureLoadAdmin_(){
+      adgbFeatureStatus_('Loading live role settings…',false);
+      try{
+        const response=await adgbFeatureManage_('list');
+        if(!Array.isArray(response.features)||response.features.length!==20||!response.flags)throw Error('Expected 20 features from V17.7.90 backend.');
+        adgbFeatureCatalog_=response.features;adgbFeatureFlags_=adgbFeatureClone_(response.flags);
+        adgbFeatureSaved_=adgbFeatureClone_(response.flags);adgbFeatureVersion_=response.version;
+        adgbFeatureManageReady_=true;
+        for(const id of ['adgbControlPresetRestricted','adgbControlPresetDefault'])document.getElementById(id).disabled=false;
+        adgbFeatureDraw_();
+      }catch(e){adgbFeatureManageReady_=false;adgbFeatureStatus_('Settings unavailable: '+(e.message||'Check backend deployment')+'. No features were changed.',false);}
+    }
+    async function adgbFeatureSaveAdmin_(){
+      if(!adgbFeatureManageReady_||!adgbFeatureDirty_())return;
+      if(!window.confirm('Apply these feature settings to public, viewer, office and administrator audiences? Existing login permissions will still apply.'))return;
+      const button=document.getElementById('adgbControlSave');button.disabled=true;
+      try{
+        const response=await adgbFeatureManage_('save',{flags:adgbFeatureFlags_,expectedVersion:adgbFeatureVersion_});
+        adgbFeatureVersion_=response.version;
+        adgbFeatureSaved_=adgbFeatureClone_(response.flags);
+        adgbFeatureFlags_=adgbFeatureClone_(response.flags);
+        adgbFeatureDraw_();
+        adgbFeatureStatus_('Saved successfully by '+String(response.updatedBy||'Administrator')+'. Users will see the updates after refresh.',false);
+        await adgbFeatureRead_(true);
+      }catch(e){adgbFeatureStatus_('Save FAILED: '+(e.message||'Please reload')+'. Unsaved selections remain in this editor.',true);button.disabled=false;}
+    }
+    function adgbFeatureInit_(){
+      document.getElementById('adgbControlLoad')?.addEventListener('click',adgbFeatureLoadAdmin_);
+      document.getElementById('adgbControlSearch')?.addEventListener('input',adgbFeatureDraw_);
+      document.getElementById('adgbControlGroup')?.addEventListener('change',adgbFeatureDraw_);
+      document.getElementById('adgbControlPresetRestricted')?.addEventListener('click',()=>adgbFeaturePreset_('restricted'));
+      document.getElementById('adgbControlPresetDefault')?.addEventListener('click',()=>adgbFeaturePreset_('default'));
+      document.getElementById('adgbControlDiscard')?.addEventListener('click',()=>{
+        if(!adgbFeatureManageReady_)return;
+        adgbFeatureFlags_=adgbFeatureClone_(adgbFeatureSaved_);adgbFeatureDraw_();
+      });
+      document.getElementById('adgbControlSave')?.addEventListener('click',adgbFeatureSaveAdmin_);
+      document.getElementById('adgbControlRows')?.addEventListener('change',event=>{
+        const input=event.target.closest('input[data-feature-id]');
+        if(!input||!adgbFeatureManageReady_)return;
+        const id=input.dataset.featureId,role=input.dataset.featureRole;
+        if(!adgbFeatureHard_(id,role)){input.checked=false;return;}
+        adgbFeatureFlags_[id][role]=input.checked;adgbFeatureDraw_();
+      });
+      setInterval(()=>adgbFeatureRead_(),60000);
+    }
     function adgbOpenInsights(view){
       adgbInsightsView=view;
       const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
@@ -3215,8 +3379,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(reg)reg.hidden=view!=='register';
       if(ana)ana.hidden=view!=='analytics';
       if(actions)actions.hidden=view!=='actions';
+      const control=document.getElementById('adgbControlPanel');if(control)control.hidden=view!=='control';
       adgbRefreshInsights();
-      (view==='register'?reg:view==='actions'?actions:ana)?.scrollIntoView({block:'start',behavior:'smooth'});
+      (view==='register'?reg:view==='actions'?actions:view==='control'?document.getElementById('adgbControlPanel'):ana)?.scrollIntoView({block:'start',behavior:'smooth'});
     }
     function adgbFormatTimeIST(value){
       if(!value)return '—';
@@ -4343,6 +4508,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbRenderRegister();adgbRenderAnalytics();adgbRenderActions_();
     }
     function adgbInitInsights(){
+      adgbFeatureInit_();
       adgbNoticeInit_();
       ['adgbActionOffice','adgbActionPriority','adgbActionSearch','adgbActionSort'].forEach(id=>{
         const field=document.getElementById(id);
@@ -4439,6 +4605,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(mount&&panel&&!mount.contains(panel))mount.appendChild(panel);
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
         const nav=btn.getAttribute('data-adgb-nav');
+        if(nav==='control'){
+          if(!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token)return;
+          adgbOpenInsights('control');adgbFeatureLoadAdmin_();return;
+        }
+        const feature=adgbFeatureNav_[nav];
+        if(feature&&!adgbFeatureAllowedClient_(feature)){
+          showToast('This feature has been disabled for your user group.','info');return;
+        }
         document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-adgb-nav')===nav));
         if(nav==='archive'){adgbOpenArchive();return;}
         if(nav==='register'||nav==='analytics'||nav==='actions'){
@@ -4453,6 +4627,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }));
     }
     function adgbRenderLivePanels(){
+      adgbFeatureApply_();
+      adgbFeatureRead_();
       adgbNoticeRenderStrip_();
       adgbNoticeLoad_();
       const timeline=document.getElementById('adgbTimeline');
