@@ -1392,6 +1392,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-nav-item:focus-visible,.adgb-nav-more:focus-visible{outline:3px solid #fbc769;outline-offset:2px}
 @media(max-width:720px){.adgb-advanced-nav .adgb-nav-item{font-size:12px;min-height:42px}}
 
+.adgb-recovery-audit{padding:14px;margin:14px;border:1px solid #cbddeb;border-radius:12px;background:#f7fbff}
+.adgb-recovery-audit h3{font-size:15px;color:#164d7a;margin:0 0 6px}
+.adgb-recovery-audit p,.adgb-recovery-audit #adgbRecoveryResults{font-size:12px;color:#45637e}
+.adgb-recovery-audit button{padding:9px 13px;border:0;border-radius:8px;background:#165d94;color:white;font-weight:750}
+.adgb-recovery-audit button:disabled{opacity:.6}
 /* V17.7.93 clearer office and administrator presentation */
 [data-adgb-health-entry][hidden],#adgbHealthPanel[hidden]{display:none!important}
 .adgb-health-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -2001,6 +2006,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
   <h3 class="adgb-health-heading">Office-wise submission progress</h3>
   <div id="adgbHealthOffices" class="adgb-health-office-list"><p>No health check loaded yet.</p></div>
   <details class="adgb-health-more"><summary>Technical checks &amp; limitations</summary><div id="adgbHealthChecks">No health check loaded.</div><p>Historical upload failures and external synchronization timestamps are not collected by this backend. Counts are not shown as zero.</p></details>
+  <section class="adgb-recovery-audit" aria-label="Recovery Audit">
+  <h3>Recovery audit — read-only</h3>
+  <p>Administrator-only. Checks current-cycle submission register against status index without changing data.</p>
+  <button type="button" id="adgbRecoveryRun">Check consistency</button>
+  <p id="adgbRecoveryMessage" role="status" aria-live="polite">Requires V17.8.6-staging backend.</p>
+  <div id="adgbRecoveryResults"></div>
+  </section>
 </section>
 <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
@@ -3581,6 +3593,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }catch(err){if(node)node.textContent='Unable to load health information: '+String(err.message||err)+'. Confirm Apps Script backend V17.7.92 is deployed.';}
       finally{if(button)button.disabled=false;}
     }
+    async function adgbRunRecoveryAudit_(){
+      const btn=document.getElementById('adgbRecoveryRun');
+      const msg=document.getElementById('adgbRecoveryMessage');
+      const output=document.getElementById('adgbRecoveryResults');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){if(msg)msg.textContent='Administrator login required.';return;}
+      btn.disabled=true;
+      if(msg)msg.textContent='Checking current-cycle records…';
+      if(output)output.textContent='';
+      try{
+        const result=await postToBackend({action:'adminRecoveryAudit',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!result?.ok||result.readOnly!==true)throw Error(result?.message||'Unverified response');
+        const d=result.discrepancies||{};
+        if(msg)msg.textContent=result.blocked?'Too many records: manual audit needed.':result.reviewRequired?'Mismatch found: administrator reconciliation needed.':'No current-cycle index mismatch detected (PDFs not checked).';
+        if(output)output.textContent='Missing status: '+String(d.missingCurrent??'—')+' · Status mismatches: '+String(d.mismatch??'—')+' · Orphan status: '+String(d.statusWithoutCurrentCycleEvent??'—')+'. Read-only; no auto-repair.';
+      }catch(error){if(msg)msg.textContent='Recovery audit unavailable: '+String(error?.message||error)+'. Deploy V17.8.6 in a separate test project first.';}
+      finally{btn.disabled=false;}
+    }
+    document.getElementById('adgbRecoveryRun')?.addEventListener('click',adgbRunRecoveryAudit_);
+
     document.getElementById('adgbHealthRefresh')?.addEventListener('click',adgbHealthLoad_);
     function adgbHealthAccess_(){
       document.querySelectorAll('[data-adgb-health-entry]').forEach(el=>{el.hidden=!(isRecognizedAsAdmin()&&!!window.ADGB_AUTH?.token);});
