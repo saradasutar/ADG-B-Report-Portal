@@ -160,3 +160,11 @@ The integrated private backend, test harness and release guide are supplied as a
 - Existing GitHub staging branch's admin Recovery Audit preview now surfaces pending-cleanup count. **No production frontend or backend change**.
 - Node syntax of integrated Code.gs passed; **10 isolated mocked tests** passed. Real Sheets/Drive failure injection, workload and user-role tests still necessary.
 - Limitations: orphan PDF before append is still possible; pending marker might remain after successful Trash if updating marker fails; no autonomous cleanup or reconciliation; source has live root ID and MUST be reconfigured before independent staging; existing linked PDF sharing risk unresolved.
+
+## V17.8.8 consolidated private staging — PDF sharing risk audit and readiness gate
+- Private backend package retains V17.8.7 persisted upload replay and pending removal cleanup, V17.8.6 read-only reconciliation, and V17.8.5 direct PDF opening.
+- New administrator-session-only `adminPdfSharingAudit` checks existing subject-linked file sharing access and reports aggregate counts (ANYONE_WITH_LINK, private, other, inaccessible, unscanned). It never alters Drive permissions and never returns Drive file identifiers.
+- Bounded to 50 Drive file reads per request and 2,000 subject rows; larger workloads require a paginated future audit. Eight isolated local security tests and full backend JS syntax passed; no live Drive behavior verified.
+- GitHub **staging** System Health now has a PDF sharing audit button. Production frontend remains unchanged.
+- Existing `saveLinkedSubjectPdf_` still sets `DriveApp.Access.ANYONE_WITH_LINK` for new subject-linked PDFs, which can expose documents to anyone possessing their URLs. **Not production-certified for confidential documents**. Do not call this a complete security fix.
+- Multi-office JSON sample is a *design-only example*, not a functional new-office installer. Complete folder migration and all remaining security/recovery gates must be validated before deployment.
