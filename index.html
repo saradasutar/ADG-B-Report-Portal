@@ -1373,6 +1373,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.93 clearer office and administrator presentation */
+[data-adgb-health-entry][hidden],#adgbHealthPanel[hidden]{display:none!important}
+.adgb-health-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.adgb-health-metric{display:grid;gap:8px;padding:16px;border:1px solid #d7e3ed;border-radius:13px;background:#f7fbff}
+.adgb-health-metric small{color:#526a82;font-weight:700}
+.adgb-health-metric strong{font-size:27px;color:#0c3e69}
+.adgb-health-heading{margin:17px 0 12px;font-size:16px}
+.adgb-health-office-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.adgb-health-office{padding:15px;background:#fff;border:1px solid #d8e4ee;border-radius:13px}
+.adgb-health-office-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.adgb-health-office-top strong{font-size:14px}
+.adgb-health-office-top span,.adgb-health-office small{font-size:12px;color:#60748b}
+.adgb-health-track{height:9px;background:#e8eff6;border-radius:99px;overflow:hidden;margin-bottom:10px}
+.adgb-health-track>span{display:block;height:100%;border-radius:99px;background:#d4882f}
+.adgb-health-track>span.good{background:#179b7f}.adgb-health-track>span.low{background:#d96962}
+.adgb-health-more{margin-top:18px;padding:12px 16px;border:1px solid #d9e4ee;border-radius:12px;background:#f9fbfe}
+.adgb-health-more summary{cursor:pointer;font-weight:750}
+.adgb-sidebar{background:#0d3561}
+.adgb-nav-item{border-radius:9px}
+.adgb-nav-item:not(.active){color:#e4eef9}
+@media(max-width:720px){.adgb-health-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-health-office-list{grid-template-columns:1fr}}
 /* V17.7.90 20-feature role-based Administrator Control Centre */
 [data-adgb-disabled="true"]{display:none!important}
 [data-adgb-control-entry][hidden]{display:none!important}
@@ -1659,6 +1680,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="actions">⚑ <span>Action Required</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
+        <button type="button" class="adgb-nav-item" data-adgb-nav="health" data-adgb-health-entry hidden>♡ <span>System Health</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="control" data-adgb-control-entry hidden>⚙ <span>Admin Control Centre</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
@@ -1848,7 +1870,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <p class="adgb-insights-count"><a id="adgbArchiveReadyLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open authorised archived PDF (link expires shortly)</a></p>
       <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Kind</th><th>Office</th><th>Latest state</th><th>Submitted at (IST)</th><th>Document</th></tr></thead><tbody id="adgbArchiveRows"><tr><td colspan="6">No archive loaded</td></tr></tbody></table></div>
     </section>
-    <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
+    <section id="adgbHealthPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbHealthTitle">
+  <div class="adgb-insights-heading"><div><h2 id="adgbHealthTitle">System health &amp; office comparison</h2><p>Administrator only · current reporting cycle · read-only</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+  <div class="adgb-insights-toolbar"><button type="button" id="adgbHealthRefresh">↻ Check live status</button><span id="adgbHealthMessage" role="status" aria-live="polite">Choose Check live status to load a secure snapshot.</span></div>
+  <div id="adgbHealthSummary" class="adgb-health-cards"></div>
+  <h3 class="adgb-health-heading">Office-wise submission progress</h3>
+  <div id="adgbHealthOffices" class="adgb-health-office-list"><p>No health check loaded yet.</p></div>
+  <details class="adgb-health-more"><summary>Technical checks &amp; limitations</summary><div id="adgbHealthChecks">No health check loaded.</div><p>Historical upload failures and external synchronization timestamps are not collected by this backend. Counts are not shown as zero.</p></details>
+</section>
+<section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
       <div class="adgb-insights-toolbar">
         <label>Search report <input id="adgbRegisterSearch" type="search" placeholder="Subject or office"></label>
@@ -3382,6 +3412,51 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       });
       // Do not poll feature settings: refreshing a session just to check flags can extend idle login duration.
     }
+
+    /* V17.7.93: secured administrator health presentation, no background polling */
+    function adgbHealthText_(value){return escapeHtml(String(value===undefined||value===null?'—':value));}
+    function adgbHealthRender_(data){
+      const summary=data.summary||{};
+      const checks=document.getElementById('adgbHealthChecks');
+      const cards=document.getElementById('adgbHealthSummary');
+      const rows=document.getElementById('adgbHealthOffices');
+      const note=document.getElementById('adgbHealthMessage');
+      if(note)note.textContent='Backend '+String(data.backendVersion||'unknown')+' · '+String(data.health||'UNKNOWN')+' · '+(data.checkedAt?new Date(data.checkedAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}):'time unavailable');
+      if(cards){
+        const metrics=[['Expected reports',summary.total],['Submitted',summary.submitted],['Pending',summary.pending],['Completion',summary.completionPercent===undefined?'—':summary.completionPercent+'%']];
+        cards.innerHTML=metrics.map(x=>'<article class="adgb-health-metric"><small>'+adgbHealthText_(x[0])+'</small><strong>'+adgbHealthText_(x[1])+'</strong></article>').join('');
+      }
+      const officeList=Array.isArray(data.officeComparison)?data.officeComparison:[];
+      if(rows)rows.innerHTML=officeList.length?officeList.map(o=>{
+        const pct=Math.max(0,Math.min(100,Number(o.completionPercent)||0));
+        const accent=pct>=90?'good':pct>=50?'mid':'low';
+        return '<article class="adgb-health-office"><div class="adgb-health-office-top"><strong>'+adgbHealthText_(o.officeName)+'</strong><span>'+adgbHealthText_(o.rank===null?'Not ranked':'Rank '+o.rank)+' · '+adgbHealthText_(pct)+'%</span></div><div class="adgb-health-track"><span class="'+accent+'" style="width:'+pct+'%"></span></div><small>'+adgbHealthText_(o.submitted)+' submitted / '+adgbHealthText_(o.expected)+' expected · '+adgbHealthText_(o.pending)+' pending</small></article>';
+      }).join(''):'<p>Office comparison is unavailable from this check.</p>';
+      if(checks)checks.innerHTML=(Array.isArray(data.checks)?data.checks:[]).map(x=>'<p><strong>'+adgbHealthText_(x.id)+'</strong> — '+adgbHealthText_(x.status)+' : '+adgbHealthText_(x.detail)+'</p>').join('')+'<p>Execution: '+adgbHealthText_(data.elapsedMs)+' ms</p>';
+    }
+    async function adgbHealthLoad_(){
+      const node=document.getElementById('adgbHealthMessage'),button=document.getElementById('adgbHealthRefresh');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){if(node)node.textContent='Administrator sign-in required.';return;}
+      if(button)button.disabled=true;
+      if(node)node.textContent='Reading live backend status…';
+      try{
+        const data=await postToBackend({action:'adminHealthMonitor',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!data?.ok)throw Error(data?.message||'Health endpoint unavailable');
+        adgbHealthRender_(data);
+      }catch(err){if(node)node.textContent='Unable to load health information: '+String(err.message||err)+'. Confirm Apps Script backend V17.7.92 is deployed.';}
+      finally{if(button)button.disabled=false;}
+    }
+    document.getElementById('adgbHealthRefresh')?.addEventListener('click',adgbHealthLoad_);
+    function adgbHealthAccess_(){
+      document.querySelectorAll('[data-adgb-health-entry]').forEach(el=>{el.hidden=!(isRecognizedAsAdmin()&&!!window.ADGB_AUTH?.token);});
+    }
+    const adgbHealthAccessObserver_=new MutationObserver(adgbHealthAccess_);
+    const adgbHealthRoleNode_=document.getElementById('adgbUserRole');
+    if(adgbHealthRoleNode_)adgbHealthAccessObserver_.observe(adgbHealthRoleNode_,{childList:true,characterData:true,subtree:true});
+    adgbHealthAccess_();
+
     function adgbOpenInsights(view){
       adgbInsightsView=view;
       const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
@@ -3390,8 +3465,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(ana)ana.hidden=view!=='analytics';
       if(actions)actions.hidden=view!=='actions';
       const control=document.getElementById('adgbControlPanel');if(control)control.hidden=view!=='control';
+      const health=document.getElementById('adgbHealthPanel');if(health)health.hidden=view!=='health';
       adgbRefreshInsights();
-      (view==='register'?reg:view==='actions'?actions:view==='control'?document.getElementById('adgbControlPanel'):ana)?.scrollIntoView({block:'start',behavior:'smooth'});
+      (view==='register'?reg:view==='actions'?actions:view==='control'?document.getElementById('adgbControlPanel'):view==='health'?document.getElementById('adgbHealthPanel'):ana)?.scrollIntoView({block:'start',behavior:'smooth'});
     }
     function adgbFormatTimeIST(value){
       if(!value)return '—';
@@ -4616,6 +4692,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(mount&&panel&&!mount.contains(panel))mount.appendChild(panel);
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
         const nav=btn.getAttribute('data-adgb-nav');
+        if(nav==='health'){
+          if(!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token)return;
+          adgbOpenInsights('health');adgbHealthLoad_();return;
+        }
         if(nav==='control'){
           if(!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token)return;
           adgbOpenInsights('control');adgbFeatureLoadAdmin_();return;
