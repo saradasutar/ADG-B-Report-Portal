@@ -24,6 +24,38 @@
   <link rel="preload" href="sticky-v1767.js?v=17757" as="script">
 
 
+  <!-- V17.7.101: start the existing, authenticated report bootstrap while HTML is parsing.
+       In-memory only. No cached reports, no new API and no change to permission checks. -->
+  <script>
+    (() => {
+      try {
+        const sessionToken = sessionStorage.getItem('adgbPortalSessionTokenV1512') || '';
+        const callback = 'adgbEarlyBootstrap_' +
+          (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') :
+            Date.now().toString(36) + Math.random().toString(36).slice(2));
+        const script = document.createElement('script');
+        let finish;
+        const promise = new Promise(resolve => { finish = resolve; });
+        const timeout = setTimeout(() => done(null), 20000);
+        function done(data) {
+          clearTimeout(timeout);
+          try { delete window[callback]; } catch (_) { window[callback] = undefined; }
+          script.remove();
+          finish(data);
+        }
+        window[callback] = data => done(data);
+        script.onerror = () => done(null);
+        const params = new URLSearchParams({
+          action: 'bootstrap', callback, sessionToken, fresh: '0', _: String(Date.now())
+        });
+        script.src = 'https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec?' + params;
+        window.__adgbEarlyBootstrap = { sessionToken, promise };
+        document.head.appendChild(script);
+      } catch (_) {
+        window.__adgbEarlyBootstrap = null;
+      }
+    })();
+  </script>
   <style>
     :root{
       --navy:#082f63;
@@ -3010,10 +3042,21 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       try{
         for(let attempt=1;attempt<=maxAttempts;attempt++){
           try{
-            data=await jsonpRequest('bootstrap',{
-              sessionToken:window.ADGB_AUTH?.token||'',
-              fresh:forceFresh?'1':'0'
-            });
+            // The one-time request started in <head> overlaps HTML parsing and startup.
+            // Consume it only if the authenticated session has not changed.
+            // Any missing/failed prefetch falls back to the existing JSONP path.
+            const early=attempt===1&&!forceFresh?window.__adgbEarlyBootstrap:null;
+            const currentSession=window.ADGB_AUTH?.token||'';
+            if(early&&early.sessionToken===currentSession){
+              window.__adgbEarlyBootstrap=null;
+              data=await early.promise;
+            }
+            if(!data){
+              data=await jsonpRequest('bootstrap',{
+                sessionToken:currentSession,
+                fresh:forceFresh?'1':'0'
+              });
+            }
             if(!data?.ok)throw new Error(data?.message||'Portal backend returned an error.');
             lastError=null;
             break;
