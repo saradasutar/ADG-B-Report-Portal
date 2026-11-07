@@ -1375,6 +1375,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
 /* V17.7.90 20-feature role-based Administrator Control Centre */
 [data-adgb-disabled="true"]{display:none!important}
+[data-adgb-control-entry][hidden]{display:none!important}
 #adgbControlPanel[hidden]{display:none!important}
 .adgb-control-intro{background:#f1f7ff;color:#244969;border:1px solid #cddff2;padding:12px 14px;border-radius:9px;margin:12px 14px;font-size:12px;line-height:1.55}
 .adgb-control-table{min-width:730px}
@@ -3233,16 +3234,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const notice=document.getElementById('adgbNoticeStrip');
       if(notice&&enabled.notices===false)notice.hidden=true;
       const features={adgbReviewWorkspace:'reviewWorkspace',adgbComplianceTrends:'trends',
-        adgbAuditRows:'auditTrail'};
+        adgbAuditRows:'auditTrail',adgbNoticeAdmin:'notices'};
       Object.keys(features).forEach(id=>{
         const node=document.getElementById(id);
         if(!node)return;
         const section=id==='adgbAuditRows'?node.closest('.adgb-audit-panel'):node;
         if(section)section.dataset.adgbDisabled=enabled[features[id]]===false?'true':'false';
       });
-      const upload=document.getElementById('uploadSubmit');
-      if(upload&&enabled.reportUpload===false)upload.dataset.adgbDisabled='true';
-      else if(upload)upload.dataset.adgbDisabled='false';
+      const actions={uploadSubmit:'reportUpload',viewReportButton:'reportView',removeReportButton:'reportRemove'};
+      Object.keys(actions).forEach(id=>{
+        const control=document.getElementById(id);
+        if(control)control.dataset.adgbDisabled=enabled[actions[id]]===false?'true':'false';
+      });
     }
     async function adgbFeatureRead_(force=false){
       if(!endpointReady()||!state.connected||adgbFeatureReadBusy_)return;
@@ -3826,6 +3829,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbNoticeRenderStrip_(){
       const strip=document.getElementById('adgbNoticeStrip'),track=document.getElementById('adgbNoticeTrack');
       if(!strip||!track)return;
+      if(!adgbFeatureAllowedClient_('notices')){strip.hidden=true;track.replaceChildren();return;}
       const token=String(window.ADGB_AUTH?.token||'');
       const feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
       if(!feed||!state.connected){strip.hidden=true;track.replaceChildren();return;}
