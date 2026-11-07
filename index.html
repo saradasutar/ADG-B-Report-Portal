@@ -1646,6 +1646,31 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-archive-view{background:#e7f2ff;color:#175994;border:1px solid #b8d5ee;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800}
 .adgb-archive-view:disabled{opacity:.5}
 
+/* V17.7.99 — fit five offices in normal desktop view without clipping
+   Never shrink admin remark/editor columns below their usable width. */
+@media (min-width:761px){
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public{
+    min-width:660px!important;width:100%!important;table-layout:fixed!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public thead th:first-child{
+    width:31%!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public thead th:not(:first-child){
+    width:13.8%!important;white-space:normal!important;font-size:10px!important;padding:8px 2px!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public tbody th{
+    padding:7px!important;font-size:11px!important;overflow-wrap:anywhere
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public tbody td{
+    padding:4px 2px!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public .upload-button{
+    min-width:0!important;width:calc(100% - 6px)!important;max-width:94px!important;
+    padding-left:3px!important;padding-right:3px!important;font-size:10px!important
+  }
+}
+.adgb-primary-column .table-wrap table.adgb-matrix-admin{min-width:950px}
+@media print{.adgb-primary-column .table-wrap table.adgb-matrix-public{min-width:0!important}}
 /* V17.7.98 — full-width reporting with current five-office status summary */
 #adgbFullOfficeSummary[hidden]{display:none!important}
 .adgb-shell.matrix-expanded .adgb-full-office-summary{
@@ -5005,7 +5030,7 @@ function adgbAlignPreviewLayout(){
       }).join('');
 
       $('#matrixContent').innerHTML=
-        '<div class="table-wrap"><table><thead><tr><th scope="col">Report subject</th>'+
+        '<div class="table-wrap"><table class="'+(isAdmin?'adgb-matrix-admin':'adgb-matrix-public')+'"><thead><tr><th scope="col">Report subject</th>'+
         headers+(isAdmin?'<th scope="col">Remark</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
 
