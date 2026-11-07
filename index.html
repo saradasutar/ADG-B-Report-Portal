@@ -1392,6 +1392,29 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-nav-item:focus-visible,.adgb-nav-more:focus-visible{outline:3px solid #fbc769;outline-offset:2px}
 @media(max-width:720px){.adgb-advanced-nav .adgb-nav-item{font-size:12px;min-height:42px}}
 
+.adgb-recovery-audit{padding:14px;margin:14px;border:1px solid #cbddeb;border-radius:12px;background:#f7fbff}
+.adgb-recovery-audit h3{font-size:15px;color:#164d7a;margin:0 0 6px}
+.adgb-recovery-audit p,.adgb-recovery-audit #adgbRecoveryResults{font-size:12px;color:#45637e}
+.adgb-recovery-audit button{padding:9px 13px;border:0;border-radius:8px;background:#165d94;color:white;font-weight:750}
+.adgb-recovery-audit button:disabled{opacity:.6}
+/* V17.8.8 staging administrator PDF-sharing audit */
+.adgb-security-audit{padding:14px;margin:14px 0;border:1px solid #d4e2ef;border-radius:11px;background:#fff}
+.adgb-security-audit h3{font-size:15px;color:#164d7a;margin:0 0 6px}
+.adgb-security-audit p,.adgb-security-audit #adgbSharingAuditResults{font-size:12px;color:#45637e}
+.adgb-security-audit button{padding:9px 13px;border:0;border-radius:8px;background:#165d94;color:white;font-weight:750}
+.adgb-security-audit button:disabled{opacity:.6}
+/* V17.9.0 staging: read-only administrator release readiness */
+.adgb-release-readiness{padding:14px;margin:14px 0;border:1px solid #d4e2ef;border-radius:11px;background:#fff}
+.adgb-release-readiness h3{font-size:15px;margin:0 0 6px;color:#174f7d}
+.adgb-release-readiness p{font-size:12px;color:#506c83}
+.adgb-release-readiness button{padding:9px 14px;border:0;border-radius:8px;background:#175e93;color:#fff;font-weight:750}
+.adgb-release-readiness button:disabled{opacity:.6}
+.adgb-release-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.adgb-release-item{padding:9px;border:1px solid #dae4ed;border-radius:9px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.adgb-release-item strong{font-size:12px;color:#1b4767;flex:1}
+.adgb-release-status{border-radius:5px;padding:3px 6px;background:#e8f0f7;font-size:10px;font-weight:bold}
+.adgb-release-item small{flex-basis:100%;font-size:11px;color:#536f81}
+@media(max-width:720px){.adgb-release-list{grid-template-columns:1fr}}
 /* V17.7.93 clearer office and administrator presentation */
 [data-adgb-health-entry][hidden],#adgbHealthPanel[hidden]{display:none!important}
 .adgb-health-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -2001,6 +2024,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
   <h3 class="adgb-health-heading">Office-wise submission progress</h3>
   <div id="adgbHealthOffices" class="adgb-health-office-list"><p>No health check loaded yet.</p></div>
   <details class="adgb-health-more"><summary>Technical checks &amp; limitations</summary><div id="adgbHealthChecks">No health check loaded.</div><p>Historical upload failures and external synchronization timestamps are not collected by this backend. Counts are not shown as zero.</p></details>
+  <section class="adgb-recovery-audit" aria-label="Recovery Audit">
+  <h3>Recovery audit — read-only</h3>
+  <p>Administrator-only. Checks current-cycle submission register against status index without changing data.</p>
+  <button type="button" id="adgbRecoveryRun">Check consistency</button>
+  <p id="adgbRecoveryMessage" role="status" aria-live="polite">Requires V17.8.6-staging backend.</p>
+  <div id="adgbRecoveryResults"></div>
+    <div class="adgb-security-audit">
+      <h3>PDF sharing audit — read-only</h3>
+      <p>Checks subject-linked PDFs for public-link access. Administrator-only; makes no sharing changes. Uploaded-report PDF permissions are not included.</p>
+      <button type="button" id="adgbSharingAuditRun">Audit linked PDF access</button>
+      <p id="adgbSharingAuditMessage" role="status" aria-live="polite">Requires the private V17.8.8 backend.</p>
+      <div id="adgbSharingAuditResults"></div>
+    <div class="adgb-release-readiness">
+      <h3>Release readiness — Administrator only</h3>
+      <p>Read-only inspection. A successful configuration check is not a substitute for backup, role or browser acceptance tests.</p>
+      <button type="button" id="adgbReleaseReadinessRun">Run release preflight</button>
+      <p id="adgbReleaseReadinessMessage" role="status" aria-live="polite">Requires V17.9.0 staging backend.</p>
+      <div id="adgbReleaseReadinessResults"></div>
+    </div>
+    </div>
+  </section>
 </section>
 <section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
@@ -3581,6 +3625,79 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }catch(err){if(node)node.textContent='Unable to load health information: '+String(err.message||err)+'. Confirm Apps Script backend V17.7.92 is deployed.';}
       finally{if(button)button.disabled=false;}
     }
+    async function adgbRunRecoveryAudit_(){
+      const btn=document.getElementById('adgbRecoveryRun');
+      const msg=document.getElementById('adgbRecoveryMessage');
+      const output=document.getElementById('adgbRecoveryResults');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){if(msg)msg.textContent='Administrator login required.';return;}
+      btn.disabled=true;
+      if(msg)msg.textContent='Checking current-cycle records…';
+      if(output)output.textContent='';
+      try{
+        const result=await postToBackend({action:'adminRecoveryAudit',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!result?.ok||result.readOnly!==true)throw Error(result?.message||'Unverified response');
+        const d=result.discrepancies||{};
+        if(msg)msg.textContent=result.blocked?'Too many records: manual audit needed.':result.reviewRequired?'Mismatch found: administrator reconciliation needed.':'No current-cycle index mismatch detected (PDFs not checked).';
+        if(output)output.textContent='Missing status: '+String(d.missingCurrent??'—')+' · Status mismatches: '+String(d.mismatch??'—')+' · Orphan status: '+String(d.statusWithoutCurrentCycleEvent??'—')+' · Pending PDF cleanup: '+String(d.pendingRemovalCleanup??'—')+'. Read-only; no auto-repair.';
+      }catch(error){if(msg)msg.textContent='Recovery audit unavailable: '+String(error?.message||error)+'. Deploy V17.8.6 in a separate test project first.';}
+      finally{btn.disabled=false;}
+    }
+    async function adgbRunSharingAudit_(){
+      const button=document.getElementById('adgbSharingAuditRun');
+      const message=document.getElementById('adgbSharingAuditMessage');
+      const resultNode=document.getElementById('adgbSharingAuditResults');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){message.textContent='Administrator login required.';return;}
+      button.disabled=true;message.textContent='Checking PDF-sharing permissions…';resultNode.textContent='';
+      try{
+        const data=await postToBackend({action:'adminPdfSharingAudit',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!data?.ok||data.readOnly!==true)throw Error(data?.message||'Audit response invalid.');
+        const m=data.metrics||{};
+        const publicCount=Number(m.publicLinkAccess||0);
+        message.textContent=data.limited?'Partial audit — some linked files were not scanned.':
+          publicCount>0?'Public-link PDFs found — administrator review is recommended.':
+          'No public-link PDFs were identified in the scanned subject references.';
+        resultNode.textContent='Linked PDF references: '+String(m.linkedPdfReferences??'—')+
+          ' · Anyone-with-link: '+String(m.publicLinkAccess??'—')+
+          ' · Private: '+String(m.restrictedAccess??'—')+
+          ' · Other sharing: '+String(m.otherAccess??'—')+
+          ' · Inaccessible: '+String(m.inaccessible??'—')+
+          ' · Not scanned: '+String(m.notScanned??'—')+
+          '. No permissions were changed.';
+      }catch(e){message.textContent='Audit unavailable: '+String(e.message||e)+'. Verify V17.8.8 staging backend.';}
+      finally{button.disabled=false;}
+    }
+    async function adgbRunReleaseReadiness_(){
+      const button=document.getElementById('adgbReleaseReadinessRun');
+      const message=document.getElementById('adgbReleaseReadinessMessage');
+      const results=document.getElementById('adgbReleaseReadinessResults');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token||!isRecognizedAsAdmin()){message.textContent='Administrator login required.';return;}
+      button.disabled=true;message.textContent='Checking release readiness without changing data…';results.textContent='';
+      try{
+        const data=await postToBackend({action:'adminReleaseReadiness',sessionToken:token});
+        if(token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!data?.ok||data.readOnly!==true||data.noWrites!==true)throw Error('Backend did not confirm read-only release inspection.');
+        message.textContent='Review required. Production approval, Drive migration and office cloning are not automatic.';
+        const rows=Array.isArray(data.gates)?data.gates:[];
+        const labels={DATABASE:'Existing database',DRIVE_ROOT:'Drive root',RECOVERY_INDEX:'Submission recovery',LINKED_PDF_SHARING:'Linked PDF sharing',
+          SECURE_SUBJECT_MODE:'Private PDF mode',BACKUP_RESTORE:'Backups & restore test',ROLE_SECURITY:'User-role security',
+          CREDENTIAL_ROTATION:'Initial credential rotation',FRONTEND_BACKEND_PAIR:'Frontend/backend matching',DRIVE_MANIFEST:'Drive inventory',NEW_OFFICE_PILOT:'Independent office pilot'};
+        results.innerHTML='<div class="adgb-release-list">'+rows.map(x=>
+          '<div class="adgb-release-item"><strong>'+adgbHealthText_(labels[x.id]||x.id)+'</strong>'+
+          '<span class="adgb-release-status">'+adgbHealthText_(x.status)+'</span>'+
+          '<small>'+adgbHealthText_(x.detail)+'</small></div>').join('')+'</div>'+
+          '<p class="adgb-release-warning">No backup, migration, access change or automatic repair has been performed.</p>';
+      }catch(error){message.textContent='Release preflight unavailable: '+String(error.message||error)+'. Deploy V17.9.0 to an isolated test backend first.';}
+      finally{button.disabled=false;}
+    }
+    document.getElementById('adgbReleaseReadinessRun')?.addEventListener('click',adgbRunReleaseReadiness_);
+    document.getElementById('adgbSharingAuditRun')?.addEventListener('click',adgbRunSharingAudit_);
+    document.getElementById('adgbRecoveryRun')?.addEventListener('click',adgbRunRecoveryAudit_);
+
     document.getElementById('adgbHealthRefresh')?.addEventListener('click',adgbHealthLoad_);
     function adgbHealthAccess_(){
       document.querySelectorAll('[data-adgb-health-entry]').forEach(el=>{el.hidden=!(isRecognizedAsAdmin()&&!!window.ADGB_AUTH?.token);});
@@ -5182,21 +5299,49 @@ function adgbAlignPreviewLayout(){
 
     function renderLinkedSubjectName(name,linkText,linkUrl){
       if(!linkText||!linkUrl)return escapeHtml(name);
-
       const start=name.toLowerCase().indexOf(linkText.toLowerCase());
       if(start<0)return escapeHtml(name);
-
       const end=start+linkText.length;
+      const secure=/^adgb-secure-subject:[A-Za-z0-9_-]{1,128}$/.test(linkUrl);
+      const attr=secure
+        ?'href="#" data-adgb-secure-subject="'+escapeAttr(linkUrl.split(':')[1])+'"'
+        :'href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer"';
       return escapeHtml(name.slice(0,start))+
-        '<a class="subject-link" href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer">'+
+        '<a class="subject-link" '+attr+'>'+
         escapeHtml(name.slice(start,end))+'<span class="subject-link-mark">↗</span></a>'+
         escapeHtml(name.slice(end));
     }
 
     function validSubjectUrl(value){
       const url=String(value||'').trim();
+      if(/^adgb-secure-subject:[A-Za-z0-9_-]{1,128}$/.test(url))return url;
       return /^https:\/\/[^\s]+$/i.test(url)?url:'';
     }
+
+    document.addEventListener('click',async function(event){
+      const target=event.target.closest?.('[data-adgb-secure-subject]');
+      if(!target)return;
+      event.preventDefault();
+      const subjectId=String(target.getAttribute('data-adgb-secure-subject')||'');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token){showToast('Sign in to view this protected subject PDF.','error');return;}
+      // Create the tab during the user's click; browsers otherwise block delayed opening.
+      const tab=window.open('about:blank','_blank');
+      if(!tab){showToast('Allow pop-ups to view the protected PDF.','error');return;}
+      try{
+        tab.document.write('<!doctype html><title>Opening secure subject PDF…</title><body style="font-family:Arial;padding:2rem">Verifying permission and preparing PDF…</body>');
+        tab.document.close();
+      }catch(ignore){}
+      try{
+        const data=await postToBackend({action:'viewSubjectLinkedPdf',subjectId,sessionToken:token});
+        const url=validSecureViewUrl(data?.viewUrl);
+        if(!url)throw new Error('Secure PDF link unavailable.');
+        tab.location.replace(url);
+      }catch(error){
+        try{tab.close()}catch(ignore){}
+        showToast(error.message||'You do not have permission to view this PDF.','error');
+      }
+    });
 
 
     function reportStatusFor(subject,office){

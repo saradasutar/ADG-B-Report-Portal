@@ -1,0 +1,21 @@
+name: Portal static quality gate
+on:
+  pull_request:
+  push:
+    branches: [main, upgrade/platform-readiness-2026-11]
+permissions:
+  contents: read
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python static portal structure audit
+        run: python3 tools/preflight_check.py index.html
+      - name: JavaScript syntax checks
+        run: python3 tools/check_frontend_scripts.py
+      - name: Office config schema check
+        run: python3 tools/validate_instance_config.py config/office-instance.example.json

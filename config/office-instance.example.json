@@ -1,0 +1,19 @@
+{
+  "_comment": "Example only. No real Drive IDs, deployment URLs, credentials, session tokens or private emails.",
+  "schemaVersion": 1,
+  "instanceId": "EXAMPLE_SECTION_A",
+  "displayName": "Section A Reporting Portal",
+  "environment": "staging",
+  "timeZone": "Asia/Kolkata",
+  "publicMode": "LOGIN_REQUIRED",
+  "offices": [
+    {"id": "SECTION_A1", "name": "Section A1", "active": true},
+    {"id": "SECTION_A2", "name": "Section A2", "active": true}
+  ],
+  "reportCycles": ["MONTHLY", "QUARTERLY"],
+  "requiresDedicatedDatabase": true,
+  "requiresDedicatedDriveRoot": true,
+  "requiresDedicatedAppsScriptDeployment": true,
+  "copiesProductionCredentials": false,
+  "copiesProductionData": false
+}
