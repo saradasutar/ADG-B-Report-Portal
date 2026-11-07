@@ -168,3 +168,13 @@ The integrated private backend, test harness and release guide are supplied as a
 - GitHub **staging** System Health now has a PDF sharing audit button. Production frontend remains unchanged.
 - Existing `saveLinkedSubjectPdf_` still sets `DriveApp.Access.ANYONE_WITH_LINK` for new subject-linked PDFs, which can expose documents to anyone possessing their URLs. **Not production-certified for confidential documents**. Do not call this a complete security fix.
 - Multi-office JSON sample is a *design-only example*, not a functional new-office installer. Complete folder migration and all remaining security/recovery gates must be validated before deployment.
+
+## V17.8.9 staged opt-in secure subject-linked PDF delivery
+- Complete private backend prepared using V17.8.8 baseline; V17.8.5 direct submitted-report PDF viewing preserved.
+- **OFF by default**: Script Property `ADGB_PRIVATE_SUBJECT_PDF_V189=ENABLED` activates linked PDF private mode. When disabled, historical link behavior remains (including public-link risk).
+- With secure mode enabled, **new** linked PDFs receive Drive `PRIVATE` permission, session-gated `viewSubjectLinkedPdf` resolves subject ID to stored file ID server-side, and only returns a short-lived one-use PDF viewer link.
+- When enabled, the dashboard bootstrap response replaces real Drive link URLs with opaque `adgb-secure-subject:<subjectId>` markers for authenticated users and blanks them for public guests. The paired **staging frontend** intercepts these clicks and presents the already-working direct PDF viewer via user-initiated new tab.
+- Existing linked PDFs that were shared as `ANYONE_WITH_LINK` are **not automatically repermissioned**; a separately verified migration plan remains required.
+- **11 isolated local tests passed**, plus full backend JS syntax passed. Browser and Apps Script end-to-end tests have not been performed.
+- Require independent Drive/Sheet identity in staging before enabling; the source retains a live root reference. Do not deploy private mode into production from a standalone backend paste without the corresponding frontend changes.
+- Residual concerns: account/role accessibility under non-public mode, rollback of newly private links, mobile popup policies, endpoint access audit, and data-retention/permissions certification.
