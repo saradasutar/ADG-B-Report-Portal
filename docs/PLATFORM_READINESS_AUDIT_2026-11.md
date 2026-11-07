@@ -126,3 +126,13 @@ The integrated private backend, test harness and release guide are supplied as a
 - Local mock tests passed: anonymous diagnostic denial; authorized health read; one file/row/status for repeated nonce; mismatched payload rejected; new upload nonce accepted.
 - **Release blockers remain**: report removal currently trashes a PDF before committing the status event; linked-subject PDF path uses ANYONE_WITH_LINK; transaction recovery and authorized PDF-sharing tests are incomplete.
 - The V17.8.2 private ZIP includes full Code.gs, local test script and release guide. **Do not commit backend, deploy to production, move Drive contents, or run setupPortal() on the live instance.**
+
+## V17.8.3 staging — removal order hardened (local only)
+
+- A private integrated backend changes removal ordering to: acquire lock → append `Removed` event → update `Current_Status` → flush → verify the exact status event → optionally move the PDF to Trash.
+- If the status write fails, the PDF is NOT trashed; the administrator must reconcile the append-only record and index.
+- If Drive cleanup fails, the removal response returns `cleanupPending:true` and the PDF remains in Drive. This is a *non-durable flag*, not a cleanup queue.
+- A repeat removal when the latest event is already `Removed` is refused rather than risking a second removal.
+- Offline Node tests passed for successful removal, repeat removal, status write failure and Trash failure. JavaScript syntax passed.
+- **BLOCKERS**: no durable cleanup ledger/reconciliation UI; no fully durable upload deduplication; PDF sharing risk remains; no authorized staging Drive integration tests.
+- No live production report, spreadsheet, Drive folder, Apps Script deployment or frontend was modified.
