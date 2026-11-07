@@ -14,6 +14,15 @@
   <link rel="shortcut icon" href="adgb-v1767.ico">
 
   <title>ADG(B) Report Submission Portal</title>
+  <!-- V17.7.100: start connections and download required JS during HTML parsing.
+       Keep the existing blocking script order, login checks and backend calls intact. -->
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="dns-prefetch" href="//script.google.com">
+  <link rel="dns-prefetch" href="//script.googleusercontent.com">
+  <link rel="preload" href="portal-v1767.js?v=17757" as="script">
+  <link rel="preload" href="sticky-v1767.js?v=17757" as="script">
+
 
   <style>
     :root{
