@@ -3228,7 +3228,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(disabled)el.setAttribute('aria-disabled','true');else el.removeAttribute('aria-disabled');
       });
       const control=document.querySelector('[data-adgb-control-entry]');
-      if(control){control.hidden=!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token;}
+      const adminActive=isRecognizedAsAdmin()&&!!window.ADGB_AUTH?.token;
+      if(control){control.hidden=!adminActive;}
+      const controlPanel=document.getElementById('adgbControlPanel');
+      if(controlPanel&&!adminActive){controlPanel.hidden=true;adgbFeatureManageReady_=false;}
       const recent=document.getElementById('adgbRecentActivity');
       if(recent)recent.dataset.adgbDisabled=enabled.recent===false?'true':'false';
       const notice=document.getElementById('adgbNoticeStrip');
@@ -3254,7 +3257,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbFeatureEffective_=null;adgbFeatureToken_=token;adgbFeatureLastRead_=0;
         adgbFeatureApply_();
       }
-      if(!force&&Date.now()-adgbFeatureLastRead_<60000)return;
+      // Read once per login; the server checks current settings on every protected action.
+      // Avoid extending a user's idle session through automatic feature polling.
+      if(!force&&adgbFeatureLastRead_>0)return;
       adgbFeatureReadBusy_=true;adgbFeatureLastRead_=Date.now();
       try{
         const response=await jsonpRequest('featureAccess',{sessionToken:token});
@@ -3373,7 +3378,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(!adgbFeatureHard_(id,role)){input.checked=false;return;}
         adgbFeatureFlags_[id][role]=input.checked;adgbFeatureDraw_();
       });
-      setInterval(()=>adgbFeatureRead_(),60000);
+      // Do not poll feature settings: refreshing a session just to check flags can extend idle login duration.
     }
     function adgbOpenInsights(view){
       adgbInsightsView=view;
