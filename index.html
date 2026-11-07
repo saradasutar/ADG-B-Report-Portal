@@ -5255,21 +5255,49 @@ function adgbAlignPreviewLayout(){
 
     function renderLinkedSubjectName(name,linkText,linkUrl){
       if(!linkText||!linkUrl)return escapeHtml(name);
-
       const start=name.toLowerCase().indexOf(linkText.toLowerCase());
       if(start<0)return escapeHtml(name);
-
       const end=start+linkText.length;
+      const secure=/^adgb-secure-subject:[A-Za-z0-9_-]{1,128}$/.test(linkUrl);
+      const attr=secure
+        ?'href="#" data-adgb-secure-subject="'+escapeAttr(linkUrl.split(':')[1])+'"'
+        :'href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer"';
       return escapeHtml(name.slice(0,start))+
-        '<a class="subject-link" href="'+escapeAttr(linkUrl)+'" target="_blank" rel="noopener noreferrer">'+
+        '<a class="subject-link" '+attr+'>'+
         escapeHtml(name.slice(start,end))+'<span class="subject-link-mark">↗</span></a>'+
         escapeHtml(name.slice(end));
     }
 
     function validSubjectUrl(value){
       const url=String(value||'').trim();
+      if(/^adgb-secure-subject:[A-Za-z0-9_-]{1,128}$/.test(url))return url;
       return /^https:\/\/[^\s]+$/i.test(url)?url:'';
     }
+
+    document.addEventListener('click',async function(event){
+      const target=event.target.closest?.('[data-adgb-secure-subject]');
+      if(!target)return;
+      event.preventDefault();
+      const subjectId=String(target.getAttribute('data-adgb-secure-subject')||'');
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token){showToast('Sign in to view this protected subject PDF.','error');return;}
+      // Create the tab during the user's click; browsers otherwise block delayed opening.
+      const tab=window.open('about:blank','_blank');
+      if(!tab){showToast('Allow pop-ups to view the protected PDF.','error');return;}
+      try{
+        tab.document.write('<!doctype html><title>Opening secure subject PDF…</title><body style="font-family:Arial;padding:2rem">Verifying permission and preparing PDF…</body>');
+        tab.document.close();
+      }catch(ignore){}
+      try{
+        const data=await postToBackend({action:'viewSubjectLinkedPdf',subjectId,sessionToken:token});
+        const url=validSecureViewUrl(data?.viewUrl);
+        if(!url)throw new Error('Secure PDF link unavailable.');
+        tab.location.replace(url);
+      }catch(error){
+        try{tab.close()}catch(ignore){}
+        showToast(error.message||'You do not have permission to view this PDF.','error');
+      }
+    });
 
 
     function reportStatusFor(subject,office){
