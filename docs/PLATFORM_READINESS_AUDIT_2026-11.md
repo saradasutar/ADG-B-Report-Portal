@@ -117,3 +117,12 @@ Prepared and locally checked **outside public GitHub** on 07 November 2026:
 **Still blocked**: existing linked-subject document path may set `ANYONE_WITH_LINK` Drive permission; classification/access review is required before enabling this portal across additional offices. No linked-PDF sharing change has been silently applied. Do not treat synthetic tests as live security tests.
 
 The integrated private backend, test harness and release guide are supplied as a separate chat ZIP, **never included in the public repository**. No live Apps Script deployment, Drive migration, office-user provisioning, or production sheet mutation performed.
+
+## Phase 1 — V17.8.2 staging upload replay safeguard (2026-11-07)
+
+- Private integrated backend V17.8.2-staging prepared **outside public GitHub**; adds best-effort protection against replaying the **same frontend upload nonce**.
+- Under the existing script lock, a matching completed request returns its cached success response; mismatched file/subject/office reuse is denied.
+- CacheService TTL is six hours (subject to early eviction). This is **not** durable exactly-once semantics and does not prevent an intentionally new nonce from creating another upload.
+- Local mock tests passed: anonymous diagnostic denial; authorized health read; one file/row/status for repeated nonce; mismatched payload rejected; new upload nonce accepted.
+- **Release blockers remain**: report removal currently trashes a PDF before committing the status event; linked-subject PDF path uses ANYONE_WITH_LINK; transaction recovery and authorized PDF-sharing tests are incomplete.
+- The V17.8.2 private ZIP includes full Code.gs, local test script and release guide. **Do not commit backend, deploy to production, move Drive contents, or run setupPortal() on the live instance.**
