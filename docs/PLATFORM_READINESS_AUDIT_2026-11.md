@@ -104,3 +104,16 @@ Completed in the `upgrade/platform-readiness-2026-11` branch:
 Not yet completed: live role tests; per-file Drive parent/permissions inventory; production relocation; dynamic server office-registry refactor; idempotent upload tests; complete cross-instance isolation tests; performance/load tests. None of these are implied to have passed by the existence of the workflow.
 
 For the next implementation, prioritize the actual end-to-end security permission matrix, approved PDF sharing policy, and safe one-instance configuration of the backend before enabling bulk office cloning.
+
+## Phase 1 implementation — private backend V17.8.1-staging
+Prepared and locally checked **outside public GitHub** on 07 November 2026:
+- GET `databaseHealth` requires ADMIN and returns no spreadsheet ID/name. It uses the recorded existing spreadsheet via `SpreadsheetApp.openById`, never database recovery/create.
+- GET `stickyHealth` requires ADMIN; checks for an existing sheet without calling its `ensure...` constructor.
+- GET `previewFolderNames` requires ADMIN; uses read-only existing database resolution.
+- Public `ping` no longer advertises a sensitive folder-preview route.
+- Local mocked negative tests passed for anonymous denial and positive tests passed for admin diagnostics.
+- The separate admin-only V17.8.0 read-only Drive inventory endpoint remains available in the private package.
+
+**Still blocked**: existing linked-subject document path may set `ANYONE_WITH_LINK` Drive permission; classification/access review is required before enabling this portal across additional offices. No linked-PDF sharing change has been silently applied. Do not treat synthetic tests as live security tests.
+
+The integrated private backend, test harness and release guide are supplied as a separate chat ZIP, **never included in the public repository**. No live Apps Script deployment, Drive migration, office-user provisioning, or production sheet mutation performed.
