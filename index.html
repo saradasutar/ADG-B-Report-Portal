@@ -3608,7 +3608,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(!result?.ok||result.readOnly!==true)throw Error(result?.message||'Unverified response');
         const d=result.discrepancies||{};
         if(msg)msg.textContent=result.blocked?'Too many records: manual audit needed.':result.reviewRequired?'Mismatch found: administrator reconciliation needed.':'No current-cycle index mismatch detected (PDFs not checked).';
-        if(output)output.textContent='Missing status: '+String(d.missingCurrent??'—')+' · Status mismatches: '+String(d.mismatch??'—')+' · Orphan status: '+String(d.statusWithoutCurrentCycleEvent??'—')+'. Read-only; no auto-repair.';
+        if(output)output.textContent='Missing status: '+String(d.missingCurrent??'—')+' · Status mismatches: '+String(d.mismatch??'—')+' · Orphan status: '+String(d.statusWithoutCurrentCycleEvent??'—')+' · Pending PDF cleanup: '+String(d.pendingRemovalCleanup??'—')+'. Read-only; no auto-repair.';
       }catch(error){if(msg)msg.textContent='Recovery audit unavailable: '+String(error?.message||error)+'. Deploy V17.8.6 in a separate test project first.';}
       finally{btn.disabled=false;}
     }
