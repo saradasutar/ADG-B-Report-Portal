@@ -1645,6 +1645,47 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbArchivePanel .adgb-insights-toolbar{align-items:end}
 .adgb-archive-view{background:#e7f2ff;color:#175994;border:1px solid #b8d5ee;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800}
 .adgb-archive-view:disabled{opacity:.5}
+
+/* V17.7.96 — keep office comparison in a compact right column on desktop.
+   Preserve mobile stacking and the expanded-matrix full-width mode. */
+@media (min-width:1051px){
+  .adgb-shell:not(.matrix-expanded) .adgb-dashboard-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) clamp(222px,19vw,252px)!important;
+    align-items:start!important;
+    gap:12px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:9px!important;
+    min-width:0!important;
+  }
+  .adgb-shell .adgb-right-panel #adgbOfficePanelMount{
+    order:-1!important;
+    grid-column:auto!important;
+    min-width:0!important;
+    width:100%;
+  }
+  #adgbOfficePanelMount .office-panel{margin:0!important}
+  #adgbOfficePanelMount .panel-head{padding:9px 11px}
+  #adgbOfficePanelMount .office-cycle-list{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:5px!important;padding:7px!important;overflow:visible!important}
+  #adgbOfficePanelMount .office-cycle-row{padding:6px 8px!important;border-radius:8px!important;min-width:0}
+  #adgbOfficePanelMount .office-filter-note{padding:5px 9px;font-size:10px;line-height:1.35}
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column{min-width:0!important}
+}
+@media (max-width:1050px){
+  .adgb-shell .adgb-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}
+  .adgb-shell .adgb-right-panel{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .adgb-shell .adgb-right-panel #adgbOfficePanelMount{order:-1;grid-column:1/-1!important}
+  #adgbOfficePanelMount .office-cycle-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;overflow:visible!important}
+}
+@media (max-width:760px){
+  .adgb-shell .adgb-right-panel{grid-template-columns:minmax(0,1fr)!important}
+  #adgbOfficePanelMount .office-cycle-list{grid-template-columns:minmax(0,1fr)!important}
+}
+@media print{.adgb-shell .adgb-dashboard-grid{display:block!important}.adgb-shell .adgb-right-panel{display:none!important}}
+
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
