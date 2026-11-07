@@ -152,3 +152,11 @@ The integrated private backend, test harness and release guide are supplied as a
 - Node syntax passed and seven mock tests passed: anonymous denied, empty, matching, mismatched, missing status, orphan status, safety row bound.
 - **Still outstanding:** Durable transaction journal, authoritative reconciliation & cleanup queue, per-action live security tests, PDF sharing, Drive master-folder inventory, and deployment of an independent example office.
 - Production unchanged and no Drive/Sheet changes made. This audit alone does not warrant 9.8/10 certification.
+
+## V17.8.7 private staging — persistent upload replay and removal cleanup markers
+- Full private backend, test script and installation instructions packaged outside public GitHub, based on V17.8.6 with V17.8.5 PDF opening retained.
+- Persist same-request upload marker as hashed nonce + file fingerprint in the existing `Submissions` note column Q; under the upload lock, check persisted marker before Drive file creation. A completed same-nonce retry returns recorded success; conflicting office/file or index mismatches block and request manual reconciliation.
+- Persist removal cleanup marker `ADGB_REMOVAL_PENDING_V187` in appended removal event before attempting Drive Trash, then `ADGB_REMOVAL_DONE_V187` once cleanup confirmed. Read-only recovery audit counts pending cleanup events.
+- Existing GitHub staging branch's admin Recovery Audit preview now surfaces pending-cleanup count. **No production frontend or backend change**.
+- Node syntax of integrated Code.gs passed; **10 isolated mocked tests** passed. Real Sheets/Drive failure injection, workload and user-role tests still necessary.
+- Limitations: orphan PDF before append is still possible; pending marker might remain after successful Trash if updating marker fails; no autonomous cleanup or reconciliation; source has live root ID and MUST be reconfigured before independent staging; existing linked PDF sharing risk unresolved.
