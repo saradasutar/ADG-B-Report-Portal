@@ -671,3 +671,70 @@ This GitHub frontend release improves the **Action Required** page across the fi
 Open **Action Required** on the portal after GitHub Pages refreshes. Compare totals with the Submission Register. Try **Due in next 7 days** and **Due in next 30 days** against known deadlines. Click an office workload card, change sorting, and confirm the days-remaining labels use India dates. In Administrator login, export CSV and print the filtered table. Check narrow mobile screens for clipping, and verify normal uploads, login, archives and notice editor remain unaffected.
 
 This is a **frontend-only** release: no Apps Script code, Drive files, new spreadsheet, Sheet tabs, triggers or login permissions are changed. Use the previously compatible backend for existing portal features. JavaScript syntax was validated on the final GitHub source; live browser acceptance has not yet been confirmed.
+
+
+---
+
+## V17.7.90 — 20-Feature Administrator Control Centre (backend deployment required)
+
+The new **⚙ Admin Control Centre** is available from the portal sidebar **only to an Administrator with an active session**. It manages **20 existing features × 4 audiences**: **PUBLIC (guest)**, **VIEWER**, **OFFICE**, and **ADMIN**. It does not introduce a second login system.
+
+### Twenty separately manageable features
+
+| # | Feature | Enforcement |
+|---|---|---|
+| 1 | Dashboard overview | UI navigation/display |
+| 2 | Reports matrix | UI navigation/display |
+| 3 | Recent submissions | UI navigation/display |
+| 4 | Pending reports | UI navigation/display |
+| 5 | Submission Register | UI navigation/display |
+| 6 | Action Required | UI navigation/display |
+| 7 | Office Analytics | UI navigation/display |
+| 8 | Historical Archive | Administrator-only server route |
+| 9 | Moving Notice Board | Server read/manage routes |
+| 10 | Raw Data | Server read/write routes |
+| 11 | Targets and Reminders | Server read/write routes |
+| 12 | Reports and Print | UI navigation/display |
+| 13 | Subject listing | UI navigation/display |
+| 14 | Upload reports | Server-protected action |
+| 15 | View submitted PDF | Server-protected action |
+| 16 | Remove submitted report | Server-protected action |
+| 17 | Drive folder link | Server-protected action |
+| 18 | Administrator Office Reviews | Administrator-only server route |
+| 19 | Review Audit History | Administrator-only server route |
+| 20 | Monthly Compliance Trends | Administrator-only server route |
+
+**Important:** The UI-only switches hide the corresponding navigation/display surfaces, but the Dashboard, Matrix, Register, Recent, Pending, Analytics and other derived views share the existing **bootstrap data response**. These switches are **not independent confidentiality boundaries**. Use the existing LOGIN_REQUIRED / ADMIN_ONLY portal access mode for restricted data. Disabling a feature does not grant other permissions or modify historical reports.
+
+### Administrator conveniences
+
+- Separate enable/disable checkbox per audience for all 20 features, with unsafe combinations **locked**.
+- Search feature list and filter by read, write, administrator-only or presentation groups.
+- Enabled-feature totals for each audience.
+- **Restricted public preset** (previews turning public features off; does not save until confirmed).
+- **Default preset**, **Discard edits**, and **explicit Save** confirmation.
+- Version-controlled saves: a second Administrator cannot silently overwrite a newer configuration; reload to resolve conflicts.
+- Saved-by/time/version metadata in the backend.
+- The Administrator Control Centre itself cannot be disabled.
+
+### Install the private integrated backend
+
+1. Back up the existing live Apps Script **Code.gs** and the current database spreadsheet.
+2. Download **ADGB_Code_gs_V17_7_90_Integrated.txt** from ChatGPT. It is based on the previously prepared V17.7.86 integrated backend. **If your live backend has additional changes, merge first**; do not replace it blindly.
+3. In the same existing Google Apps Script project, replace Code.gs with the complete integrated V17.7.90 code, then **Save**.
+4. Deploy → Manage deployments → Edit → **New version** → Deploy. Keep the existing web app and URL.
+5. Do **not** run `setupPortal()` or `setPortalSecurityCodes()`.
+6. Refresh the portal and log in as an actual Administrator with a session. Select **⚙ Admin Control Centre → Load live settings**.
+7. Toggle roles and features, save, refresh, and test separately using a VIEWER and OFFICE account; check PUBLIC only if the portal is configured to permit public viewing.
+8. Confirm submissions, archive, notes, notices, Office Reviews and historical records still work for permitted roles.
+
+### Persistence, safety, and rollback
+
+- Uses a new key `ADGB_FEATURE_CONTROL_V1` **inside existing Apps Script Script Properties**. No new spreadsheet, sheet tab, Drive folder, or scheduled trigger.
+- Protected actions retain the portal's **existing** per-user permissions and office-ID verification. The Control Centre switches **only restrict** availability; they do not grant new capabilities.
+- Certain legacy office-code report actions remain supported subject to existing PIN verification and **OFFICE** feature policy.
+- Public users receive only the effective permissions for their own audience, **never** the full editable matrix.
+- If the newer backend is unavailable, the frontend does not claim settings were saved. Upgrade backend before attempting to manage toggles.
+- For immediate rollback, redeploy the previous working Apps Script version, or reload and restore defaults from the Administrator Control Centre. Retain the existing database backup.
+- JavaScript syntax and isolated role/configuration tests passed. **Live deployment and end-to-end browser testing have not yet been completed.**
+
