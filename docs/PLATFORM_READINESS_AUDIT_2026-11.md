@@ -92,3 +92,15 @@ Run with separate test accounts, browsers, actual approved test PDFs, month-boun
 ## Minimum release sequence (one user approval, multiple technical gates)
 A. Backup + baseline verification → B. local static tests → C. staging deployment → D. security/role tests → E. UI acceptance → F. Drive dry run → G. rollback rehearsal → H. controlled production release → I. post-release validation.
 **One approval is not permission to skip backups, tests, or move/delete production files.**
+
+## Implementation status — staging package (07 Nov 2026)
+Completed in the `upgrade/platform-readiness-2026-11` branch:
+- Added `config/office-instance.example.json` with non-sensitive, explicit instance and office configuration.
+- Added `tools/validate_instance_config.py` to reject duplicate/invalid office IDs and unsafe cross-instance settings in the example.
+- Added `tools/check_frontend_scripts.py` for Node JavaScript syntax checks on inline and external frontend scripts.
+- Added `.github/workflows/portal-static-checks.yml` to run structural, syntax and instance-validation gates on changes.
+- Prepared separate **private** V17.8.0-staging integrated Apps Script code; **not** committed publicly. Adds an admin-only, read-only `adminDriveInventory` route with counts and checks that avoids the database recovery/create path.
+
+Not yet completed: live role tests; per-file Drive parent/permissions inventory; production relocation; dynamic server office-registry refactor; idempotent upload tests; complete cross-instance isolation tests; performance/load tests. None of these are implied to have passed by the existence of the workflow.
+
+For the next implementation, prioritize the actual end-to-end security permission matrix, approved PDF sharing policy, and safe one-instance configuration of the backend before enabling bulk office cloning.
