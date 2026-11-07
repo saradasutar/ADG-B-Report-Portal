@@ -1373,6 +1373,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-analytics-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.adgb-insights-heading h2{font-size:16px}}
 
 
+/* V17.7.94: progressive disclosure keeps public and login views uncluttered */
+.adgb-nav-more{min-height:41px;border:1px solid rgba(200,221,240,.24);border-radius:10px;padding:9px 12px;background:rgba(255,255,255,.075);color:#e5f2ff;font-size:12px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;cursor:pointer}
+.adgb-nav-more:hover,.adgb-nav-more[aria-expanded="true"]{background:rgba(255,255,255,.17)}
+.adgb-advanced-nav{display:grid;gap:5px;margin-top:-2px;padding:4px 0 4px 8px;border-left:2px solid rgba(206,226,249,.25)}
+.adgb-advanced-nav[hidden]{display:none!important}
+.adgb-advanced-nav .adgb-nav-item{min-height:37px;padding:7px 9px;font-size:11px}
+.adgb-nav-item:focus-visible,.adgb-nav-more:focus-visible{outline:3px solid #fbc769;outline-offset:2px}
+@media(max-width:720px){.adgb-advanced-nav .adgb-nav-item{font-size:12px;min-height:42px}}
+
 /* V17.7.93 clearer office and administrator presentation */
 [data-adgb-health-entry][hidden],#adgbHealthPanel[hidden]{display:none!important}
 .adgb-health-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -1676,17 +1685,20 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <nav class="adgb-side-nav" aria-label="Main navigation">
         <button type="button" class="adgb-nav-item active" data-adgb-nav="dashboard">⌂ <span>Dashboard</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="matrix">▤ <span>Reports Matrix</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="register">▦ <span>Submission Register</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="actions">⚑ <span>Action Required</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="health" data-adgb-health-entry hidden>♡ <span>System Health</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="control" data-adgb-control-entry hidden>⚙ <span>Admin Control Centre</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
-        <button type="button" class="adgb-nav-item" data-adgb-nav="admin">⚙ <span>Administration</span></button>
+        <button type="button" id="adgbMoreTools" class="adgb-nav-more" aria-expanded="false" aria-controls="adgbAdvancedNav">＋ More tools <span aria-hidden="true">⌄</span></button>
+        <div id="adgbAdvancedNav" class="adgb-advanced-nav" hidden>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="register">▦ <span>Submission Register</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="health" data-adgb-health-entry hidden>♡ <span>System Health</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="control" data-adgb-control-entry hidden>⚙ <span>Admin Control Centre</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="archive">▣ <span>Historical Archive</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="subjects">▧ <span>Subjects</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="print">▣ <span>Reports &amp; Print</span></button>
+        <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="admin">⚙ <span>Administration</span></button>
+        </div>
       </nav>
       <div class="adgb-sidebar-foot"><span class="adgb-sidebar-dot"></span><strong>Portal status</strong><small id="adgbSidebarStatus">Connecting…</small></div>
     </aside>
@@ -4717,6 +4729,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         (nav==='dashboard'?document.getElementById('top'):document.getElementById('matrixTitle'))?.scrollIntoView({behavior:'smooth',block:'start'});
       }));
     }
+    /* Presentation-only toggle; no credentials or private records stored. */
+    const adgbMoreToolsButton_=document.getElementById('adgbMoreTools');
+    const adgbAdvancedNav_=document.getElementById('adgbAdvancedNav');
+    function adgbSetMoreTools_(expanded){
+      if(!adgbMoreToolsButton_||!adgbAdvancedNav_)return;
+      adgbMoreToolsButton_.setAttribute('aria-expanded',String(!!expanded));
+      adgbMoreToolsButton_.innerHTML=(expanded?'− Less tools':'＋ More tools')+' <span aria-hidden="true">'+(expanded?'⌃':'⌄')+'</span>';
+      adgbAdvancedNav_.hidden=!expanded;
+    }
+    adgbMoreToolsButton_?.addEventListener('click',()=>adgbSetMoreTools_(adgbMoreToolsButton_.getAttribute('aria-expanded')!=='true'));
+    adgbSetMoreTools_(false);
+
     function adgbRenderLivePanels(){
       adgbHealthAccess_();
       adgbFeatureApply_();
