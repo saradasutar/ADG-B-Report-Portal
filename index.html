@@ -1944,6 +1944,95 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 }
 .adgb-shell.matrix-expanded .adgb-office-overview{display:none!important}
 @media print{.adgb-office-overview{display:none!important}}
+
+/* V17.7.101 — FIX: old #adgbOfficePanelMount selectors had higher specificity
+   and forced every office to fill an entire row. Keep 5 compact tiles on
+   desktop, 3 medium, 2 mobile, 1 only on very small screens. */
+@media screen {
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-panel{
+    display:block!important; width:100%!important; max-width:none!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:8px!important;
+    padding:9px 12px!important;
+    margin:0!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    align-items:stretch!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:5px!important;
+    padding:9px 10px!important;
+    margin:0!important;
+    min-width:0!important;
+    width:auto!important;
+    min-height:91px!important;
+    align-content:start!important;
+    border:1px solid #d2e3f0!important;
+    border-top:3px solid #2179b9!important;
+    border-radius:11px!important;
+    background:#fff!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row>span:first-child{
+    font-weight:850!important;
+    font-size:12px!important;
+    line-height:1.25!important;
+    min-width:0!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-status{
+    display:flex!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    gap:3px 8px!important;
+    flex-wrap:wrap!important;
+    grid-column:1!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .adgb-office-percent{
+    grid-column:1!important;
+    justify-self:start!important;
+    padding:2px 7px!important;
+    font-size:10px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-track{
+    grid-column:1!important;
+    margin:0!important;
+    width:100%!important;
+    height:6px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-filter-note{
+    padding:0 12px 8px!important;
+    font-size:10px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview .panel-head{
+    padding:7px 12px!important;
+    min-height:0!important;
+  }
+}
+@media screen and (max-width:1250px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media screen and (max-width:760px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    padding:8px!important;
+    gap:7px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row{
+    min-height:84px!important;padding:8px!important;
+  }
+}
+@media screen and (max-width:380px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:1fr!important;
+  }
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
