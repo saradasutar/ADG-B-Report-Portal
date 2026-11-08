@@ -2342,6 +2342,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media (prefers-reduced-motion:reduce){
   .adgb-primary-column .upload-button{transition:none!important;transform:none!important}
 }
+
+/* V17.7.106 — hide redundant horizontal navigation when office columns fit.
+   Keep matrix navigation visible only for real overflow, with disabled edge arrows. */
+.adgb-matrix-travel[hidden],#adgbMatrixScrollHint[hidden]{display:none!important}
+.adgb-matrix-travel button:disabled{opacity:.34;cursor:default;box-shadow:none!important}
+.adgb-matrix-travel button:focus-visible{outline:2px solid #2169ad;outline-offset:2px}
+.result-count{font-weight:700;letter-spacing:.01em}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -5544,6 +5551,11 @@ function adgbAlignPreviewLayout(){
         const amount=Math.max(180,Math.min(330,Math.round(box.clientWidth*.38)));
         box.scrollBy({left:direction*amount,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
       }
+      const matrixContentNode=document.getElementById('matrixContent');
+      matrixContentNode?.addEventListener('scroll',event=>{
+        if(event.target?.classList?.contains('table-wrap'))adgbUpdateMatrixScrollControls_();
+      },true);
+      window.addEventListener('resize',()=>requestAnimationFrame(adgbUpdateMatrixScrollControls_));
       document.getElementById('adgbMatrixPrev')?.addEventListener('click',()=>adgbMatrixMove_(-1));
       document.getElementById('adgbMatrixNext')?.addEventListener('click',()=>adgbMatrixMove_(1));
       document.getElementById('adgbExpandMatrix')?.addEventListener('click',()=>{
@@ -5597,11 +5609,25 @@ function adgbAlignPreviewLayout(){
       });
     }
 
+    function adgbUpdateMatrixScrollControls_(){
+      const box=document.querySelector('#matrixContent .table-wrap');
+      const travel=document.querySelector('.adgb-matrix-travel');
+      const hint=document.getElementById('adgbMatrixScrollHint');
+      const prev=document.getElementById('adgbMatrixPrev');
+      const next=document.getElementById('adgbMatrixNext');
+      const overflow=!!box&&box.scrollWidth>box.clientWidth+3;
+      if(travel)travel.hidden=!overflow;
+      if(hint)hint.hidden=!overflow;
+      if(prev)prev.disabled=!overflow||box.scrollLeft<=2;
+      if(next)next.disabled=!overflow||box.scrollLeft+box.clientWidth>=box.scrollWidth-3;
+      if(hint&&overflow)hint.textContent='Additional office columns are available. Use ‹ › or scroll the table horizontally.';
+    }
+
     function renderMatrix(){
       const subjects=getVisibleSubjects();
       const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
       const count=$('#resultCount');
-      if(count)count.textContent=subjects.length+' of '+state.subjects.length+' report subject'+(state.subjects.length===1?'':'s')+' shown';
+      if(count)count.textContent=subjects.length+' of '+state.subjects.length+' subjects · '+offices.length+' office'+(offices.length===1?'':'s')+' · '+(subjects.length*offices.length)+' report positions';
 
       syncAdminCodeFromSession();
       const isAdmin=isRecognizedAsAdmin();
@@ -5611,10 +5637,12 @@ function adgbAlignPreviewLayout(){
 
       if(!state.subjects.length){
         $('#matrixContent').innerHTML='<div class="matrix-loading">No active report subjects. Head Office can add a subject from Administrator.</div>';
+        adgbUpdateMatrixScrollControls_();
         return;
       }
       if(!subjects.length){
         $('#matrixContent').innerHTML='<div class="empty-result">No report subjects match the selected filters.</div>';
+        adgbUpdateMatrixScrollControls_();
         return;
       }
 
@@ -5649,6 +5677,7 @@ function adgbAlignPreviewLayout(){
         '<div class="table-wrap"><table class="'+(isAdmin?'adgb-matrix-admin':'adgb-matrix-public')+'"><thead><tr><th scope="col">Report subject</th>'+
         headers+(isAdmin?'<th scope="col">Remark</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
+      requestAnimationFrame(adgbUpdateMatrixScrollControls_);
 
       if(state.remarkEditingSubjectId){
         setTimeout(()=>document.querySelector('[data-remark-input="'+CSS.escape(state.remarkEditingSubjectId)+'"]')?.focus(),30);
