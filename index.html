@@ -2223,6 +2223,125 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media (prefers-reduced-motion: reduce) {
  .adgb-office-overview .office-cycle-row {transition:none!important;transform:none!important}
 }
+
+/* V17.7.105 — matrix readability and compact status contrast; UI-only.
+   Keep all five office columns, sticky subject, office actions, and admin remark widths. */
+@media screen and (min-width:761px){
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-public tbody th,
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-admin tbody th{
+    text-align:left!important;
+    line-height:1.36!important;
+    font-size:11px!important;
+    padding:8px 9px!important;
+    vertical-align:middle!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .subject-wrap{
+    display:flex!important;
+    align-items:flex-start!important;
+    gap:7px!important;
+    min-width:0!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .subject-number{
+    flex:none!important;
+    font-size:10px!important;
+    font-weight:850!important;
+    margin-top:1px!important;
+    color:#437092!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .subject-title-column{
+    min-width:0!important;
+    overflow-wrap:break-word!important;
+    line-height:1.38!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td{
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+    vertical-align:middle!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td .cell-status{
+    gap:3px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td .upload-button{
+    border-radius:7px!important;
+    min-height:29px!important;
+    height:auto!important;
+    padding:5px 7px!important;
+    line-height:1.18!important;
+    box-shadow:none!important;
+    transition:background-color .15s ease,border-color .15s ease!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.pending-cell{
+    background:#fff9f7!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.pending-cell .upload-button{
+    color:#a83c30!important;
+    border-color:#e5aea4!important;
+    background:#fff7f3!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.submitted-cell{
+    background:#f3fbf7!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.submitted-cell .upload-button.submitted{
+    background:#16835a!important;
+    border-color:#16835a!important;
+    color:#fff!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.received-cell{
+    background:#f0f8fd!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody td.received-cell .upload-button.received-physically{
+    background:#146f94!important;
+    border-color:#146f94!important;
+    color:#fff!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .submitted-time{
+    font-size:9px!important;
+    color:#48667a!important;
+    text-align:center!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .replace-hint{
+    font-size:9px!important;
+    line-height:1.22!important;
+    text-align:center!important;
+    color:#47746a!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody tr:nth-child(even):not(.disabled-subject-row)>th:first-child{
+    background:#f6faff!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody tr:not(.disabled-subject-row):hover>th:first-child{
+    background:#eaf4fd!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody .upload-button:focus-visible{
+    outline:2px solid #1b68b0!important;
+    outline-offset:2px!important;
+  }
+  /* Keep the earlier deliberately-grey "submission closed" rows grey. */
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody tr.disabled-subject-row>td,
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table tbody tr.disabled-subject-row>th{
+    background:#e5e7eb!important;
+  }
+  /* Administrators need an editable remark; do not shrink that column. */
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .table-wrap table.adgb-matrix-admin{
+    min-width:950px!important;
+  }
+}
+@media screen and (max-width:760px){
+  .adgb-shell:not(.matrix-expanded) .mobile-matrix .subject-card{
+    border-radius:11px!important;
+    overflow:hidden!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .mobile-matrix .subject-card-title{
+    line-height:1.35!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .mobile-matrix .office-list>div{
+    min-height:38px!important;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .adgb-primary-column .upload-button{transition:none!important;transform:none!important}
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
