@@ -2356,6 +2356,65 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-recent-controls #adgbRecentToggle{border:1px solid #bad3e8;background:#fff;padding:4px 9px;border-radius:7px;text-decoration:none!important;color:#155986;font-size:11px;font-weight:850;cursor:pointer}
 .adgb-recent-controls #adgbRecentToggle:hover{background:#e5f3ff}
 .adgb-recent-controls #adgbRecentToggle:focus-visible{outline:2px solid #186ab2;outline-offset:2px}
+
+/* V17.9.1 — PG & RTI monitoring beneath Report Matrix; preserve right rail. */
+.adgb-pgrti-panel{grid-column:1;min-width:0;margin:12px 0 0;border:1px solid #cddfeb;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(19,57,105,.06)}
+.adgb-pgrti-panel [hidden]{display:none!important}
+.pgrti-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:13px 15px;background:linear-gradient(115deg,#eaf5ff,#f9fcff);border-bottom:1px solid #d7e7f3}
+.pgrti-head small{font-size:9px;letter-spacing:.07em;color:#477397;font-weight:850}
+.pgrti-head h2{font-size:17px;color:#123e72;margin:3px 0}
+.pgrti-head p{font-size:11px;color:#57728a;margin:0}
+.adgb-pgrti-panel button{cursor:pointer;border-radius:8px;border:1px solid #bbd3e5;background:#eaf4fd;color:#165b8f;padding:8px 10px;font-size:11px;font-weight:800}
+.adgb-pgrti-panel button:hover{background:#d8ebfc}
+.adgb-pgrti-panel button:disabled{opacity:.55;cursor:wait}
+.adgb-pgrti-panel button:focus-visible{outline:2px solid #187cc3;outline-offset:2px}
+.adgb-pgrti-panel .pgrti-primary{background:#17679c;color:#fff;border-color:#17679c}
+.pgrti-status{font-size:11px;margin:9px 14px;color:#2b6289}
+.pgrti-status.pgrti-error{color:#a33341}
+.pgrti-summary{padding:5px 13px 13px}
+.pgrti-summary-meta{font-size:11px;color:#55728a;margin:4px 0 11px}
+.pgrti-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:10px 0}
+.pgrti-metric{background:#eff7ff;border:1px solid #d6e5f4;border-top:3px solid #276eb4;border-radius:11px;padding:12px;display:grid;gap:5px}
+.pgrti-metric strong{font-size:26px;color:#174879;line-height:1}
+.pgrti-metric small{font-size:11px;font-weight:850;color:#345b77}
+.pgrti-metric span{font-size:10px;color:#627c91}
+.pgrti-pg{background:#eefaf5;border-top-color:#138c72}.pgrti-pg_appeal{background:#f5effe;border-top-color:#8953bb}
+.pgrti-rti{background:#eef5ff;border-top-color:#2679b9}.pgrti-rti_appeal{background:#fff8e9;border-top-color:#ce8a2d}
+.pgrti-table-wrap{overflow-x:auto;border:1px solid #dce6f0;border-radius:10px}
+.adgb-pgrti-panel table{border-collapse:collapse;width:100%;font-size:11px;min-width:620px}
+.adgb-pgrti-panel th,.adgb-pgrti-panel td{padding:9px 10px;text-align:left;border-bottom:1px solid #e9eff5;color:#294969}
+.adgb-pgrti-panel thead{background:#164a80;color:#fff}
+.adgb-pgrti-panel thead th{color:#fff}
+.adgb-pgrti-panel tbody tr:nth-child(even){background:#f9fcff}
+.pgrti-muted{font-size:10px;color:#637e92;line-height:1.5}
+.pgrti-detail>summary,.pgrti-admin>summary,.pgrti-import>summary{font-size:12px;color:#174b79;font-weight:850;cursor:pointer;padding:10px 12px}
+.pgrti-detail details{margin:7px 0;border:1px solid #e0eaf2;border-radius:9px}
+.pgrti-detail details summary{padding:9px 10px;font-size:11px;color:#27547c;cursor:pointer}
+.pgrti-officer-list{padding:8px 12px;display:grid;gap:6px}.pgrti-officer-list>div{display:flex;justify-content:space-between;gap:8px;font-size:11px}
+.pgrti-admin{border-top:1px solid #d9e6f1;background:#f8fbff}
+.pgrti-admin-inner{padding:10px 14px 15px}
+.pgrti-admin-inner h3{font-size:13px;color:#174b79;margin:16px 0 8px}
+.pgrti-admin-line{display:flex;flex-wrap:wrap;gap:8px}
+.pgrti-setting{display:grid;gap:6px;font-size:11px;padding:10px 0}
+.pgrti-allowed{font-size:11px;margin:8px 0;display:grid;gap:6px}
+#pgrtiAllowed{display:flex;flex-wrap:wrap;gap:8px 14px}
+.pgrti-form-top{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:7px 0}
+.adgb-pgrti-panel label{display:grid;gap:4px;font-weight:750;color:#2c5577;font-size:11px;min-width:0}
+.pgrti-setting label,#pgrtiAllowed label{display:flex;align-items:center;gap:6px}
+.adgb-pgrti-panel input:not([type=checkbox]),.adgb-pgrti-panel select,.adgb-pgrti-panel textarea{border:1px solid #c4d6e5;background:#fff;border-radius:7px;padding:8px;font-size:11px;color:#183b59;min-width:0;width:100%;box-sizing:border-box}
+.pgrti-import textarea{min-height:72px;resize:vertical}
+.pgrti-row-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pgrti-row-toolbar h3{font-size:13px;margin:0}
+.pgrti-officer-row{border:1px solid #dce8f1;border-radius:10px;padding:10px;margin:9px 0;background:#fff}
+.pgrti-row-head{display:grid;grid-template-columns:minmax(90px,1fr) minmax(150px,3fr) auto;gap:8px;align-items:end}
+.pgrti-age-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:8px}
+.pgrti-age-grid input{padding:5px!important}
+.pgrti-draft-item{display:grid!important;gap:3px;text-align:left!important;width:100%;margin:5px 0}
+.pgrti-draft-item span{font-size:10px;color:#54718c}
+.pgrti-review{padding:14px;border-top:1px solid #d4e3ef;background:#f2f8fd}
+@media(max-width:1100px){.pgrti-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-form-top{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-age-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:620px){.pgrti-row-head{grid-template-columns:1fr}.pgrti-age-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-form-top{grid-template-columns:1fr}.pgrti-head{padding:10px}.pgrti-summary{padding:6px}.pgrti-metrics{gap:6px}.pgrti-metric{padding:9px}.pgrti-metric strong{font-size:22px}}
+@media print{.adgb-pgrti-panel{display:none!important}}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2543,6 +2602,57 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
       </div>
+    <section class="adgb-pgrti-panel" id="adgbPgrti" aria-label="PG and RTI pendency monitoring">
+      <div class="pgrti-head">
+        <div><small>ADG(B) · OFFICE MONITORING</small><h2>PG &amp; RTI Pendency</h2>
+          <p>Latest approved officer-wise snapshots · PG, PG Appeals, RTI and RTI First Appeals</p></div>
+        <button id="pgrtiRefresh" type="button">↻ Refresh</button>
+      </div>
+      <p id="pgrtiMessage" class="pgrti-status" role="status" aria-live="polite">PG/RTI data will load when this section is visible.</p>
+      <div id="pgrtiSummary" class="pgrti-summary"><p class="pgrti-muted">Loading approved pendency information…</p></div>
+      <details id="pgrtiAdminBlock" class="pgrti-admin" hidden>
+        <summary>Administrator · Setup, permissions and verification</summary>
+        <div class="pgrti-admin-inner">
+          <div class="pgrti-admin-line"><button id="pgrtiInitialize" type="button">Initialize registers in existing spreadsheet</button>
+            <button id="pgrtiSettingsLoad" type="button">Load settings</button>
+            <button id="pgrtiLoadDrafts" type="button">Refresh drafts</button></div>
+          <div class="pgrti-setting">
+            <label><input id="pgrtiOfficeUploads" type="checkbox"> Allow selected offices to upload draft PDFs</label>
+            <label><input id="pgrtiPublicTotals" type="checkbox"> Display office totals without login (no officer details)</label>
+          </div>
+          <div class="pgrti-allowed"><strong>Offices permitted to upload</strong><div id="pgrtiAllowed"></div></div>
+          <button id="pgrtiSettingsSave" type="button">Save administrator settings</button>
+          <h3>Draft reports awaiting approval</h3><div id="pgrtiDraftList"></div>
+        </div>
+      </details>
+      <details id="pgrtiUploadBlock" class="pgrti-admin" hidden>
+        <summary>Upload PG/RTI PDF · Draft (not automatically published)</summary>
+        <div class="pgrti-admin-inner">
+          <div class="pgrti-form-top">
+            <label>Category<select id="pgrtiCat"><option value="PG">Public Grievance</option><option value="PG_APPEAL">PG Appeal</option><option value="RTI">RTI Application</option><option value="RTI_APPEAL">RTI First Appeal</option></select></label>
+            <label>Report as on<input id="pgrtiDate" type="date"></label>
+            <label>PDF scope<select id="pgrtiScope"><option value="OFFICE">Single office</option><option value="REGION">All offices</option></select></label>
+            <label id="pgrtiOfficeBox">Office<select id="pgrtiOffice"><option value="CEB">CE(B)</option></select></label>
+          </div>
+          <div class="pgrti-form-top"><label>Source PDF · maximum 8 MB<input id="pgrtiFile" type="file" accept="application/pdf,.pdf"></label>
+            <label>Source / remarks<input id="pgrtiNote" maxlength="300" placeholder="Portal export date, source and notes"></label></div>
+          <p class="pgrti-muted">The PDF is stored privately. Enter or paste officer-wise figures below; no extracted numbers are treated as verified automatically. For scanned or poorly formatted reports, transcribe and check against the original PDF.</p>
+          <details class="pgrti-import"><summary>Paste tabular rows from official Excel export (optional)</summary>
+            <p class="pgrti-muted">Single-office: Officer, Total, With citizen, &lt;10, 10–20, 21–30, 31–60, 61–90, &gt;90 (tab-separated). Regional: put office ID first. Verify all values before publishing.</p>
+            <textarea id="pgrtiPaste" rows="3" placeholder="Paste tab-separated officer-wise rows"></textarea><button id="pgrtiPasteImport" type="button">Add pasted rows</button>
+          </details>
+          <div class="pgrti-row-toolbar"><strong>Individual officer-wise entries</strong><button id="pgrtiAddRow" type="button">+ Add officer / CPIO / GRO / FAA</button></div>
+          <div id="pgrtiRows"></div><button id="pgrtiSaveDraft" type="button" class="pgrti-primary">Save source PDF as draft</button>
+        </div>
+      </details>
+      <section id="pgrtiReview" class="pgrti-review" hidden aria-label="Draft review">
+        <div class="pgrti-row-toolbar"><h3 id="pgrtiReviewTitle">Review draft</h3><button id="pgrtiOpenSource" type="button">Open source PDF securely</button></div>
+        <p class="pgrti-muted">Review and correct the officer rows above, then approve. The portal displays only published snapshots.</p>
+        <label>Review note<input id="pgrtiReviewNote" maxlength="300" placeholder="Verification or correction details"></label>
+        <div class="pgrti-admin-line"><button id="pgrtiPublish" type="button" class="pgrti-primary">Publish verified figures</button>
+          <button id="pgrtiReject" type="button">Reject draft</button></div>
+      </section>
+    </section>
     <section class="adgb-office-overview" aria-label="Sub-office submission status after report submission matrix">
       <div id="adgbOfficePanelMount"></div>
     </section>
@@ -3719,6 +3829,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         document.head.appendChild(script);
       });
     }
+
+    // V17.9.1: expose only the existing authenticated transport to the PG/RTI UI.
+    // All PG/RTI access and writes are checked independently in Code.gs.
+    window.ADGB_PGRTI_CALL=function(payload){return postToBackend(payload);};
 
     function postToBackend(payload){
       return new Promise((resolve,reject)=>{
@@ -7672,5 +7786,6 @@ function renderAdminSubjects(){
     });
   })();
   </script>
+  <script defer src="pgrti-v1791.js?v=1791"></script>
 </body>
 </html>
