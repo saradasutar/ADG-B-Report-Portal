@@ -28,13 +28,13 @@ function drawSummary(response){
  const list=Array.isArray(response.totals)?response.totals:[];
  const sum=Object.fromEntries(Object.keys(categories).map(c=>[c,list.filter(x=>x.category===c).reduce((n,x)=>n+Number(x.total||0),0)]));
  const latest=list.map(x=>x.asOf).filter(Boolean).sort().reverse()[0]||'No approved snapshot';
- const cards=Object.keys(categories).map(c=>'<div class="pgrti-metric pgrti-'+c.toLowerCase()+'"><small>'+categories[c]+'</small><strong>'+fmt(sum[c])+'</strong><span>Latest approved counts</span></div>').join('');
+ const cards=Object.keys(categories).map(c=>{let n=list.filter(x=>x.category===c).length;return '<div class="pgrti-metric pgrti-'+c.toLowerCase()+'"><small>'+categories[c]+'</small><strong>'+(n?fmt(sum[c]):'—')+'</strong><span>'+(n?n+' office snapshot(s)':'Not reported yet')+'</span></div>';}).join('');
  let officeRows=offices.map(o=>{
    const set=list.filter(x=>x.officeId===o.id),total=set.reduce((n,x)=>n+Number(x.total||0),0);
    const aged=set.reduce((n,x)=>n+Number(x.agedOver30||0),0);
    if(!set.length)return '<tr><th scope="row">'+esc(o.name)+'</th><td colspan="6">Not reported</td></tr>';
-   return '<tr><th scope="row">'+esc(o.name)+'</th>'+Object.keys(categories).map(c=>'<td>'+fmt(set.find(x=>x.category===c)?.total||0)+'</td>').join('')+
-   '<td><strong>'+fmt(total)+'</strong></td><td>'+fmt(aged)+'</td></tr>';
+   return '<tr><th scope="row">'+esc(o.name)+'</th>'+Object.keys(categories).map(c=>'<td>'+(set.find(x=>x.category===c)?fmt(set.find(x=>x.category===c)?.total):'—')+'</td>').join('')+
+   '<td><strong>'+fmt(total)+'</strong> <small>reported</small></td><td>'+fmt(aged)+'</td></tr>';
  }).join('');
  const details=list.filter(x=>Array.isArray(x.officers)&&x.officers.length).map(x=>
    '<details><summary>'+esc(officeName(x.officeId))+' · '+categories[x.category]+' — '+fmt(x.total)+' pending, as on '+esc(x.asOf)+
@@ -43,7 +43,7 @@ function drawSummary(response){
  el.innerHTML='<div class="pgrti-summary-meta">Last approved snapshot: <strong>'+esc(latest)+'</strong> · These are uploaded snapshots, not live portal data.</div>'+
    '<div class="pgrti-metrics">'+cards+'</div><div class="pgrti-table-wrap"><table><thead><tr><th>Office</th><th>PG</th><th>PG Appeal</th><th>RTI</th><th>RTI Appeal</th><th>Total</th><th>Over 30d</th></tr></thead><tbody>'+officeRows+'</tbody></table></div>'+
    (details?'<details class="pgrti-detail"><summary>Officer-wise approved details</summary>'+details+'</details>':'')+
-   '<p class="pgrti-muted">Each office/category uses its latest approved snapshot. A reduction is not proof of disposal; old snapshots remain in the audit register.</p>';
+   '<p class="pgrti-muted">Figures are totals for reported offices/categories only; a dash means not reported, not zero. A reduction is not proof of disposal. Old snapshots remain in the audit register.</p>';
 }
 async function load(){
  if(busy)return;
