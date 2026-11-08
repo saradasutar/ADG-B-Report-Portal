@@ -2033,6 +2033,69 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     grid-template-columns:1fr!important;
   }
 }
+
+/* V17.7.102 — explicitly keep reporting tools to the RIGHT; office cards
+   live BELOW the report matrix inside the main column. Overrides V100. */
+@media screen and (min-width:1101px){
+  .adgb-shell:not(.matrix-expanded) .adgb-dashboard-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) clamp(220px,19vw,265px)!important;
+    align-items:start!important;
+    gap:12px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel{
+    display:flex!important;flex-direction:column!important;gap:10px!important;
+    align-self:start!important;grid-column:2!important;grid-row:1!important;
+    min-width:0!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel>.adgb-side-card{
+    display:block!important;width:100%!important;grid-column:auto!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-quick-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-quick-actions button{
+    min-height:62px!important;
+  }
+}
+.adgb-shell:not(.matrix-expanded) .adgb-office-overview{
+  display:block!important;grid-column:1!important;min-width:0!important;
+  margin:12px 0 0!important;
+}
+.adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-panel{
+  margin:0!important;
+}
+@media screen and (min-width:1101px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row{
+    padding:7px!important;min-height:82px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-status{
+    font-size:10px!important;
+  }
+}
+@media screen and (max-width:1100px){
+  .adgb-shell:not(.matrix-expanded) .adgb-dashboard-grid{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-column:1!important;gap:10px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel>.adgb-side-card:last-of-type{
+    grid-column:1/-1!important;
+  }
+}
+@media screen and (max-width:760px){
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel>.adgb-side-card:last-of-type{
+    grid-column:auto!important;
+  }
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2158,9 +2221,6 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </article>
     </section>
 
-    <section class="adgb-office-overview" aria-label="Quick office performance overview">
-      <div id="adgbOfficePanelMount"></div>
-    </section>
     <div class="workspace">
       <aside class="office-panel" aria-label="Submission status of sub-offices">
         <div class="panel-head">
@@ -2223,6 +2283,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
       </div>
+    <section class="adgb-office-overview" aria-label="Sub-office submission status after report submission matrix">
+      <div id="adgbOfficePanelMount"></div>
+    </section>
       </div>
       <aside class="adgb-right-panel" aria-label="Reporting tools">
         <section class="adgb-side-card adgb-timeline">
