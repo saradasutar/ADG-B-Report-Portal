@@ -69,7 +69,7 @@ async function adminInit(){if(!isAdmin())return;buttonBusy('#pgrtiInitialize',tr
 async function loadSettings(){if(!isAdmin())return;try{const r=await call('pgrtiSettingsGet');settings=r.settings||{};
  $('#pgrtiOfficeUploads').checked=settings.officeUploads===true;
  $('#pgrtiPublicTotals').checked=settings.publicTotals===true;
- $('#pgrtiAllowed').innerHTML=offices.map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'" '+false+'>'+esc(o.name)+'</label>').join('');
+ $('#pgrtiAllowed').innerHTML=offices.map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'">'+esc(o.name)+'</label>').join('');
  // Reset checked states explicitly (avoid string interpolation of stale lists).
  $('#pgrtiAllowed').querySelectorAll('input').forEach(e=>e.checked=(settings.allowedOfficeIds||[]).includes(e.value));
  setMsg('Administrator settings loaded.');
@@ -120,8 +120,9 @@ function chooseDraft(id){
  $('#pgrtiRows').innerHTML='';
  chosen.rows.forEach(addRow);
  $('#pgrtiReview').hidden=false;
+ $('#pgrtiUploadBlock').open=true;
  $('#pgrtiReviewTitle').textContent='Review draft: '+chosen.fileName+' ('+chosen.reportDate+')';
- $('#pgrtiReview').scrollIntoView({behavior:'smooth',block:'nearest'});
+ $('#pgrtiUploadBlock').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function manageDraft(action){
  if(!chosen||!isAdmin())return;
@@ -143,6 +144,7 @@ async function openSource(){
  tab.location.replace(url.href);}
  catch(e){try{tab.close();}catch(ignore){}flash(String(e.message||e),true);}
 }
+document.getElementById('adgbPgrtiJump')?.addEventListener('click',()=>{root.scrollIntoView({behavior:'smooth',block:'start'});if(isAdmin())$('#pgrtiUploadBlock').open=true;});
 $('#pgrtiRefresh').addEventListener('click',load);
 $('#pgrtiInitialize').addEventListener('click',adminInit);
 $('#pgrtiSettingsLoad').addEventListener('click',loadSettings);
