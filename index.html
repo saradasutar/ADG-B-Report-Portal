@@ -2204,6 +2204,25 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     gap:9px!important;
   }
 }
+
+/* V17.7.104 — compact live reporting cues, preserving the existing layout. */
+@media screen {
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row.adgb-performance-complete {
+    border-top-color:#0a9870!important;background:#f2fcf7!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row.adgb-performance-progress {
+    border-top-color:#d79a32!important
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row:focus-visible {
+    outline:3px solid #2779bd!important;outline-offset:2px!important
+  }
+  .adgb-due-pill {display:inline-block;padding:3px 7px;border-radius:20px;
+    background:#e6f3fc;color:#135b87;font-size:10px;font-weight:900;line-height:1.2}
+  .adgb-shell:not(.matrix-expanded) .adgb-right-panel .adgb-line small {line-height:1.35!important}
+}
+@media (prefers-reduced-motion: reduce) {
+ .adgb-office-overview .office-cycle-row {transition:none!important;transform:none!important}
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -5361,7 +5380,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(dot)dot.classList.toggle('online',!!state.connected);
       const india=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date());
       if(timeline)timeline.innerHTML='<div class="adgb-line"><span class="adgb-line-icon">▣</span><span><strong>Current reporting cycle</strong><small>'+escapeHtml(document.getElementById('cycleName')?.textContent||india)+'</small></span></div>'+
-        '<div class="adgb-line"><span class="adgb-line-icon">◷</span><span><strong>Submission deadlines</strong><small>See due dates beside individual report subjects</small></span></div>';
+        '<div class="adgb-line"><span class="adgb-line-icon">◷</span><span><strong>Due today <span class="adgb-due-pill">'+escapeHtml(dueToday?.textContent||'0')+'</span></strong><small>Check individual subject due dates in the report matrix</small></span></div>';
       if(!recent)return;
       const entries=[];
       state.subjects.forEach(subject=>state.offices.forEach(office=>{
@@ -6101,7 +6120,7 @@ function adgbAlignPreviewLayout(){
         const pct=officeTotal?Math.round(submitted*100/officeTotal):0;
         const active=state.officeFilter===office.id;
 
-        return '<button type="button" class="office-cycle-row'+(active?' active':'')+'" data-office-filter="'+escapeAttr(office.id)+'">'+
+        return '<button type="button" class="office-cycle-row adgb-performance-'+(pct===100?'complete':pct>=50?'progress':'pending')+(active?' active':'')+'" aria-pressed="'+String(active)+'" data-office-filter="'+escapeAttr(office.id)+'">'+
           '<span>'+escapeHtml(office.name)+'</span>'+
           '<span class="office-cycle-status"><span class="office-status-submitted">Submitted <strong>'+submitted+'</strong></span>'+
           '<span class="office-status-pending">Pending <strong>'+pending+'</strong></span></span>'+
