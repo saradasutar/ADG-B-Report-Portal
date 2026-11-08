@@ -2357,6 +2357,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-recent-controls #adgbRecentToggle:hover{background:#e5f3ff}
 .adgb-recent-controls #adgbRecentToggle:focus-visible{outline:2px solid #186ab2;outline-offset:2px}
 
+/* Hide the extra summary while full-width matrix mode is active. */
+.adgb-shell.matrix-expanded .adgb-pgrti-panel{display:none!important}
 /* V17.9.1 — PG & RTI monitoring beneath Report Matrix; preserve right rail. */
 .adgb-pgrti-panel{grid-column:1;min-width:0;margin:12px 0 0;border:1px solid #cddfeb;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(19,57,105,.06)}
 .adgb-pgrti-panel [hidden]{display:none!important}
@@ -2884,7 +2886,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.7.99</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.9.1</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -3776,7 +3778,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.7.99 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.9.1 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
