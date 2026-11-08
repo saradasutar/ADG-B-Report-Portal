@@ -2349,6 +2349,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-matrix-travel button:disabled{opacity:.34;cursor:default;box-shadow:none!important}
 .adgb-matrix-travel button:focus-visible{outline:2px solid #2169ad;outline-offset:2px}
 .result-count{font-weight:700;letter-spacing:.01em}
+
+/* V17.7.107: accessible compact right-rail recent submissions. */
+.adgb-right-panel #adgbRecentActivity[hidden]{display:none!important}
+.adgb-recent-controls{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adgb-recent-controls #adgbRecentToggle{border:1px solid #bad3e8;background:#fff;padding:4px 9px;border-radius:7px;text-decoration:none!important;color:#155986;font-size:11px;font-weight:850;cursor:pointer}
+.adgb-recent-controls #adgbRecentToggle:hover{background:#e5f3ff}
+.adgb-recent-controls #adgbRecentToggle:focus-visible{outline:2px solid #186ab2;outline-offset:2px}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2555,8 +2562,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           </div>
         </section>
         <section class="adgb-side-card">
-          <h2 class="adgb-recent-heading"><span>◴ Recent submissions</span><button type="button" id="adgbViewAllRecent">View all</button></h2>
-          <div id="adgbRecentActivity"><p class="adgb-empty">Loading verified submission status…</p></div>
+          <h2 class="adgb-recent-heading"><span>◴ Recent submissions</span><span class="adgb-recent-controls"><button type="button" id="adgbRecentToggle" aria-expanded="false" aria-controls="adgbRecentActivity">Show</button><button type="button" id="adgbViewAllRecent">View all</button></span></h2>
+          <div id="adgbRecentActivity" hidden><p class="adgb-empty">Loading verified submission status…</p></div>
         </section>
       </aside>
       </div>
@@ -7651,5 +7658,19 @@ function renderAdminSubjects(){
 
   <script src="portal-v1767.js?v=17757"></script>
   <script src="sticky-v1767.js?v=17757"></script>
+  <script>
+  /* V17.7.107 — small, standalone UI toggle; no server access. */
+  (()=>{
+    const button=document.getElementById('adgbRecentToggle');
+    const content=document.getElementById('adgbRecentActivity');
+    if(!button||!content)return;
+    button.addEventListener('click',()=>{
+      const opening=content.hidden;
+      content.hidden=!opening;
+      button.setAttribute('aria-expanded',String(opening));
+      button.textContent=opening?'Hide':'Show';
+    });
+  })();
+  </script>
 </body>
 </html>
