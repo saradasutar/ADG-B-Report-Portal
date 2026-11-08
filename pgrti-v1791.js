@@ -51,8 +51,11 @@ async function load(){
  try{const response=await call('pgrtiBootstrap');if(!response?.ok)throw Error(response?.message||'Data unavailable');
  drawSummary(response);
  $('#pgrtiAdminBlock').hidden=!isAdmin();
- $('#pgrtiUploadBlock').hidden=!isAdmin();
- $('#pgrtiOffice').innerHTML=opts(offices,$('#pgrtiOffice').value||'CEB');
+ $('#pgrtiUploadBlock').hidden=!(response.canUpload||isAdmin());
+ $('#pgrtiOffice').innerHTML=opts(offices,response.uploadOfficeId||$('#pgrtiOffice').value||'CEB');
+ $('#pgrtiScope').disabled=!isAdmin();
+ $('#pgrtiOffice').disabled=!isAdmin();
+ if(!isAdmin()){$('#pgrtiScope').value='OFFICE';$('#pgrtiOfficeBox').hidden=false;}
  setMsg(response.initialized?'Approved figures loaded.':'Administrator setup is required.');
  }catch(e){setMsg('PG/RTI module requires the matching V17.9.1 backend. '+String(e.message||e),true);
  $('#pgrtiSummary').innerHTML='<p class="pgrti-muted">Existing report submissions are unaffected. PG/RTI monitoring will activate after the new backend is deployed.</p>';}
@@ -66,7 +69,7 @@ async function adminInit(){if(!isAdmin())return;buttonBusy('#pgrtiInitialize',tr
 async function loadSettings(){if(!isAdmin())return;try{const r=await call('pgrtiSettingsGet');settings=r.settings||{};
  $('#pgrtiOfficeUploads').checked=settings.officeUploads===true;
  $('#pgrtiPublicTotals').checked=settings.publicTotals===true;
- $('#pgrtiAllowed').innerHTML=offices.map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'" '+(settings.allowedOfficeIds||[]).includes(o.id?'':'')+'>'+esc(o.name)+'</label>').join('');
+ $('#pgrtiAllowed').innerHTML=offices.map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'" '+false+'>'+esc(o.name)+'</label>').join('');
  // Reset checked states explicitly (avoid string interpolation of stale lists).
  $('#pgrtiAllowed').querySelectorAll('input').forEach(e=>e.checked=(settings.allowedOfficeIds||[]).includes(e.value));
  setMsg('Administrator settings loaded.');
@@ -155,5 +158,5 @@ $('#pgrtiPublish').addEventListener('click',()=>manageDraft('pgrtiPublishDraft')
 $('#pgrtiReject').addEventListener('click',()=>manageDraft('pgrtiRejectDraft'));
 $('#pgrtiOpenSource').addEventListener('click',openSource);
 $('#pgrtiDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-setTimeout(load,900);
+if('IntersectionObserver' in window){const watcher=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)){watcher.disconnect();load();}},{rootMargin:'200px'});watcher.observe(root);}else setTimeout(load,900);
 })();
