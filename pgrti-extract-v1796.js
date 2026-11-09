@@ -80,6 +80,10 @@
        texts.push(parsed.text);
      }
      var joined=texts.join(' ');
+     if(!/Age\s+wise\s+(?:Appeal\(s\)\s+)?Pendency\s+Report/i.test(joined)||
+        !/CPWD\s+Region\s+Bangalore/i.test(joined)){
+       throw Error('PDF format is not recognized as a CPWD Region Bangalore RTI age-wise export. For PG PDFs or different layouts, use verified manual entries / Paste table.');
+     }
      var m=joined.match(/(?:Age\s+wise[\s\S]{0,90}as\s+on)\s*(\d{4}-\d{2}-\d{2})/i);
      var date=m?m[1]:'';
      var isAppeal=/Age\s+wise\s+Appeal/i.test(joined);
