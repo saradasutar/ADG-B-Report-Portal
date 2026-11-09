@@ -2503,6 +2503,72 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:1100px){.pgrti-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-form-top{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-age-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:620px){.pgrti-row-head{grid-template-columns:1fr}.pgrti-age-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrti-form-top{grid-template-columns:1fr}.pgrti-head{padding:10px}.pgrti-summary{padding:6px}.pgrti-metrics{gap:6px}.pgrti-metric{padding:9px}.pgrti-metric strong{font-size:22px}}
 @media print{.adgb-pgrti-panel{display:none!important}}
+
+/* V17.10.3 — dashboard space and office overview refinements.
+   Keep matrix/office/right-rail ordering and all existing action buttons. */
+@media screen and (min-width:1101px){
+  .adgb-shell:not(.matrix-expanded) .adgb-dashboard-grid{
+    grid-template-columns:minmax(0,1fr) clamp(205px,17vw,242px)!important;
+    column-gap:10px!important;
+  }
+}
+@media screen {
+  .adgb-shell:not(.matrix-expanded) .adgb-primary-column .matrix-section{
+    border-radius:12px!important;overflow:visible!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .matrix-section .matrix-top{
+    padding:9px 12px!important;min-height:0!important;gap:8px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .matrix-section .matrix-tools{
+    padding:8px 11px!important;gap:7px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row{
+    min-height:76px!important;padding:8px 9px!important;
+    transition:box-shadow .15s ease,border-color .15s ease!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row>span:first-child{
+    min-width:0!important;overflow-wrap:anywhere!important;
+    font-size:12px!important;line-height:1.25!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-status{
+    flex-wrap:wrap!important;gap:3px 8px!important;
+    justify-content:space-between!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row:focus-visible{
+    outline:3px solid #157ac0!important;outline-offset:2px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) #matrixContent .table-wrap{
+    max-height:none!important;overflow-x:auto!important;overflow-y:visible!important;
+    scrollbar-width:thin;overscroll-behavior-x:contain;
+  }
+  .adgb-shell:not(.matrix-expanded) #matrixContent .table-wrap table{
+    border-collapse:separate;border-spacing:0;
+  }
+  .adgb-shell:not(.matrix-expanded) #matrixContent .table-wrap tbody tr:hover>td{
+    background-color:#f2f8ff!important;
+  }
+}
+@media screen and (max-width:1250px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media screen and (max-width:760px){
+  .adgb-shell:not(.matrix-expanded) .matrix-section .matrix-tools{
+    padding:8px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;
+  }
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-row{
+    min-height:78px!important;
+  }
+}
+@media screen and (max-width:380px){
+  .adgb-shell:not(.matrix-expanded) .adgb-office-overview #adgbOfficePanelMount .office-cycle-list{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2959,7 +3025,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.2</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.3</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -6210,6 +6276,9 @@ function adgbAlignPreviewLayout(){
     }
 
     function renderMatrix(){
+      // Keep the current office-column position when filters or status updates repaint the matrix.
+      const previousTable=$('#matrixContent .table-wrap');
+      const previousScrollLeft=previousTable?.scrollLeft||0;
       const subjects=getVisibleSubjects();
       const offices=state.officeFilter?state.offices.filter(o=>o.id===state.officeFilter):state.offices;
       const count=$('#resultCount');
@@ -6263,7 +6332,11 @@ function adgbAlignPreviewLayout(){
         '<div class="table-wrap"><table class="'+(isAdmin?'adgb-matrix-admin':'adgb-matrix-public')+'"><thead><tr><th scope="col">Report subject</th>'+
         headers+(isAdmin?'<th scope="col">Remark</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
         '<div class="mobile-matrix">'+cards+'</div>';
-      requestAnimationFrame(adgbUpdateMatrixScrollControls_);
+      requestAnimationFrame(()=>{
+        const table=$('#matrixContent .table-wrap');
+        if(table&&previousScrollLeft)table.scrollLeft=Math.min(previousScrollLeft,Math.max(0,table.scrollWidth-table.clientWidth));
+        adgbUpdateMatrixScrollControls_();
+      });
 
       if(state.remarkEditingSubjectId){
         setTimeout(()=>document.querySelector('[data-remark-input="'+CSS.escape(state.remarkEditingSubjectId)+'"]')?.focus(),30);
