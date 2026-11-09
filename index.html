@@ -3920,6 +3920,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     // V17.9.1: expose only the existing authenticated transport to the PG/RTI UI.
     // All PG/RTI access and writes are checked independently in Code.gs.
     window.ADGB_PGRTI_CALL=function(payload){return postToBackend(payload);};
+    // Reuse the portal's existing administrator display checks; backend still authorizes every operation.
+    window.ADGB_PGRTI_IS_ADMIN=function(){return !!String(window.ADGB_AUTH?.token||'')&&isRecognizedAsAdmin();};
 
     function postToBackend(payload){
       return new Promise((resolve,reject)=>{
