@@ -5,7 +5,7 @@ const $=s=>root.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories={PG:'Public Grievances',PG_APPEAL:'PG Appeals',RTI:'RTI Applications',RTI_APPEAL:'RTI First Appeals'};
 const defaults=['HEAD_OFFICE','CEB','CEHAL','SEPD','SEMYSORE','SEHUBLI'];
-let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null;
+let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null,queuedAuthRefresh=false;
 function uploadReceipt_(r,fileName){
  const box=$('#pgrtiUploadReceipt');if(!box)return;box.hidden=false;box.replaceChildren();
  const title=document.createElement('strong');title.textContent=r.existing?'This PDF was already uploaded':'PDF uploaded successfully';
@@ -20,7 +20,7 @@ function uploadReceipt_(r,fileName){
  box.appendChild(button);}
 }
 const token=()=>String(window.ADGB_AUTH?.token||'');
-const isAdmin=()=>!!token()&&(typeof window.ADGB_PGRTI_IS_ADMIN==='function'?window.ADGB_PGRTI_IS_ADMIN():document.getElementById('adgbUserRole')?.textContent?.trim()==='Administrator');
+const isAdmin=()=>!!token()&&window.ADGB_AUTH?.role==='ADMIN';
 const call=(action,extra={})=>{if(typeof window.ADGB_PGRTI_CALL!=='function')throw Error('PG/RTI backend bridge is not available.');return window.ADGB_PGRTI_CALL({action,sessionToken:token(),...extra});};
 const fmt=n=>Number(n||0).toLocaleString('en-IN');
 const setMsg=(message,error=false)=>{let x=$('#pgrtiMessage');if(x){x.textContent=message;x.classList.toggle('pgrti-error',!!error);}};
@@ -59,7 +59,8 @@ function drawSummary(response){
    '<p class="pgrti-muted">Figures are totals for reported offices/categories only; a dash means not reported, not zero. A reduction is not proof of disposal. Old snapshots remain in the audit register.</p>';
 }
 async function load(){
- if(busy)return;
+ if(busy){queuedAuthRefresh=true;return;}
+ busy=true;
  buttonBusy('#pgrtiRefresh',true);setMsg('Reading approved PG/RTI snapshots…');
  try{const response=await call('pgrtiBootstrap');if(!response?.ok)throw Error(response?.message||'Data unavailable');
  drawSummary(response);
@@ -77,7 +78,9 @@ async function load(){
  if(admin&&response.initialized)await loadDrafts(true);
  }catch(e){setMsg('PG/RTI module requires the matching V17.9.1 backend. '+String(e.message||e),true);
  $('#pgrtiSummary').innerHTML='<p class="pgrti-muted">Existing report submissions are unaffected. PG/RTI monitoring will activate after the new backend is deployed.</p>';}
- finally{buttonBusy('#pgrtiRefresh',false);}
+ finally{busy=false;buttonBusy('#pgrtiRefresh',false);
+  if(queuedAuthRefresh){queuedAuthRefresh=false;void load();}
+ }
 }
 async function adminInit(){if(!isAdmin())return;buttonBusy('#pgrtiInitialize',true);
  try{const r=await call('pgrtiInit');setMsg(r.message||'Initialized.');await load();}
@@ -169,6 +172,9 @@ async function openSource(){
 }
 document.getElementById('adgbPgrtiJump')?.addEventListener('click',()=>{root.scrollIntoView({behavior:'smooth',block:'start'});if(isAdmin())$('#pgrtiUploadBlock').open=true;});
 $('#pgrtiRefresh').addEventListener('click',load);
+// The login UI is populated asynchronously. Rerun bootstrap immediately after role/token changes.
+window.addEventListener('adgb-auth-changed',()=>{void load();});
+window.addEventListener('adgb-access-changed',()=>{void load();});
 $('#pgrtiInitialize').addEventListener('click',adminInit);
 $('#pgrtiSettingsLoad').addEventListener('click',loadSettings);
 $('#pgrtiSettingsSave').addEventListener('click',saveSettings);
