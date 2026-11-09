@@ -43,13 +43,13 @@
    var data=items.filter(function(i){return typeof i.str==='string' && i.str.trim();}).map(function(i){
      return {t:i.str.trim(),x:Number(i.transform[4])*scale,y:(height-Number(i.transform[5]))*scale};
    });
-   var anchors=data.filter(function(i){return i.x>30&&i.x<75&&i.y>150&&/^[1-9]\d?$/.test(i.t);}).sort(function(a,b){return a.y-b.y;});
+   var anchors=data.filter(function(i){return i.x>30&&i.x<75&&i.y>165&&i.y<650&&/^[1-9]\d?$/.test(i.t);}).sort(function(a,b){return a.y-b.y;});
    var result=[];
    anchors.forEach(function(a,index){
      var lower=index?(anchors[index-1].y+a.y)/2:a.y-38;
      var upper=index+1<anchors.length?(anchors[index+1].y+a.y)/2:a.y+38;
      var name=cleanName(data.filter(function(i){return i.x>72&&i.x<139&&i.y>=lower&&i.y<upper&&!/^(total|name of|cpio|faa)$/i.test(i.t);}).sort(function(a,b){return a.y-b.y||a.x-b.x;}));
-     var nums=data.filter(function(i){return i.x>139&&i.x<575&&Math.abs(i.y-a.y)<7&&/^\d+$/.test(i.t);}).sort(function(a,b){return a.x-b.x;}).map(function(i){return Number(i.t);});
+     var nums=data.filter(function(i){return i.x>120&&i.x<575&&Math.abs(i.y-a.y)<7&&/^\d+$/.test(i.t);}).sort(function(a,b){return a.x-b.x;}).map(function(i){return Number(i.t);});
      if(!name||nums.length!==9)return;
      var office=officeFromName(name);
      var total=nums[0],withCitizen=nums[1],u10=nums[2],d10_20=nums[3],d21_30=nums[4],agedOver30=nums[5],d31_60=nums[6],d61_90=nums[7],over90=nums[8];
