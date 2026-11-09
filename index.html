@@ -2592,10 +2592,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           <b id="systemStatus">Connecting…</b>
           <span id="lastChecked"></span>
         </span>
-        <button class="refresh-button" id="refreshButton" type="button">↻ Refresh</button>
+        <button class="refresh-button" id="refreshButton" type="button">↻ Refresh</button><button id="adgbPerfButton" type="button" hidden title="Administrator performance timings">⏱ Performance</button>
       </div>
     </section>
 
+    <section id="adgbPerfPanel" hidden style="padding:12px;border:1px solid #b8d3e8;background:#f6fbff;border-radius:12px;margin:10px 0">
+      <strong>Portal loading diagnostics (this browser session)</strong>
+      <p id="adgbPerfText" style="white-space:pre-line;font-size:12px">No samples yet.</p>
+      <button type="button" id="adgbPerfMeasure">Measure fresh load</button>
+      <button type="button" id="adgbPerfCopy">Copy results</button>
+      <button type="button" id="adgbPerfClose">Close</button>
+    </section>
     <div class="adgb-dashboard-grid">
       <div class="adgb-primary-column">
       <section class="stats-grid" aria-label="Submission overview">
@@ -2952,7 +2959,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.0</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.1</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -3442,6 +3449,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
+      adgbPerfInit_();
       adgbInitLayout();
       adgbInitInsights();
       adgbInitArchive();
@@ -3731,6 +3739,47 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
      * dictionary shape only if an unexpected/older response lacks
      * statusList entirely.
      */
+
+    // Local-only performance measurements. Never store credentials, report names or file content.
+    const adgbPerfData_={started:performance.now(),samples:[],renderMs:null,firstReadyMs:null,active:null};
+    function adgbPerfShow_(){
+      const allowed=window.ADGB_AUTH?.isAdmin===true&&!!window.ADGB_AUTH?.token;
+      const button=document.getElementById('adgbPerfButton');
+      const panel=document.getElementById('adgbPerfPanel');
+      if(button)button.hidden=!allowed;
+      if(!allowed&&panel)panel.hidden=true;
+      if(!panel||panel.hidden)return;
+      const p=document.getElementById('adgbPerfText');
+      if(!p)return;
+      const v=adgbPerfData_;
+      const last=v.samples[v.samples.length-1];
+      const avg=v.samples.length?Math.round(v.samples.reduce((a,x)=>a+x.durationMs,0)/v.samples.length):null;
+      p.textContent='First ready: '+(v.firstReadyMs??'—')+' ms\n'+
+        'Latest bootstrap: '+(last?.durationMs??'—')+' ms\n'+
+        'Average bootstrap: '+(avg??'—')+' ms\n'+
+        'Latest dashboard render: '+(v.renderMs??'—')+' ms\n'+
+        'Bootstrap samples: '+v.samples.length+'\n'+
+        'Latest result: '+(last?.ok===true?'Success':last?.ok===false?'Failed':'Not measured');
+    }
+    function adgbPerfInit_(){
+      document.getElementById('adgbPerfButton')?.addEventListener('click',()=>{
+        if(window.ADGB_AUTH?.isAdmin!==true)return;
+        const panel=document.getElementById('adgbPerfPanel');panel.hidden=!panel.hidden;
+        adgbPerfShow_();
+      });
+      document.getElementById('adgbPerfMeasure')?.addEventListener('click',()=>{
+        if(window.ADGB_AUTH?.isAdmin===true)void loadPortal(true);
+      });
+      document.getElementById('adgbPerfClose')?.addEventListener('click',()=>{document.getElementById('adgbPerfPanel').hidden=true;});
+      document.getElementById('adgbPerfCopy')?.addEventListener('click',()=>{
+        if(window.ADGB_AUTH?.isAdmin!==true)return;
+        navigator.clipboard?.writeText(document.getElementById('adgbPerfText')?.textContent||'')
+          .then(()=>showToast('Performance results copied.','success'))
+          .catch(()=>showToast('Copy unavailable.','error'));
+      });
+      window.addEventListener('adgb-auth-changed',adgbPerfShow_);
+      adgbPerfShow_();
+    }
     function buildStatusMapFromServer(data){
       const list=Array.isArray(data?.statusList)?data.statusList:null;
 
@@ -3783,6 +3832,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return task;
     }
     async function adgbLoadPortalInternal_(forceFresh=false){
+      const perfStart=performance.now();let perfSuccess=false;
       setNotice('',false);
       const refresh=$('#refreshButton');
       if(refresh)setBusy(refresh,true,'Refreshing…');
@@ -3845,6 +3895,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         }
 
         if(data){
+          perfSuccess=true;
           state.offices=Array.isArray(data.offices)?data.offices:FALLBACK_OFFICES;
           state.subjects=Array.isArray(data.subjects)?data.subjects:[];
           state.subjectMasters=Array.isArray(data.subjectMasters)&&data.subjectMasters.length
@@ -3893,6 +3944,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           if(!hadLiveState)showToast(error.message||'Connection failed.','error');
         }
       }finally{
+        adgbPerfData_.samples.push({durationMs:Math.round(performance.now()-perfStart),ok:perfSuccess});
+        if(adgbPerfData_.samples.length>12)adgbPerfData_.samples.shift();
+        adgbPerfShow_();
         if(refresh)setBusy(refresh,false,'↻ Refresh');
       }
     }
@@ -6083,6 +6137,7 @@ function adgbAlignPreviewLayout(){
     }
 
     function renderAll(lastUpdated){
+      const perfRenderStart=performance.now();
       populateOfficeFilter();
       renderMatrix();
       updateSummary();
@@ -6090,6 +6145,9 @@ function adgbAlignPreviewLayout(){
       adgbRefreshInsights();
       renderAdminSubjects();
       setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated);
+      adgbPerfData_.renderMs=Math.round(performance.now()-perfRenderStart);
+      if(state.connected&&adgbPerfData_.firstReadyMs===null)adgbPerfData_.firstReadyMs=Math.round(performance.now()-adgbPerfData_.started);
+      adgbPerfShow_();
     }
 
     function populateOfficeFilter(){
