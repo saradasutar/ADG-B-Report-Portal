@@ -1501,6 +1501,46 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-notice-preview-ticker .adgb-rich-line-display{display:block;width:max-content;max-width:100%;overflow-wrap:anywhere;padding:2px 5px;border-radius:4px}
 @media(max-width:650px){.adgb-rich-line{grid-template-columns:minmax(100px,1fr) 42px 42px 30px;gap:4px}.adgb-notice-track .adgb-rich-message .adgb-rich-line-display{max-width:65vw}}
 
+
+/* ADG(B) Report Studio V1 — isolated visual workspace */
+#adgbStudio{margin:14px 0;border:1px solid #c6d9ee;background:#f2f7ff;border-radius:14px;padding:16px;color:#162f53}
+#adgbStudio[hidden]{display:none!important}
+.adgb-studio-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.adgb-studio-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+#adgbStudio button{cursor:pointer;border:1px solid #a8c4df;border-radius:8px;background:#fff;color:#19436b;padding:7px 11px;font-weight:700}
+#adgbStudio button:focus-visible{outline:3px solid #f9c642}
+.adgb-studio-work{display:grid;grid-template-columns:minmax(195px,260px) minmax(0,1fr);gap:12px;align-items:start}
+.adgb-studio-controls{background:#fff;border:1px solid #d0e1f2;border-radius:10px;padding:12px;display:grid;gap:9px}
+.adgb-studio-controls label{font-size:12px;font-weight:750;display:grid;gap:3px}
+.adgb-studio-controls input,.adgb-studio-controls select{width:100%;box-sizing:border-box;padding:7px;border:1px solid #b8cfe5;border-radius:6px}
+.adgb-studio-canvas{min-width:0;background:white;border:1px solid #bdd0e5;border-radius:10px;padding:12px}
+.adgb-studio-page{background:#fff;min-height:340px;padding:12px;box-shadow:0 3px 12px #14395617}
+.adgb-studio-page .studio-title{background:linear-gradient(110deg,#063470,#0b6ab6);color:#fff;border-radius:8px;padding:17px 12px;text-align:center;font-weight:900;font-size:clamp(17px,2.5vw,26px)}
+.adgb-studio-page .studio-subtitle{text-align:center;font-size:12px;color:#49617d;margin:8px 0}
+.adgb-studio-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;align-items:start}
+.adgb-studio-block{grid-column:span 12;border:1px solid #d1e2f2;background:#fff;border-radius:9px;overflow:hidden;min-width:0}
+.adgb-studio-block[data-width="6"]{grid-column:span 6}
+.adgb-studio-block[data-width="4"]{grid-column:span 4}
+.adgb-studio-block-title{background:#dcecff;color:#083e7b;font-size:13px;font-weight:850;padding:7px 10px}
+.adgb-studio-block-tools{display:flex;justify-content:flex-end;align-items:center;gap:4px;padding:4px;border-bottom:1px solid #ecf1f6}
+.adgb-studio-block-tools select{max-width:86px;font-size:11px}
+.adgb-studio-block-tools button{padding:2px 7px!important;font-size:11px}
+.adgb-studio-table{width:100%;border-collapse:collapse;font-size:11px}
+.adgb-studio-table th,.adgb-studio-table td{padding:7px;border-bottom:1px solid #d9e5f3;text-align:left}
+.adgb-studio-table th{background:#e4f2ff}
+.adgb-studio-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px}
+.adgb-studio-kpi{background:#deedff;padding:12px 8px;border-radius:8px;text-align:center}
+.adgb-studio-kpi b{display:block;font-size:26px;color:#034ca2}
+.adgb-studio-bar{height:17px;background:linear-gradient(90deg,#4b39dd,#1599df);border-radius:4px;color:white;text-align:right;padding-right:5px;box-sizing:border-box}
+.adgb-studio-page[data-theme="minimal"] .studio-title{background:#242f41}
+.adgb-studio-page[data-theme="minimal"] .adgb-studio-block-title{background:#e9eef4}
+.adgb-studio-page[data-theme="print"] .studio-title{background:#fff;color:#111;border:2px solid #111}
+.adgb-studio-page[data-theme="print"] .adgb-studio-block-title,.adgb-studio-page[data-theme="print"] .adgb-studio-kpi{background:#f1f1f1;color:#111}
+.adgb-studio-page[data-theme="print"] .adgb-studio-bar{background:#444}
+@media(max-width:860px){.adgb-studio-work{grid-template-columns:1fr}.adgb-studio-block[data-width="4"]{grid-column:span 6}}
+@media(max-width:500px){.adgb-studio-block[data-width="6"],.adgb-studio-block[data-width="4"]{grid-column:span 12}.adgb-studio-kpis{gap:4px}.adgb-studio-kpi b{font-size:18px}}
+@media print{body.adgb-studio-print *{visibility:hidden!important}body.adgb-studio-print #adgbStudio,body.adgb-studio-print #adgbStudio .adgb-studio-page,body.adgb-studio-print #adgbStudio .adgb-studio-page *{visibility:visible!important}body.adgb-studio-print #adgbStudio{position:absolute!important;left:0;top:0;width:100%;margin:0!important;padding:0;border:0;background:#fff}body.adgb-studio-print #adgbStudio .adgb-studio-page{box-shadow:none!important}.adgb-studio-block{break-inside:avoid}body.adgb-studio-print .adgb-studio-block-tools,body.adgb-studio-print .adgb-studio-work>.adgb-studio-controls,body.adgb-studio-print .adgb-studio-head,body.adgb-studio-print .adgb-studio-actions{display:none!important}}
+
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2702,6 +2742,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         The dashboard/matrix views share bootstrap data, so their switches control navigation and presentation; backend-protected routes are also enforced server-side.
       </div>
       <div class="adgb-insights-toolbar">
+        <button type="button" id="adgbStudioLaunch">🎨 Open Report Studio</button>
         <button type="button" id="adgbControlLoad">Load live settings</button>
         <button type="button" id="adgbControlPresetRestricted" disabled>Restricted public preset</button>
         <button type="button" id="adgbControlPresetDefault" disabled>Preview defaults</button>
@@ -2897,7 +2938,30 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>Note:</strong> Parliament Matters and other reports not included in this portal may please be emailed to
       <a href="mailto:bngeepcsr2.cpwd@gov.in">bngeepcsr2.cpwd@gov.in</a>.
     </aside>
-  </main>
+  
+<section id="adgbStudio" hidden aria-label="ADG(B) Smart Report Studio">
+ <div class="adgb-studio-head"><div><h2>🎨 ADG(B) Smart Report Studio</h2><p>Administrator design workspace · reports remain local to the current session</p></div><button type="button" id="adgbStudioClose">✕ Close Studio</button></div>
+ <div class="adgb-studio-actions"><button type="button" id="adgbStudioRefresh">↻ Refresh report data</button><button type="button" id="adgbStudioSave">Save layout</button><button type="button" id="adgbStudioPrint">Print / Save PDF</button><button type="button" id="adgbStudioExport">Export layout JSON</button></div>
+ <div class="adgb-studio-work">
+  <div class="adgb-studio-controls">
+   <label>Report title<input id="adgbStudioTitle" value="ADG(B) Official Reporting Dashboard" maxlength="100"></label>
+   <label>Report dataset<select id="adgbStudioType"><option value="submissions">Report submission status (live portal data)</option><option value="rti">RTI pendency (import CSV)</option><option value="appeal">RTI appeals (import CSV)</option><option value="pg">Public grievances (import CSV)</option></select></label>
+   <label>Design theme<select id="adgbStudioTheme"><option value="official">Official Blue</option><option value="minimal">Executive Minimal</option><option value="print">Black & White Print</option></select></label>
+   <label>Saved layout<select id="adgbStudioLayouts"><option value="">Select saved layout</option></select></label>
+   <label>Upload CSV (optional)<input type="file" id="adgbStudioCsv" accept=".csv,text/csv"></label>
+   <small>CSV columns: Office, Pending, AgeBand. Example: CE(B),9,21-30 days. Imports are not uploaded or stored by this designer.</small>
+   <strong>Include components</strong>
+   <label><input type="checkbox" data-studio-item="kpi" checked> Summary cards</label>
+   <label><input type="checkbox" data-studio-item="bar" checked> Office comparison</label>
+   <label><input type="checkbox" data-studio-item="age" checked> Age-wise distribution</label>
+   <label><input type="checkbox" data-studio-item="table" checked> Detail table</label>
+   <label><input type="checkbox" data-studio-item="insights" checked> Key takeaways</label>
+   <p id="adgbStudioStatus" role="status">Choose report and components to preview.</p>
+  </div>
+  <div class="adgb-studio-canvas"><div class="adgb-studio-page" id="adgbStudioPage"><div class="studio-title" id="adgbStudioReportTitle"></div><div class="studio-subtitle" id="adgbStudioSubtitle"></div><div class="adgb-studio-grid" id="adgbStudioGrid"></div></div></div>
+ </div>
+</section>
+</main>
   </div>
 
   <footer>
@@ -4839,6 +4903,158 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       });
       adgbRichRenderEditor_();
     }
+
+    // V1 Studio: data from authorised in-memory portal status, or explicit admin CSV import.
+    // Never cache confidential case data. Only layout metadata may be saved in localStorage.
+    const adgbStudio_={rows:[],layout:[],csv:[]};
+    const adgbStudioKinds_=['kpi','bar','age','table','insights'];
+    function adgbStudioEsc_(s){return escapeHtml(String(s??''));}
+    function adgbStudioData_(){
+      const type=document.getElementById('adgbStudioType')?.value||'submissions';
+      if(type!=='submissions')return adgbStudio_.csv;
+      if(!state.connected)return [];
+      return adgbRegisterData().map(r=>({office:r.office,pending:r.submitted?0:1,age:'',submitted:r.submitted?1:0}));
+    }
+    function adgbStudioAggregate_(rows){
+      const office=new Map(),age=new Map();
+      let total=0,submitted=0;
+      rows.forEach(r=>{
+        const v=Number(r.pending)||0;total+=v;submitted+=Number(r.submitted)||0;
+        const name=String(r.office||'Other');office.set(name,(office.get(name)||0)+v);
+        if(r.age)age.set(String(r.age),(age.get(String(r.age))||0)+v);
+      });
+      return {total,submitted,office:[...office].sort((a,b)=>b[1]-a[1]),age:[...age].sort((a,b)=>b[1]-a[1])};
+    }
+    function adgbStudioBarRows_(entries){
+      const max=Math.max(1,...entries.map(x=>x[1]));
+      return entries.slice(0,18).map(([name,value])=>'<tr><td>'+adgbStudioEsc_(name)+'</td><td style="width:65%"><div class="adgb-studio-bar" style="width:'+Math.max(8,Math.round(100*value/max))+'%">'+value+'</div></td></tr>').join('');
+    }
+    function adgbStudioContent_(id,rows,data){
+      const type=document.getElementById('adgbStudioType').value;
+      if(id==='kpi')return '<div class="adgb-studio-kpis"><div class="adgb-studio-kpi">Pending<b>'+data.total+'</b></div><div class="adgb-studio-kpi">Offices<b>'+data.office.length+'</b></div><div class="adgb-studio-kpi">'+(type==='submissions'?'Submitted':'Age bands')+'<b>'+(type==='submissions'?data.submitted:data.age.length)+'</b></div></div>';
+      if(id==='bar')return '<table class="adgb-studio-table"><tbody>'+adgbStudioBarRows_(data.office)+'</tbody></table>';
+      if(id==='age')return data.age.length?'<table class="adgb-studio-table"><tbody>'+adgbStudioBarRows_(data.age)+'</tbody></table>':'<p style="padding:10px">Age-band data not available for this dataset.</p>';
+      if(id==='table')return '<div style="overflow-x:auto"><table class="adgb-studio-table"><thead><tr><th>Office / CPIO</th><th>Pending</th><th>Age band</th></tr></thead><tbody>'+rows.slice(0,250).map(r=>'<tr><td>'+adgbStudioEsc_(r.office)+'</td><td>'+Number(r.pending||0)+'</td><td>'+adgbStudioEsc_(r.age||'—')+'</td></tr>').join('')+'</tbody></table></div>';
+      const leader=data.office[0];return '<div style="padding:12px"><p><b>'+data.total+'</b> pending items in selected dataset.</p><p>'+ (leader?'Highest office: '+adgbStudioEsc_(leader[0])+' ('+leader[1]+').':'No office data loaded.')+'</p><p>Automated summary uses only figures in the current authorised dataset.</p></div>';
+    }
+    function adgbStudioRender_(){
+      const sec=document.getElementById('adgbStudio');if(!sec||sec.hidden)return;
+      if(!isRecognizedAsAdmin()){sec.hidden=true;return;}
+      const rows=adgbStudioData_(),data=adgbStudioAggregate_(rows);
+      const title=document.getElementById('adgbStudioTitle').value.trim()||'Official Report';
+      const theme=document.getElementById('adgbStudioTheme').value;
+      document.getElementById('adgbStudioPage').dataset.theme=theme;
+      document.getElementById('adgbStudioReportTitle').textContent=title;
+      document.getElementById('adgbStudioSubtitle').textContent='O/o ADG(B), CPWD Bengaluru · '+new Date().toLocaleDateString('en-IN')+' · '+(rows.length?'Source: '+(document.getElementById('adgbStudioType').value==='submissions'?'Authenticated portal data':'Imported CSV'):'No data available');
+      const grid=document.getElementById('adgbStudioGrid');grid.replaceChildren();
+      const names={kpi:'Summary KPI cards',bar:'Office-wise comparison',age:'Age-wise distribution',table:'Detailed office data',insights:'Key takeaways'};
+      adgbStudio_.layout.forEach((item,i)=>{
+        const block=document.createElement('section');block.className='adgb-studio-block';block.dataset.width=String(item.width||12);
+        const bar=document.createElement('div');bar.className='adgb-studio-block-tools';
+        const width=document.createElement('select');width.setAttribute('aria-label','Block width');
+        [12,6,4].forEach(n=>{const o=document.createElement('option');o.value=String(n);o.textContent=n===12?'Full':n===6?'Half':'Third';width.appendChild(o);});width.value=String(item.width||12);
+        width.addEventListener('change',()=>{item.width=Number(width.value);adgbStudioRender_();});
+        bar.appendChild(width);
+        [['↑',-1],['↓',1],['×',0]].forEach(([label,shift])=>{
+          const b=document.createElement('button');b.type='button';b.textContent=label;b.title=shift?'Move block':'Remove block';
+          b.addEventListener('click',()=>{
+            if(!shift){document.querySelector('[data-studio-item="'+item.id+'"]').checked=false;adgbStudio_.layout.splice(i,1);}
+            else{const j=i+shift;if(j>=0&&j<adgbStudio_.layout.length){const tmp=adgbStudio_.layout[i];adgbStudio_.layout[i]=adgbStudio_.layout[j];adgbStudio_.layout[j]=tmp;}}
+            adgbStudioRender_();
+          });bar.appendChild(b);
+        });
+        const heading=document.createElement('div');heading.className='adgb-studio-block-title';heading.textContent=names[item.id]||item.id;
+        const body=document.createElement('div');body.innerHTML=adgbStudioContent_(item.id,rows,data);
+        block.append(bar,heading,body);grid.appendChild(block);
+      });
+      document.getElementById('adgbStudioStatus').textContent=rows.length+' data rows · '+adgbStudio_.layout.length+' design components. Layout only is saved; report data remains session-only.';
+    }
+    function adgbStudioLayoutOptions_(){
+      const sel=document.getElementById('adgbStudioLayouts');if(!sel)return;
+      sel.innerHTML='<option value="">Select saved layout</option>';
+      try{const saved=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}');
+        Object.keys(saved).forEach(key=>{const opt=document.createElement('option');opt.value=key;opt.textContent=key;sel.appendChild(opt);});
+      }catch{}
+    }
+    function adgbStudioLoad_(){
+      if(!isRecognizedAsAdmin())return;
+      const key=document.getElementById('adgbStudioLayouts').value;if(!key)return;
+      try{const t=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}')[key];if(!t)return;
+        document.getElementById('adgbStudioTitle').value=String(t.title||'').slice(0,100);
+        document.getElementById('adgbStudioTheme').value=['official','minimal','print'].includes(t.theme)?t.theme:'official';
+        document.getElementById('adgbStudioType').value=['submissions','rti','appeal','pg'].includes(t.type)?t.type:'submissions';
+        adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';
+        adgbStudio_.layout=(Array.isArray(t.layout)?t.layout:[]).filter(x=>adgbStudioKinds_.includes(x.id)).map(x=>({id:x.id,width:[4,6,12].includes(x.width)?x.width:12}));
+        document.querySelectorAll('[data-studio-item]').forEach(x=>x.checked=adgbStudio_.layout.some(y=>y.id===x.dataset.studioItem));
+        adgbStudioRender_();
+      }catch{document.getElementById('adgbStudioStatus').textContent='Saved layout could not be read.';}
+    }
+    function adgbStudioCsvParse_(text){
+      // RFC4180-style quoted comma and quoted newline support.
+      const records=[];let row=[],field='',quoted=false;
+      for(let i=0;i<text.length;i++){const c=text[i];
+        if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else quoted=!quoted;}
+        else if(c===','&&!quoted){row.push(field);field='';}
+        else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(x=>x.trim()))records.push(row);row=[];field='';}
+        else field+=c;
+      }row.push(field);if(row.some(x=>x.trim()))records.push(row);
+      if(!records.length)return [];
+      const headers=records.shift().map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,''));
+      const find=(...names)=>headers.findIndex(x=>names.includes(x));
+      const office=find('office','cpio','nameofoffice','officename');
+      const pending=find('pending','totalpending','count');
+      const age=find('ageband','age','aging','ageing');
+      if(office<0||pending<0)throw Error('CSV must contain Office and Pending column headings.');
+      return records.slice(0,2000).map(row=>({office:String(row[office]||'Other').slice(0,160),pending:Math.max(0,Number(row[pending])||0),age:age>=0?String(row[age]||'').slice(0,80):''})).filter(x=>Number.isFinite(x.pending));
+    }
+    function adgbStudioInit_(){
+      const open=document.getElementById('adgbStudioLaunch'),section=document.getElementById('adgbStudio');
+      open?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin())return;
+        section.hidden=false;adgbStudio_.csv=[];
+        if(!adgbStudio_.layout.length)adgbStudio_.layout=adgbStudioKinds_.map(id=>({id,width:id==='kpi'?12:6}));
+        adgbStudioLayoutOptions_();adgbStudioRender_();section.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      document.getElementById('adgbStudioClose')?.addEventListener('click',()=>{section.hidden=true;});
+      ['adgbStudioTitle','adgbStudioTheme'].forEach(id=>document.getElementById(id)?.addEventListener('input',adgbStudioRender_));
+      document.getElementById('adgbStudioType')?.addEventListener('change',()=>{adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';adgbStudioRender_();});
+      document.querySelectorAll('[data-studio-item]').forEach(input=>input.addEventListener('change',()=>{
+        if(input.checked){if(!adgbStudio_.layout.some(x=>x.id===input.dataset.studioItem))adgbStudio_.layout.push({id:input.dataset.studioItem,width:12});}
+        else adgbStudio_.layout=adgbStudio_.layout.filter(x=>x.id!==input.dataset.studioItem);
+        adgbStudioRender_();
+      }));
+      document.getElementById('adgbStudioRefresh')?.addEventListener('click',adgbStudioRender_);
+      document.getElementById('adgbStudioCsv')?.addEventListener('change',async e=>{
+        if(!isRecognizedAsAdmin())return;
+        const file=e.target.files?.[0];if(!file)return;
+        if(file.size>2000000){document.getElementById('adgbStudioStatus').textContent='CSV too large (maximum 2 MB).';return;}
+        try{adgbStudio_.csv=adgbStudioCsvParse_(await file.text());adgbStudioRender_();}
+        catch(err){adgbStudio_.csv=[];document.getElementById('adgbStudioStatus').textContent=err.message;}
+      });
+      document.getElementById('adgbStudioLayouts')?.addEventListener('change',adgbStudioLoad_);
+      document.getElementById('adgbStudioSave')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin())return;
+        const name=window.prompt('Layout name (stores DESIGN only, not case data):',document.getElementById('adgbStudioTitle').value);if(!name?.trim())return;
+        try{const saved=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}');
+          saved[name.trim().slice(0,80)]={title:document.getElementById('adgbStudioTitle').value,theme:document.getElementById('adgbStudioTheme').value,type:document.getElementById('adgbStudioType').value,layout:adgbStudio_.layout};
+          localStorage.setItem('adgbStudioTemplatesV1',JSON.stringify(saved));adgbStudioLayoutOptions_();document.getElementById('adgbStudioLayouts').value=name.trim().slice(0,80);
+          document.getElementById('adgbStudioStatus').textContent='Layout saved in this browser only. No report data stored.';
+        }catch{document.getElementById('adgbStudioStatus').textContent='Could not store layout in this browser.';}
+      });
+      document.getElementById('adgbStudioExport')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin())return;
+        const t={title:document.getElementById('adgbStudioTitle').value,theme:document.getElementById('adgbStudioTheme').value,type:document.getElementById('adgbStudioType').value,layout:adgbStudio_.layout};
+        const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(t,null,2)],{type:'application/json'}));
+        a.href=url;a.download='ADGB_Report_Layout.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      });
+      document.getElementById('adgbStudioPrint')?.addEventListener('click',()=>{
+        if(!isRecognizedAsAdmin())return;
+        document.body.classList.add('adgb-studio-print');
+        const done=()=>{document.body.classList.remove('adgb-studio-print');window.removeEventListener('afterprint',done);};
+        window.addEventListener('afterprint',done);window.print();
+      });
+    }
+
     function adgbNoticePreview_(){
       if(!isRecognizedAsAdmin())return;
       adgbNoticeDraftIndicator_();
@@ -5576,6 +5792,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbInitInsights(){
       adgbFeatureInit_();
       adgbNoticeInit_();
+      adgbStudioInit_();
       ['adgbActionOffice','adgbActionPriority','adgbActionSearch','adgbActionSort'].forEach(id=>{
         const field=document.getElementById(id);
         field?.addEventListener(id==='adgbActionSearch'?'input':'change',adgbRenderActions_);
