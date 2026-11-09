@@ -2959,7 +2959,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.1</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.2</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -3544,8 +3544,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       $('#officeFilter')?.addEventListener('change',event=>{
         state.officeFilter=event.target.value;renderMatrix();updateSummary();
       });
+      // V17.10.2 — prevent expensive matrix rebuild on every search keystroke.
+      let adgbSearchTimer_=null;
       $('#subjectSearch')?.addEventListener('input',event=>{
-        state.search=event.target.value.trim().toLowerCase();renderMatrix();
+        const value=event.target.value.trim().toLowerCase();
+        if(adgbSearchTimer_!==null)clearTimeout(adgbSearchTimer_);
+        adgbSearchTimer_=setTimeout(()=>{
+          adgbSearchTimer_=null;
+          if(state.search===value)return;
+          state.search=value;
+          renderMatrix();
+        },180);
+      });
+      $('#subjectSearch')?.addEventListener('keydown',event=>{
+        if(event.key!=='Enter')return;
+        if(adgbSearchTimer_!==null){clearTimeout(adgbSearchTimer_);adgbSearchTimer_=null;}
+        const value=event.currentTarget.value.trim().toLowerCase();
+        if(state.search!==value){state.search=value;renderMatrix();}
       });
 
       document.addEventListener('input',event=>{
@@ -5222,13 +5237,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbNoticeDraftFormSnapshot_={text:'',target:'ALL',start:start?.value||'',end:end?.value||'',enabled:true};
       adgbNoticePreview_();
     }
+    let adgbNoticeLastRenderedKey_='';
     function adgbNoticeRenderStrip_(){
       const strip=document.getElementById('adgbNoticeStrip'),track=document.getElementById('adgbNoticeTrack');
       if(!strip||!track)return;
-      if(!adgbFeatureAllowedClient_('notices')){strip.hidden=true;track.replaceChildren();return;}
+      if(!adgbFeatureAllowedClient_('notices')){strip.hidden=true;track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
       const token=String(window.ADGB_AUTH?.token||'');
       const feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
-      if(!feed||!state.connected){strip.hidden=true;track.replaceChildren();return;}
+      if(!feed||!state.connected){strip.hidden=true;track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
       const pieces=Array.isArray(feed.notices)?feed.notices.map(x=>String(x.text||'').trim()).filter(Boolean):[];
       if(Array.isArray(feed.pendingOfficeIds)){
         const rows=adgbRegisterData();
@@ -5241,12 +5257,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         }
       }
       strip.hidden=!pieces.length;
-      track.replaceChildren();
-      if(!pieces.length)return;
-      for(const message of pieces){
-        const span=document.createElement('span');span.className='adgb-rich-message';
-        const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
-        adgbRichFill_(span,message);track.appendChild(span);
+      if(!pieces.length){track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
+      // Only rebuild text nodes when notice content changes. Keeps marquee animation
+      // from restarting on routine report refreshes. Styling is still applied below.
+      const nextKey=JSON.stringify(pieces);
+      if(nextKey!==adgbNoticeLastRenderedKey_){
+        track.replaceChildren();
+        for(const message of pieces){
+          const span=document.createElement('span');span.className='adgb-rich-message';
+          const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
+          adgbRichFill_(span,message);track.appendChild(span);
+        }
+        adgbNoticeLastRenderedKey_=nextKey;
       }
       track.classList.toggle('paused',adgbNoticePaused_);
       const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
