@@ -1487,6 +1487,20 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-days-indicator[data-status="today"]{color:#935b10}
 @media(max-width:760px){.adgb-action-office-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 9px 9px;gap:7px}.adgb-action-office-breakdown button{padding:9px}.adgb-action-office-breakdown .office-count{font-size:18px}}
 @media(max-width:440px){.adgb-action-office-breakdown{grid-template-columns:1fr 1fr}.adgb-action-office-breakdown .office-name{font-size:10px}}
+/* Rich notice lines — backward-compatible text encoding, no HTML from saved notices */
+.adgb-rich-notice-editor{border:1px solid #d7e0eb;background:#f7faff;border-radius:10px;padding:10px;margin:8px 0}
+.adgb-rich-notice-editor>strong{display:block;color:#193c63;font-size:13px}
+.adgb-rich-notice-editor>small{display:block;color:#52677e;font-size:11px;margin:3px 0 8px}
+.adgb-rich-line{display:grid;grid-template-columns:minmax(140px,1fr) 84px 84px 32px;gap:6px;align-items:center;margin:6px 0}
+.adgb-rich-line input[type=text]{min-width:0;width:100%;box-sizing:border-box;padding:7px;border:1px solid #b6cce2;border-radius:6px}
+.adgb-rich-line input[type=color]{width:100%;height:35px;border:1px solid #b6cce2;border-radius:6px}
+.adgb-rich-line button{min-height:35px;border-radius:6px}
+#adgbRichNoticeAdd{border:1px solid #9fb9d7;background:#fff;color:#174672;border-radius:7px;padding:7px;font-weight:750}
+.adgb-notice-track .adgb-rich-message{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:flex-start;margin-right:24px;white-space:normal}
+.adgb-notice-track .adgb-rich-message .adgb-rich-line-display{display:block;width:max-content;max-width:75vw;overflow-wrap:anywhere;border-radius:4px;padding:1px 5px;margin:1px 0}
+.adgb-notice-preview-ticker .adgb-rich-line-display{display:block;width:max-content;max-width:100%;overflow-wrap:anywhere;padding:2px 5px;border-radius:4px}
+@media(max-width:650px){.adgb-rich-line{grid-template-columns:minmax(100px,1fr) 42px 42px 30px;gap:4px}.adgb-notice-track .adgb-rich-message .adgb-rich-line-display{max-width:65vw}}
+
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2778,7 +2792,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div><p id="adgbNoticeFilteredCount" class="adgb-insights-count" aria-live="polite"></p>
         <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
         <div class="adgb-notice-form">
-          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="2" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label><p id="adgbNoticeTextCounter" class="adgb-notice-charcount">0 / 220 characters</p><p id="adgbNoticeDraftStatus" class="adgb-notice-draft-status" aria-live="polite">New notice · not published</p>
+          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="3" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label>
+          <div id="adgbRichNoticeEditor" class="adgb-rich-notice-editor" aria-label="Multiline notice colour editor">
+            <strong>Multiline colour editor</strong><small>Each line may have its own text and highlight colour. The existing 220-character notice limit also counts formatting codes.</small>
+            <div id="adgbRichNoticeLines"></div>
+            <button type="button" id="adgbRichNoticeAdd">+ Add coloured line</button>
+          </div><p id="adgbNoticeTextCounter" class="adgb-notice-charcount">0 / 220 characters</p><p id="adgbNoticeDraftStatus" class="adgb-notice-draft-status" aria-live="polite">New notice · not published</p>
           <div class="adgb-notice-form-grid">
             <label>Display to <select id="adgbNoticeTarget"><option value="ALL">Everyone permitted to view the portal</option></select></label>
             <label>Start (IST) <input id="adgbNoticeStart" type="datetime-local"></label>
@@ -4743,6 +4762,80 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         (adgbNoticeDraftChanged_()?' · unsaved changes':' · no unsaved changes')+
         ' · not published until saved';
     }
+
+    // Rich multiline text uses a plain-text wire format accepted by the existing backend:
+    // [#112233/#FFEEDD]Text on one line. #------ represents no highlight.
+    // Never interpret notice text as HTML; use DOM nodes/textContent only.
+    const adgbRichHex_=/^#[0-9a-fA-F]{6}$/;
+    function adgbRichParse_(raw){
+      return String(raw||'').split(/\r?\n/).map(line=>{
+        const m=line.match(/^\[(#[0-9a-fA-F]{6})\/(#[0-9a-fA-F]{6}|-)\](.*)$/);
+        return m?{text:m[3],color:m[1],bg:m[2]==='-'?'none':m[2]}:
+          {text:line,color:'',bg:'none'};
+      });
+    }
+    function adgbRichTextNode_(line, fallback){
+      const node=document.createElement('span');node.className='adgb-rich-line-display';
+      node.textContent=line.text;
+      if(adgbRichHex_.test(line.color))node.style.color=line.color;
+      if(adgbRichHex_.test(line.bg))node.style.backgroundColor=line.bg;
+      else node.style.backgroundColor='transparent';
+      if(adgbRichHex_.test(line.bg)&&adgbRichHex_.test(line.color)&&adgbNoticeContrast_(line.color,line.bg)<4.5)
+        node.style.color=adgbNoticeContrast_('#111827',line.bg)>=4.5?'#111827':'#ffffff';
+      if(!line.color&&fallback)node.style.color=fallback;
+      return node;
+    }
+    function adgbRichFill_(container, raw, fallback){
+      if(!container)return;
+      container.replaceChildren();
+      adgbRichParse_(raw).forEach(line=>container.appendChild(adgbRichTextNode_(line,fallback)));
+    }
+    function adgbRichRenderEditor_(){
+      const host=document.getElementById('adgbRichNoticeLines');
+      const source=document.getElementById('adgbNoticeText');
+      if(!host||!source)return;
+      host.replaceChildren();
+      adgbRichParse_(source.value).forEach((line,index)=>{
+        const row=document.createElement('div');row.className='adgb-rich-line';row.dataset.line=String(index);
+        const input=document.createElement('input');input.type='text';input.value=line.text;input.maxLength=220;input.setAttribute('aria-label','Notice line '+(index+1));
+        const fg=document.createElement('input');fg.type='color';fg.value=adgbRichHex_.test(line.color)?line.color:'#bd1726';fg.title='Text colour';
+        const bg=document.createElement('input');bg.type='color';bg.value=adgbRichHex_.test(line.bg)?line.bg:'#fff7cc';bg.title='Highlighter colour';
+        const del=document.createElement('button');del.type='button';del.textContent='×';del.title='Remove line';
+        row.append(input,fg,bg,del);host.appendChild(row);
+        // Colour options are opt-in; old notices remain plain unless edited.
+        fg.dataset.enabled=line.color?'1':'0';bg.dataset.enabled=line.bg!=='none'?'1':'0';
+        fg.addEventListener('input',()=>{fg.dataset.enabled='1';adgbRichCompile_();});
+        bg.addEventListener('input',()=>{bg.dataset.enabled='1';adgbRichCompile_();});
+        input.addEventListener('input',adgbRichCompile_);
+        del.addEventListener('click',()=>{
+          const lines=adgbRichParse_(source.value);lines.splice(index,1);
+          source.value=lines.map(adgbRichEncode_).join('\n');adgbRichRenderEditor_();source.dispatchEvent(new Event('input'));
+        });
+      });
+    }
+    function adgbRichEncode_(line){
+      return line.color?'['+line.color+'/'+(line.bg==='none'?'-':line.bg)+']'+line.text:line.text;
+    }
+    function adgbRichCompile_(){
+      const source=document.getElementById('adgbNoticeText');if(!source)return;
+      const rows=[...document.querySelectorAll('#adgbRichNoticeLines .adgb-rich-line')];
+      const value=rows.map(row=>{
+        const [input,fg,bg]=row.querySelectorAll('input');
+        return adgbRichEncode_({text:input.value,color:fg.dataset.enabled==='1'?fg.value:'',bg:bg.dataset.enabled==='1'?bg.value:'none'});
+      }).join('\n');
+      if(value.length>220){adgbNoticeStatus_('220-character limit reached. Shorten lines or remove formatting.');return;}
+      source.value=value;source.dispatchEvent(new Event('input'));
+    }
+    function adgbRichInit_(){
+      const source=document.getElementById('adgbNoticeText');if(!source)return;
+      source.addEventListener('input',adgbRichRenderEditor_);
+      document.getElementById('adgbRichNoticeAdd')?.addEventListener('click',()=>{
+        const value=source.value?source.value+'\nNew line':'New line';
+        if(value.length>220){adgbNoticeStatus_('Notice limit is 220 characters.');return;}
+        source.value=value;source.dispatchEvent(new Event('input'));
+      });
+      adgbRichRenderEditor_();
+    }
     function adgbNoticePreview_(){
       if(!isRecognizedAsAdmin())return;
       adgbNoticeDraftIndicator_();
@@ -4760,7 +4853,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const stateLabel=document.getElementById('adgbNoticePreviewState');
       if(stateLabel)stateLabel.textContent=schedule;
       const ticker=document.getElementById('adgbNoticePreviewText');
-      if(ticker)ticker.textContent=text||'Enter your notice to preview its appearance.';
+      if(ticker)adgbRichFill_(ticker,text||'Enter your notice to preview its appearance.');
       const audience=document.getElementById('adgbNoticePreviewAudience');
       if(!audience)return;
       const offices=state.offices.length?state.offices:FALLBACK_OFFICES;
@@ -4811,7 +4904,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       track.replaceChildren();
       if(!pieces.length)return;
       for(const message of pieces){
-        const span=document.createElement('span');span.textContent='● '+message;track.appendChild(span);
+        const span=document.createElement('span');span.className='adgb-rich-message';
+        const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
+        adgbRichFill_(span,message);track.appendChild(span);
       }
       track.classList.toggle('paused',adgbNoticePaused_);
       const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
@@ -5012,6 +5107,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(audience)audience.innerHTML='<option value="ALL">Everyone permitted to view the portal</option>'+
         state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+' only</option>').join('');
       adgbNoticeResetForm_();
+      adgbRichInit_();
       ['adgbNoticeText','adgbNoticeTarget','adgbNoticeStart','adgbNoticeEnd','adgbNoticeEnabled'].forEach(id=>{
         const node=document.getElementById(id);
         if(node){node.addEventListener('input',adgbNoticePreview_);node.addEventListener('change',adgbNoticePreview_);}
