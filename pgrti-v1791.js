@@ -7,7 +7,7 @@ const categories={PG:'Public Grievances',PG_APPEAL:'PG Appeals',RTI:'RTI Applica
 const defaults=['HEAD_OFFICE','CEB','CEHAL','SEPD','SEMYSORE','SEHUBLI'];
 let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null;
 const token=()=>String(window.ADGB_AUTH?.token||'');
-const isAdmin=()=>!!token()&&document.getElementById('adgbUserRole')?.textContent?.trim()==='Administrator';
+const isAdmin=()=>!!token()&&(typeof window.ADGB_PGRTI_IS_ADMIN==='function'?window.ADGB_PGRTI_IS_ADMIN():document.getElementById('adgbUserRole')?.textContent?.trim()==='Administrator');
 const call=(action,extra={})=>{if(typeof window.ADGB_PGRTI_CALL!=='function')throw Error('PG/RTI backend bridge is not available.');return window.ADGB_PGRTI_CALL({action,sessionToken:token(),...extra});};
 const fmt=n=>Number(n||0).toLocaleString('en-IN');
 const setMsg=(message,error=false)=>{let x=$('#pgrtiMessage');if(x){x.textContent=message;x.classList.toggle('pgrti-error',!!error);}};
@@ -50,13 +50,17 @@ async function load(){
  buttonBusy('#pgrtiRefresh',true);setMsg('Reading approved PG/RTI snapshots…');
  try{const response=await call('pgrtiBootstrap');if(!response?.ok)throw Error(response?.message||'Data unavailable');
  drawSummary(response);
- $('#pgrtiAdminBlock').hidden=!isAdmin();
- $('#pgrtiUploadBlock').hidden=!(response.canUpload||isAdmin());
+ const admin=isAdmin();
+ $('#pgrtiAdminBlock').hidden=!admin;
+ $('#pgrtiUploadBlock').hidden=!(response.canUpload||admin);
+ if(admin&&!response.initialized){$('#pgrtiAdminBlock').open=true;$('#pgrtiUploadBlock').open=false;}
+ else if(admin&&response.initialized){$('#pgrtiUploadBlock').open=true;}
+ if(!admin&&!response.canUpload&&!response.initialized)setMsg('Administrator sign-in required to initialize PG/RTI registers. Open the portal Administrator login, then Refresh.',true);
  $('#pgrtiOffice').innerHTML=opts(offices,response.uploadOfficeId||$('#pgrtiOffice').value||'CEB');
  $('#pgrtiScope').disabled=!isAdmin();
  $('#pgrtiOffice').disabled=!isAdmin();
  if(!isAdmin()){$('#pgrtiScope').value='OFFICE';$('#pgrtiOfficeBox').hidden=false;}
- setMsg(response.initialized?'Approved figures loaded.':'Administrator setup is required.');
+ if(admin||response.initialized||response.canUpload)setMsg(response.initialized?'Approved figures loaded.':'Administrator setup is required. Open the expanded administrator setup below.');
  }catch(e){setMsg('PG/RTI module requires the matching V17.9.1 backend. '+String(e.message||e),true);
  $('#pgrtiSummary').innerHTML='<p class="pgrti-muted">Existing report submissions are unaffected. PG/RTI monitoring will activate after the new backend is deployed.</p>';}
  finally{buttonBusy('#pgrtiRefresh',false);}
