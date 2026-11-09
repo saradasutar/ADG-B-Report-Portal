@@ -2694,7 +2694,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </details>
       <details id="pgrtiUploadBlock" class="pgrti-admin" hidden>
         <summary>Upload PG/RTI PDF · Draft (not automatically published)</summary>
-        <div class="pgrti-admin-inner"><div id="pgrtiUploadReceipt" class="pgrti-upload-receipt" hidden role="status" aria-live="polite"></div><div class="pgrti-form-top">
+        <div class="pgrti-admin-inner"><div id="pgrtiUploadReceipt" class="pgrti-upload-receipt" hidden role="status" aria-live="polite"></div>
+          <p id="pgrtiUploadHelp" class="pgrti-muted">Step 1: select a PDF and report date. Step 2: save as draft. Officer-wise figures can be added during Administrator review, before publishing.</p><div class="pgrti-form-top">
             <label>Category<select id="pgrtiCat"><option value="PG">Public Grievance</option><option value="PG_APPEAL">PG Appeal</option><option value="RTI">RTI Application</option><option value="RTI_APPEAL">RTI First Appeal</option></select></label>
             <label>Report as on<input id="pgrtiDate" type="date"></label>
             <label>PDF scope<select id="pgrtiScope"><option value="OFFICE">Single office</option><option value="REGION">All offices</option></select></label>
@@ -3988,7 +3989,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
         const timer=setTimeout(
           ()=>finish(new Error(timeoutMessage)),
-          payload.action==='upload'||linkedPdfIncluded?120000:45000
+          payload.action==='upload'||payload.action==='pgrtiPrepareDraft'||linkedPdfIncluded?120000:45000
         );
 
         function onMessage(event){
@@ -8179,6 +8180,6 @@ function renderAdminSubjects(){
     });
   })();
   </script>
-  <script defer src="pgrti-v1791.js?v=1794-auth-refresh"></script>
+  <script defer src="pgrti-v1791.js?v=1795-upload-state"></script>
 </body>
 </html>
