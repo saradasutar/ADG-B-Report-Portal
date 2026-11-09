@@ -1559,6 +1559,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .pgrti-extract-summary[data-warning=yes]{background:#fff8e7;border-color:#eac070}
 .pgrti-extract-summary strong{display:block;margin:0 0 5px}
 .pgrti-extract-summary ul{padding-left:20px;margin:5px 0}
+.pgrti-workflow-status{margin:5px 14px 13px;border:1px solid #dfc484;background:#fff9e9;color:#694b15;border-radius:10px;padding:11px 13px;font-size:12px}
+.pgrti-workflow-status[hidden]{display:none!important}
+.pgrti-workflow-status button{margin:7px 7px 0 0;min-height:32px}
+.pgrti-workflow-status strong{display:block;font-size:13px;margin-bottom:4px}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2685,10 +2689,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       </div>
       <p id="pgrtiMessage" class="pgrti-status" role="status" aria-live="polite">PG/RTI data will load when this section is visible.</p>
       <div id="pgrtiSummary" class="pgrti-summary"><p class="pgrti-muted">Loading approved pendency information…</p></div>
+      <div id="pgrtiWorkflowStatus" class="pgrti-workflow-status" hidden role="status" aria-live="polite"></div>
       <details id="pgrtiAdminBlock" class="pgrti-admin" hidden>
         <summary>Administrator · Setup, permissions and verification</summary>
         <div class="pgrti-admin-inner">
-          <div class="pgrti-admin-line"><button id="pgrtiInitialize" type="button">Initialize registers in existing spreadsheet</button>
+          <div class="pgrti-admin-line"><button type="button" id="pgrtiCheckHealth">Check uploaded / published counts</button>
+          <button id="pgrtiInitialize" type="button">Initialize registers in existing spreadsheet</button>
             <button id="pgrtiSettingsLoad" type="button">Load settings</button>
             <button id="pgrtiLoadDrafts" type="button">Refresh drafts</button></div>
           <div class="pgrti-setting">
@@ -8192,6 +8198,6 @@ function renderAdminSubjects(){
   })();
   </script>
   <script defer src="pgrti-extract-v1796.js?v=1796"></script>
-  <script defer src="pgrti-v1791.js?v=1796-extract-upload"></script>
+  <script defer src="pgrti-v1791.js?v=1797-publication-guide"></script>
 </body>
 </html>
