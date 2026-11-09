@@ -216,14 +216,22 @@ async function extractPdf_(auto){
      sum.appendChild(warnings);
    }
    extractStatus_('Extraction complete. Check all '+result.rows.length+' rows before saving.',false);
+   quickStatus_('Ready to save draft: '+result.rows.length+' officer entries; '+result.total+' pending. Verify mapped offices first.','ok');
  }catch(e){
    extractStatus_(String(e.message||e),true);
+   quickStatus_('PDF extraction did not complete: '+String(e.message||e)+' You can still upload as a draft, then enter verified figures.','error');
    if(!auto)flash('PDF extraction unavailable: '+String(e.message||e),true);
  }finally{extracting=false;buttonBusy('#pgrtiExtractPdf',false);}
 }
 
+function quickStatus_(text,state){
+ const el=$('#pgrtiQuickStatus'),wrap=el?.closest('.pgrti-quick-actions');
+ if(el)el.textContent=String(text||'');
+ if(wrap)wrap.dataset.state=state||'';
+}
 async function saveDraft(){
  if(uploading)return;
+ if(extracting){quickStatus_('PDF is being read; finish extraction before uploading.','busy');return;}
  if(!token()){flash('Sign in before uploading.',true);return;}
  if(!data?.initialized){
   if(!isAdmin()){flash('Administrator must initialize the PG/RTI registers before uploading.',true);$('#pgrtiAdminBlock').open=true;return;}
@@ -241,7 +249,7 @@ async function saveDraft(){
  if(rows.some(r=>!r.officeId||!offices.some(o=>o.id===r.officeId))){flash('An extracted office could not be mapped. Select the correct Office for every officer row.',true);return;}
  const body={category:$('#pgrtiCat').value,reportDate:$('#pgrtiDate').value,scope:$('#pgrtiScope').value,
  officeId:$('#pgrtiOffice').value,fileName:file.name,rows,note:$('#pgrtiNote').value};
- uploading=true;buttonBusy('#pgrtiSaveDraft',true);
+ uploading=true;buttonBusy('#pgrtiSaveDraft',true);buttonBusy('#pgrtiQuickSave',true);quickStatus_('Uploading PDF to private Drive folder. Do not upload twice.','busy');
  const saveButton=$('#pgrtiSaveDraft');saveButton.textContent='Uploading PDF…';
  $('#pgrtiUploadReceipt').hidden=true;
  flash('Uploading PDF securely. Do not press Save again or leave the page until confirmation.');
@@ -249,11 +257,12 @@ async function saveDraft(){
  const r=await call('pgrtiPrepareDraft',body);
  if(!r?.ok)throw Error(r?.message||'Backend did not confirm the upload.');
  uploadReceipt_(r,file.name);
+ quickStatus_('Upload confirmed · '+String(r.status||'DRAFT')+' · '+String(r.draftId||'')+' — review pending.', 'ok');
  flash(r.message||'PDF stored as a draft; Administrator approval needed.');
  $('#pgrtiFile').value='';
  if(isAdmin()){$('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
- catch(e){flash('Upload was NOT confirmed: '+String(e.message||e)+'. Check pending drafts before trying again.',true);if(isAdmin()){$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
- finally{uploading=false;buttonBusy('#pgrtiSaveDraft',false);$('#pgrtiSaveDraft').textContent='Save source PDF as draft';}
+ catch(e){quickStatus_('Upload not confirmed. Check uploaded drafts before retrying.','error');flash('Upload was NOT confirmed: '+String(e.message||e)+'. Check pending drafts before trying again.',true);if(isAdmin()){$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
+ finally{uploading=false;buttonBusy('#pgrtiSaveDraft',false);buttonBusy('#pgrtiQuickSave',false);$('#pgrtiSaveDraft').textContent='Save source PDF as draft';}
 }
 async function loadDrafts(silent=false){
  if(!isAdmin())return;
@@ -302,8 +311,8 @@ $('#pgrtiFile').addEventListener('change',()=>{
  extractedPdfName='';$('#pgrtiExtractSummary').hidden=true;
  const file=$('#pgrtiFile').files?.[0];
  if(!file)return;
- if($('#pgrtiCat').value==='RTI'||$('#pgrtiCat').value==='RTI_APPEAL')void extractPdf_(true);
- else extractStatus_('PDF selected. Click Read office-wise figures if this is a CPWD age-wise export.',false);
+ quickStatus_('PDF selected: '+file.name+' ('+(file.size/1048576).toFixed(2)+' MB). Checking for office-wise figures…','busy');
+ void extractPdf_(true);
 });
 // The login UI is populated asynchronously. Rerun bootstrap immediately after role/token changes.
 window.addEventListener('adgb-auth-changed',()=>{void load();});
@@ -317,6 +326,7 @@ $('#pgrtiAddRow').addEventListener('click',()=>addRow());
 $('#pgrtiPasteImport').addEventListener('click',csvImport);
 $('#pgrtiRows').addEventListener('click',e=>{if(e.target.closest('[data-pgrti-remove-row]'))e.target.closest('.pgrti-officer-row')?.remove();});
 $('#pgrtiSaveDraft').addEventListener('click',saveDraft);
+$('#pgrtiQuickSave').addEventListener('click',saveDraft);
 $('#pgrtiLoadDrafts').addEventListener('click',loadDrafts);
 $('#pgrtiDraftList').addEventListener('click',e=>{let b=e.target.closest('[data-draft]');if(b)chooseDraft(b.dataset.draft);});
 $('#pgrtiPublish').addEventListener('click',()=>manageDraft('pgrtiPublishDraft'));
