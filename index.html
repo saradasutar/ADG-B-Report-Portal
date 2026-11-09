@@ -1551,6 +1551,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #pgrtiDraftList .pgrti-draft-item{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;text-align:left}
 #pgrtiDraftList .pgrti-draft-item strong{flex:1 1 210px}
 #pgrtiDraftList .pgrti-draft-item span{flex:2 1 250px}
+.pgrti-extract-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:9px 0;padding:10px;background:#eef5ff;border:1px solid #c9def1;border-radius:9px}
+.pgrti-extract-toolbar button{background:#17679c;color:#fff;border:1px solid #17679c;font-size:12px;font-weight:850}
+.pgrti-extract-toolbar span{font-size:11px;color:#425c78;flex:1 1 220px;overflow-wrap:anywhere}
+.pgrti-extract-summary{border:1px solid #9dc9e7;background:#f3fbff;border-radius:9px;padding:10px;color:#173959;font-size:12px;margin:10px 0}
+.pgrti-extract-summary[hidden]{display:none!important}
+.pgrti-extract-summary[data-warning=yes]{background:#fff8e7;border-color:#eac070}
+.pgrti-extract-summary strong{display:block;margin:0 0 5px}
+.pgrti-extract-summary ul{padding-left:20px;margin:5px 0}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2695,7 +2703,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <details id="pgrtiUploadBlock" class="pgrti-admin" hidden>
         <summary>Upload PG/RTI PDF · Draft (not automatically published)</summary>
         <div class="pgrti-admin-inner"><div id="pgrtiUploadReceipt" class="pgrti-upload-receipt" hidden role="status" aria-live="polite"></div>
-          <p id="pgrtiUploadHelp" class="pgrti-muted">Step 1: select a PDF and report date. Step 2: save as draft. Officer-wise figures can be added during Administrator review, before publishing.</p><div class="pgrti-form-top">
+          <p id="pgrtiUploadHelp" class="pgrti-muted">Step 1: select a PDF. For compatible CPWD RTI age-wise exports, officer-wise figures will be extracted for review. Step 2: check the office mapping and totals. Step 3: save as draft; Administrator approval is required before publication.</p>
+          <div class="pgrti-extract-toolbar"><button id="pgrtiExtractPdf" type="button">📄 Read office-wise figures from PDF</button>
+          <span id="pgrtiExtractStatus" role="status" aria-live="polite">Extraction runs locally in this browser; no figures are published automatically.</span></div>
+          <div id="pgrtiExtractSummary" class="pgrti-extract-summary" hidden></div><div class="pgrti-form-top">
             <label>Category<select id="pgrtiCat"><option value="PG">Public Grievance</option><option value="PG_APPEAL">PG Appeal</option><option value="RTI">RTI Application</option><option value="RTI_APPEAL">RTI First Appeal</option></select></label>
             <label>Report as on<input id="pgrtiDate" type="date"></label>
             <label>PDF scope<select id="pgrtiScope"><option value="OFFICE">Single office</option><option value="REGION">All offices</option></select></label>
@@ -8180,6 +8191,7 @@ function renderAdminSubjects(){
     });
   })();
   </script>
-  <script defer src="pgrti-v1791.js?v=1795-upload-state"></script>
+  <script defer src="pgrti-extract-v1796.js?v=1796"></script>
+  <script defer src="pgrti-v1791.js?v=1796-extract-upload"></script>
 </body>
 </html>
