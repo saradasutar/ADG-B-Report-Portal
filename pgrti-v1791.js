@@ -33,6 +33,48 @@ const getRows=()=>Array.from(root.querySelectorAll('.pgrti-officer-row')).map(el
 const addRow=r=>{let el=document.createElement('div');el.innerHTML=rowTemplate(r);$('#pgrtiRows').appendChild(el.firstElementChild);};
 const buttonBusy=(name,on)=>{let b=$(name);if(b)b.disabled=on;};
 const flash=(msg,error=false)=>setMsg(msg,error);
+function workflowStatus_(response){
+ const box=$('#pgrtiWorkflowStatus');if(!box)return;
+ box.replaceChildren();box.hidden=true;
+ if(!response?.initialized||!response.visible)return;
+ const totals=Array.isArray(response.totals)?response.totals:[];
+ if(totals.length)return;
+ box.hidden=false;
+ const title=document.createElement('strong');title.textContent='No PG/RTI figures have been published yet';
+ const line=document.createElement('div');
+ line.textContent='Uploaded PDFs are private drafts. Office-wise pendency appears here only after an Administrator checks and publishes the corresponding officer rows.';
+ box.append(title,line);
+ if(isAdmin()){
+   const review=document.createElement('button');review.type='button';review.textContent='Check uploaded drafts';
+   review.addEventListener('click',async()=>{
+     $('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;
+     await loadDrafts(false);$('#pgrtiAdminBlock').scrollIntoView({behavior:'smooth',block:'start'});
+   });
+   const add=document.createElement('button');add.type='button';add.textContent='Upload new PDF';
+   add.addEventListener('click',()=>{
+     $('#pgrtiUploadBlock').hidden=false;$('#pgrtiUploadBlock').open=true;
+     $('#pgrtiUploadBlock').scrollIntoView({behavior:'smooth',block:'start'});
+   });
+   box.append(review,add);
+ }
+}
+async function healthCheck_(){
+ if(!isAdmin())return;
+ const button=$('#pgrtiCheckHealth');if(button)button.disabled=true;
+ try{
+   const r=await call('pgrtiHealth');
+   if(!r?.ok)throw Error(r?.message||'Health check failed.');
+   const count=Number(r.drafts)||0,published=Number(r.published)||0;
+   const message=r.initialized
+     ?'Register check: '+count+' PDF draft(s) awaiting approval, '+published+' published snapshot(s).'+
+       (count?' Open Refresh drafts and approve verified reports.':
+       published?' Refresh summary to see published figures.':' No saved PDF drafts were found. Upload and save a PDF as draft.')
+     :'Registers have not been initialized. Use Initialize registers in existing spreadsheet.';
+   setMsg(message);$('#pgrtiAdminBlock').open=true;
+   return r;
+ }catch(e){setMsg('Register check unavailable: '+String(e?.message||e)+'. Verify backend V17.9.6 deployment.',true);}
+ finally{if(button)button.disabled=false;}
+}
 function drawSummary(response){
  data=response;if(Array.isArray(response.offices)&&response.offices.length)offices=response.offices;
  let el=$('#pgrtiSummary');if(!el)return;
@@ -64,6 +106,7 @@ async function load(){
  buttonBusy('#pgrtiRefresh',true);setMsg('Reading approved PG/RTI snapshots…');
  try{const response=await call('pgrtiBootstrap');if(!response?.ok)throw Error(response?.message||'Data unavailable');
  drawSummary(response);
+ workflowStatus_(response);
  const admin=isAdmin();
  $('#pgrtiAdminBlock').hidden=!admin;
  $('#pgrtiUploadBlock').hidden=!(response.canUpload||admin);
@@ -202,7 +245,7 @@ async function loadDrafts(silent=false){
  $('#pgrtiDraftCount').textContent=drafts.length+' awaiting review';
  $('#pgrtiDraftList').innerHTML=drafts.length?drafts.map(d=>'<button type="button" class="pgrti-draft-item" data-draft="'+esc(d.id)+'"><strong>'+esc(categories[d.category]||d.category)+' · '+esc(d.reportDate)+'</strong><span>'+esc(d.fileName)+' · '+esc(d.scope==='REGION'?'All offices':officeName(d.officeId))+' · '+d.rows.length+' officer rows</span><em class="pgrti-draft-pill">DRAFT — review</em></button>').join(''):'<p class="pgrti-muted">No drafts awaiting review. Published figures appear above.</p>';
  if(!silent)flash(drafts.length+' draft(s) awaiting review.');
- }catch(e){$('#pgrtiDraftCount').textContent='Unable to load';if(!silent)flash(String(e.message||e),true);}
+ }catch(e){$('#pgrtiDraftCount').textContent='Unable to load';$('#pgrtiDraftList').textContent='Could not load uploaded drafts: '+String(e.message||e);if(!silent)flash(String(e.message||e),true);}
 }
 function chooseDraft(id){
  chosen=drafts.find(d=>d.id===id);if(!chosen)return;
@@ -251,6 +294,7 @@ window.addEventListener('adgb-auth-changed',()=>{void load();});
 window.addEventListener('adgb-access-changed',()=>{void load();});
 $('#pgrtiInitialize').addEventListener('click',adminInit);
 $('#pgrtiSettingsLoad').addEventListener('click',loadSettings);
+$('#pgrtiCheckHealth').addEventListener('click',healthCheck_);
 $('#pgrtiSettingsSave').addEventListener('click',saveSettings);
 $('#pgrtiScope').addEventListener('change',()=>{$('#pgrtiOfficeBox').hidden=$('#pgrtiScope').value==='REGION';});
 $('#pgrtiAddRow').addEventListener('click',()=>addRow());
