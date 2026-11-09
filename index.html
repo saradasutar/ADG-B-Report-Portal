@@ -1568,6 +1568,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #pgrtiCheckHealth{background:#fff4d5;border-color:#d4a343;color:#704b10;font-weight:850}
 #pgrtiHealthResult{background:#f0f8ff;border-color:#a2c9e7;color:#173e66}
 #pgrtiHealthResult[hidden],#pgrtiCheckHealth[hidden]{display:none!important}
+.pgrti-quick-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px;margin:8px 0;background:#eef7ff;border:1px solid #b5d4ee;border-radius:9px}
+.pgrti-quick-actions .pgrti-primary{font-size:12px!important;font-weight:900}
+.pgrti-quick-actions span{color:#214769;font-size:12px;flex:1 1 210px}
+.pgrti-quick-actions[data-state=busy]{background:#fff4d4}
+.pgrti-quick-actions[data-state=error]{background:#fff0ed;border-color:#efaea0}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2728,6 +2733,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           </div>
           <div class="pgrti-form-top"><label>Source PDF · maximum 8 MB<input id="pgrtiFile" type="file" accept="application/pdf,.pdf"></label>
             <label>Source / remarks<input id="pgrtiNote" maxlength="300" placeholder="Portal export date, source and notes"></label></div>
+          <div class="pgrti-quick-actions">
+            <button id="pgrtiQuickSave" type="button" class="pgrti-primary">⬆ Upload PDF as draft</button>
+            <span id="pgrtiQuickStatus" role="status" aria-live="polite">Choose PDF first. Automatic extraction starts when a compatible RTI PDF is selected.</span>
+          </div>
           <p class="pgrti-muted">The PDF is stored privately. Enter or paste officer-wise figures below; no extracted numbers are treated as verified automatically. For scanned or poorly formatted reports, transcribe and check against the original PDF.</p>
           <details class="pgrti-import"><summary>Paste tabular rows from official Excel export (optional)</summary>
             <p class="pgrti-muted">Single-office: Officer, Total, With citizen, &lt;10, 10–20, 21–30, 31–60, 61–90, &gt;90 (tab-separated). Regional: put office ID first. Verify all values before publishing.</p>
@@ -8205,7 +8214,7 @@ function renderAdminSubjects(){
     });
   })();
   </script>
-  <script defer src="pgrti-extract-v1796.js?v=1796"></script>
-  <script defer src="pgrti-v1791.js?v=1798-visible-status"></script>
+  <script defer src="pgrti-extract-v1796.js?v=1799-columns"></script>
+  <script defer src="pgrti-v1791.js?v=1799-quickupload"></script>
 </body>
 </html>
