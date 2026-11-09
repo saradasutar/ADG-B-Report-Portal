@@ -2674,6 +2674,28 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbControlPanel .adgb-history-table td[data-higher="true"]{background:#e6f6ef;color:#0b7652;font-weight:850}
 #adgbControlPanel .adgb-history-table td[data-lower="true"]{background:#fff0ed;color:#ab3a3c;font-weight:850}
 @media(max-width:600px){#adgbControlPanel .adgb-historical-fields label{flex:1 1 130px}#adgbControlPanel .adgb-historical-fields input{max-width:none;width:100%}}
+
+/* V17.11.0 — historical office comparisons, accessibility and export */
+#adgbControlPanel .adgb-historical-presets,#adgbControlPanel .adgb-historical-filters{display:flex;align-items:end;gap:7px;flex-wrap:wrap;margin:6px 0 10px}
+#adgbControlPanel .adgb-historical-presets button,#adgbControlPanel .adgb-historical-filters button{border-radius:7px;padding:7px 10px;border:1px solid #b8d1e7;color:#19527f;background:#eef7ff;font-size:11px;font-weight:800;min-height:33px;cursor:pointer}
+#adgbControlPanel .adgb-historical-presets button[aria-pressed=true]{background:#145c98;color:#fff}
+#adgbControlPanel .adgb-historical-presets button:disabled,#adgbControlPanel .adgb-historical-filters button:disabled{opacity:.5;cursor:not-allowed}
+#adgbControlPanel .adgb-historical-filters label{display:grid;gap:3px;font-size:10px;font-weight:850;color:#365e82}
+#adgbControlPanel .adgb-historical-filters select{min-height:33px;border:1px solid #c2d5e6;background:#fff;border-radius:7px;color:#224a75;padding:5px;max-width:190px}
+#adgbControlPanel .adgb-historical-filters .adgb-history-trend-toggle{display:flex;gap:5px;align-items:center;align-self:center}
+#adgbControlPanel .adgb-historical-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:7px;margin:8px 0}
+#adgbControlPanel .adgb-historical-summary>div{padding:8px 9px;border:1px solid #d9e7f3;border-radius:8px;background:#fff}
+#adgbControlPanel .adgb-historical-summary strong{display:block;font-size:18px;color:#155385}
+#adgbControlPanel .adgb-historical-summary small{font-size:10px;color:#57748d}
+#adgbControlPanel .adgb-history-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#5d7790;margin:5px 0}
+#adgbControlPanel .adgb-history-spark{width:100%;height:30px;min-width:80px;max-width:160px;display:block;margin:auto}
+#adgbControlPanel .adgb-history-table th{position:sticky;top:0;z-index:1}
+#adgbControlPanel .adgb-history-table th:first-child{position:sticky;left:0;z-index:2}
+#adgbControlPanel .adgb-history-table td:first-child{position:sticky;left:0;z-index:1;background:#f5f9ff}
+#adgbControlPanel .adgb-historical-results:focus-visible{outline:3px solid #dfac2f}
+#adgbControlPanel .adgb-historical-presets button:focus-visible,#adgbControlPanel .adgb-historical-filters button:focus-visible{outline:3px solid #dfac2f;outline-offset:2px}
+@media(max-width:620px){#adgbControlPanel .adgb-historical-filters label{flex:1 1 110px}#adgbControlPanel .adgb-historical-filters select{max-width:none;width:100%}#adgbControlPanel .adgb-historical-presets button{flex:1 1 auto}}
+@media(prefers-reduced-motion:reduce){#adgbControlPanel .adgb-historical-compare *{scroll-behavior:auto!important;transition:none!important}}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2921,6 +2943,24 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <button type="button" id="adgbHistoryLoad">Load comparison</button>
             <button type="button" id="adgbHistoryPrint" disabled>Print / Save PDF</button>
           </div>
+          <div class="adgb-historical-presets" role="group" aria-label="Historical periods">
+            <button type="button" data-adgb-history-period="1">Last month</button>
+            <button type="button" data-adgb-history-period="3">Last 3 months</button>
+            <button type="button" data-adgb-history-period="6">Last 6 months</button>
+            <button type="button" id="adgbHistoryPrev">‹ Earlier</button>
+            <button type="button" id="adgbHistoryNext">Later ›</button>
+            <button type="button" id="adgbHistoryClear">Clear</button>
+          </div>
+          <div class="adgb-historical-filters">
+            <label>Office <select id="adgbHistoryOffice"><option value="all">All offices</option></select></label>
+            <label>Show <select id="adgbHistoryMetric"><option value="submitted">Submitted</option><option value="removed">Removed</option><option value="recorded">All recorded states</option></select></label>
+            <label>Sort <select id="adgbHistorySort"><option value="name">Office name</option><option value="latest">Latest month (high first)</option><option value="change">Change (high first)</option></select></label>
+            <label class="adgb-history-trend-toggle"><input type="checkbox" id="adgbHistoryShowTrend" checked> Show trends</label>
+            <button type="button" id="adgbHistoryCsv" disabled>Export CSV</button>
+            <button type="button" id="adgbHistoryCopy" disabled>Copy table</button>
+          </div>
+          <div id="adgbHistorySummary" class="adgb-historical-summary" aria-live="polite"></div>
+          <div class="adgb-history-legend"><span>— = no office records</span><span>Change compares endpoints only</span><span>Counts are not completion rates</span></div>
           <p id="adgbHistoryMessage" role="status" aria-live="polite">Select up to six completed historical months. Records load only when requested.</p>
           <div id="adgbHistoryResults" class="adgb-historical-results"></div>
           <small>Historical archive shows the last recorded state per office/report combination. Missing records are not zero, and historical completion percentages cannot be calculated reliably without archived expected-report totals.</small>
@@ -3169,7 +3209,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.7</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.11.0</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -4916,6 +4956,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbHistorySnapshot_=null;
       const print=document.getElementById('adgbHistoryPrint');
       if(print)print.disabled=true;
+      for(const id of ['adgbHistoryCsv','adgbHistoryCopy']){const button=document.getElementById(id);if(button)button.disabled=true;}
+      document.getElementById('adgbHistorySummary')?.replaceChildren();
       document.getElementById('adgbHistoryResults')?.replaceChildren();
     }
     function adgbHistoryRows_(records,officeId){
@@ -4924,39 +4966,96 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return {recorded:rows.length,submitted:rows.filter(row=>String(row.status)==='SUBMITTED').length,
         removed:rows.filter(row=>String(row.status)==='REMOVED').length};
     }
+
+    function adgbHistoryDisplayRows_(model){
+      const metric=document.getElementById('adgbHistoryMetric')?.value||'submitted';
+      const officeFilter=document.getElementById('adgbHistoryOffice')?.value||'all';
+      const sort=document.getElementById('adgbHistorySort')?.value||'name';
+      const rows=state.offices.filter(o=>officeFilter==='all'||o.id===officeFilter).map(o=>{
+        const values=model.months.map(month=>adgbHistoryRows_(model.byMonth[month],o.id));
+        const selected=values.map(v=>v?v[metric]:null);
+        const first=selected[0],last=selected[selected.length-1];
+        return {name:o.name,values,selected,last,change:first!==null&&last!==null&&selected.length>1?last-first:null};
+      });
+      if(sort==='latest')rows.sort((x,y)=>(y.last??-1)-(x.last??-1)||x.name.localeCompare(y.name));
+      else if(sort==='change')rows.sort((x,y)=>(y.change??-Infinity)-(x.change??-Infinity)||x.name.localeCompare(y.name));
+      else rows.sort((x,y)=>x.name.localeCompare(y.name));
+      return rows;
+    }
+    function adgbHistoryCsvText_(model){
+      const metric=document.getElementById('adgbHistoryMetric')?.value||'submitted';
+      const cells=[['Office',...model.months,'Change']];
+      adgbHistoryDisplayRows_(model).forEach(row=>cells.push([row.name,...row.selected.map(n=>n===null?'':String(n)),row.change===null?'':String(row.change)]));
+      cells.push(['Metric: '+metric+' (latest recorded archive states, not completion percentages)']);
+      return cells.map(row=>row.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\r\n');
+    }
+    function adgbHistorySpark_(values){
+      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('viewBox','0 0 150 30');svg.setAttribute('class','adgb-history-spark');
+      svg.setAttribute('role','img');svg.setAttribute('aria-label','Recorded counts across months: '+values.map(x=>x===null?'unavailable':x).join(', '));
+      const available=values.filter(x=>x!==null),max=Math.max(1,...available);
+      const points=values.map((value,i)=>value===null?null:[7+i*136/Math.max(1,values.length-1),26-20*value/max]);
+      // Do not draw across missing months.
+      let segment=[];
+      function flush(){
+        if(segment.length>1){
+          const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+          line.setAttribute('points',segment.map(x=>x.join(',')).join(' '));
+          line.setAttribute('stroke','#17729e');line.setAttribute('stroke-width','2.5');line.setAttribute('fill','none');
+          line.setAttribute('stroke-linecap','round');svg.appendChild(line);
+        }
+        segment=[];
+      }
+      points.forEach(point=>{if(point)segment.push(point);else flush();});flush();
+      points.filter(Boolean).forEach(([x,y])=>{
+        const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));dot.setAttribute('r','2.8');dot.setAttribute('fill','#175b89');svg.appendChild(dot);
+      });
+      return svg;
+    }
     function adgbHistoryRender_(model){
       const container=document.getElementById('adgbHistoryResults');
       if(!container)return;
       container.replaceChildren();
+      const metric=document.getElementById('adgbHistoryMetric')?.value||'submitted';
+      const rows=adgbHistoryDisplayRows_(model);
+      const hasTrend=document.getElementById('adgbHistoryShowTrend')?.checked===true;
       const table=document.createElement('table');table.className='adgb-history-table';
       const head=document.createElement('thead'),tr=document.createElement('tr');
-      ['Office',...model.months,'Change*'].forEach(name=>{
+      ['Office',...model.months,'Change*',...(hasTrend?['Trend']:[])].forEach(name=>{
         const th=document.createElement('th');th.scope='col';th.textContent=name;tr.appendChild(th);
       });
-      head.appendChild(tr);table.appendChild(head);
-      const body=document.createElement('tbody');
-      state.offices.forEach(office=>{
+      head.appendChild(tr);table.appendChild(head);const body=document.createElement('tbody');
+      rows.forEach(row=>{
         const line=document.createElement('tr');
-        const label=document.createElement('td');label.textContent=office.name;line.appendChild(label);
-        const values=model.months.map(month=>adgbHistoryRows_(model.byMonth[month],office.id));
-        values.forEach(v=>{
-          const cell=document.createElement('td');
-          cell.textContent=v?String(v.submitted):'—';if(!v){cell.dataset.missing='true';cell.title='No archive records returned for this office in this month';}
-          else cell.title=v.recorded+' latest archive record(s): '+v.submitted+' submitted, '+v.removed+' removed';
+        const label=document.createElement('td');label.textContent=row.name;line.appendChild(label);
+        row.values.forEach(v=>{
+          const cell=document.createElement('td'),n=v?v[metric]:null;
+          cell.textContent=n===null?'—':String(n);
+          if(n===null){cell.dataset.missing='true';cell.title='No archive rows recorded for this office';}
+          else cell.title=v.recorded+' recorded state(s) including '+v.submitted+' submitted and '+v.removed+' removed';
           line.appendChild(cell);
         });
-        const first=values[0],last=values[values.length-1],delta=document.createElement('td');
-        if(first&&last&&values.length>1){
-          const diff=last.submitted-first.submitted;
-          delta.textContent=(diff>0?'+':'')+diff;
-          if(diff>0)delta.dataset.higher='true';if(diff<0)delta.dataset.lower='true';
-        }else delta.textContent='—';
-        line.appendChild(delta);body.appendChild(line);
+        const delta=document.createElement('td');
+        delta.textContent=row.change===null?'—':(row.change>0?'+':'')+row.change;
+        if(row.change>0)delta.dataset.higher='true';
+        if(row.change<0)delta.dataset.lower='true';
+        line.appendChild(delta);
+        if(hasTrend){const chart=document.createElement('td');chart.appendChild(adgbHistorySpark_(row.selected));line.appendChild(chart);}
+        body.appendChild(line);
       });
       table.appendChild(body);container.appendChild(table);
       const note=document.createElement('p');note.style.fontSize='10px';
-      note.textContent='Each value is the number of SUBMITTED records in that month’s latest archived states. “—” means no records returned. *Change compares the first and last months, not performance or completion. A report added/removed between months changes the count.';
+      note.textContent='Values count latest archive states for each office/month. “—” means no matching records; changes are differences in recorded counts, not performance improvements. No historical completion rates are inferred.';
       container.appendChild(note);
+      const summary=document.getElementById('adgbHistorySummary');summary.replaceChildren();
+      const cells=model.months.length*rows.length,covered=rows.reduce((n,r)=>n+r.values.filter(Boolean).length,0);
+      const submitted=rows.reduce((n,r)=>n+r.values.reduce((a,v)=>a+(v?.submitted||0),0),0);
+      const removed=rows.reduce((n,r)=>n+r.values.reduce((a,v)=>a+(v?.removed||0),0),0);
+      [['Months',model.months.length],['Offices',rows.length],['Available office-months',covered+'/'+cells],['Recorded submitted states',submitted],['Recorded removed states',removed]].forEach(([label,value])=>{
+        const box=document.createElement('div'),num=document.createElement('strong'),name=document.createElement('small');
+        num.textContent=String(value);name.textContent=label;box.append(num,name);summary.appendChild(box);
+      });
     }
     async function adgbHistoryLoad_(){
       if(adgbHistoryBusy_)return;
@@ -4970,16 +5069,22 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const button=document.getElementById('adgbHistoryLoad');button.disabled=true;adgbHistoryBusy_=true;
       adgbHistoryStatus_('Retrieving '+months.length+' historical archive cycle(s)…');
       try{
-        const result=await Promise.all(months.map(month=>postToBackend({action:'adminArchiveList',securityCode,cycleKey:month})));
-        if(serial!==adgbHistorySerial_||token!==String(window.ADGB_AUTH?.token||''))return;
         const byMonth={};
-        result.forEach((response,i)=>{
-          if(!response?.ok||!Array.isArray(response.records))throw Error('No valid archive response for '+months[i]+'.');
-          byMonth[months[i]]=response.records;
-        });
+        // At most two archive requests at a time to avoid overloading Apps Script.
+        for(let i=0;i<months.length;i+=2){
+          if(serial!==adgbHistorySerial_||token!==String(window.ADGB_AUTH?.token||''))return;
+          const batch=months.slice(i,i+2);
+          adgbHistoryStatus_('Loading archive '+(i+1)+'–'+Math.min(i+2,months.length)+' of '+months.length+'…');
+          const responses=await Promise.all(batch.map(month=>postToBackend({action:'adminArchiveList',securityCode,cycleKey:month})));
+          responses.forEach((response,j)=>{
+            if(!response?.ok||!Array.isArray(response.records))throw Error('No valid archive response for '+batch[j]+'.');
+            byMonth[batch[j]]=response.records;
+          });
+        }
+        if(serial!==adgbHistorySerial_||token!==String(window.ADGB_AUTH?.token||''))return;
         const model={months,byMonth};adgbHistorySnapshot_=model;
         adgbHistoryRender_(model);
-        document.getElementById('adgbHistoryPrint').disabled=false;
+        for(const id of ['adgbHistoryPrint','adgbHistoryCsv','adgbHistoryCopy'])document.getElementById(id).disabled=false;
         adgbHistoryStatus_('Loaded '+months.length+' verified archive response(s). Figures are recorded submissions only; no historical completion rates are inferred.');
       }catch(error){
         if(serial===adgbHistorySerial_){adgbHistoryReset_();adgbHistoryStatus_('Historical comparison unavailable: '+String(error.message||error)+'. Current-cycle reports were not changed.');}
@@ -5005,6 +5110,44 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.body.classList.add('adgb-office-comparison-print');
       try{window.print();}catch(error){cleanup();showToast('Could not open print dialogue.','error');}
     }
+
+    function adgbHistorySetPeriod_(count){
+      const last=adgbHistoryPreviousMonth_(adgbCurrentCycleKeyIST(),1);
+      const first=adgbHistoryPreviousMonth_(last,count-1);
+      document.getElementById('adgbHistoryStart').value=first;
+      document.getElementById('adgbHistoryEnd').value=last;
+      adgbHistoryReset_();adgbHistoryStatus_('Selected last '+count+' complete month(s). Click Load comparison.');
+      document.querySelectorAll('[data-adgb-history-period]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.adgbHistoryPeriod)===count)));
+    }
+    function adgbHistoryShift_(direction){
+      const start=document.getElementById('adgbHistoryStart'),end=document.getElementById('adgbHistoryEnd');
+      if(!adgbHistoryMonths_(start.value,end.value)){adgbHistoryStatus_('Choose a valid period first.');return;}
+      const shift=value=>{
+        const [y,m]=value.split('-').map(Number),date=new Date(Date.UTC(y,m-1+direction,1));
+        return date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0');
+      };
+      const a=shift(start.value),b=shift(end.value);
+      if(!adgbHistoryMonths_(a,b)){adgbHistoryStatus_('Only completed historical months can be selected.');return;}
+      start.value=a;end.value=b;adgbHistoryReset_();adgbHistoryStatus_('Period adjusted. Click Load comparison.');
+      document.querySelectorAll('[data-adgb-history-period]').forEach(el=>el.setAttribute('aria-pressed','false'));
+    }
+    function adgbHistoryExport_(){
+      if(!adgbHistorySnapshot_||!adgbArchiveCredential())return;
+      const content='\ufeff'+adgbHistoryCsvText_(adgbHistorySnapshot_);
+      const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));
+      const link=document.createElement('a');link.href=url;
+      link.download='ADGB_Recorded_Submissions_'+adgbHistorySnapshot_.months[0]+'_to_'+adgbHistorySnapshot_.months.at(-1)+'.csv';
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    async function adgbHistoryCopy_(){
+      if(!adgbHistorySnapshot_||!adgbArchiveCredential())return;
+      const snapshot=adgbHistorySnapshot_,head=['Office',...snapshot.months,'Change'];
+      const rows=adgbHistoryDisplayRows_(snapshot).map(r=>[r.name,...r.selected.map(n=>n===null?'—':n),r.change===null?'—':r.change]);
+      const body=[head,...rows].map(row=>row.join('\t')).join('\n');
+      try{await navigator.clipboard.writeText(body);showToast('Historical comparison copied.','success');}
+      catch(error){showToast('Clipboard unavailable. Use Export CSV.','error');}
+    }
     function adgbHistoryInit_(){
       const current=adgbCurrentCycleKeyIST();
       const last=adgbHistoryPreviousMonth_(current,1);
@@ -5014,6 +5157,22 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       }
       document.getElementById('adgbHistoryLoad')?.addEventListener('click',adgbHistoryLoad_);
       document.getElementById('adgbHistoryPrint')?.addEventListener('click',adgbHistoryPrint_);
+      document.getElementById('adgbHistoryCsv')?.addEventListener('click',adgbHistoryExport_);
+      document.getElementById('adgbHistoryCopy')?.addEventListener('click',adgbHistoryCopy_);
+      document.querySelectorAll('[data-adgb-history-period]').forEach(button=>button.addEventListener('click',()=>adgbHistorySetPeriod_(Number(button.dataset.adgbHistoryPeriod))));
+      document.getElementById('adgbHistoryPrev')?.addEventListener('click',()=>adgbHistoryShift_(-1));
+      document.getElementById('adgbHistoryNext')?.addEventListener('click',()=>adgbHistoryShift_(1));
+      document.getElementById('adgbHistoryClear')?.addEventListener('click',()=>{
+        adgbHistoryReset_();document.getElementById('adgbHistoryStart').value='';document.getElementById('adgbHistoryEnd').value='';
+        adgbHistoryStatus_('Period cleared. Select completed months to continue.');
+      });
+      const officeSelect=document.getElementById('adgbHistoryOffice');
+      if(officeSelect)officeSelect.innerHTML='<option value="all">All offices</option>'+state.offices.map(o=>'<option value="'+escapeAttr(o.id)+'">'+escapeHtml(o.name)+'</option>').join('');
+      for(const id of ['adgbHistoryOffice','adgbHistoryMetric','adgbHistorySort','adgbHistoryShowTrend']){
+        document.getElementById(id)?.addEventListener('change',()=>{
+          if(adgbHistorySnapshot_)adgbHistoryRender_(adgbHistorySnapshot_);
+        });
+      }
       window.addEventListener('adgb-auth-changed',()=>{adgbHistoryReset_();adgbHistoryStatus_('Select Load comparison to retrieve historical archive records.');});
     }
     function adgbOverviewInit_(){
