@@ -5,7 +5,7 @@ const $=s=>root.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories={PG:'Public Grievances',PG_APPEAL:'PG Appeals',RTI:'RTI Applications',RTI_APPEAL:'RTI First Appeals'};
 const defaults=['HEAD_OFFICE','CEB','CEHAL','SEPD','SEMYSORE','SEHUBLI'];
-let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null,queuedAuthRefresh=false;
+let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null,queuedAuthRefresh=false,uploading=false;
 function uploadReceipt_(r,fileName){
  const box=$('#pgrtiUploadReceipt');if(!box)return;box.hidden=false;box.replaceChildren();
  const title=document.createElement('strong');title.textContent=r.existing?'This PDF was already uploaded':'PDF uploaded successfully';
@@ -117,18 +117,26 @@ function csvImport(){
 }
 const readFile=f=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');reader.onerror=()=>reject(Error('Unable to read the PDF.'));reader.readAsDataURL(f);});
 async function saveDraft(){
+ if(uploading)return;
  if(!token()){flash('Sign in before uploading.',true);return;}
+ if(!data?.initialized){flash('Initialize PG/RTI registers first (Administrator Setup → Initialize registers), then Refresh.',true);$('#pgrtiAdminBlock').open=true;return;}
  const file=$('#pgrtiFile').files[0];if(!file||!file.name.toLowerCase().endsWith('.pdf')||file.size>8*1024*1024){flash('Choose a PDF up to 8 MB.',true);return;}
+ if(!$('#pgrtiDate').value){flash('Select the report as-on date.',true);return;}
  const rows=getRows(),body={category:$('#pgrtiCat').value,reportDate:$('#pgrtiDate').value,scope:$('#pgrtiScope').value,
  officeId:$('#pgrtiOffice').value,fileName:file.name,rows,note:$('#pgrtiNote').value};
- buttonBusy('#pgrtiSaveDraft',true);flash('Uploading private source PDF…');
- try{body.fileBase64=await readFile(file);const r=await call('pgrtiPrepareDraft',body);
+ uploading=true;buttonBusy('#pgrtiSaveDraft',true);
+ const saveButton=$('#pgrtiSaveDraft');saveButton.textContent='Uploading PDF…';
+ $('#pgrtiUploadReceipt').hidden=true;
+ flash('Uploading PDF securely. Do not press Save again or leave the page until confirmation.');
+ try{body.fileBase64=await readFile(file);flash('Sending PDF ('+(file.size/1048576).toFixed(2)+' MB) to the private PG/RTI folder…');
+ const r=await call('pgrtiPrepareDraft',body);
+ if(!r?.ok)throw Error(r?.message||'Backend did not confirm the upload.');
  uploadReceipt_(r,file.name);
  flash(r.message||'PDF stored as a draft; Administrator approval needed.');
  $('#pgrtiFile').value='';
  if(isAdmin()){$('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
- catch(e){flash(String(e.message||e),true);}
- finally{buttonBusy('#pgrtiSaveDraft',false);}
+ catch(e){flash('Upload was NOT confirmed: '+String(e.message||e)+'. Check pending drafts before trying again.',true);if(isAdmin()){$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
+ finally{uploading=false;buttonBusy('#pgrtiSaveDraft',false);$('#pgrtiSaveDraft').textContent='Save source PDF as draft';}
 }
 async function loadDrafts(silent=false){
  if(!isAdmin())return;
@@ -189,5 +197,7 @@ $('#pgrtiPublish').addEventListener('click',()=>manageDraft('pgrtiPublishDraft')
 $('#pgrtiReject').addEventListener('click',()=>manageDraft('pgrtiRejectDraft'));
 $('#pgrtiOpenSource').addEventListener('click',openSource);
 $('#pgrtiDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+// Ensure button never stays visually disabled after sign-in, unless the user is actively uploading.
+$('#pgrtiSaveDraft').disabled=false;
 if('IntersectionObserver' in window){const watcher=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)){watcher.disconnect();load();}},{rootMargin:'200px'});watcher.observe(root);}else setTimeout(load,900);
 })();
