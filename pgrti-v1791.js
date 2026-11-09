@@ -6,6 +6,19 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const categories={PG:'Public Grievances',PG_APPEAL:'PG Appeals',RTI:'RTI Applications',RTI_APPEAL:'RTI First Appeals'};
 const defaults=['HEAD_OFFICE','CEB','CEHAL','SEPD','SEMYSORE','SEHUBLI'];
 let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null;
+function uploadReceipt_(r,fileName){
+ const box=$('#pgrtiUploadReceipt');if(!box)return;box.hidden=false;box.replaceChildren();
+ const title=document.createElement('strong');title.textContent=r.existing?'This PDF was already uploaded':'PDF uploaded successfully';
+ const detail=document.createElement('div'),status=String(r.status||'DRAFT');
+ detail.textContent=fileName+' · '+status+(r.draftId?' · Reference: '+r.draftId:'')+
+   (status==='PUBLISHED'?'. Already approved: refresh the summary above.':'. Awaiting Administrator verification; it is not yet in published figures.');
+ box.append(title,detail);
+ if(isAdmin()&&status==='DRAFT'){const button=document.createElement('button');button.type='button';button.textContent='Review uploaded draft';
+ button.addEventListener('click',async()=>{$('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;
+   await loadDrafts(true);const found=drafts.find(x=>String(x.id)===String(r.draftId));
+   if(found)chooseDraft(found.id);else{$('#pgrtiAdminBlock').scrollIntoView({behavior:'smooth'});}});
+ box.appendChild(button);}
+}
 const token=()=>String(window.ADGB_AUTH?.token||'');
 const isAdmin=()=>!!token()&&(typeof window.ADGB_PGRTI_IS_ADMIN==='function'?window.ADGB_PGRTI_IS_ADMIN():document.getElementById('adgbUserRole')?.textContent?.trim()==='Administrator');
 const call=(action,extra={})=>{if(typeof window.ADGB_PGRTI_CALL!=='function')throw Error('PG/RTI backend bridge is not available.');return window.ADGB_PGRTI_CALL({action,sessionToken:token(),...extra});};
@@ -61,6 +74,7 @@ async function load(){
  $('#pgrtiOffice').disabled=!isAdmin();
  if(!isAdmin()){$('#pgrtiScope').value='OFFICE';$('#pgrtiOfficeBox').hidden=false;}
  if(admin||response.initialized||response.canUpload)setMsg(response.initialized?'Approved figures loaded.':'Administrator setup is required. Open the expanded administrator setup below.');
+ if(admin&&response.initialized)await loadDrafts(true);
  }catch(e){setMsg('PG/RTI module requires the matching V17.9.1 backend. '+String(e.message||e),true);
  $('#pgrtiSummary').innerHTML='<p class="pgrti-muted">Existing report submissions are unaffected. PG/RTI monitoring will activate after the new backend is deployed.</p>';}
  finally{buttonBusy('#pgrtiRefresh',false);}
@@ -106,16 +120,20 @@ async function saveDraft(){
  officeId:$('#pgrtiOffice').value,fileName:file.name,rows,note:$('#pgrtiNote').value};
  buttonBusy('#pgrtiSaveDraft',true);flash('Uploading private source PDF…');
  try{body.fileBase64=await readFile(file);const r=await call('pgrtiPrepareDraft',body);
- flash(r.message||'Draft stored privately.');$('#pgrtiFile').value='';if(isAdmin())await loadDrafts();}
+ uploadReceipt_(r,file.name);
+ flash(r.message||'PDF stored as a draft; Administrator approval needed.');
+ $('#pgrtiFile').value='';
+ if(isAdmin()){$('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;await loadDrafts(true);}}
  catch(e){flash(String(e.message||e),true);}
  finally{buttonBusy('#pgrtiSaveDraft',false);}
 }
-async function loadDrafts(){
+async function loadDrafts(silent=false){
  if(!isAdmin())return;
  try{const r=await call('pgrtiListDrafts');drafts=Array.isArray(r.drafts)?r.drafts:[];
- $('#pgrtiDraftList').innerHTML=drafts.length?drafts.map(d=>'<button type="button" class="pgrti-draft-item" data-draft="'+esc(d.id)+'"><strong>'+esc(categories[d.category]||d.category)+' · '+esc(d.reportDate)+'</strong><span>'+esc(d.fileName)+' · '+esc(d.scope==='REGION'?'All offices':officeName(d.officeId))+' · '+d.rows.length+' officer rows</span></button>').join(''):'<p class="pgrti-muted">No drafts awaiting review.</p>';
- flash(drafts.length+' draft(s) awaiting review.');
- }catch(e){flash(String(e.message||e),true);}
+ $('#pgrtiDraftCount').textContent=drafts.length+' awaiting review';
+ $('#pgrtiDraftList').innerHTML=drafts.length?drafts.map(d=>'<button type="button" class="pgrti-draft-item" data-draft="'+esc(d.id)+'"><strong>'+esc(categories[d.category]||d.category)+' · '+esc(d.reportDate)+'</strong><span>'+esc(d.fileName)+' · '+esc(d.scope==='REGION'?'All offices':officeName(d.officeId))+' · '+d.rows.length+' officer rows</span><em class="pgrti-draft-pill">DRAFT — review</em></button>').join(''):'<p class="pgrti-muted">No drafts awaiting review. Published figures appear above.</p>';
+ if(!silent)flash(drafts.length+' draft(s) awaiting review.');
+ }catch(e){$('#pgrtiDraftCount').textContent='Unable to load';if(!silent)flash(String(e.message||e),true);}
 }
 function chooseDraft(id){
  chosen=drafts.find(d=>d.id===id);if(!chosen)return;
@@ -125,6 +143,7 @@ function chooseDraft(id){
  chosen.rows.forEach(addRow);
  $('#pgrtiReview').hidden=false;
  $('#pgrtiUploadBlock').open=true;
+ $('#pgrtiAdminBlock').open=true;
  $('#pgrtiReviewTitle').textContent='Review draft: '+chosen.fileName+' ('+chosen.reportDate+')';
  $('#pgrtiUploadBlock').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -135,7 +154,7 @@ async function manageDraft(action){
  buttonBusy('#pgrtiPublish',true);buttonBusy('#pgrtiReject',true);
  try{let body={draftId:chosen.id,rows:getRows(),note:$('#pgrtiReviewNote').value};
  if(action==='pgrtiRejectDraft')body.reason=body.note||'Rejected during review';
- const r=await call(action,body);flash(r.message||'Saved.');chosen=null;$('#pgrtiReview').hidden=true;await loadDrafts();await load();}
+ const r=await call(action,body);chosen=null;$('#pgrtiReview').hidden=true;await load();if(isAdmin())$('#pgrtiAdminBlock').open=true;flash(r.message||'Saved. Refresh to see updated approved figures.');}
  catch(e){flash(String(e.message||e),true);}
  finally{buttonBusy('#pgrtiPublish',false);buttonBusy('#pgrtiReject',false);}
 }
