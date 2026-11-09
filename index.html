@@ -2952,7 +2952,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.9.1</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.0</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -3762,7 +3762,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       return map;
     }
 
-    async function loadPortal(forceFresh=false){
+    // V17.10.0 Phase 1: deduplicate overlapping dashboard refreshes.
+    // A force-fresh request arriving during a load is performed immediately after it.
+    let adgbBootstrapTask_=null,adgbBootstrapForceQueued_=false;
+    function loadPortal(forceFresh=false){
+      if(adgbBootstrapTask_){
+        if(forceFresh)adgbBootstrapForceQueued_=true;
+        return adgbBootstrapTask_;
+      }
+      const task=adgbLoadPortalInternal_(forceFresh);
+      adgbBootstrapTask_=task;
+      task.finally(()=>{
+        if(adgbBootstrapTask_!==task)return;
+        adgbBootstrapTask_=null;
+        if(adgbBootstrapForceQueued_){
+          adgbBootstrapForceQueued_=false;
+          void loadPortal(true);
+        }
+      }).catch(()=>{ /* original caller receives rejection; prevent orphaned finally rejection */ });
+      return task;
+    }
+    async function adgbLoadPortalInternal_(forceFresh=false){
       setNotice('',false);
       const refresh=$('#refreshButton');
       if(refresh)setBusy(refresh,true,'Refreshing…');
@@ -3844,7 +3864,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
            * or guess whether a deploy actually landed.
            */
           if(data.backendVersion&&$('#footerBuild')){
-            $('#footerBuild').textContent='Portal file build: 17.9.1 · Live backend: v'+data.backendVersion;
+            $('#footerBuild').textContent='Portal file build: 17.10.0 · Live backend: v'+data.backendVersion;
           }
 
           if(data.cycleName&&$('#cycleName'))$('#cycleName').textContent=String(data.cycleName);
@@ -6063,7 +6083,6 @@ function adgbAlignPreviewLayout(){
     }
 
     function renderAll(lastUpdated){
-      adgbRenderLivePanels();
       populateOfficeFilter();
       renderMatrix();
       updateSummary();
@@ -7055,7 +7074,9 @@ function adgbAlignPreviewLayout(){
       }catch(e){return''}
     }
 
+    let adgbPdfViewInFlight_=false;
     async function viewSubmittedReport(){
+      if(adgbPdfViewInFlight_)return;
       const securityCode=$('#officeCode').value.trim();
       const selected=state.selected;
       if(!selected)return;
@@ -7079,6 +7100,7 @@ function adgbAlignPreviewLayout(){
       }catch(e){}
 
       const button=$('#viewReportButton');
+      adgbPdfViewInFlight_=true;
       setBusy(button,true,'Preparing secure view…');
 
       try{
@@ -7096,6 +7118,7 @@ function adgbAlignPreviewLayout(){
         try{viewer.close()}catch(e){}
         showToast(error.message||'Submitted report could not be opened.','error');
       }finally{
+        adgbPdfViewInFlight_=false;
         setBusy(button,false,'View submitted report');
       }
     }
