@@ -5,7 +5,7 @@ const $=s=>root.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories={PG:'Public Grievances',PG_APPEAL:'PG Appeals',RTI:'RTI Applications',RTI_APPEAL:'RTI First Appeals'};
 const defaults=['HEAD_OFFICE','CEB','CEHAL','SEPD','SEMYSORE','SEHUBLI'];
-let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null,queuedAuthRefresh=false,uploading=false;
+let offices=defaults.map(id=>({id,name:id})),data=null,drafts=[],chosen=null,busy=false,settings=null,queuedAuthRefresh=false,uploading=false,extracting=false,extractedPdfName='';
 function uploadReceipt_(r,fileName){
  const box=$('#pgrtiUploadReceipt');if(!box)return;box.hidden=false;box.replaceChildren();
  const title=document.createElement('strong');title.textContent=r.existing?'This PDF was already uploaded':'PDF uploaded successfully';
@@ -116,13 +116,62 @@ function csvImport(){
  flash(added+' row(s) added from pasted table. Check every officer and figure before uploading.',added===0);
 }
 const readFile=f=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');reader.onerror=()=>reject(Error('Unable to read the PDF.'));reader.readAsDataURL(f);});
+
+function extractStatus_(message,error){
+ const el=$('#pgrtiExtractStatus');if(!el)return;
+ el.textContent=message;el.style.color=error?'#a33341':'#425c78';
+}
+async function extractPdf_(auto){
+ if(extracting||uploading)return;
+ const file=$('#pgrtiFile')?.files?.[0];if(!file){extractStatus_('Select the source PDF first.',true);return;}
+ if(!window.ADGB_PGRTI_EXTRACT){extractStatus_('PDF reader did not load. Refresh the page or paste rows from Excel.',true);return;}
+ if(getRows().length && !window.confirm('Replace existing officer-wise entries with extracted PDF figures?'))return;
+ extracting=true;buttonBusy('#pgrtiExtractPdf',true);
+ $('#pgrtiExtractSummary').hidden=true;
+ try{
+   const result=await window.ADGB_PGRTI_EXTRACT(file,(message)=>extractStatus_(message,false));
+   // Only CPWD RTI applications and first-appeal formats are recognized.
+   if(!result.rows.length)throw Error('No officer-wise figures detected.');
+   const category=$('#pgrtiCat').value;
+   if((category==='PG'||category==='PG_APPEAL')&&!auto&&
+      !window.confirm('The PDF resembles an RTI report, not a PG report. Switch category to '+result.category+'?'))
+      throw Error('Category was not changed. Review the selected PDF.');
+   $('#pgrtiCat').value=result.category;
+   if(result.reportDate)$('#pgrtiDate').value=result.reportDate;
+   $('#pgrtiScope').value='REGION';$('#pgrtiOfficeBox').hidden=true;
+   $('#pgrtiRows').replaceChildren();
+   result.rows.forEach((r)=>addRow({...r,officeId:r.officeId==='UNMAPPED'?'':r.officeId}));
+   extractedPdfName=file.name;
+   const sum=$('#pgrtiExtractSummary');sum.hidden=false;
+   sum.dataset.warning=result.unmatched.length||result.duplicateNames.length?'yes':'no';
+   sum.replaceChildren();
+   const head=document.createElement('strong');
+   head.textContent='Extracted '+result.rows.length+' officer rows · '+result.total+' pending · '+(result.reportDate||'Date not found');
+   sum.appendChild(head);
+   const note=document.createElement('p');
+   note.textContent='Verify every office, officer, total and age category against the PDF. This is a draft extraction, not a published report.';
+   sum.appendChild(note);
+   if(result.unmatched.length||result.duplicateNames.length){
+     const warnings=document.createElement('ul');
+     [...result.unmatched.map(n=>'Office not recognized: '+n),...result.duplicateNames.map(n=>'Duplicate officer: '+n)].forEach(n=>{const li=document.createElement('li');li.textContent=n;warnings.appendChild(li);});
+     sum.appendChild(warnings);
+   }
+   extractStatus_('Extraction complete. Check all '+result.rows.length+' rows before saving.',false);
+ }catch(e){
+   extractStatus_(String(e.message||e),true);
+   if(!auto)flash('PDF extraction unavailable: '+String(e.message||e),true);
+ }finally{extracting=false;buttonBusy('#pgrtiExtractPdf',false);}
+}
+
 async function saveDraft(){
  if(uploading)return;
  if(!token()){flash('Sign in before uploading.',true);return;}
- if(!data?.initialized){flash('Initialize PG/RTI registers first (Administrator Setup → Initialize registers), then Refresh.',true);$('#pgrtiAdminBlock').open=true;return;}
+ if(!data?.initialized){flash('PG/RTI registers are not initialized. Click Initialize registers in Administrator Setup, then Refresh.',true);$('#pgrtiAdminBlock').open=true;return;}
  const file=$('#pgrtiFile').files[0];if(!file||!file.name.toLowerCase().endsWith('.pdf')||file.size>8*1024*1024){flash('Choose a PDF up to 8 MB.',true);return;}
  if(!$('#pgrtiDate').value){flash('Select the report as-on date.',true);return;}
- const rows=getRows(),body={category:$('#pgrtiCat').value,reportDate:$('#pgrtiDate').value,scope:$('#pgrtiScope').value,
+ const rows=getRows();
+ if(rows.some(r=>!r.officeId||!offices.some(o=>o.id===r.officeId))){flash('An extracted office could not be mapped. Select the correct Office for every officer row.',true);return;}
+ const body={category:$('#pgrtiCat').value,reportDate:$('#pgrtiDate').value,scope:$('#pgrtiScope').value,
  officeId:$('#pgrtiOffice').value,fileName:file.name,rows,note:$('#pgrtiNote').value};
  uploading=true;buttonBusy('#pgrtiSaveDraft',true);
  const saveButton=$('#pgrtiSaveDraft');saveButton.textContent='Uploading PDF…';
@@ -180,6 +229,14 @@ async function openSource(){
 }
 document.getElementById('adgbPgrtiJump')?.addEventListener('click',()=>{root.scrollIntoView({behavior:'smooth',block:'start'});if(isAdmin())$('#pgrtiUploadBlock').open=true;});
 $('#pgrtiRefresh').addEventListener('click',load);
+$('#pgrtiExtractPdf').addEventListener('click',()=>extractPdf_(false));
+$('#pgrtiFile').addEventListener('change',()=>{
+ extractedPdfName='';$('#pgrtiExtractSummary').hidden=true;
+ const file=$('#pgrtiFile').files?.[0];
+ if(!file)return;
+ if($('#pgrtiCat').value==='RTI'||$('#pgrtiCat').value==='RTI_APPEAL')void extractPdf_(true);
+ else extractStatus_('PDF selected. Click Read office-wise figures if this is a CPWD age-wise export.',false);
+});
 // The login UI is populated asynchronously. Rerun bootstrap immediately after role/token changes.
 window.addEventListener('adgb-auth-changed',()=>{void load();});
 window.addEventListener('adgb-access-changed',()=>{void load();});
@@ -199,5 +256,7 @@ $('#pgrtiOpenSource').addEventListener('click',openSource);
 $('#pgrtiDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
 // Ensure button never stays visually disabled after sign-in, unless the user is actively uploading.
 $('#pgrtiSaveDraft').disabled=false;
+const originalSaveButton=$('#pgrtiSaveDraft');
+originalSaveButton.setAttribute('aria-label','Save PDF as private draft; approval and officer-wise review follow');
 if('IntersectionObserver' in window){const watcher=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)){watcher.disconnect();load();}},{rootMargin:'200px'});watcher.observe(root);}else setTimeout(load,900);
 })();
