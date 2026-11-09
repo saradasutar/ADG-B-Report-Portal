@@ -7091,7 +7091,7 @@ function adgbAlignPreviewLayout(){
         const viewUrl=validSecureViewUrl(result.viewUrl);
         if(!viewUrl)throw new Error('Backend did not return a valid secure report link.');
         viewer.location.replace(viewUrl);
-        showToast('Secure report viewer ready. Select Open PDF to view the file.','success');
+        showToast('Submitted PDF opened directly in the secure viewer.','success');
       }catch(error){
         try{viewer.close()}catch(e){}
         showToast(error.message||'Submitted report could not be opened.','error');
