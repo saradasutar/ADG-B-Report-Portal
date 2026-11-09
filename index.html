@@ -7066,7 +7066,9 @@ function adgbAlignPreviewLayout(){
         return;
       }
 
-      const viewer=window.open('about:blank','_blank');
+      // Reuse one named secure viewer tab rather than accumulating "Submitted report" tabs.
+      const viewer=window.open('about:blank','ADGB_Submitted_Report_Viewer');
+      try{viewer?.focus();}catch(ignore){}
       if(!viewer){
         showToast('Allow pop-ups for this portal, then try again.','error');return;
       }
@@ -7089,7 +7091,7 @@ function adgbAlignPreviewLayout(){
         const viewUrl=validSecureViewUrl(result.viewUrl);
         if(!viewUrl)throw new Error('Backend did not return a valid secure report link.');
         viewer.location.replace(viewUrl);
-        showToast(result.message||'Submitted report opened securely.','success');
+        showToast('Secure report viewer ready. Select Open PDF to view the file.','success');
       }catch(error){
         try{viewer.close()}catch(e){}
         showToast(error.message||'Submitted report could not be opened.','error');
