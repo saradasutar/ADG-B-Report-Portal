@@ -2569,6 +2569,29 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     grid-template-columns:minmax(0,1fr)!important;
   }
 }
+
+/* V17.10.4 — compact Administrator Control Centre; presentation preferences only */
+#adgbControlPanel .adgb-insights-heading{padding:11px 14px;gap:9px}
+#adgbControlPanel .adgb-insights-heading p{margin-top:2px}
+#adgbControlPanel .adgb-control-security-note{margin:9px 13px 3px;padding:7px 11px;background:#f4f8ff;border:1px solid #d8e5f2;border-radius:9px}
+#adgbControlPanel .adgb-control-security-note summary{cursor:pointer;font-size:11px;color:#234d7b;font-weight:800}
+#adgbControlPanel .adgb-control-security-note p{margin:8px 0 0;font-size:11px;line-height:1.5}
+#adgbControlPanel .adgb-insights-toolbar{padding:8px 13px;gap:7px}
+#adgbControlPanel .adgb-control-main-toolbar{align-items:center}
+#adgbControlPanel .adgb-control-advanced{background:#f4f8ff;border-top:1px solid #e1eaf3;border-bottom:1px solid #e1eaf3}
+#adgbControlPanel .adgb-control-advanced[hidden]{display:none!important}
+#adgbControlPanel .adgb-control-quick-groups{padding:5px 13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#adgbControlPanel .adgb-control-quick-groups button{background:#edf5fe;border:1px solid #c6daed;border-radius:20px;padding:6px 11px;color:#24527e;font-size:11px;font-weight:800;cursor:pointer}
+#adgbControlPanel .adgb-control-quick-groups button[aria-pressed="true"]{background:#155a9b;color:white;border-color:#155a9b}
+#adgbControlPanel .adgb-control-quick-groups button:focus-visible,#adgbControlPanel summary:focus-visible{outline:3px solid #f5b936;outline-offset:2px}
+#adgbControlPanel .adgb-control-summary{padding-top:5px;padding-bottom:5px}
+#adgbControlPanel .adgb-control-table td{padding:7px 9px}
+#adgbControlPanel .adgb-control-save-bar{gap:9px}
+@media(max-width:640px){
+ #adgbControlPanel .adgb-control-main-toolbar>button{flex:1 1 auto}
+ #adgbControlPanel .adgb-control-quick-groups{gap:5px}
+ #adgbControlPanel .adgb-control-quick-groups button{padding:7px 9px}
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2792,17 +2815,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
     <section id="adgbControlPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbControlTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbControlTitle">⚙ Administrator Control Centre</h2><p>Manage availability of 20 portal features by audience · existing permissions remain in force</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-      <div class="adgb-control-intro">
-        <strong>Security first:</strong> switches can restrict features but never grant upload, Drive, administrator or data permissions that an account does not already have.
-        The dashboard/matrix views share bootstrap data, so their switches control navigation and presentation; backend-protected routes are also enforced server-side.
+      <details class="adgb-control-intro adgb-control-security-note">
+        <summary>Security &amp; permissions — important information</summary>
+        <p><strong>Security first:</strong> switches can restrict features but never grant upload, Drive, administrator or data permissions that an account does not already have. The dashboard/matrix views share bootstrap data, so their switches control navigation and presentation; backend-protected routes are also enforced server-side.</p>
+      </details>
+      <div class="adgb-insights-toolbar adgb-control-main-toolbar">
+        <button type="button" id="adgbControlLoad">↻ Load live settings</button>
+        <button type="button" id="adgbControlSave" class="adgb-control-save-primary" disabled>✓ Save feature settings</button>
+        <button type="button" id="adgbControlAdvancedToggle" aria-expanded="false" aria-controls="adgbControlAdvanced">More controls ▾</button>
       </div>
-      <div class="adgb-insights-toolbar">
+      <div id="adgbControlAdvanced" class="adgb-insights-toolbar adgb-control-advanced" hidden>
         <button type="button" id="adgbStudioLaunch">🎨 Open Report Studio</button>
-        <button type="button" id="adgbControlLoad">Load live settings</button>
         <button type="button" id="adgbControlPresetRestricted" disabled>Restricted public preset</button>
         <button type="button" id="adgbControlPresetDefault" disabled>Preview defaults</button>
         <button type="button" id="adgbControlDiscard" disabled>Discard edits</button>
-        <button type="button" id="adgbControlSave" class="adgb-control-save-primary" disabled>✓ Save feature settings</button>
+      </div>
+      <div class="adgb-control-quick-groups" role="group" aria-label="Quick feature groups">
+        <button type="button" data-adgb-control-group="all" aria-pressed="true">All</button>
+        <button type="button" data-adgb-control-group="display" aria-pressed="false">Views</button>
+        <button type="button" data-adgb-control-group="read" aria-pressed="false">Read</button>
+        <button type="button" data-adgb-control-group="write" aria-pressed="false">Report actions</button>
+        <button type="button" data-adgb-control-group="admin" aria-pressed="false">Administrator</button>
       </div>
       <div class="adgb-insights-toolbar">
         <label>Find feature <input id="adgbControlSearch" type="search" placeholder="Search 20 features"></label>
@@ -3025,7 +3058,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.3</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.4</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -4494,7 +4527,52 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         await adgbFeatureRead_(true);
       }catch(e){adgbFeatureStatus_('Save FAILED: '+(e.message||'Please reload')+'. Unsaved selections remain in this editor.',true);button.disabled=false;}
     }
+
+    // V17.10.4: save only the admin's local visual preferences; never feature permissions.
+    const adgbControlPrefsKey_='adgbControlViewPrefsV17104';
+    function adgbControlApplyQuickGroup_(group,persist=true){
+      const allowed=['all','display','read','write','admin'];
+      if(!allowed.includes(group))group='all';
+      const select=document.getElementById('adgbControlGroup');
+      if(select){select.value=group;adgbFeatureDraw_();}
+      document.querySelectorAll('[data-adgb-control-group]').forEach(button=>{
+        button.setAttribute('aria-pressed',String(button.dataset.adgbControlGroup===group));
+      });
+      if(persist)adgbControlPersistPrefs_();
+    }
+    function adgbControlPersistPrefs_(){
+      try{
+        const p={group:document.getElementById('adgbControlGroup')?.value||'all',
+          advanced:!document.getElementById('adgbControlAdvanced')?.hidden};
+        localStorage.setItem(adgbControlPrefsKey_,JSON.stringify(p));
+      }catch(ignore){}
+    }
+    function adgbControlSetAdvanced_(open,persist=true){
+      const container=document.getElementById('adgbControlAdvanced'),button=document.getElementById('adgbControlAdvancedToggle');
+      if(!container||!button)return;
+      container.hidden=!open;
+      button.setAttribute('aria-expanded',String(!!open));
+      button.textContent=open?'Fewer controls ▴':'More controls ▾';
+      if(persist)adgbControlPersistPrefs_();
+    }
+    function adgbControlCompactInit_(){
+      let previous={};
+      try{previous=JSON.parse(localStorage.getItem(adgbControlPrefsKey_)||'{}')||{};}catch(ignore){}
+      adgbControlApplyQuickGroup_(previous.group||'all',false);
+      adgbControlSetAdvanced_(previous.advanced===true,false);
+      document.querySelectorAll('[data-adgb-control-group]').forEach(button=>{
+        button.addEventListener('click',()=>adgbControlApplyQuickGroup_(button.dataset.adgbControlGroup));
+      });
+      document.getElementById('adgbControlGroup')?.addEventListener('change',event=>{
+        adgbControlApplyQuickGroup_(event.currentTarget.value);
+      });
+      document.getElementById('adgbControlAdvancedToggle')?.addEventListener('click',()=>{
+        const container=document.getElementById('adgbControlAdvanced');
+        adgbControlSetAdvanced_(!!container?.hidden);
+      });
+    }
     function adgbFeatureInit_(){
+      adgbControlCompactInit_();
       document.getElementById('adgbControlLoad')?.addEventListener('click',adgbFeatureLoadAdmin_);
       document.getElementById('adgbControlSearch')?.addEventListener('input',adgbFeatureDraw_);
       document.getElementById('adgbControlGroup')?.addEventListener('change',adgbFeatureDraw_);
