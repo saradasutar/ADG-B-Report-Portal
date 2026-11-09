@@ -2592,6 +2592,29 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
  #adgbControlPanel .adgb-control-quick-groups{gap:5px}
  #adgbControlPanel .adgb-control-quick-groups button{padding:7px 9px}
 }
+
+/* V17.10.5 Administrator current-cycle overview */
+#adgbAdminOverview{margin:11px 13px;padding:12px;border:1px solid #c3d9ed;border-radius:12px;background:#f7fbff;color:#153e6a}
+#adgbAdminOverview .adgb-overview-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+#adgbAdminOverview .adgb-overview-head strong{font-size:15px}
+#adgbAdminOverview .adgb-overview-head span,#adgbAdminOverview>small{font-size:10px;color:#607a94}
+#adgbAdminOverview .adgb-overview-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}
+#adgbAdminOverview .adgb-overview-metrics>div{padding:10px;background:#fff;border:1px solid #d9e7f3;border-radius:9px;min-width:0}
+#adgbAdminOverview .adgb-overview-metrics strong{display:block;font-size:22px;color:#104b83}
+#adgbAdminOverview .adgb-overview-metrics span{font-size:10px;color:#58718a}
+#adgbAdminOverview .adgb-overview-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:9px 0}
+#adgbAdminOverview .adgb-overview-columns>div{background:#fff;padding:10px;border:1px solid #d9e7f3;border-radius:9px;min-width:0}
+#adgbAdminOverview h3{font-size:12px;margin:0 0 7px}
+#adgbAdminOverview .adgb-office-line{padding:5px 0;border-bottom:1px solid #e8f0f8;font-size:11px}
+#adgbAdminOverview .adgb-office-line>div:first-child{display:flex;justify-content:space-between;gap:8px}
+#adgbAdminOverview .adgb-office-line i{display:block;height:5px;background:#138873;border-radius:7px}
+#adgbAdminOverview .adgb-office-track{background:#e8eff6;border-radius:7px;overflow:hidden;margin-top:4px}
+#adgbAdminOverview .adgb-recent-line{display:grid;gap:2px;padding:6px 0;border-bottom:1px solid #e8f0f8;font-size:11px;overflow-wrap:anywhere}
+#adgbAdminOverview .adgb-recent-line small{font-size:10px;color:#6a8297}
+#adgbAdminOverview .adgb-overview-actions{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+#adgbAdminOverview .adgb-overview-actions button{padding:7px 10px;border:1px solid #b6d0e7;background:#eaf5ff;color:#185180;border-radius:8px;font-size:11px;font-weight:750}
+@media(max-width:850px){#adgbAdminOverview .adgb-overview-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}#adgbAdminOverview .adgb-overview-columns{grid-template-columns:1fr}}
+@media(max-width:450px){#adgbAdminOverview .adgb-overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2815,6 +2838,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
     <section id="adgbControlPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbControlTitle">
       <div class="adgb-insights-heading"><div><h2 id="adgbControlTitle">⚙ Administrator Control Centre</h2><p>Manage availability of 20 portal features by audience · existing permissions remain in force</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <section id="adgbAdminOverview" class="adgb-admin-overview" aria-label="Administrator current-cycle overview">
+        <div class="adgb-overview-head"><strong>Current-cycle overview</strong><span id="adgbOverviewStatus">Waiting for data</span></div>
+        <div id="adgbOverviewMetrics" class="adgb-overview-metrics"></div>
+        <div class="adgb-overview-columns"><div><h3>Office-wise completion</h3><div id="adgbOverviewOffices"></div></div><div><h3>Recent submissions</h3><div id="adgbOverviewRecent"></div></div></div>
+        <div class="adgb-overview-actions"><button type="button" data-adgb-overview="actions">Pending actions</button><button type="button" data-adgb-overview="register">Submission register</button><button type="button" data-adgb-overview="health">System health</button></div>
+        <small>Read-only information from the current dashboard. No extra backend requests.</small>
+      </section>
       <details class="adgb-control-intro adgb-control-security-note">
         <summary>Security &amp; permissions — important information</summary>
         <p><strong>Security first:</strong> switches can restrict features but never grant upload, Drive, administrator or data permissions that an account does not already have. The dashboard/matrix views share bootstrap data, so their switches control navigation and presentation; backend-protected routes are also enforced server-side.</p>
@@ -3058,7 +3088,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.4</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.5</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -3549,6 +3579,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     document.addEventListener('DOMContentLoaded',()=>{
       bindEvents();
       adgbPerfInit_();
+      adgbOverviewInit_();
       adgbInitLayout();
       adgbInitInsights();
       adgbInitArchive();
@@ -4638,6 +4669,65 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     if(adgbHealthRoleNode_)adgbHealthAccessObserver_.observe(adgbHealthRoleNode_,{childList:true,characterData:true,subtree:true});
     adgbHealthAccess_();
 
+
+    function adgbOverviewRender_(){
+      const panel=document.getElementById('adgbControlPanel');
+      if(!panel||panel.hidden)return;
+      const overview=document.getElementById('adgbAdminOverview');
+      const authorized=isRecognizedAsAdmin()&&!!window.ADGB_AUTH?.token;
+      if(overview)overview.hidden=!authorized;
+      if(!authorized)return;
+      const status=document.getElementById('adgbOverviewStatus');
+      const metrics=document.getElementById('adgbOverviewMetrics');
+      const offices=document.getElementById('adgbOverviewOffices');
+      const recent=document.getElementById('adgbOverviewRecent');
+      metrics.replaceChildren();offices.replaceChildren();recent.replaceChildren();
+      status.textContent=state.connected?'Connected · current cycle':'Connection unavailable';
+      if(!state.connected){
+        recent.textContent='Report figures are unavailable until the portal connects.';
+        return;
+      }
+      const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length;
+      const today=adgbTodayIST();
+      const overdue=rows.filter(x=>!x.submitted&&!x.deadlineReview&&x.dueDate&&x.dueDate<today).length;
+      const pairs=[['Expected',total],['Submitted',submitted],['Pending',total-submitted],['Overdue',overdue],['Completion',total?Math.round(submitted*100/total)+'%':'—']];
+      for(const [name,value] of pairs){
+        const card=document.createElement('div'),num=document.createElement('strong'),label=document.createElement('span');
+        num.textContent=String(value);label.textContent=name;card.append(num,label);metrics.appendChild(card);
+      }
+      for(const office of state.offices){
+        const list=rows.filter(x=>x.officeId===office.id),done=list.filter(x=>x.submitted).length;
+        const pct=list.length?Math.round(100*done/list.length):0;
+        const wrapper=document.createElement('div');wrapper.className='adgb-office-line';
+        const line=document.createElement('div'),name=document.createElement('span'),n=document.createElement('strong');
+        name.textContent=office.name;n.textContent=done+'/'+list.length+' ('+pct+'%)';
+        line.append(name,n);
+        const track=document.createElement('div');track.className='adgb-office-track';
+        const bar=document.createElement('i');bar.style.width=pct+'%';track.appendChild(bar);
+        wrapper.append(line,track);offices.appendChild(wrapper);
+      }
+      const latest=rows.filter(x=>x.submitted&&x.submittedAt)
+        .map(x=>({office:x.office,subject:x.subject,at:x.submittedAt,t:new Date(x.submittedAt).getTime()}))
+        .filter(x=>Number.isFinite(x.t)).sort((a,b)=>b.t-a.t).slice(0,4);
+      if(!latest.length)recent.textContent='No dated submissions available for this cycle.';
+      for(const item of latest){
+        const line=document.createElement('div');line.className='adgb-recent-line';
+        const heading=document.createElement('span');heading.textContent=item.office+' · '+item.subject;
+        const time=document.createElement('small');time.textContent=adgbFormatTimeIST(item.at);
+        line.append(heading,time);recent.appendChild(line);
+      }
+    }
+    function adgbOverviewInit_(){
+      document.getElementById('adgbAdminOverview')?.addEventListener('click',event=>{
+        const button=event.target.closest('[data-adgb-overview]');
+        if(!button||!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token)return;
+        const view=button.dataset.adgbOverview;
+        if(!['actions','register','health'].includes(view))return;
+        adgbOpenInsights(view);
+        if(view==='health')adgbHealthLoad_();
+      });
+      window.addEventListener('adgb-auth-changed',adgbOverviewRender_);
+    }
     function adgbOpenInsights(view){
       adgbInsightsView=view;
       const archive=document.getElementById('adgbArchivePanel');if(archive)archive.hidden=true;
@@ -4648,6 +4738,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const control=document.getElementById('adgbControlPanel');if(control)control.hidden=view!=='control';
       const health=document.getElementById('adgbHealthPanel');if(health)health.hidden=view!=='health';
       adgbRefreshInsights();
+      if(view==='control')adgbOverviewRender_();
       (view==='register'?reg:view==='actions'?actions:view==='control'?document.getElementById('adgbControlPanel'):view==='health'?document.getElementById('adgbHealthPanel'):ana)?.scrollIntoView({block:'start',behavior:'smooth'});
     }
     function adgbFormatTimeIST(value){
@@ -6309,6 +6400,7 @@ function adgbAlignPreviewLayout(){
       updateSummary();
       adgbRenderLivePanels();
       adgbRefreshInsights();
+      adgbOverviewRender_();
       renderAdminSubjects();
       setSystemState(state.connected?'System ready':'Setup required',state.connected,lastUpdated);
       adgbPerfData_.renderMs=Math.round(performance.now()-perfRenderStart);
