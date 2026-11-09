@@ -2556,7 +2556,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="actions">⚑ <span>Action Required</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
-        <button type="button" class="adgb-nav-item" id="adgbPgrtiJump">▥ <span>PG &amp; RTI Pendency</span></button>
+        
         <button type="button" id="adgbMoreTools" class="adgb-nav-more" aria-expanded="false" aria-controls="adgbAdvancedNav">＋ More tools <span aria-hidden="true">⌄</span></button>
         <div id="adgbAdvancedNav" class="adgb-advanced-nav" hidden>
         <button type="button" class="adgb-nav-item adgb-nav-advanced" data-adgb-nav="recent">◴ <span>Recent Submissions</span></button>
@@ -2691,69 +2691,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="matrixContent"><div class="matrix-loading">Loading report subjects…</div></div>
       </section>
       </div>
-    <section class="adgb-pgrti-panel" id="adgbPgrti" aria-label="PG and RTI pendency monitoring">
-      <div class="pgrti-head">
-        <div><small>ADG(B) · OFFICE MONITORING</small><h2>PG &amp; RTI Pendency</h2>
-          <p>Latest approved officer-wise snapshots · PG, PG Appeals, RTI and RTI First Appeals</p></div>
-        <div class="pgrti-head-actions">
-          <button id="pgrtiCheckHealth" type="button" hidden>🔎 Check uploads &amp; approvals</button>
-          <button id="pgrtiRefresh" type="button">↻ Refresh</button>
-        </div>
-      </div>
-      <p id="pgrtiMessage" class="pgrti-status" role="status" aria-live="polite">PG/RTI data will load when this section is visible.</p>
-      <div id="pgrtiSummary" class="pgrti-summary"><p class="pgrti-muted">Loading approved pendency information…</p></div>
-      <div id="pgrtiWorkflowStatus" class="pgrti-workflow-status" hidden role="status" aria-live="polite"></div>
-      <div id="pgrtiHealthResult" class="pgrti-workflow-status" hidden role="status" aria-live="polite"></div>
-      <details id="pgrtiAdminBlock" class="pgrti-admin" hidden>
-        <summary>Administrator · Setup, permissions and verification</summary>
-        <div class="pgrti-admin-inner">
-          <div class="pgrti-admin-line"><button id="pgrtiInitialize" type="button">Initialize registers in existing spreadsheet</button>
-            <button id="pgrtiSettingsLoad" type="button">Load settings</button>
-            <button id="pgrtiLoadDrafts" type="button">Refresh drafts</button></div>
-          <div class="pgrti-setting">
-            <label><input id="pgrtiOfficeUploads" type="checkbox"> Allow selected offices to upload draft PDFs</label>
-            <label><input id="pgrtiPublicTotals" type="checkbox"> Display office totals without login (no officer details)</label>
-          </div>
-          <div class="pgrti-allowed"><strong>Offices permitted to upload</strong><div id="pgrtiAllowed"></div></div>
-          <button id="pgrtiSettingsSave" type="button">Save administrator settings</button>
-          <h3>Draft reports awaiting approval <span id="pgrtiDraftCount" class="pgrti-draft-count">Not loaded</span></h3><p class="pgrti-muted">PDFs remain drafts until an Administrator verifies officer-wise figures and publishes them. Uploading alone does not update the public summary.</p><div id="pgrtiDraftList" aria-live="polite"><p class="pgrti-muted">Sign in as Administrator to load the draft list.</p></div>
-        </div>
-      </details>
-      <details id="pgrtiUploadBlock" class="pgrti-admin" hidden>
-        <summary>Upload PG/RTI PDF · Draft (not automatically published)</summary>
-        <div class="pgrti-admin-inner"><div id="pgrtiUploadReceipt" class="pgrti-upload-receipt" hidden role="status" aria-live="polite"></div>
-          <p id="pgrtiUploadHelp" class="pgrti-muted">Step 1: select a PDF. For compatible CPWD RTI age-wise exports, officer-wise figures will be extracted for review. Step 2: check the office mapping and totals. Step 3: save as draft; Administrator approval is required before publication.</p>
-          <div class="pgrti-extract-toolbar"><button id="pgrtiExtractPdf" type="button">📄 Read office-wise figures from PDF</button>
-          <span id="pgrtiExtractStatus" role="status" aria-live="polite">Extraction runs locally in this browser; no figures are published automatically.</span></div>
-          <div id="pgrtiExtractSummary" class="pgrti-extract-summary" hidden></div><div class="pgrti-form-top">
-            <label>Category<select id="pgrtiCat"><option value="PG">Public Grievance</option><option value="PG_APPEAL">PG Appeal</option><option value="RTI">RTI Application</option><option value="RTI_APPEAL">RTI First Appeal</option></select></label>
-            <label>Report as on<input id="pgrtiDate" type="date"></label>
-            <label>PDF scope<select id="pgrtiScope"><option value="OFFICE">Single office</option><option value="REGION">All offices</option></select></label>
-            <label id="pgrtiOfficeBox">Office<select id="pgrtiOffice"><option value="CEB">CE(B)</option></select></label>
-          </div>
-          <div class="pgrti-form-top"><label>Source PDF · maximum 8 MB<input id="pgrtiFile" type="file" accept="application/pdf,.pdf"></label>
-            <label>Source / remarks<input id="pgrtiNote" maxlength="300" placeholder="Portal export date, source and notes"></label></div>
-          <div class="pgrti-quick-actions">
-            <button id="pgrtiQuickSave" type="button" class="pgrti-primary">⬆ Upload PDF as draft</button>
-            <span id="pgrtiQuickStatus" role="status" aria-live="polite">Choose PDF first. Automatic extraction starts when a compatible RTI PDF is selected.</span>
-          </div>
-          <p class="pgrti-muted">The PDF is stored privately. Enter or paste officer-wise figures below; no extracted numbers are treated as verified automatically. For scanned or poorly formatted reports, transcribe and check against the original PDF.</p>
-          <details class="pgrti-import"><summary>Paste tabular rows from official Excel export (optional)</summary>
-            <p class="pgrti-muted">Single-office: Officer, Total, With citizen, &lt;10, 10–20, 21–30, 31–60, 61–90, &gt;90 (tab-separated). Regional: put office ID first. Verify all values before publishing.</p>
-            <textarea id="pgrtiPaste" rows="3" placeholder="Paste tab-separated officer-wise rows"></textarea><button id="pgrtiPasteImport" type="button">Add pasted rows</button>
-          </details>
-          <div class="pgrti-row-toolbar"><strong>Individual officer-wise entries</strong><button id="pgrtiAddRow" type="button">+ Add officer / CPIO / GRO / FAA</button></div>
-          <div id="pgrtiRows"></div><button id="pgrtiSaveDraft" type="button" class="pgrti-primary">Save source PDF as draft</button>
-        </div>
-      </details>
-      <section id="pgrtiReview" class="pgrti-review" hidden aria-label="Draft review">
-        <div class="pgrti-row-toolbar"><h3 id="pgrtiReviewTitle">Review draft</h3><button id="pgrtiOpenSource" type="button">Open source PDF securely</button></div>
-        <p class="pgrti-muted">Review and correct the officer rows above, then approve. The portal displays only published snapshots.</p>
-        <label>Review note<input id="pgrtiReviewNote" maxlength="300" placeholder="Verification or correction details"></label>
-        <div class="pgrti-admin-line"><button id="pgrtiPublish" type="button" class="pgrti-primary">Publish verified figures</button>
-          <button id="pgrtiReject" type="button">Reject draft</button></div>
-      </section>
-    </section>
+<!-- PG/RTI monitoring removed from portal UI intentionally; backend registers, Drive PDFs and existing data are unchanged. -->
     <section class="adgb-office-overview" aria-label="Sub-office submission status after report submission matrix">
       <div id="adgbOfficePanelMount"></div>
     </section>
@@ -2989,10 +2927,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
  <div class="adgb-studio-work">
   <div class="adgb-studio-controls">
    <label>Report title<input id="adgbStudioTitle" value="ADG(B) Official Reporting Dashboard" maxlength="100"></label>
-   <label>Report dataset<select id="adgbStudioType"><option value="submissions">Report submission status (live portal data)</option><option value="rti">RTI pendency (approved snapshots)</option><option value="appeal">RTI appeals (approved snapshots)</option><option value="pg">Public grievances (approved snapshots)</option><option value="pgappeal">PG appeals (approved snapshots)</option></select></label>
+   <label>Report dataset<select id="adgbStudioType"><option value="submissions">Report submission status (live portal data)</option><option value="custom">Custom report (CSV import)</option></select></label>
    <label>Design theme<select id="adgbStudioTheme"><option value="official">Official Blue</option><option value="minimal">Executive Minimal</option><option value="print">Black & White Print</option></select></label>
    <label>Saved layout<select id="adgbStudioLayouts"><option value="">Select saved layout</option></select></label>
-   <label>Data mode<select id="adgbStudioSource"><option value="live">Live approved PG/RTI snapshots</option><option value="csv">Import CSV manually</option></select></label>
+   <label>Data mode<select id="adgbStudioSource"><option value="live">Live portal data</option><option value="csv">Import CSV manually</option></select></label>
    <label>Upload CSV (optional)<input type="file" id="adgbStudioCsv" accept=".csv,text/csv"></label>
    <small>CSV columns: Office, Pending, AgeBand. Example: CE(B),9,21-30 days. Imports are not uploaded or stored by this designer.</small>
    <strong>Include components</strong>
@@ -5089,7 +5027,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       try{const t=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}')[key];if(!t)return;
         document.getElementById('adgbStudioTitle').value=String(t.title||'').slice(0,100);
         document.getElementById('adgbStudioTheme').value=['official','minimal','print'].includes(t.theme)?t.theme:'official';
-        document.getElementById('adgbStudioType').value=['submissions','rti','appeal','pg','pgappeal'].includes(t.type)?t.type:'submissions';
+        document.getElementById('adgbStudioType').value=['submissions','custom'].includes(t.type)?t.type:'submissions';
         adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';
         document.getElementById('adgbStudioSource').value=t.source==='csv'?'csv':'live';
         adgbStudio_.layout=(Array.isArray(t.layout)?t.layout:[]).filter(x=>adgbStudioKinds_.includes(x.id)).map(x=>({id:x.id,width:[4,6,12].includes(x.width)?x.width:12}));
@@ -8214,7 +8152,5 @@ function renderAdminSubjects(){
     });
   })();
   </script>
-  <script defer src="pgrti-extract-v1796.js?v=1799-columns-namefix"></script>
-  <script defer src="pgrti-v1791.js?v=1799-quickupload"></script>
 </body>
 </html>
