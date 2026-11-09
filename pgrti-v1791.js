@@ -28,7 +28,7 @@ const officeName=id=>offices.find(x=>x.id===id)?.name||id;
 const opts=(values,selected)=>values.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===selected?' selected':'')+'>'+esc(x.name)+'</option>').join('');
 const catOpts=(selected)=>Object.entries(categories).map(([key,label])=>'<option value="'+key+'"'+(key===selected?' selected':'')+'>'+label+'</option>').join('');
 const rowTemplate=r=>{r=r||{};let inp=(field,label)=>'<label>'+label+'<input data-field="'+field+'" type="number" min="0" step="1" value="'+esc(r[field]??0)+'" required></label>';
-return '<div class="pgrti-officer-row"><div class="pgrti-row-head"><label>Office<select data-field="officeId">'+opts(offices,r.officeId||$('#pgrtiOffice')?.value||'CEB')+'</select></label><label>Officer / CPIO / GRO / FAA / Unit<input data-field="officer" maxlength="180" value="'+esc(r.officer||'')+'" placeholder="Officer or authority with unit"></label><button type="button" data-pgrti-remove-row title="Remove row">Remove</button></div><div class="pgrti-age-grid">'+inp('total','Total pending')+inp('withCitizen','With citizen')+inp('u10','<10d')+inp('d10_20','10–20d')+inp('d21_30','21–30d')+inp('d31_60','31–60d')+inp('d61_90','61–90d')+inp('over90','>90d')+'</div></div>';};
+return '<div class="pgrti-officer-row"><div class="pgrti-row-head"><label>Office<select data-field="officeId">'+'<option value="">Select correct office</option>'+opts(offices,r.officeId||($('#pgrtiScope').value==='OFFICE'?$('#pgrtiOffice')?.value:''))+'</select></label><label>Officer / CPIO / GRO / FAA / Unit<input data-field="officer" maxlength="180" value="'+esc(r.officer||'')+'" placeholder="Officer or authority with unit"></label><button type="button" data-pgrti-remove-row title="Remove row">Remove</button></div><div class="pgrti-age-grid">'+inp('total','Total pending')+inp('withCitizen','With citizen')+inp('u10','<10d')+inp('d10_20','10–20d')+inp('d21_30','21–30d')+inp('d31_60','31–60d')+inp('d61_90','61–90d')+inp('over90','>90d')+'</div></div>';};
 const getRows=()=>Array.from(root.querySelectorAll('.pgrti-officer-row')).map(el=>{let r={};el.querySelectorAll('[data-field]').forEach(f=>r[f.dataset.field]=f.tagName==='SELECT'||f.dataset.field==='officer'?f.value:f.value);return r;});
 const addRow=r=>{let el=document.createElement('div');el.innerHTML=rowTemplate(r);$('#pgrtiRows').appendChild(el.firstElementChild);};
 const buttonBusy=(name,on)=>{let b=$(name);if(b)b.disabled=on;};
@@ -166,9 +166,18 @@ async function extractPdf_(auto){
 async function saveDraft(){
  if(uploading)return;
  if(!token()){flash('Sign in before uploading.',true);return;}
- if(!data?.initialized){flash('PG/RTI registers are not initialized. Click Initialize registers in Administrator Setup, then Refresh.',true);$('#pgrtiAdminBlock').open=true;return;}
+ if(!data?.initialized){
+  if(!isAdmin()){flash('Administrator must initialize the PG/RTI registers before uploading.',true);$('#pgrtiAdminBlock').open=true;return;}
+  try{flash('Initializing missing PG/RTI registers in the existing database…');
+    const initialized=await call('pgrtiInit');
+    if(!initialized?.ok)throw Error(initialized?.message||'Unable to initialize registers.');
+    await load();
+    if(!data?.initialized)throw Error('Initialization could not be confirmed. Refresh and check Administrator Setup.');
+  }catch(e){flash('Could not initialize registers: '+String(e.message||e),true);$('#pgrtiAdminBlock').open=true;return;}
+ }
  const file=$('#pgrtiFile').files[0];if(!file||!file.name.toLowerCase().endsWith('.pdf')||file.size>8*1024*1024){flash('Choose a PDF up to 8 MB.',true);return;}
  if(!$('#pgrtiDate').value){flash('Select the report as-on date.',true);return;}
+ if(!data?.initialized&&isAdmin()){flash('Initialize registers first; use the Administrator button above.',true);return;}
  const rows=getRows();
  if(rows.some(r=>!r.officeId||!offices.some(o=>o.id===r.officeId))){flash('An extracted office could not be mapped. Select the correct Office for every officer row.',true);return;}
  const body={category:$('#pgrtiCat').value,reportDate:$('#pgrtiDate').value,scope:$('#pgrtiScope').value,
