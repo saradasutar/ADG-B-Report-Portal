@@ -4805,7 +4805,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         // Colour options are opt-in; old notices remain plain unless edited.
         fg.dataset.enabled=line.color?'1':'0';bg.dataset.enabled=line.bg!=='none'?'1':'0';
         fg.addEventListener('input',()=>{fg.dataset.enabled='1';adgbRichCompile_();});
-        bg.addEventListener('input',()=>{bg.dataset.enabled='1';adgbRichCompile_();});
+        bg.addEventListener('input',()=>{bg.dataset.enabled='1';fg.dataset.enabled='1';adgbRichCompile_();});
         input.addEventListener('input',adgbRichCompile_);
         del.addEventListener('click',()=>{
           const lines=adgbRichParse_(source.value);lines.splice(index,1);
@@ -4816,6 +4816,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     function adgbRichEncode_(line){
       return line.color?'['+line.color+'/'+(line.bg==='none'?'-':line.bg)+']'+line.text:line.text;
     }
+    let adgbRichCompiling_=false;
     function adgbRichCompile_(){
       const source=document.getElementById('adgbNoticeText');if(!source)return;
       const rows=[...document.querySelectorAll('#adgbRichNoticeLines .adgb-rich-line')];
@@ -4824,11 +4825,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         return adgbRichEncode_({text:input.value,color:fg.dataset.enabled==='1'?fg.value:'',bg:bg.dataset.enabled==='1'?bg.value:'none'});
       }).join('\n');
       if(value.length>220){adgbNoticeStatus_('220-character limit reached. Shorten lines or remove formatting.');return;}
-      source.value=value;source.dispatchEvent(new Event('input'));
+      source.value=value;
+      adgbRichCompiling_=true;
+      try{source.dispatchEvent(new Event('input'));}finally{adgbRichCompiling_=false;}
     }
     function adgbRichInit_(){
       const source=document.getElementById('adgbNoticeText');if(!source)return;
-      source.addEventListener('input',adgbRichRenderEditor_);
+      source.addEventListener('input',()=>{if(!adgbRichCompiling_)adgbRichRenderEditor_();});
       document.getElementById('adgbRichNoticeAdd')?.addEventListener('click',()=>{
         const value=source.value?source.value+'\nNew line':'New line';
         if(value.length>220){adgbNoticeStatus_('Notice limit is 220 characters.');return;}
