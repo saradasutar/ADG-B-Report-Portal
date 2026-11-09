@@ -59,21 +59,36 @@ function workflowStatus_(response){
  }
 }
 async function healthCheck_(){
- if(!isAdmin())return;
- const button=$('#pgrtiCheckHealth');if(button)button.disabled=true;
+ const target=$('#pgrtiHealthResult'),button=$('#pgrtiCheckHealth');
+ if(!isAdmin()){target.hidden=false;target.textContent='Administrator login required to check private upload records.';return;}
+ target.hidden=false;target.textContent='Checking approved snapshots and pending drafts…';
+ if(button)button.disabled=true;
  try{
-   const r=await call('pgrtiHealth');
-   if(!r?.ok)throw Error(r?.message||'Health check failed.');
-   const count=Number(r.drafts)||0,published=Number(r.published)||0;
-   const message=r.initialized
-     ?'Register check: '+count+' PDF draft(s) awaiting approval, '+published+' published snapshot(s).'+
-       (count?' Open Refresh drafts and approve verified reports.':
-       published?' Refresh summary to see published figures.':' No saved PDF drafts were found. Upload and save a PDF as draft.')
-     :'Registers have not been initialized. Use Initialize registers in existing spreadsheet.';
-   setMsg(message);$('#pgrtiAdminBlock').open=true;
-   return r;
- }catch(e){setMsg('Register check unavailable: '+String(e?.message||e)+'. Verify backend V17.9.6 deployment.',true);}
- finally{if(button)button.disabled=false;}
+   // Uses the two existing authenticated actions, not an optional newer health endpoint.
+   const report=await call('pgrtiBootstrap');
+   if(!report?.ok)throw Error(report?.message||'Could not load monitoring status.');
+   if(!report.initialized){target.textContent='PG/RTI registers are not initialized. Open Administrator Setup and initialize existing spreadsheet registers once.';return;}
+   const result=await call('pgrtiListDrafts');
+   if(!result?.ok)throw Error(result?.message||'Cannot read draft register.');
+   const saved=Array.isArray(result.drafts)?result.drafts:[];
+   const approved=Array.isArray(report.totals)?report.totals:[];
+   const detail=saved.length+' draft(s) available for review · '+approved.length+' approved office/category snapshot(s).';
+   target.replaceChildren();
+   const title=document.createElement('strong');title.textContent='PG/RTI upload status';
+   const p=document.createElement('div');p.textContent=detail;
+   const explanation=document.createElement('div');explanation.textContent=saved.length
+     ?'Select Review drafts below to check the uploaded PDFs and publish verified figures.'
+     :approved.length?'Approved figures are available. Click Refresh for the summary.':
+       'No approved snapshots or pending drafts were returned. Confirm your upload saved successfully before trying again.';
+   target.append(title,p,explanation);
+   if(saved.length){
+     const action=document.createElement('button');action.type='button';action.textContent='Review '+saved.length+' uploaded draft(s)';
+     action.addEventListener('click',()=>{$('#pgrtiAdminBlock').hidden=false;$('#pgrtiAdminBlock').open=true;void loadDrafts();$('#pgrtiAdminBlock').scrollIntoView({behavior:'smooth',block:'start'});});
+     target.appendChild(action);
+   }
+ }catch(e){
+   target.textContent='Could not verify uploads: '+String(e?.message||e)+'. Your existing data was not changed.';
+ }finally{if(button)button.disabled=false;}
 }
 function drawSummary(response){
  data=response;if(Array.isArray(response.offices)&&response.offices.length)offices=response.offices;
@@ -108,6 +123,7 @@ async function load(){
  drawSummary(response);
  workflowStatus_(response);
  const admin=isAdmin();
+ $('#pgrtiCheckHealth').hidden=!admin;
  $('#pgrtiAdminBlock').hidden=!admin;
  $('#pgrtiUploadBlock').hidden=!(response.canUpload||admin);
  if(admin&&!response.initialized){$('#pgrtiAdminBlock').open=true;$('#pgrtiUploadBlock').open=false;}
