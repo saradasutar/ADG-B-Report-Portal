@@ -48,7 +48,7 @@
    anchors.forEach(function(a,index){
      var lower=index?(anchors[index-1].y+a.y)/2:a.y-38;
      var upper=index+1<anchors.length?(anchors[index+1].y+a.y)/2:a.y+38;
-     var name=cleanName(data.filter(function(i){return i.x>72&&i.x<139&&i.y>=lower&&i.y<upper&&!/^(total|name of|cpio|faa)$/i.test(i.t);}).sort(function(a,b){return a.y-b.y||a.x-b.x;}));
+     var name=cleanName(data.filter(function(i){return i.x>72&&i.x<120&&i.y>=lower&&i.y<upper&&!/^(total|name of|cpio|faa)$/i.test(i.t);}).sort(function(a,b){return a.y-b.y||a.x-b.x;}));
      var nums=data.filter(function(i){return i.x>120&&i.x<575&&Math.abs(i.y-a.y)<7&&/^\d+$/.test(i.t);}).sort(function(a,b){return a.x-b.x;}).map(function(i){return Number(i.t);});
      if(!name||nums.length!==9)return;
      var office=officeFromName(name);
