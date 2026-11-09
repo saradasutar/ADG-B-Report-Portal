@@ -1541,6 +1541,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:500px){.adgb-studio-block[data-width="6"],.adgb-studio-block[data-width="4"]{grid-column:span 12}.adgb-studio-kpis{gap:4px}.adgb-studio-kpi b{font-size:18px}}
 @media print{body.adgb-studio-print *{visibility:hidden!important}body.adgb-studio-print #adgbStudio,body.adgb-studio-print #adgbStudio .adgb-studio-page,body.adgb-studio-print #adgbStudio .adgb-studio-page *{visibility:visible!important}body.adgb-studio-print #adgbStudio{position:absolute!important;left:0;top:0;width:100%;margin:0!important;padding:0;border:0;background:#fff}body.adgb-studio-print #adgbStudio .adgb-studio-page{box-shadow:none!important}.adgb-studio-block{break-inside:avoid}body.adgb-studio-print .adgb-studio-block-tools,body.adgb-studio-print .adgb-studio-work>.adgb-studio-controls,body.adgb-studio-print .adgb-studio-head,body.adgb-studio-print .adgb-studio-actions{display:none!important}}
 
+/* PG/RTI: explicit upload receipts and pending approval */
+.pgrti-upload-receipt{padding:12px 14px;margin-bottom:12px;background:#eaf7ee;color:#164b2d;border:1px solid #9dcfac;border-left:5px solid #299252;border-radius:9px;overflow-wrap:anywhere}
+.pgrti-upload-receipt[hidden]{display:none!important}
+.pgrti-upload-receipt strong{display:block;font-size:14px;margin-bottom:5px}
+.pgrti-upload-receipt button{margin-top:9px;background:#175b89;color:white;border:0;border-radius:7px;padding:8px 12px;font-weight:750;cursor:pointer}
+.pgrti-draft-count{font-size:11px;background:#e7efff;color:#184a83;padding:4px 7px;border-radius:20px;margin-left:7px}
+.pgrti-draft-pill{font-size:11px;border-radius:30px;background:#fff1c7;color:#7d4b00;padding:4px 8px;font-weight:800}
+#pgrtiDraftList .pgrti-draft-item{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;text-align:left}
+#pgrtiDraftList .pgrti-draft-item strong{flex:1 1 210px}
+#pgrtiDraftList .pgrti-draft-item span{flex:2 1 250px}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -2679,13 +2689,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           </div>
           <div class="pgrti-allowed"><strong>Offices permitted to upload</strong><div id="pgrtiAllowed"></div></div>
           <button id="pgrtiSettingsSave" type="button">Save administrator settings</button>
-          <h3>Draft reports awaiting approval</h3><div id="pgrtiDraftList"></div>
+          <h3>Draft reports awaiting approval <span id="pgrtiDraftCount" class="pgrti-draft-count">Not loaded</span></h3><p class="pgrti-muted">PDFs remain drafts until an Administrator verifies officer-wise figures and publishes them. Uploading alone does not update the public summary.</p><div id="pgrtiDraftList" aria-live="polite"><p class="pgrti-muted">Sign in as Administrator to load the draft list.</p></div>
         </div>
       </details>
       <details id="pgrtiUploadBlock" class="pgrti-admin" hidden>
         <summary>Upload PG/RTI PDF · Draft (not automatically published)</summary>
-        <div class="pgrti-admin-inner">
-          <div class="pgrti-form-top">
+        <div class="pgrti-admin-inner"><div id="pgrtiUploadReceipt" class="pgrti-upload-receipt" hidden role="status" aria-live="polite"></div><div class="pgrti-form-top">
             <label>Category<select id="pgrtiCat"><option value="PG">Public Grievance</option><option value="PG_APPEAL">PG Appeal</option><option value="RTI">RTI Application</option><option value="RTI_APPEAL">RTI First Appeal</option></select></label>
             <label>Report as on<input id="pgrtiDate" type="date"></label>
             <label>PDF scope<select id="pgrtiScope"><option value="OFFICE">Single office</option><option value="REGION">All offices</option></select></label>
@@ -8170,6 +8179,6 @@ function renderAdminSubjects(){
     });
   })();
   </script>
-  <script defer src="pgrti-v1791.js?v=1791-adminfix1"></script>
+  <script defer src="pgrti-v1791.js?v=1793-draft-visibility"></script>
 </body>
 </html>
