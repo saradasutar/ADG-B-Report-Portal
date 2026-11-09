@@ -2615,6 +2615,45 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbAdminOverview .adgb-overview-actions button{padding:7px 10px;border:1px solid #b6d0e7;background:#eaf5ff;color:#185180;border-radius:8px;font-size:11px;font-weight:750}
 @media(max-width:850px){#adgbAdminOverview .adgb-overview-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}#adgbAdminOverview .adgb-overview-columns{grid-template-columns:1fr}}
 @media(max-width:450px){#adgbAdminOverview .adgb-overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* V17.10.6 — ranked monthly-cycle office reporting and standalone print */
+#adgbControlPanel .adgb-ranking-details{margin-top:12px;border-top:1px solid #d9e6f2;padding-top:10px}
+#adgbControlPanel .adgb-ranking-details>summary{font-size:13px;font-weight:850;color:#164978;cursor:pointer;padding:5px 0}
+#adgbControlPanel .adgb-ranking-heading{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;margin:7px 0 11px}
+#adgbControlPanel .adgb-ranking-heading>span{font-size:10px;color:#617c94;flex:1 1 190px}
+#adgbControlPanel #adgbRankingPrint{padding:8px 11px;background:#165e9c;color:#fff;border:0;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer}
+#adgbControlPanel #adgbRankingPrint:focus-visible{outline:3px solid #edb84b;outline-offset:2px}
+#adgbControlPanel .adgb-ranking-rows{display:grid;gap:8px}
+#adgbControlPanel .adgb-rank-row{display:grid;grid-template-columns:30px minmax(105px,1.2fr) minmax(85px,2fr) auto;gap:8px;align-items:center;padding:9px 10px;background:#fff;border:1px solid #dae6f2;border-radius:9px;font-size:11px}
+#adgbControlPanel .adgb-rank-num{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:#e8f2fd;color:#135486;font-weight:900}
+#adgbControlPanel .adgb-rank-office{font-weight:850;color:#164978;overflow-wrap:anywhere}
+#adgbControlPanel .adgb-rank-progress{height:9px;border-radius:12px;background:#e6edf5;overflow:hidden}
+#adgbControlPanel .adgb-rank-progress i{display:block;height:100%;background:#15866f}
+#adgbControlPanel .adgb-rank-progress i[data-level="medium"]{background:#d59919}
+#adgbControlPanel .adgb-rank-progress i[data-level="low"]{background:#c6535a}
+#adgbControlPanel .adgb-rank-stats{font-size:10px;color:#4f6881;text-align:right;white-space:normal;min-width:110px}
+#adgbControlPanel .adgb-rank-stats .adgb-rank-overdue{color:#a33242;font-weight:900}
+#adgbControlPanel .adgb-ranking-empty{padding:12px;color:#61788d}
+#adgbOfficeComparisonPrint{display:none}
+@media(max-width:680px){#adgbControlPanel .adgb-rank-row{grid-template-columns:26px minmax(0,1fr) auto;gap:6px}
+#adgbControlPanel .adgb-rank-progress{grid-column:2/-1}
+#adgbControlPanel .adgb-rank-stats{min-width:0}}
+@media print{
+ body.adgb-office-comparison-print> :not(#adgbOfficeComparisonPrint){display:none!important}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint{display:block!important;color:#111;background:#fff;padding:0;margin:0;font:11px Arial,sans-serif}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint h1{font-size:20px;margin:0 0 3px}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint h2{font-size:13px;margin:16px 0 7px}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint .print-note{font-size:10px;color:#444}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint .print-kpis{display:flex;gap:9px;margin:14px 0}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint .print-kpis>div{flex:1;border:1px solid #aaa;padding:9px;font-size:11px}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint .print-kpis strong{display:block;font-size:17px}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint table{border-collapse:collapse;width:100%;table-layout:auto;min-width:0}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint th,body.adgb-office-comparison-print #adgbOfficeComparisonPrint td{border:1px solid #aaa;padding:8px 7px;text-align:left;color:#111;background:#fff}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint thead{display:table-header-group}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint tr{break-inside:avoid}
+ body.adgb-office-comparison-print #adgbOfficeComparisonPrint .print-footer{border-top:1px solid #bbb;margin-top:14px;padding-top:7px;font-size:10px}
+ @page{size:A4 portrait;margin:12mm}
+}
 </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
@@ -2844,6 +2883,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div class="adgb-overview-columns"><div><h3>Office-wise completion</h3><div id="adgbOverviewOffices"></div></div><div><h3>Recent submissions</h3><div id="adgbOverviewRecent"></div></div></div>
         <div class="adgb-overview-actions"><button type="button" data-adgb-overview="actions">Pending actions</button><button type="button" data-adgb-overview="register">Submission register</button><button type="button" data-adgb-overview="health">System health</button></div>
         <small>Read-only information from the current dashboard. No extra backend requests.</small>
+        <details id="adgbRankingDetails" class="adgb-ranking-details" open>
+          <summary>Office performance ranking · current reporting cycle</summary>
+          <div class="adgb-ranking-heading">
+            <span>Ranked by completion; ties sorted by overdue cases. Only explicitly dated, pending reports count as overdue.</span>
+            <button id="adgbRankingPrint" type="button">🖨 Print one-page summary / Save PDF</button>
+          </div>
+          <div id="adgbRankingRows" class="adgb-ranking-rows" aria-live="polite">
+            <p>Loading current reporting figures…</p>
+          </div>
+        </details>
       </section>
       <details class="adgb-control-intro adgb-control-security-note">
         <summary>Security &amp; permissions — important information</summary>
@@ -3088,7 +3137,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <strong>O/o Additional Director General (B)</strong>
       <span>Central Public Works Department · Bengaluru</span>
     </div>
-    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.5</span></span>
+    <span>Secure document submission portal · <b id="footerDate"></b> · <span id="footerBuild">Portal file build: 17.10.6</span></span>
   </footer>
 
   <div id="printPendingReport" class="print-only" aria-hidden="true"></div>
@@ -4685,9 +4734,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       status.textContent=state.connected?'Connected · current cycle':'Connection unavailable';
       if(!state.connected){
         recent.textContent='Report figures are unavailable until the portal connects.';
+        adgbRankingRender_([]);
         return;
       }
       const rows=adgbRegisterData(),total=rows.length,submitted=rows.filter(x=>x.submitted).length;
+      adgbRankingRender_(rows);
       const today=adgbTodayIST();
       const overdue=rows.filter(x=>!x.submitted&&!x.deadlineReview&&x.dueDate&&x.dueDate<today).length;
       const pairs=[['Expected',total],['Submitted',submitted],['Pending',total-submitted],['Overdue',overdue],['Completion',total?Math.round(submitted*100/total)+'%':'—']];
@@ -4717,7 +4768,95 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         line.append(heading,time);recent.appendChild(line);
       }
     }
+
+    function adgbOfficeRankingModel_(rows){
+      const today=adgbTodayIST();
+      const offices=state.offices.map(office=>{
+        const officeRows=rows.filter(row=>row.officeId===office.id);
+        const expected=officeRows.length,submitted=officeRows.filter(row=>row.submitted).length;
+        const overdue=officeRows.filter(row=>!row.submitted&&!row.deadlineReview&&row.dueDate&&row.dueDate<today).length;
+        const dueToday=officeRows.filter(row=>!row.submitted&&!row.deadlineReview&&row.dueDate===today).length;
+        return {name:office.name,expected,submitted,pending:expected-submitted,overdue,dueToday,
+          completion:expected?Math.round(submitted*100/expected):0};
+      });
+      offices.sort((a,b)=>b.completion-a.completion||a.overdue-b.overdue||a.pending-b.pending||a.name.localeCompare(b.name));
+      let previousKey=null,rank=0;
+      offices.forEach((office,i)=>{
+        const key=office.completion+'|'+office.overdue+'|'+office.pending;
+        if(key!==previousKey){rank=i+1;previousKey=key;}
+        office.rank=rank;
+      });
+      return offices;
+    }
+    function adgbRankingRender_(rows){
+      const area=document.getElementById('adgbRankingRows');
+      if(!area)return;
+      area.replaceChildren();
+      if(!state.connected){area.textContent='Office performance is unavailable while disconnected.';return;}
+      const ranking=adgbOfficeRankingModel_(rows);
+      if(!ranking.length){area.textContent='No office data is available.';return;}
+      ranking.forEach(office=>{
+        const line=document.createElement('div');line.className='adgb-rank-row';
+        const rank=document.createElement('span');rank.className='adgb-rank-num';rank.textContent=String(office.rank);
+        const title=document.createElement('span');title.className='adgb-rank-office';title.textContent=office.name;
+        const progress=document.createElement('div');progress.className='adgb-rank-progress';
+        progress.setAttribute('role','progressbar');progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax','100');
+        progress.setAttribute('aria-valuenow',String(office.completion));progress.setAttribute('aria-label',office.name+' completion percentage');
+        const inner=document.createElement('i');inner.style.width=office.completion+'%';
+        inner.dataset.level=office.completion>=80?'high':office.completion>=50?'medium':'low';progress.appendChild(inner);
+        const stats=document.createElement('span');stats.className='adgb-rank-stats';
+        stats.textContent=office.completion+'% · '+office.submitted+'/'+office.expected+' submitted · '+office.pending+' pending';
+        if(office.overdue){const more=document.createElement('span');more.className='adgb-rank-overdue';more.textContent=' · '+office.overdue+' overdue';stats.appendChild(more);}
+        line.append(rank,title,progress,stats);area.appendChild(line);
+      });
+    }
+    function adgbRankingPrint_(){
+      if(!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token||!state.connected){
+        showToast('Administrator connection is required to print the office comparison.','error');return;
+      }
+      const rows=adgbRegisterData(),ranking=adgbOfficeRankingModel_(rows);
+      const print=document.createElement('section');print.id='adgbOfficeComparisonPrint';
+      const title=document.createElement('h1');title.textContent='CPWD · O/o ADG(B), Bengaluru';
+      const subtitle=document.createElement('div');subtitle.className='print-note';
+      subtitle.textContent='Office-wise report submission performance · '+String(document.getElementById('cycleName')?.textContent||'Current reporting cycle');
+      const asof=document.createElement('div');asof.className='print-note';
+      asof.textContent='Prepared: '+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'});
+      const totals={expected:rows.length,submitted:rows.filter(x=>x.submitted).length,
+        overdue:rows.filter(x=>!x.submitted&&!x.deadlineReview&&x.dueDate&&x.dueDate<adgbTodayIST()).length};
+      const kpis=document.createElement('div');kpis.className='print-kpis';
+      [['Expected',totals.expected],['Submitted',totals.submitted],['Pending',totals.expected-totals.submitted],
+        ['Overdue',totals.overdue],['Completion',totals.expected?Math.round(100*totals.submitted/totals.expected)+'%':'—']].forEach(([label,value])=>{
+        const box=document.createElement('div'),num=document.createElement('strong'),name=document.createElement('span');
+        num.textContent=String(value);name.textContent=label;box.append(num,name);kpis.appendChild(box);
+      });
+      const h=document.createElement('h2');h.textContent='Ranked office comparison';
+      const table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');
+      ['Rank','Office','Expected','Submitted','Pending','Overdue','Due today','Completion'].forEach(x=>{
+        const th=document.createElement('th');th.textContent=x;tr.appendChild(th);
+      });thead.appendChild(tr);table.appendChild(thead);
+      const tbody=document.createElement('tbody');
+      ranking.forEach(x=>{
+        const row=document.createElement('tr');
+        [x.rank,x.name,x.expected,x.submitted,x.pending,x.overdue,x.dueToday,x.completion+'%'].forEach(value=>{
+          const td=document.createElement('td');td.textContent=String(value);row.appendChild(td);
+        });tbody.appendChild(row);
+      });table.appendChild(tbody);
+      const note=document.createElement('p');note.className='print-note';
+      note.textContent='Ranking: completion descending, then fewer overdue and pending reports. Equal performance receives equal rank. Overdue counts include only pending reports with a valid, explicit due date before today. Snapshot reflects the current reporting cycle; it is not a historical trend.';
+      const footer=document.createElement('div');footer.className='print-footer';footer.textContent='Source: ADG(B) Report Submission Portal · authenticated current-cycle data';
+      print.append(title,subtitle,asof,kpis,h,table,note,footer);
+      const previous=document.getElementById('adgbOfficeComparisonPrint');if(previous)previous.remove();
+      document.body.appendChild(print);
+      const cleanup=()=>{
+        document.body.classList.remove('adgb-office-comparison-print');
+        print.remove();window.removeEventListener('afterprint',cleanup);
+      };
+      window.addEventListener('afterprint',cleanup);
+      document.body.classList.add('adgb-office-comparison-print');
+      try{window.print();}catch(error){cleanup();showToast('Unable to open print dialog.','error');}
+    }
     function adgbOverviewInit_(){
+      document.getElementById('adgbRankingPrint')?.addEventListener('click',adgbRankingPrint_);
       document.getElementById('adgbAdminOverview')?.addEventListener('click',event=>{
         const button=event.target.closest('[data-adgb-overview]');
         if(!button||!isRecognizedAsAdmin()||!window.ADGB_AUTH?.token)return;
