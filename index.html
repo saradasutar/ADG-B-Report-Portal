@@ -2945,9 +2945,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
  <div class="adgb-studio-work">
   <div class="adgb-studio-controls">
    <label>Report title<input id="adgbStudioTitle" value="ADG(B) Official Reporting Dashboard" maxlength="100"></label>
-   <label>Report dataset<select id="adgbStudioType"><option value="submissions">Report submission status (live portal data)</option><option value="rti">RTI pendency (import CSV)</option><option value="appeal">RTI appeals (import CSV)</option><option value="pg">Public grievances (import CSV)</option></select></label>
+   <label>Report dataset<select id="adgbStudioType"><option value="submissions">Report submission status (live portal data)</option><option value="rti">RTI pendency (approved snapshots)</option><option value="appeal">RTI appeals (approved snapshots)</option><option value="pg">Public grievances (approved snapshots)</option><option value="pgappeal">PG appeals (approved snapshots)</option></select></label>
    <label>Design theme<select id="adgbStudioTheme"><option value="official">Official Blue</option><option value="minimal">Executive Minimal</option><option value="print">Black & White Print</option></select></label>
    <label>Saved layout<select id="adgbStudioLayouts"><option value="">Select saved layout</option></select></label>
+   <label>Data mode<select id="adgbStudioSource"><option value="live">Live approved PG/RTI snapshots</option><option value="csv">Import CSV manually</option></select></label>
    <label>Upload CSV (optional)<input type="file" id="adgbStudioCsv" accept=".csv,text/csv"></label>
    <small>CSV columns: Office, Pending, AgeBand. Example: CE(B),9,21-30 days. Imports are not uploaded or stored by this designer.</small>
    <strong>Include components</strong>
@@ -4906,14 +4907,72 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
     // V1 Studio: data from authorised in-memory portal status, or explicit admin CSV import.
     // Never cache confidential case data. Only layout metadata may be saved in localStorage.
-    const adgbStudio_={rows:[],layout:[],csv:[]};
+    const adgbStudio_={rows:[],layout:[],csv:[],live:null,loadedToken:"",loading:false,loadSerial:0,error:"",dates:[]};
     const adgbStudioKinds_=['kpi','bar','age','table','insights'];
     function adgbStudioEsc_(s){return escapeHtml(String(s??''));}
     function adgbStudioData_(){
       const type=document.getElementById('adgbStudioType')?.value||'submissions';
-      if(type!=='submissions')return adgbStudio_.csv;
+      if(type!=='submissions'){
+        if(document.getElementById('adgbStudioSource')?.value==='csv')return adgbStudio_.csv;
+        if(adgbStudio_.loadedToken!==String(window.ADGB_AUTH?.token||''))return [];
+        return adgbStudioLiveRows_(type);
+      }
       if(!state.connected)return [];
       return adgbRegisterData().map(r=>({office:r.office,pending:r.submitted?0:1,age:'',submitted:r.submitted?1:0}));
+    }
+
+    function adgbStudioLiveRows_(type){
+      const category={rti:'RTI',appeal:'RTI_APPEAL',pg:'PG',pgappeal:'PG_APPEAL'}[type];
+      const feed=adgbStudio_.live;
+      if(!feed?.visible||!feed.initialized||!Array.isArray(feed.totals))return [];
+      const names=new Map((feed.offices||[]).map(x=>[String(x.id),String(x.name)]));
+      const relevant=feed.totals.filter(x=>x.category===category);
+      adgbStudio_.dates=[...new Set(relevant.map(x=>String(x.asOf||'')).filter(Boolean))].sort();
+      const result=[];
+      relevant.forEach(item=>{
+        const office=names.get(String(item.officeId))||String(item.officeId);
+        // Only the existing backend decides whether this account may see officer detail.
+        const officers=Array.isArray(item.officers)?item.officers:null;
+        if(officers){
+          officers.forEach(person=>{
+            const buckets=[['< 10 days',person.u10],['10–20 days',person.d10_20],['21–30 days',person.d21_30],['31–60 days',person.d31_60],['61–90 days',person.d61_90],['> 90 days',person.over90]];
+            const ageingCount=buckets.reduce((n,x)=>n+Math.max(0,Number(x[1])||0),0);
+            const officerTotal=Math.max(0,Number(person.total)||0);
+            buckets.forEach(([age,count])=>{const n=Math.max(0,Number(count)||0);if(n)result.push({office:office+' — '+String(person.officer||'Officer'),pending:n,age});});
+            // Preserve reported total if age buckets do not reconcile.
+            if(officerTotal>ageingCount)result.push({office:office+' — '+String(person.officer||'Officer'),pending:officerTotal-ageingCount,age:'Age not specified'});
+          });
+        }else{
+          // Backend may return aggregate totals without authorised officer detail.
+          result.push({office,pending:Math.max(0,Number(item.total)||0),age:'Not available for this account'});
+        }
+      });
+      return result;
+    }
+    async function adgbStudioFetchLive_(force=false){
+      if(!isRecognizedAsAdmin()||document.getElementById('adgbStudio')?.hidden)return;
+      if(document.getElementById('adgbStudioType')?.value==='submissions')return adgbStudioRender_();
+      if(document.getElementById('adgbStudioSource')?.value==='csv')return adgbStudioRender_();
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!token){adgbStudio_.error='Administrator sign-in required.';adgbStudioRender_();return;}
+      if(!force&&adgbStudio_.live&&adgbStudio_.loadedToken===token){adgbStudioRender_();return;}
+      if(adgbStudio_.loading)return;
+      adgbStudio_.loading=true;adgbStudio_.error='';
+      const serial=++adgbStudio_.loadSerial;
+      document.getElementById('adgbStudioStatus').textContent='Loading approved PG/RTI snapshots securely…';
+      try{
+        if(typeof window.ADGB_PGRTI_CALL!=='function')throw Error('PG/RTI backend bridge is unavailable. Refresh the portal.');
+        const data=await window.ADGB_PGRTI_CALL({action:'pgrtiBootstrap',sessionToken:token});
+        if(serial!==adgbStudio_.loadSerial||token!==String(window.ADGB_AUTH?.token||''))return;
+        if(!data?.ok)throw Error(data?.message||'Approved data unavailable.');
+        if(!data.visible)throw Error(data.message||'Access to PG/RTI figures is not permitted.');
+        adgbStudio_.live=data;adgbStudio_.loadedToken=token;
+        if(!data.initialized)adgbStudio_.error='PG/RTI register has not yet been initialized.';
+      }catch(e){
+        if(serial===adgbStudio_.loadSerial){adgbStudio_.live=null;adgbStudio_.loadedToken='';adgbStudio_.error=String(e?.message||'Unable to retrieve approved report.');}
+      }finally{
+        if(serial===adgbStudio_.loadSerial){adgbStudio_.loading=false;adgbStudioRender_();}
+      }
     }
     function adgbStudioAggregate_(rows){
       const office=new Map(),age=new Map();
@@ -4941,11 +5000,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const sec=document.getElementById('adgbStudio');if(!sec||sec.hidden)return;
       if(!isRecognizedAsAdmin()){sec.hidden=true;return;}
       const rows=adgbStudioData_(),data=adgbStudioAggregate_(rows);
+      const mode=document.getElementById('adgbStudioSource')?.value||'live',kind=document.getElementById('adgbStudioType')?.value||'submissions';
       const title=document.getElementById('adgbStudioTitle').value.trim()||'Official Report';
       const theme=document.getElementById('adgbStudioTheme').value;
       document.getElementById('adgbStudioPage').dataset.theme=theme;
       document.getElementById('adgbStudioReportTitle').textContent=title;
-      document.getElementById('adgbStudioSubtitle').textContent='O/o ADG(B), CPWD Bengaluru · '+new Date().toLocaleDateString('en-IN')+' · '+(rows.length?'Source: '+(document.getElementById('adgbStudioType').value==='submissions'?'Authenticated portal data':'Imported CSV'):'No data available');
+      document.getElementById('adgbStudioSubtitle').textContent='O/o ADG(B), CPWD Bengaluru · '+new Date().toLocaleDateString('en-IN')+' · '+(rows.length?'Source: '+(kind==='submissions'?'Authenticated submission status':mode==='csv'?'User-imported CSV':'Approved PG/RTI snapshots')+
+      (kind!=='submissions'&&mode==='live'&&adgbStudio_.dates.length?' · As of '+adgbStudio_.dates.join(', '):''):'No data available');
       const grid=document.getElementById('adgbStudioGrid');grid.replaceChildren();
       const names={kpi:'Summary KPI cards',bar:'Office-wise comparison',age:'Age-wise distribution',table:'Detailed office data',insights:'Key takeaways'};
       adgbStudio_.layout.forEach((item,i)=>{
@@ -4967,7 +5028,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const body=document.createElement('div');body.innerHTML=adgbStudioContent_(item.id,rows,data);
         block.append(bar,heading,body);grid.appendChild(block);
       });
-      document.getElementById('adgbStudioStatus').textContent=rows.length+' data rows · '+adgbStudio_.layout.length+' design components. Layout only is saved; report data remains session-only.';
+      document.getElementById('adgbStudioStatus').textContent=(adgbStudio_.error?adgbStudio_.error+' · ':'')+rows.length+' data rows · '+adgbStudio_.layout.length+' design components. Layout only is saved; report data remains session-only.';
     }
     function adgbStudioLayoutOptions_(){
       const sel=document.getElementById('adgbStudioLayouts');if(!sel)return;
@@ -4982,11 +5043,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       try{const t=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}')[key];if(!t)return;
         document.getElementById('adgbStudioTitle').value=String(t.title||'').slice(0,100);
         document.getElementById('adgbStudioTheme').value=['official','minimal','print'].includes(t.theme)?t.theme:'official';
-        document.getElementById('adgbStudioType').value=['submissions','rti','appeal','pg'].includes(t.type)?t.type:'submissions';
+        document.getElementById('adgbStudioType').value=['submissions','rti','appeal','pg','pgappeal'].includes(t.type)?t.type:'submissions';
         adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';
+        document.getElementById('adgbStudioSource').value=t.source==='csv'?'csv':'live';
         adgbStudio_.layout=(Array.isArray(t.layout)?t.layout:[]).filter(x=>adgbStudioKinds_.includes(x.id)).map(x=>({id:x.id,width:[4,6,12].includes(x.width)?x.width:12}));
         document.querySelectorAll('[data-studio-item]').forEach(x=>x.checked=adgbStudio_.layout.some(y=>y.id===x.dataset.studioItem));
-        adgbStudioRender_();
+        adgbStudioRender_();adgbStudioFetchLive_();
       }catch{document.getElementById('adgbStudioStatus').textContent='Saved layout could not be read.';}
     }
     function adgbStudioCsvParse_(text){
@@ -5013,22 +5075,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(!isRecognizedAsAdmin())return;
         section.hidden=false;adgbStudio_.csv=[];
         if(!adgbStudio_.layout.length)adgbStudio_.layout=adgbStudioKinds_.map(id=>({id,width:id==='kpi'?12:6}));
-        adgbStudioLayoutOptions_();adgbStudioRender_();section.scrollIntoView({behavior:'smooth',block:'start'});
+        adgbStudioLayoutOptions_();adgbStudioRender_();adgbStudioFetchLive_();section.scrollIntoView({behavior:'smooth',block:'start'});
       });
-      document.getElementById('adgbStudioClose')?.addEventListener('click',()=>{section.hidden=true;});
+      document.getElementById('adgbStudioClose')?.addEventListener('click',()=>{section.hidden=true;adgbStudio_.live=null;adgbStudio_.csv=[];adgbStudio_.loadedToken='';adgbStudio_.loadSerial++;adgbStudio_.loading=false;});
       ['adgbStudioTitle','adgbStudioTheme'].forEach(id=>document.getElementById(id)?.addEventListener('input',adgbStudioRender_));
-      document.getElementById('adgbStudioType')?.addEventListener('change',()=>{adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';adgbStudioRender_();});
+      document.getElementById('adgbStudioType')?.addEventListener('change',()=>{adgbStudio_.csv=[];document.getElementById('adgbStudioCsv').value='';adgbStudio_.dates=[];adgbStudioRender_();adgbStudioFetchLive_();});
+      document.getElementById('adgbStudioSource')?.addEventListener('change',()=>{adgbStudioRender_();adgbStudioFetchLive_();});
       document.querySelectorAll('[data-studio-item]').forEach(input=>input.addEventListener('change',()=>{
         if(input.checked){if(!adgbStudio_.layout.some(x=>x.id===input.dataset.studioItem))adgbStudio_.layout.push({id:input.dataset.studioItem,width:12});}
         else adgbStudio_.layout=adgbStudio_.layout.filter(x=>x.id!==input.dataset.studioItem);
         adgbStudioRender_();
       }));
-      document.getElementById('adgbStudioRefresh')?.addEventListener('click',adgbStudioRender_);
+      document.getElementById('adgbStudioRefresh')?.addEventListener('click',()=>adgbStudioFetchLive_(true));
       document.getElementById('adgbStudioCsv')?.addEventListener('change',async e=>{
         if(!isRecognizedAsAdmin())return;
         const file=e.target.files?.[0];if(!file)return;
         if(file.size>2000000){document.getElementById('adgbStudioStatus').textContent='CSV too large (maximum 2 MB).';return;}
-        try{adgbStudio_.csv=adgbStudioCsvParse_(await file.text());adgbStudioRender_();}
+        try{adgbStudio_.csv=adgbStudioCsvParse_(await file.text());document.getElementById('adgbStudioSource').value='csv';adgbStudioRender_();}
         catch(err){adgbStudio_.csv=[];document.getElementById('adgbStudioStatus').textContent=err.message;}
       });
       document.getElementById('adgbStudioLayouts')?.addEventListener('change',adgbStudioLoad_);
@@ -5036,7 +5099,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         if(!isRecognizedAsAdmin())return;
         const name=window.prompt('Layout name (stores DESIGN only, not case data):',document.getElementById('adgbStudioTitle').value);if(!name?.trim())return;
         try{const saved=JSON.parse(localStorage.getItem('adgbStudioTemplatesV1')||'{}');
-          saved[name.trim().slice(0,80)]={title:document.getElementById('adgbStudioTitle').value,theme:document.getElementById('adgbStudioTheme').value,type:document.getElementById('adgbStudioType').value,layout:adgbStudio_.layout};
+          saved[name.trim().slice(0,80)]={title:document.getElementById('adgbStudioTitle').value,theme:document.getElementById('adgbStudioTheme').value,type:document.getElementById('adgbStudioType').value,source:document.getElementById('adgbStudioSource').value,layout:adgbStudio_.layout};
           localStorage.setItem('adgbStudioTemplatesV1',JSON.stringify(saved));adgbStudioLayoutOptions_();document.getElementById('adgbStudioLayouts').value=name.trim().slice(0,80);
           document.getElementById('adgbStudioStatus').textContent='Layout saved in this browser only. No report data stored.';
         }catch{document.getElementById('adgbStudioStatus').textContent='Could not store layout in this browser.';}
