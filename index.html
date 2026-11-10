@@ -6100,10 +6100,18 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbNoticeAppearanceIndicator_();
     }
     async function adgbNoticeAdminRequest_(payload){
-      const credential=adgbReviewCredential();
-      if(!isRecognizedAsAdmin()||!credential)throw Error('Administrator session required.');
+      // The notice backend accepts an authenticated ADMIN SESSION, not the
+      // legacy office/admin PIN. Always use the same session token as noticeBoard GET.
+      const rawToken=String(window.ADGB_AUTH?.token||'');
+      const fallback=String(adgbReviewCredential()||'');
+      const credential=rawToken
+        ? (rawToken.indexOf('SESSION:')===0?rawToken:'SESSION:'+rawToken)
+        : (fallback.indexOf('SESSION:')===0?fallback:'');
+      if(!isRecognizedAsAdmin()||!credential)
+        throw Error('Administrator session token is missing. Sign out and sign in again, then reload notices.');
       const res=await postToBackend({action:'adminNoticeBoardManage',securityCode:credential,...payload});
-      if(!res?.ok||!Array.isArray(res.notices))throw Error('Compatible notice backend not yet deployed.');
+      if(!res?.ok)throw Error(res?.message||'Notice request was rejected by the backend.');
+      if(!Array.isArray(res.notices))throw Error('Notice backend returned an invalid notice list. Check the deployed backend version.');
       adgbNoticeRenderAdmin_(res);
       await adgbNoticeLoad_(true);
       return res;
