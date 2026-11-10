@@ -1643,6 +1643,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-notice-heading{font-size:12px;color:#9a151a;font-weight:900;letter-spacing:.06em;flex:none}
 .adgb-notice-window{flex:1;overflow:hidden;min-width:0}
 .adgb-notice-track{display:inline-block;white-space:nowrap;width:max-content;color:#bd1726;font-weight:900;font-size:17px;line-height:1.45;letter-spacing:.015em;animation:adgbNoticeMarquee 28s linear infinite}
+/* Multiline notices move as one horizontal panel while their lines remain stacked. */
+.adgb-notice-strip.is-multiline{min-height:76px;padding-top:10px;padding-bottom:10px}
+.adgb-notice-strip.is-multiline .adgb-notice-window{align-self:stretch;display:flex;align-items:center}
+.adgb-notice-strip.is-multiline .adgb-notice-track{display:inline-flex;align-items:center;white-space:normal;line-height:1.35}
+.adgb-notice-strip.is-multiline .adgb-rich-message{display:inline-flex;flex-direction:column;align-items:flex-start;white-space:normal;max-width:min(75vw,820px);margin-right:34px}
+.adgb-notice-strip.is-multiline .adgb-rich-line-display{max-width:min(75vw,820px);white-space:normal;overflow-wrap:anywhere}
+@media(max-width:650px){.adgb-notice-strip.is-multiline{min-height:88px}.adgb-notice-strip.is-multiline .adgb-rich-message,.adgb-notice-strip.is-multiline .adgb-rich-line-display{max-width:68vw}}
+@media(prefers-reduced-motion:reduce){.adgb-notice-strip.is-multiline .adgb-notice-track{animation:none;transform:none}}
 .adgb-notice-track.paused,.adgb-notice-track:hover{animation-play-state:paused}
 .adgb-notice-track span{margin-right:50px}
 #adgbNoticePause{border:1px solid #e6c562;background:#fff5bb;color:#7e2024;border-radius:6px;font-size:13px;cursor:pointer;flex:none;padding:5px 8px}
@@ -5958,7 +5966,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!pieces.length){track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
       // Only rebuild text nodes when notice content changes. Keeps marquee animation
       // from restarting on routine report refreshes. Styling is still applied below.
-      const nextKey=JSON.stringify(pieces);
+      const hasMultiline=Array.isArray(feed.notices)&&feed.notices.some(x=>/[\r\n]/.test(String(x.text||'')));
+       strip.classList.toggle('is-multiline',hasMultiline);
+       const nextKey=JSON.stringify(pieces);
       if(nextKey!==adgbNoticeLastRenderedKey_){
         track.replaceChildren();
         for(const message of pieces){
