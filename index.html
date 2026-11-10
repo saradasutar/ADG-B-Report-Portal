@@ -6125,7 +6125,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       catch(error){adgbNoticeStatus_('Could not load notices: '+(error.message||'Check backend deployment'));}
     }
     async function adgbNoticeSave_(){
-      if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved notices before making changes.');return;}
+      const button=document.getElementById('adgbNoticeSave');
+      if(!isRecognizedAsAdmin()){
+        adgbNoticeStatus_('Administrator session required. Sign in again as administrator, then retry.');
+        return;
+      }
+      // A fresh browser session may not have loaded the saved list yet.
+      // Do that automatically instead of silently refusing the Save click.
+      if(!adgbNoticeAdminLoaded_){
+        if(button){button.disabled=true;button.textContent='Loading saved notices…';}
+        adgbNoticeStatus_('Loading saved notices before saving your draft…');
+        try{
+          await adgbNoticeAdminLoad_();
+          if(!adgbNoticeAdminLoaded_)return;
+        }finally{
+          if(button){button.disabled=false;button.textContent=adgbNoticeEditId_?'Update this notice':'Save scheduled notice';}
+        }
+      }
       const notice={
         id:adgbNoticeEditId_,text:String(document.getElementById('adgbNoticeText')?.value||'').trim(),
         target:document.getElementById('adgbNoticeTarget')?.value||'ALL',
@@ -6135,10 +6151,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(!notice.text||notice.text.length>220||!notice.start||!notice.end||notice.end<=notice.start){
         adgbNoticeStatus_('Enter notice text (1–220 characters) and a valid end after its start.');return;
       }
-      const button=document.getElementById('adgbNoticeSave');if(button)button.disabled=true;
+      if(button){button.disabled=true;button.textContent=adgbNoticeEditId_?'Updating…':'Saving…';}
       try{await adgbNoticeAdminRequest_({operation:'save',notice});adgbNoticeResetForm_();adgbNoticeStatus_('Scheduled notice saved successfully. Only authorized viewers will see it during its selected period.');}
       catch(error){adgbNoticeStatus_('Notice NOT saved: '+(error.message||'Connection failed'));}
-      finally{if(button)button.disabled=false;}
+      finally{if(button){button.disabled=false;button.textContent=adgbNoticeEditId_?'Update this notice':'Save scheduled notice';}}
     }
     function adgbNoticeSpeedLabel_(){
       const speed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
