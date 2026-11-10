@@ -3006,66 +3006,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" id="adgbControlSaveBottom" class="adgb-control-save-primary" disabled>✓ Save changes</button>
       </div>
       <p class="adgb-insights-count">Saved settings apply to everyone after refresh. Administrator Control Centre access cannot be disabled. An account must still pass its existing server-side login and per-action permission checks.</p>
-    </section>
-    <section id="adgbArchivePanel" class="adgb-insights-panel" hidden aria-labelledby="adgbArchiveTitle">
-      <div class="adgb-insights-heading"><div><h2 id="adgbArchiveTitle">▣ Historical Submission Archive</h2><p>Administrator-only · read-only · previous submission cycles and latest recorded office status</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-      <div class="adgb-insights-toolbar">
-        <label>Submission cycle <input id="adgbArchiveMonth" type="month" aria-label="Submission cycle month"></label>
-        <label>Search <input id="adgbArchiveSearch" type="search" placeholder="Subject or office"></label>
-        <label>Office <select id="adgbArchiveOffice"><option value="">All offices</option></select></label>
-        <label>Status <select id="adgbArchiveStatus"><option value="all">All recorded</option><option value="SUBMITTED">Submitted</option><option value="REMOVED">Removed</option></select></label>
-        <button type="button" id="adgbArchiveLoad">Load archive</button>
-      </div>
-      <p id="adgbArchiveMessage" class="adgb-insights-count" aria-live="polite">Select a past month and load the archive. Administrator access is required.</p>
-      <p class="adgb-insights-count"><a id="adgbArchiveReadyLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open authorised archived PDF (link expires shortly)</a></p>
-      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Kind</th><th>Office</th><th>Latest state</th><th>Submitted at (IST)</th><th>Document</th></tr></thead><tbody id="adgbArchiveRows"><tr><td colspan="6">No archive loaded</td></tr></tbody></table></div>
-    </section>
-    <section id="adgbHealthPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbHealthTitle">
-  <div class="adgb-insights-heading"><div><h2 id="adgbHealthTitle">System health &amp; office comparison</h2><p>Administrator only · current reporting cycle · read-only</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-  <div class="adgb-insights-toolbar"><button type="button" id="adgbHealthRefresh">↻ Check live status</button><span id="adgbHealthMessage" role="status" aria-live="polite">Choose Check live status to load a secure snapshot.</span></div>
-  <div id="adgbHealthSummary" class="adgb-health-cards"></div>
-  <h3 class="adgb-health-heading">Office-wise submission progress</h3>
-  <div id="adgbHealthOffices" class="adgb-health-office-list"><p>No health check loaded yet.</p></div>
-  <details class="adgb-health-more"><summary>Technical checks &amp; limitations</summary><div id="adgbHealthChecks">No health check loaded.</div><p>Historical upload failures and external synchronization timestamps are not collected by this backend. Counts are not shown as zero.</p></details>
-</section>
-<section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
-      <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-      <div class="adgb-insights-toolbar">
-        <label>Search report <input id="adgbRegisterSearch" type="search" placeholder="Subject or office"></label>
-        <label>Office <select id="adgbRegisterOffice"><option value="">All offices</option></select></label>
-        <label>Status <select id="adgbRegisterStatus"><option value="all">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option><option value="overdue">Overdue</option><option value="dueToday">Due today</option><option value="noDueDate">Pending · no due date</option><option value="reviewDate">Review due date</option></select></label>
-        <button type="button" id="adgbRegisterExport" class="hidden">Export CSV (admin)</button>
-      </div>
-      <p id="adgbRegisterCount" class="adgb-insights-count" aria-live="polite"></p>
-      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Deadline</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
-    </section>
-    <section id="adgbActionPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbActionTitle">
-      <div class="adgb-insights-heading"><div><h2 id="adgbActionTitle">⚑ Action Required</h2><p>Current reporting cycle · all five offices · deadlines only where configured</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-      <div id="adgbActionSummary" class="adgb-analytics-summary"></div>
-      <div class="adgb-insights-toolbar">
-        <label>Office <select id="adgbActionOffice"><option value="">All offices</option></select></label>
-        <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="next7">Due in next 7 days</option><option value="next30">Due in next 30 days</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
-        <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label><label>Sort <select id="adgbActionSort"><option value="urgent">Urgency / earliest deadline</option><option value="office">Office name</option><option value="subject">Report subject</option><option value="due">Deadline (earliest)</option></select></label>
-        <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button><button type="button" id="adgbActionCsv" class="hidden">Export filtered CSV (admin)</button><button type="button" id="adgbActionReset">Clear filters</button>
-      </div>
-      <div id="adgbActionOfficeBreakdown" class="adgb-action-office-breakdown" aria-label="Office pending workload"></div><p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p><p class="adgb-insights-count">Days remaining are calculated in India time; an unconfigured or disputed deadline is never guessed.</p>
-      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th><th>Days remaining</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="6">No data loaded.</td></tr></tbody></table></div>
-    </section>
-    <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
-      <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
-      <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
-      <section id="adgbReadinessPanel" class="adgb-readiness-panel" hidden aria-label="Administrator deployment readiness">
-        <div class="adgb-readiness-top"><div><h3>System readiness</h3><p>Read checks only · no test uploads, emails or report changes</p></div><button type="button" id="adgbReadinessCheck">Check backend</button></div>
-        <p class="adgb-insights-count" id="adgbReadinessSummary" aria-live="polite">Run this check after deploying the integrated Apps Script backend. Checks do not prove email delivery or upload permissions.</p>
-        <div class="adgb-readiness-results" id="adgbReadinessResults"></div>
-      </section>
-      <div class="adgb-compliance-heading"><div><h3>Office-wise compliance overview</h3><p>Current reporting cycle · live recorded statuses · not a historical trend</p></div><label>Sort offices <select id="adgbAnalyticsSort"><option value="pending">Most pending first</option><option value="overdue">Most overdue first</option><option value="completion">Highest completion first</option><option value="office">Office name</option></select></label></div>
-      <div id="adgbOfficeHighlights" class="adgb-office-highlights"></div>
-      <section class="adgb-scorecard-section" aria-label="Office comparative performance">
-        <div class="adgb-compliance-heading"><div><h3>Office comparison scorecard</h3><p>Ranked by completion rate, then fewer overdue and pending items · current cycle</p></div></div>
-        <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Rank</th><th>Office</th><th>Completion</th><th>Submitted / Expected</th><th>Pending</th><th>Overdue</th><th>Due today</th></tr></thead><tbody id="adgbScorecardRows"></tbody></table></div>
-      </section>
-      <section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
+      <div class="adgb-control-notice-wrap"><div class="adgb-compliance-heading"><div><h3>📢 Noticeboard management</h3><p>Administrator-only · create, schedule and manage multiple notices and display settings</p></div></div>
+<section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
         <div class="adgb-compliance-heading"><div><h3>Moving Notice Board — Administrator</h3><p>Red text on light yellow · scheduled in India time · targeted to authorized offices</p></div></div>
         <p id="adgbNoticeAdminStatus" class="adgb-insights-count" aria-live="polite">Load notices to manage the schedule and office visibility.</p>
         <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button><label>Status <select id="adgbNoticeStatusFilter"><option value="all">All notices</option><option value="active">Active now</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select></label><label>Find notice <input type="search" id="adgbNoticeSearch" placeholder="Search message or office"></label><label>Audience <select id="adgbNoticeAudienceFilter"><option value="all">All audiences</option><option value="ALL">General notices</option></select></label><label>Sort <select id="adgbNoticeSort"><option value="startAsc">Earliest start</option><option value="startDesc">Latest start</option><option value="endAsc">Ending soonest</option></select></label><button type="button" id="adgbNoticeExport">Export filtered notices CSV (admin)</button></div>
@@ -3125,6 +3067,67 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           <button id="adgbNoticeSaveSettings" type="button">Save notice appearance &amp; pending settings</button>
         </div>
       </section>
+      </div>
+    </section>
+    <section id="adgbArchivePanel" class="adgb-insights-panel" hidden aria-labelledby="adgbArchiveTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbArchiveTitle">▣ Historical Submission Archive</h2><p>Administrator-only · read-only · previous submission cycles and latest recorded office status</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div class="adgb-insights-toolbar">
+        <label>Submission cycle <input id="adgbArchiveMonth" type="month" aria-label="Submission cycle month"></label>
+        <label>Search <input id="adgbArchiveSearch" type="search" placeholder="Subject or office"></label>
+        <label>Office <select id="adgbArchiveOffice"><option value="">All offices</option></select></label>
+        <label>Status <select id="adgbArchiveStatus"><option value="all">All recorded</option><option value="SUBMITTED">Submitted</option><option value="REMOVED">Removed</option></select></label>
+        <button type="button" id="adgbArchiveLoad">Load archive</button>
+      </div>
+      <p id="adgbArchiveMessage" class="adgb-insights-count" aria-live="polite">Select a past month and load the archive. Administrator access is required.</p>
+      <p class="adgb-insights-count"><a id="adgbArchiveReadyLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open authorised archived PDF (link expires shortly)</a></p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Kind</th><th>Office</th><th>Latest state</th><th>Submitted at (IST)</th><th>Document</th></tr></thead><tbody id="adgbArchiveRows"><tr><td colspan="6">No archive loaded</td></tr></tbody></table></div>
+    </section>
+    <section id="adgbHealthPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbHealthTitle">
+  <div class="adgb-insights-heading"><div><h2 id="adgbHealthTitle">System health &amp; office comparison</h2><p>Administrator only · current reporting cycle · read-only</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+  <div class="adgb-insights-toolbar"><button type="button" id="adgbHealthRefresh">↻ Check live status</button><span id="adgbHealthMessage" role="status" aria-live="polite">Choose Check live status to load a secure snapshot.</span></div>
+  <div id="adgbHealthSummary" class="adgb-health-cards"></div>
+  <h3 class="adgb-health-heading">Office-wise submission progress</h3>
+  <div id="adgbHealthOffices" class="adgb-health-office-list"><p>No health check loaded yet.</p></div>
+  <details class="adgb-health-more"><summary>Technical checks &amp; limitations</summary><div id="adgbHealthChecks">No health check loaded.</div><p>Historical upload failures and external synchronization timestamps are not collected by this backend. Counts are not shown as zero.</p></details>
+</section>
+<section id="adgbRegisterPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbRegisterTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbRegisterTitle">▦ Submission Register</h2><p>Current reporting cycle · office-wise status, not historical submission events</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div class="adgb-insights-toolbar">
+        <label>Search report <input id="adgbRegisterSearch" type="search" placeholder="Subject or office"></label>
+        <label>Office <select id="adgbRegisterOffice"><option value="">All offices</option></select></label>
+        <label>Status <select id="adgbRegisterStatus"><option value="all">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option><option value="overdue">Overdue</option><option value="dueToday">Due today</option><option value="noDueDate">Pending · no due date</option><option value="reviewDate">Review due date</option></select></label>
+        <button type="button" id="adgbRegisterExport" class="hidden">Export CSV (admin)</button>
+      </div>
+      <p id="adgbRegisterCount" class="adgb-insights-count" aria-live="polite"></p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Report subject</th><th>Reporting type</th><th>Office</th><th>Status</th><th>Deadline</th><th>Submitted at (IST)</th></tr></thead><tbody id="adgbRegisterRows"></tbody></table></div>
+    </section>
+    <section id="adgbActionPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbActionTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbActionTitle">⚑ Action Required</h2><p>Current reporting cycle · all five offices · deadlines only where configured</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div id="adgbActionSummary" class="adgb-analytics-summary"></div>
+      <div class="adgb-insights-toolbar">
+        <label>Office <select id="adgbActionOffice"><option value="">All offices</option></select></label>
+        <label>Priority <select id="adgbActionPriority"><option value="all">All pending</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="upcoming">Upcoming deadline</option><option value="next7">Due in next 7 days</option><option value="next30">Due in next 30 days</option><option value="review">Verify deadline</option><option value="undated">No deadline</option></select></label>
+        <label>Search <input id="adgbActionSearch" type="search" placeholder="Report subject"></label><label>Sort <select id="adgbActionSort"><option value="urgent">Urgency / earliest deadline</option><option value="office">Office name</option><option value="subject">Report subject</option><option value="due">Deadline (earliest)</option></select></label>
+        <button type="button" id="adgbActionPrint" class="hidden">Print action list (admin)</button><button type="button" id="adgbActionCsv" class="hidden">Export filtered CSV (admin)</button><button type="button" id="adgbActionReset">Clear filters</button>
+      </div>
+      <div id="adgbActionOfficeBreakdown" class="adgb-action-office-breakdown" aria-label="Office pending workload"></div><p id="adgbActionCount" class="adgb-insights-count" aria-live="polite"></p><p class="adgb-insights-count">Days remaining are calculated in India time; an unconfigured or disputed deadline is never guessed.</p>
+      <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Priority</th><th>Office</th><th>Report subject</th><th>Type</th><th>Deadline</th><th>Days remaining</th></tr></thead><tbody id="adgbActionRows"><tr><td colspan="6">No data loaded.</td></tr></tbody></table></div>
+    </section>
+    <section id="adgbAnalyticsPanel" class="adgb-insights-panel" hidden aria-labelledby="adgbAnalyticsTitle">
+      <div class="adgb-insights-heading"><div><h2 id="adgbAnalyticsTitle">▥ Office Analytics</h2><p>Current reporting cycle · calculated from verified dashboard statuses</p></div><button type="button" data-adgb-close-insights>✕ Close</button></div>
+      <div id="adgbAnalyticsSummary" class="adgb-analytics-summary"></div>
+      <section id="adgbReadinessPanel" class="adgb-readiness-panel" hidden aria-label="Administrator deployment readiness">
+        <div class="adgb-readiness-top"><div><h3>System readiness</h3><p>Read checks only · no test uploads, emails or report changes</p></div><button type="button" id="adgbReadinessCheck">Check backend</button></div>
+        <p class="adgb-insights-count" id="adgbReadinessSummary" aria-live="polite">Run this check after deploying the integrated Apps Script backend. Checks do not prove email delivery or upload permissions.</p>
+        <div class="adgb-readiness-results" id="adgbReadinessResults"></div>
+      </section>
+      <div class="adgb-compliance-heading"><div><h3>Office-wise compliance overview</h3><p>Current reporting cycle · live recorded statuses · not a historical trend</p></div><label>Sort offices <select id="adgbAnalyticsSort"><option value="pending">Most pending first</option><option value="overdue">Most overdue first</option><option value="completion">Highest completion first</option><option value="office">Office name</option></select></label></div>
+      <div id="adgbOfficeHighlights" class="adgb-office-highlights"></div>
+      <section class="adgb-scorecard-section" aria-label="Office comparative performance">
+        <div class="adgb-compliance-heading"><div><h3>Office comparison scorecard</h3><p>Ranked by completion rate, then fewer overdue and pending items · current cycle</p></div></div>
+        <div class="adgb-insights-scroll"><table class="adgb-register-table"><thead><tr><th>Rank</th><th>Office</th><th>Completion</th><th>Submitted / Expected</th><th>Pending</th><th>Overdue</th><th>Due today</th></tr></thead><tbody id="adgbScorecardRows"></tbody></table></div>
+      </section>
+      
       <section id="adgbComplianceTrends" class="adgb-trends-panel" hidden aria-label="Administrator compliance trends">
         <div class="adgb-compliance-heading"><div><h3>Month-wise compliance evidence</h3><p>Administrator only · recorded submission outcomes and dated compliance snapshots</p></div></div>
         <div class="adgb-insights-toolbar">
