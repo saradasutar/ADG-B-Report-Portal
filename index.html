@@ -6195,15 +6195,48 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const delay=Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),dl=document.getElementById('adgbNoticeLane2DelayLabel');if(dl)dl.textContent=delay+' seconds';
     }
     async function adgbNoticeSettingsSave_(){
-      if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved settings before editing.');return;}
-      const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
-      const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
-      const lane1Speed=Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane2Speed=Number(document.getElementById('adgbNoticeLane2Speed')?.value||5),lane2Delay=Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),scrollSpeed=lane1Speed;
-      const style=adgbNoticeStyleFromForm_();
-      if(adgbNoticeContrast_(style.textColor,style.backgroundColor)<4.5){adgbNoticeStatus_('Choose a notice text colour with sufficient contrast against the selected background.');return;}
-      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,lane1Speed,lane2Speed,lane2Delay,...style});
-        adgbNoticeStatus_('Both lane speeds, second-line start delay, appearance and pending display settings saved.');}
-      catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
+      const button=document.getElementById('adgbNoticeSaveSettings');
+      const status=document.getElementById('adgbNoticeAppearanceStatus');
+      const say=message=>{
+        if(status){status.textContent=message;status.dataset.dirty='yes';}
+        adgbNoticeStatus_(message);
+      };
+      if(!isRecognizedAsAdmin()){
+        say('Save blocked: administrator session is not active. Sign out, sign in again as administrator, then retry.');
+        return;
+      }
+      if(button){button.disabled=true;button.textContent='Checking saved settings…';}
+      try{
+        if(!adgbNoticeAdminLoaded_){
+          say('Loading saved notice settings before saving…');
+          await adgbNoticeAdminLoad_();
+          if(!adgbNoticeAdminLoaded_)throw new Error('Saved settings could not be loaded. Check the administrator session and deployed Apps Script version.');
+        }
+        const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
+        const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
+        const lane1Speed=Number(document.getElementById('adgbNoticeLane1Speed')?.value||5);
+        const lane2Speed=Number(document.getElementById('adgbNoticeLane2Speed')?.value||5);
+        const lane2Delay=Number(document.getElementById('adgbNoticeLane2Delay')?.value||0);
+        const style=adgbNoticeStyleFromForm_();
+        if(adgbNoticeContrast_(style.textColor,style.backgroundColor)<4.5)
+          throw new Error('Choose a notice text colour with sufficient contrast against the selected background.');
+        if(button){button.textContent='Saving settings…';}
+        say('Saving both lane speeds, start delay, appearance and pending-display settings…');
+        const result=await adgbNoticeAdminRequest_({
+          operation:'settings',showPending,pendingOfficeIds,
+          scrollSpeed:lane1Speed,lane1Speed,lane2Speed,lane2Delay,...style
+        });
+        adgbNoticeSavedSettings_=adgbNoticeCaptureControls_();
+        adgbNoticeAppearanceIndicator_();
+        const ok='Saved successfully. Line 1: '+lane1Speed+'/10 · Line 2: '+lane2Speed+'/10 · Line 2 delay: '+lane2Delay+' sec. Appearance and pending settings are saved for viewers.';
+        if(status)status.textContent=ok;
+        adgbNoticeStatus_(ok);
+      }catch(error){
+        const message='NOT SAVED: '+(error&&error.message?error.message:'Unknown error. Please retry.');
+        say(message);
+      }finally{
+        if(button){button.disabled=false;button.textContent='Save notice appearance & pending settings';}
+      }
     }
     function adgbNoticeSetDuration_(days){
       if(!isRecognizedAsAdmin())return;
