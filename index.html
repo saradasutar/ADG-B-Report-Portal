@@ -1645,6 +1645,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
 .adgb-notice-speed-ends{width:min(100%,410px);display:flex;justify-content:space-between;font-size:10px;color:#68748a}
 @media(prefers-reduced-motion:reduce){#adgbNoticeSpeed{opacity:.7}}
+/* V17.10.0 two independent horizontal notice lanes */
+.adgb-notice-lanes{display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;min-height:48px}
+.adgb-notice-lane{position:relative;overflow:hidden;width:100%;min-height:22px;display:flex;align-items:center}
+.adgb-notice-lane .adgb-notice-track{display:inline-block;white-space:nowrap;width:max-content;will-change:transform;animation-name:adgbNoticeMarquee;animation-timing-function:linear;animation-iteration-count:infinite}
+.adgb-notice-lane:nth-child(2){border-top:1px dashed #d9c77b;padding-top:2px}
+.adgb-notice-lane .adgb-notice-track.paused{animation-play-state:paused}
+.adgb-notice-lane .adgb-rich-message{display:inline-flex;align-items:center;margin-right:34px}
+.adgb-notice-strip.is-multiline .adgb-notice-window{display:flex;flex-direction:column;align-items:stretch;justify-content:center}
+.adgb-notice-strip.is-multiline .adgb-notice-lane .adgb-notice-track{white-space:nowrap}
+@media(max-width:650px){.adgb-notice-lanes{min-height:56px}.adgb-notice-lane{min-height:25px}.adgb-notice-strip{gap:6px}}
 /* V17.7.81 scheduled moving notices, office visibility, and scorecard */
 .adgb-notice-strip{display:flex;align-items:center;gap:9px;overflow:hidden;margin:7px 0 12px;border:1px solid #f0d779;border-radius:10px;background:#fff7cc;padding:8px 10px;min-height:43px}
 .adgb-notice-strip[hidden],.adgb-notice-admin[hidden]{display:none!important}
@@ -2781,7 +2791,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div class="adgb-sidebar-foot"><span class="adgb-sidebar-dot"></span><strong>Portal status</strong><small id="adgbSidebarStatus">Connecting…</small></div>
     </aside>
     <main class="page" id="top">
-      <section id="adgbNoticeStrip" class="adgb-notice-strip" hidden aria-label="Scheduled office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window"><div id="adgbNoticeTrack" class="adgb-notice-track"></div></div><button id="adgbNoticePause" type="button" aria-pressed="false" title="Pause moving notices">Ⅱ</button></section>
+      <section id="adgbNoticeStrip" class="adgb-notice-strip" hidden aria-label="Scheduled office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window adgb-notice-lanes"><div class="adgb-notice-lane"><div id="adgbNoticeTrack1" class="adgb-notice-track"></div></div><div class="adgb-notice-lane"><div id="adgbNoticeTrack2" class="adgb-notice-track"></div></div></div><button id="adgbNoticePause" type="button" aria-pressed="false" title="Pause moving notices">Ⅱ</button></section>
     <div class="notice hidden" id="connectionNotice">
       <span id="connectionMessage"></span>
       <button id="retryButton" type="button">Retry connection</button>
@@ -3037,6 +3047,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
             <button type="button" id="adgbRichNoticeAdd">+ Add coloured line</button>
           </details><p id="adgbNoticeTextCounter" class="adgb-notice-charcount">0 / 220 characters</p><p id="adgbNoticeDraftStatus" class="adgb-notice-draft-status" aria-live="polite">New notice · not published</p>
           <div class="adgb-notice-form-grid">
+            <label>Moving line <select id="adgbNoticeLane"><option value="1">Line 1 — upper row</option><option value="2">Line 2 — lower row</option></select></label>
             <label>Display to <select id="adgbNoticeTarget"><option value="ALL">Everyone permitted to view the portal</option></select></label>
             <label>Start (IST) <input id="adgbNoticeStart" type="datetime-local"></label>
             <label>End (IST) <input id="adgbNoticeEnd" type="datetime-local"></label>
@@ -3054,9 +3065,12 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div class="adgb-notice-pending-config">
           <label class="adgb-notice-check"><input id="adgbNoticePendingEnabled" type="checkbox"> Include live office-wise pending counts in moving strip</label>
           <p>Office users see only their own office count; administrators see selected offices. Guests/viewers do not receive office-specific counts.</p>
-          <label class="adgb-notice-speed-label" for="adgbNoticeSpeed">Moving text speed: <strong id="adgbNoticeSpeedLabel">Normal (5/10)</strong></label>
-          <input id="adgbNoticeSpeed" type="range" min="1" max="10" step="1" value="5" aria-label="Moving text speed">
-          <div class="adgb-notice-speed-ends"><span>Slow</span><span>Fast</span></div>
+          <h4 class="adgb-notice-step">Two-line movement controls</h4><p class="adgb-notice-simple-help">Each saved notice is assigned to Line 1 or Line 2. Both lines move independently. Set the same speed and zero delay for simultaneous movement.</p>
+          <label class="adgb-notice-speed-label" for="adgbNoticeLane1Speed">Line 1 speed: <strong id="adgbNoticeLane1SpeedLabel">Normal (5/10)</strong></label><input id="adgbNoticeLane1Speed" type="range" min="1" max="10" step="1" value="5" aria-label="Line 1 movement speed">
+          <label class="adgb-notice-speed-label" for="adgbNoticeLane2Speed">Line 2 speed: <strong id="adgbNoticeLane2SpeedLabel">Normal (5/10)</strong></label><input id="adgbNoticeLane2Speed" type="range" min="1" max="10" step="1" value="5" aria-label="Line 2 movement speed">
+          <label class="adgb-notice-speed-label" for="adgbNoticeLane2Delay">Line 2 start delay: <strong id="adgbNoticeLane2DelayLabel">0 seconds</strong></label><input id="adgbNoticeLane2Delay" type="range" min="0" max="30" step="1" value="0" aria-label="Line 2 start delay in seconds">
+          <div class="adgb-notice-speed-ends"><span>Slow / no delay</span><span>Fast / 30 sec</span></div>
+          <input id="adgbNoticeSpeed" type="hidden" value="5"><span id="adgbNoticeSpeedLabel" hidden>Normal (5/10)</span>
           <div class="adgb-notice-style-grid">
             <label>Background <select id="adgbNoticeBackgroundMode" aria-label="Moving notice background"><option value="solid">Coloured background</option><option value="transparent">No Background (transparent)</option></select><input type="color" id="adgbNoticeBackgroundColor" value="#fff7cc" aria-label="Moving notice background colour"></label>
             <label>Text colour <input id="adgbNoticeTextColor" type="color" value="#bd1726" aria-label="Moving notice text colour"></label>
@@ -5543,7 +5557,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     function adgbNoticeCaptureControls_(){
       return {...adgbNoticeStyleFromForm_(),
-        scrollSpeed:Number(document.getElementById('adgbNoticeSpeed')?.value||5),
+        scrollSpeed:Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane1Speed:Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane2Speed:Number(document.getElementById('adgbNoticeLane2Speed')?.value||5),lane2Delay:Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),
         showPending:document.getElementById('adgbNoticePendingEnabled')?.checked===true,
         pendingOfficeIds:[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office')).sort()};
     }
@@ -5564,11 +5578,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbNoticeTextColor').value=settings.textColor||'#bd1726';
       document.getElementById('adgbNoticeFontSize').value=String(settings.fontSize||17);
       document.getElementById('adgbNoticeFontWeight').value=String(settings.fontWeight||900);
-      document.getElementById('adgbNoticeSpeed').value=String(settings.scrollSpeed||5);
+      document.getElementById('adgbNoticeLane1Speed').value=String(settings.lane1Speed||settings.scrollSpeed||5);document.getElementById('adgbNoticeLane2Speed').value=String(settings.lane2Speed||settings.scrollSpeed||5);document.getElementById('adgbNoticeLane2Delay').value=String(settings.lane2Delay||0);document.getElementById('adgbNoticeSpeed').value=String(settings.lane1Speed||settings.scrollSpeed||5);
       document.getElementById('adgbNoticePendingEnabled').checked=settings.showPending===true;
       const selected=new Set(settings.pendingOfficeIds||[]);
       document.querySelectorAll('[data-notice-office]').forEach(x=>{x.checked=selected.has(x.getAttribute('data-notice-office'));});
-      adgbNoticePreviewSpeed_=null;
+      adgbNoticePreviewSpeed_=null;adgbNoticePreviewLane1Speed_=null;adgbNoticePreviewLane2Speed_=null;adgbNoticePreviewLane2Delay_=null;
       adgbNoticeStylePreview_();
       adgbNoticeSpeedLabel_();
       adgbNoticePreviewStyle_=null;
@@ -5940,10 +5954,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     function adgbNoticeResetForm_(){
       adgbNoticeEditId_='';
-      const text=document.getElementById('adgbNoticeText'),target=document.getElementById('adgbNoticeTarget');
+      const text=document.getElementById('adgbNoticeText'),target=document.getElementById('adgbNoticeTarget'),lane=document.getElementById('adgbNoticeLane');
       const start=document.getElementById('adgbNoticeStart'),end=document.getElementById('adgbNoticeEnd');
       const enabled=document.getElementById('adgbNoticeEnabled');
-      if(text)text.value='';if(target)target.value='ALL';
+      if(text)text.value='';if(target)target.value='ALL';if(lane)lane.value='1';
       if(start)start.value=adgbNoticeTimeIST_();
       if(end)end.value=adgbNoticeTimeIST_(24*3600000);
       if(enabled)enabled.checked=true;
@@ -5953,54 +5967,51 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     let adgbNoticeLastRenderedKey_='';
     function adgbNoticeRenderStrip_(){
-      const strip=document.getElementById('adgbNoticeStrip'),track=document.getElementById('adgbNoticeTrack');
-      if(!strip||!track)return;
-      if(!adgbFeatureAllowedClient_('notices')){strip.hidden=true;track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
-      const token=String(window.ADGB_AUTH?.token||'');
-      const feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
-      if(!feed||!state.connected){strip.hidden=true;track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
-      const pieces=Array.isArray(feed.notices)?feed.notices.map(x=>String(x.text||'').trim()).filter(Boolean):[];
+      const strip=document.getElementById('adgbNoticeStrip'),track1=document.getElementById('adgbNoticeTrack1'),track2=document.getElementById('adgbNoticeTrack2');
+      if(!strip||!track1||!track2)return;
+      if(!adgbFeatureAllowedClient_('notices')){strip.hidden=true;track1.replaceChildren();track2.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
+      const token=String(window.ADGB_AUTH?.token||''),feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
+      if(!feed||!state.connected){strip.hidden=true;track1.replaceChildren();track2.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
+      const notices=Array.isArray(feed.notices)?feed.notices:[];
+      const lanes=[notices.filter(x=>Number(x.lane)!==2).map(x=>String(x.text||'').trim()).filter(Boolean),notices.filter(x=>Number(x.lane)===2).map(x=>String(x.text||'').trim()).filter(Boolean)];
       if(Array.isArray(feed.pendingOfficeIds)){
         const rows=adgbRegisterData();
         for(const officeId of feed.pendingOfficeIds){
-          const office=state.offices.find(x=>String(x.id)===String(officeId));
-          if(!office)continue;
+          const office=state.offices.find(x=>String(x.id)===String(officeId));if(!office)continue;
           const waiting=rows.filter(x=>String(x.officeId)===String(officeId)&&!x.submitted);
           const overdue=waiting.filter(x=>x.dueDate&&x.dueDate<adgbTodayIST()).length;
-          pieces.push(office.name+': '+waiting.length+' pending report'+(waiting.length===1?'':'s')+(overdue?' ('+overdue+' overdue)':'')+'.');
+          lanes[0].push(office.name+': '+waiting.length+' pending report'+(waiting.length===1?'':'s')+(overdue?' ('+overdue+' overdue)':'')+'.');
         }
       }
-      strip.hidden=!pieces.length;
-      if(!pieces.length){track.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
-      // Only rebuild text nodes when notice content changes. Keeps marquee animation
-      // from restarting on routine report refreshes. Styling is still applied below.
-      const hasMultiline=Array.isArray(feed.notices)&&feed.notices.some(x=>/[\r\n]/.test(String(x.text||'')));
-       strip.classList.toggle('is-multiline',hasMultiline);
-       const nextKey=JSON.stringify(pieces);
+      strip.hidden=!lanes.some(x=>x.length);
+      if(strip.hidden){track1.replaceChildren();track2.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
+      const nextKey=JSON.stringify(lanes);
       if(nextKey!==adgbNoticeLastRenderedKey_){
-        track.replaceChildren();
-        for(const message of pieces){
-          const span=document.createElement('span');span.className='adgb-rich-message';
-          const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
-          adgbRichFill_(span,message);track.appendChild(span);
-        }
+        [track1,track2].forEach((track,index)=>{
+          track.replaceChildren();
+          for(const message of lanes[index]){
+            const span=document.createElement('span');span.className='adgb-rich-message';
+            const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
+            adgbRichFill_(span,message);track.appendChild(span);
+          }
+        });
         adgbNoticeLastRenderedKey_=nextKey;
       }
-      track.classList.toggle('paused',adgbNoticePaused_);
       const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
-      const bg=String(style.backgroundColor||'#fff7cc').toLowerCase();
-      const background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
+      const bg=String(style.backgroundColor||'#fff7cc').toLowerCase(),background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
       const colour=String(style.textColor||'#bd1726'),size=Number(style.fontSize||17),weight=Number(style.fontWeight||900);
-      strip.classList.toggle('no-background',background==='transparent');
-      strip.style.backgroundColor=background==='transparent'?'transparent':background;
-      track.style.color=/^#[0-9a-fA-F]{6}$/.test(colour)&&adgbNoticeContrast_(colour,background)>=4.5?colour:
-        (adgbNoticeContrast_('#ffffff',background)>=4.5?'#ffffff':'#111827');
-      track.style.fontSize=Math.max(12,Math.min(24,size))+'px';
-      track.style.fontWeight=weight===700?'700':'900';
-      const rawSpeed=adgbNoticePreviewSpeed_??feed.scrollSpeed;
-      const speed=Number.isInteger(Number(rawSpeed))&&Number(rawSpeed)>=1&&Number(rawSpeed)<=10?Number(rawSpeed):5;
-      const baseline=Math.max(20,pieces.join(' ').length/9);
-      track.style.animationDuration=Math.max(8,Math.min(240,baseline*5/speed))+'s';
+      strip.classList.toggle('no-background',background==='transparent');strip.style.backgroundColor=background==='transparent'?'transparent':background;
+      const safeColour=/^#[0-9a-fA-F]{6}$/.test(colour)&&adgbNoticeContrast_(colour,background)>=4.5?colour:(adgbNoticeContrast_('#ffffff',background)>=4.5?'#ffffff':'#111827');
+      [track1,track2].forEach((track,index)=>{
+        track.style.color=safeColour;track.style.fontSize=Math.max(12,Math.min(24,size))+'px';track.style.fontWeight=weight===700?'700':'900';
+        const raw=index===0?(adgbNoticePreviewLane1Speed_??feed.lane1Speed??feed.scrollSpeed):(adgbNoticePreviewLane2Speed_??feed.lane2Speed??feed.scrollSpeed);
+        const speed=Number.isInteger(Number(raw))&&Number(raw)>=1&&Number(raw)<=10?Number(raw):5;
+        const length=Math.max(20,lanes[index].join(' ').length/9);
+        track.style.animationDuration=Math.max(8,Math.min(240,length*5/speed))+'s';
+        track.style.animationDelay=index===1?Math.max(0,Math.min(30,Number(adgbNoticePreviewLane2Delay_??feed.lane2Delay??0)))+'s':'0s';
+        track.classList.toggle('paused',adgbNoticePaused_);
+      });
+      strip.classList.toggle('is-multiline',lanes[1].length>0||lanes.some(a=>a.some(t=>/[\\r\\n]/.test(t))));
     }
     async function adgbNoticeLoad_(force=false){
       if(!state.connected||!endpointReady()||adgbNoticeBusy_)return;
@@ -6161,7 +6172,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         }
       }
       const notice={
-        id:adgbNoticeEditId_,text:String(document.getElementById('adgbNoticeText')?.value||'').trim(),
+        id:adgbNoticeEditId_,text:String(document.getElementById('adgbNoticeText')?.value||'').trim(),lane:Number(document.getElementById('adgbNoticeLane')?.value||1),
         target:document.getElementById('adgbNoticeTarget')?.value||'ALL',
         start:document.getElementById('adgbNoticeStart')?.value||'',
         end:document.getElementById('adgbNoticeEnd')?.value||'',
@@ -6175,18 +6186,20 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       finally{if(button){button.disabled=false;button.textContent=adgbNoticeEditId_?'Update this notice':'Save scheduled notice';}}
     }
     function adgbNoticeSpeedLabel_(){
-      const speed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
-      const label=document.getElementById('adgbNoticeSpeedLabel');
+      const speed=Number(document.getElementById('adgbNoticeLane1Speed')?.value||5);
+      const label=document.getElementById('adgbNoticeLane1SpeedLabel');
       if(label)label.textContent=(speed<=3?'Slow':speed>=8?'Fast':'Normal')+' ('+speed+'/10)';
+      const s2=Number(document.getElementById('adgbNoticeLane2Speed')?.value||5),l2=document.getElementById('adgbNoticeLane2SpeedLabel');if(l2)l2.textContent=(s2<=3?'Slow':s2>=8?'Fast':'Normal')+' ('+s2+'/10)';
+      const delay=Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),dl=document.getElementById('adgbNoticeLane2DelayLabel');if(dl)dl.textContent=delay+' seconds';
     }
     async function adgbNoticeSettingsSave_(){
       if(!adgbNoticeAdminLoaded_){adgbNoticeStatus_('Load saved settings before editing.');return;}
       const pendingOfficeIds=[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office'));
       const showPending=document.getElementById('adgbNoticePendingEnabled')?.checked===true;
-      const scrollSpeed=Number(document.getElementById('adgbNoticeSpeed')?.value||5);
+      const lane1Speed=Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane2Speed=Number(document.getElementById('adgbNoticeLane2Speed')?.value||5),lane2Delay=Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),scrollSpeed=lane1Speed;
       const style=adgbNoticeStyleFromForm_();
       if(adgbNoticeContrast_(style.textColor,style.backgroundColor)<4.5){adgbNoticeStatus_('Choose a notice text colour with sufficient contrast against the selected background.');return;}
-      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,...style});
+      try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,lane1Speed,lane2Speed,lane2Delay,...style});
         adgbNoticeStatus_('Notice background, text colour, font size, weight, speed and pending display settings saved.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
