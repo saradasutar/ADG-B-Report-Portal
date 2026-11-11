@@ -6022,12 +6022,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const token=String(window.ADGB_AUTH?.token||''),feed=token===adgbNoticeFeedToken_?adgbNoticeFeed_:null;
       if(!feed||!state.connected){strip.hidden=true;track1.replaceChildren();track2.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
       const notices=Array.isArray(feed.notices)?feed.notices:[];
-      // A notice may contain explicit line breaks. Put successive text lines on
-      // alternate ticker lanes instead of flattening them into one long line.
+      // Honour explicit Line 2 assignments. If every saved notice is on Line 1,
+      // auto-balance separate notices across both rows so the lower row is not left blank.
+      // Real newline characters are split into separate moving rows.
       const lanes=[[],[]];
+      const hasExplicitLine2=notices.some(notice=>Number(notice.lane)===2);
+      let defaultNoticeIndex=0;
       notices.forEach(notice=>{
-        const preferred=Number(notice.lane)===2?1:0;
-        const lines=String(notice.text||'').split(/\\r\\n|\\n|\\r/).map(line=>line.trim()).filter(Boolean);
+        const preferred=Number(notice.lane)===2?1:(hasExplicitLine2?0:(defaultNoticeIndex++%2));
+        const lines=String(notice.text||'').split(/\r\n|\n|\r/).map(line=>line.trim()).filter(Boolean);
         lines.forEach((line,index)=>lanes[(preferred+index)%2].push(line));
       });
       if(Array.isArray(feed.pendingOfficeIds)){
