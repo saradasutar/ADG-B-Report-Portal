@@ -1651,7 +1651,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-notice-lane .adgb-notice-track{display:inline-block;white-space:nowrap;width:max-content;will-change:transform;animation-name:adgbNoticeMarquee;animation-timing-function:linear;animation-iteration-count:infinite}
 .adgb-notice-lane:nth-child(2){border-top:1px dashed #d9c77b;padding-top:2px}
 .adgb-notice-lane .adgb-notice-track.paused{animation-play-state:paused}
-.adgb-notice-lane .adgb-rich-message{display:inline-flex;align-items:center;margin-right:34px}
+.adgb-notice-lane .adgb-rich-message{display:inline-flex;flex-direction:column;align-items:flex-start;white-space:normal;margin-right:34px}
 .adgb-notice-strip.is-multiline .adgb-notice-window{display:flex;flex-direction:column;align-items:stretch;justify-content:center}
 .adgb-notice-strip.is-multiline .adgb-notice-lane .adgb-notice-track{white-space:nowrap}
 @media(max-width:650px){.adgb-notice-lanes{min-height:56px}.adgb-notice-lane{min-height:25px}.adgb-notice-strip{gap:6px}}
@@ -6057,7 +6057,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       if(visible)visible.textContent=selected.length+' of '+rows.length+' notices shown · filtering does not delete or change notices.';
       if(all)all.innerHTML=selected.map(x=>
         '<div class="adgb-notice-saved"><div><span class="adgb-notice-state" data-state="'+escapeAttr(x.noticeState)+'">'+escapeHtml(x.noticeState.toUpperCase())+'</span> <strong>'+escapeHtml(x.text)+'</strong><div><small>'+
-        escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · '+
+        escapeHtml(x.target==='ALL'?'All permitted viewers':state.offices.find(o=>o.id===x.target)?.name||x.target)+' · Line '+(Number(x.lane)===2?'2':'1')+' · '+
         escapeHtml(x.start)+' to '+escapeHtml(x.end)+' IST</small></div></div>'+
         '<div class="adgb-notice-saved-actions"><button type="button" data-adgb-edit-notice="'+escapeAttr(x.id)+'">Edit</button>'+
         '<button type="button" data-adgb-duplicate-notice="'+escapeAttr(x.id)+'">Duplicate draft</button>'+
@@ -6122,7 +6122,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         (adgbNoticeContrast_('#ffffff',background)>=4.5?'#ffffff':'#111827');
       document.getElementById('adgbNoticeFontSize').value=String(Number.isInteger(styleSize)&&styleSize>=12&&styleSize<=24?styleSize:17);
       document.getElementById('adgbNoticeFontWeight').value=String(styleWeight===700?700:900);
-      adgbNoticePreviewSpeed_=null;
+      adgbNoticePreviewSpeed_=null;adgbNoticePreviewLane1Speed_=null;adgbNoticePreviewLane2Speed_=null;adgbNoticePreviewLane2Delay_=null;
       adgbNoticeStylePreview_();
       adgbNoticePreviewStyle_=null;
       adgbNoticeSpeedLabel_();
