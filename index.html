@@ -1645,6 +1645,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
 .adgb-notice-speed-ends{width:min(100%,410px);display:flex;justify-content:space-between;font-size:10px;color:#68748a}
 @media(prefers-reduced-motion:reduce){#adgbNoticeSpeed{opacity:.7}}
+/* V17.10.2 compact two-row noticeboard */
+#adgbNoticeStrip.adgb-two-lane-strip{min-height:52px!important;height:auto;padding:4px 8px!important;margin:5px 0 8px;gap:7px;border-radius:8px}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-heading{font-size:10px;letter-spacing:.025em}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lanes{grid-template-rows:repeat(2,21px);gap:0;min-height:42px}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{min-height:21px;height:21px;padding-right:25px}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{font-size:14px!important;line-height:1.1;letter-spacing:0}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-message{font-size:14px;line-height:1.1;margin-right:30px}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-line-display{font-size:14px!important;line-height:1.1;margin-right:3px}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-lane-pause{width:22px;height:19px;font-size:11px;line-height:16px;border-radius:5px}
+@media(max-width:650px){
+ #adgbNoticeStrip.adgb-two-lane-strip{min-height:48px!important;padding:3px 6px!important;gap:5px}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lanes{grid-template-rows:repeat(2,20px);min-height:40px}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{min-height:20px;height:20px}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track,
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-message,
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-line-display{font-size:13px!important}
+}
 /* V17.10.1 strict two-row ticker and independent pause buttons */
 #adgbNoticeStrip.adgb-two-lane-strip{display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 12px;box-sizing:border-box}
 #adgbNoticeStrip.adgb-two-lane-strip[hidden]{display:none!important}
