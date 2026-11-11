@@ -1573,6 +1573,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .pgrti-quick-actions span{color:#214769;font-size:12px;flex:1 1 210px}
 .pgrti-quick-actions[data-state=busy]{background:#fff4d4}
 .pgrti-quick-actions[data-state=error]{background:#fff0ed;border-color:#efaea0}
+/* Simplified noticeboard manager */
+.adgb-notice-panel-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:13px 15px;border:1px solid #9fc4e3;border-radius:10px;background:linear-gradient(110deg,#edf6ff,#f5fbff);color:#173d63;cursor:pointer}
+.adgb-notice-panel-toggle span{display:grid;gap:4px}.adgb-notice-panel-toggle strong{font-size:17px}.adgb-notice-panel-toggle small{font-size:12px;font-weight:500;color:#526a82}.adgb-notice-panel-toggle b{white-space:nowrap;background:#174b78;color:white;border-radius:7px;padding:8px 11px;font-size:12px}
+.adgb-notice-panel-toggle:focus-visible{outline:3px solid #f0bd35;outline-offset:2px}
+.adgb-notice-step{margin:12px 0 4px;color:#173f68;font-size:16px}.adgb-notice-simple-help{margin:3px 0 9px;color:#52677e;font-size:12px;line-height:1.5}
+.adgb-notice-plain-label{display:grid;gap:5px;font-weight:800}.adgb-notice-plain-label textarea{width:100%;min-height:100px;box-sizing:border-box;font:600 15px/1.55 inherit;padding:11px;border:1px solid #a9bfd4;border-radius:9px;resize:vertical}
+#adgbRichNoticeEditor>summary{cursor:pointer;color:#245b89;font-weight:800;padding:8px 2px}#adgbRichNoticeEditor[open]{margin-top:8px}
+@media(max-width:650px){.adgb-notice-panel-toggle{align-items:flex-start;flex-direction:column}.adgb-notice-panel-toggle b{align-self:flex-end}}
 /* V17.7.88 ten coordinated notice and pending-workflow enhancements */
 .adgb-notice-charcount{text-align:right;color:#67798c;font-size:10px;margin:3px 0 0}
 .adgb-notice-draft-status{font-size:11px;color:#815718;background:#fff6e1;border-radius:7px;padding:7px 9px}
@@ -3014,7 +3022,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" id="adgbControlSaveBottom" class="adgb-control-save-primary" disabled>✓ Save changes</button>
       </div>
       <p class="adgb-insights-count">Saved settings apply to everyone after refresh. Administrator Control Centre access cannot be disabled. An account must still pass its existing server-side login and per-action permission checks.</p>
-      <div class="adgb-control-notice-wrap"><div class="adgb-compliance-heading"><div><h3>📢 Noticeboard management</h3><p>Administrator-only · create, schedule and manage multiple notices and display settings</p></div></div>
+      <div class="adgb-control-notice-wrap"><button type="button" id="adgbNoticePanelToggle" class="adgb-notice-panel-toggle" aria-expanded="false" aria-controls="adgbNoticeAdmin"><span><strong>📢 Noticeboard management</strong><small>Simple multiline notices · schedule · preview · publish · manage saved notices</small></span><b id="adgbNoticePanelChevron">＋ Open manager</b></button>
 <section id="adgbNoticeAdmin" class="adgb-notice-admin" hidden aria-label="Administrator moving notice board settings">
         <div class="adgb-compliance-heading"><div><h3>Moving Notice Board — Administrator</h3><p>Red text on light yellow · scheduled in India time · targeted to authorized offices</p></div></div>
         <p id="adgbNoticeAdminStatus" class="adgb-insights-count" aria-live="polite">Load notices to manage the schedule and office visibility.</p>
@@ -3022,9 +3030,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div><p id="adgbNoticeFilteredCount" class="adgb-insights-count" aria-live="polite"></p>
         <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
         <div class="adgb-notice-form">
-          <label>Notice text <textarea id="adgbNoticeText" maxlength="220" rows="3" placeholder="Enter the moving notice message (maximum 220 characters)"></textarea></label>
-          <div id="adgbRichNoticeEditor" class="adgb-rich-notice-editor" aria-label="Multiline notice colour editor">
-            <strong>Multiline colour editor</strong><small>Each line may have its own text and highlight colour. The existing 220-character notice limit also counts formatting codes.</small>
+          <h4 class="adgb-notice-step">1. Write your notice</h4><p class="adgb-notice-simple-help">Type or paste your message below. Press Enter for a new line. All lines will travel together horizontally as one notice panel.</p>
+          <label class="adgb-notice-plain-label">Notice text <textarea id="adgbNoticeText" maxlength="220" rows="4" placeholder="Example:\nImportant announcement\nAll offices must submit the report by 5 PM."></textarea></label>
+          <details id="adgbRichNoticeEditor" class="adgb-rich-notice-editor"><summary><strong>Optional: customise each line colour and highlighter</strong></summary><small>Choose a text colour and highlight colour for individual lines. Leave colours unchanged for a simple notice.</small>
             <div id="adgbRichNoticeLines"></div>
             <button type="button" id="adgbRichNoticeAdd">+ Add coloured line</button>
           </div><p id="adgbNoticeTextCounter" class="adgb-notice-charcount">0 / 220 characters</p><p id="adgbNoticeDraftStatus" class="adgb-notice-draft-status" aria-live="polite">New notice · not published</p>
@@ -6257,6 +6265,16 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.getElementById('adgbNoticeOneDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(1));
       document.getElementById('adgbNoticeSevenDay')?.addEventListener('click',()=>adgbNoticeSetDuration_(7));
       document.getElementById('adgbNoticeAdminLoad')?.addEventListener('click',adgbNoticeAdminLoad_);
+      const noticePanelToggle=document.getElementById('adgbNoticePanelToggle');
+      noticePanelToggle?.addEventListener('click',async()=>{
+        const panel=document.getElementById('adgbNoticeAdmin');if(!panel)return;
+        const opening=panel.hidden;
+        panel.hidden=!opening;
+        noticePanelToggle.setAttribute('aria-expanded',opening?'true':'false');
+        const label=document.getElementById('adgbNoticePanelChevron');if(label)label.textContent=opening?'－ Close manager':'＋ Open manager';
+        if(opening&&!adgbNoticeAdminLoaded_)await adgbNoticeAdminLoad_();
+        if(opening)panel.scrollIntoView({behavior:'smooth',block:'start'});
+      });
       const discardNoticeDraft=()=>{
         if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
            !window.confirm('Discard unsaved notice edits?'))return;
