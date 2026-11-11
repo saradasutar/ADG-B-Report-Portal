@@ -4399,7 +4399,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         async function pollBackendStatus(){
           if(finished)return;
 
-          if(state.supportsReceipts){
+          if(state.supportsReceipts||noticeManageAction){
             try{
               const receipt=await jsonpRequest('receipt',{nonce:requestNonce});
               if(receipt&&!receipt.pending){
