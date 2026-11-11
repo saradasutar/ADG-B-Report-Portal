@@ -1645,6 +1645,25 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
 .adgb-notice-speed-ends{width:min(100%,410px);display:flex;justify-content:space-between;font-size:10px;color:#68748a}
 @media(prefers-reduced-motion:reduce){#adgbNoticeSpeed{opacity:.7}}
+/* V17.10.3 final two-lane layout override: isolate lanes from legacy multiline rules */
+#adgbNoticeStrip.adgb-two-lane-strip{display:flex!important;align-items:center!important;box-sizing:border-box!important;min-height:52px!important;padding:3px 8px!important;gap:8px!important;overflow:hidden!important}
+#adgbNoticeStrip.adgb-two-lane-strip[hidden]{display:none!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-window.adgb-notice-lanes{display:grid!important;grid-template-rows:repeat(2,21px)!important;align-content:center!important;align-items:stretch!important;gap:0!important;min-height:42px!important;height:42px!important;overflow:hidden!important;flex:1 1 auto!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{display:flex!important;position:relative!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;box-sizing:border-box!important;min-width:0!important;min-height:21px!important;height:21px!important;max-height:21px!important;padding:0 27px 0 0!important;overflow:hidden!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane+.adgb-notice-lane{border-top:1px dashed rgba(120,100,60,.35)!important;padding-top:0!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{display:inline-flex!important;flex-direction:row!important;align-items:center!important;align-self:center!important;width:max-content!important;max-width:none!important;min-width:max-content!important;white-space:nowrap!important;line-height:1!important;animation-name:adgbNoticeMarquee!important;will-change:transform}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-message{display:inline-flex!important;flex-direction:row!important;align-items:center!important;white-space:nowrap!important;max-width:none!important;line-height:1!important;margin:0 30px 0 0!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-line-display{display:inline!important;white-space:nowrap!important;max-width:none!important;overflow:visible!important;overflow-wrap:normal!important;line-height:1!important;margin:0 3px 0 0!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-lane-pause{position:absolute!important;right:0!important;top:50%!important;transform:translateY(-50%)!important;width:22px!important;height:18px!important;min-height:18px!important;padding:0!important;line-height:16px!important;z-index:4!important}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-heading{flex:0 0 48px!important;width:48px!important;font-size:10px!important;line-height:1!important}
+@media(max-width:650px){
+ #adgbNoticeStrip.adgb-two-lane-strip{min-height:48px!important;padding:2px 5px!important;gap:5px!important}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-window.adgb-notice-lanes{grid-template-rows:repeat(2,20px)!important;height:40px!important;min-height:40px!important}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{height:20px!important;min-height:20px!important;max-height:20px!important}
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track,
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-message,
+ #adgbNoticeStrip.adgb-two-lane-strip .adgb-rich-line-display{font-size:13px!important}
+}
 /* V17.10.2 compact two-row noticeboard */
 #adgbNoticeStrip.adgb-two-lane-strip{min-height:52px!important;height:auto;padding:4px 8px!important;margin:5px 0 8px;gap:7px;border-radius:8px}
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-heading{font-size:10px;letter-spacing:.025em}
@@ -6042,7 +6061,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         track.classList.toggle('paused',adgbNoticePaused_[index]);
         const pauseButton=document.getElementById('adgbNoticePause'+(index+1));if(pauseButton){pauseButton.textContent=adgbNoticePaused_[index]?'▶':'Ⅱ';pauseButton.setAttribute('aria-pressed',String(adgbNoticePaused_[index]));pauseButton.title=(adgbNoticePaused_[index]?'Resume':'Pause')+' line '+(index+1);}
       });
-      strip.classList.toggle('is-multiline',lanes[1].length>0);
+      strip.classList.remove('is-multiline'); // Two independent ticker lanes are always single-row; never invoke legacy stacked-multiline styling.
     }
     async function adgbNoticeLoad_(force=false){
       if(!state.connected||!endpointReady()||adgbNoticeBusy_)return;
