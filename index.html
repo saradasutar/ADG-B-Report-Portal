@@ -5535,7 +5535,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewLane1Speed_=null,adgbNoticePreviewLane2Speed_=null,adgbNoticePreviewLane2Delay_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
     function adgbNoticeContrast_(foreground,background='#fff7cc'){
       const fg=String(foreground||'').toLowerCase(),bg=String(background||'').toLowerCase();
