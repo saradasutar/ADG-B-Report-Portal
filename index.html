@@ -6108,8 +6108,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const checkbox=document.getElementById('adgbNoticePendingEnabled');
       if(checkbox)checkbox.checked=settings.showPending===true;
       const speed=Number.isInteger(Number(settings.scrollSpeed))&&Number(settings.scrollSpeed)>=1&&Number(settings.scrollSpeed)<=10?Number(settings.scrollSpeed):5;
-      const slider=document.getElementById('adgbNoticeSpeed');
-      if(slider)slider.value=String(speed);
+      document.getElementById('adgbNoticeLane1Speed').value=String(settings.lane1Speed||speed);
+      document.getElementById('adgbNoticeLane2Speed').value=String(settings.lane2Speed||speed);
+      document.getElementById('adgbNoticeLane2Delay').value=String(settings.lane2Delay||0);
+      document.getElementById('adgbNoticeSpeed').value=String(settings.lane1Speed||speed);
       const bg=String(settings.backgroundColor||'#fff7cc').toLowerCase();
       const background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
       document.getElementById('adgbNoticeBackgroundMode').value=background==='transparent'?'transparent':'solid';
@@ -6227,6 +6229,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const node=document.getElementById(id);
         if(node){node.addEventListener('input',adgbNoticePreview_);node.addEventListener('change',adgbNoticePreview_);}
       });
+      ['adgbNoticeLane1Speed','adgbNoticeLane2Speed','adgbNoticeLane2Delay'].forEach(id=>{
+        const node=document.getElementById(id);
+        const update=()=>{adgbNoticePreviewLane1Speed_=Number(document.getElementById('adgbNoticeLane1Speed').value||5);adgbNoticePreviewLane2Speed_=Number(document.getElementById('adgbNoticeLane2Speed').value||5);adgbNoticePreviewLane2Delay_=Number(document.getElementById('adgbNoticeLane2Delay').value||0);adgbNoticeSpeedLabel_();adgbNoticeRenderStrip_();adgbNoticeAppearanceIndicator_();};
+        node?.addEventListener('input',update);node?.addEventListener('change',update);
+      });
       ['adgbNoticeBackgroundMode','adgbNoticeBackgroundColor','adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
         document.getElementById(id)?.addEventListener('input',adgbNoticeStylePreview_);
         document.getElementById(id)?.addEventListener('change',adgbNoticeStylePreview_);
@@ -6316,7 +6323,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
              !window.confirm('Replace your unsaved notice draft with this duplicate?'))return;
           adgbNoticeResetForm_();
-          document.getElementById('adgbNoticeText').value=item.text;
+          document.getElementById('adgbNoticeText').value=item.text;document.getElementById('adgbNoticeLane').value=String(Number(item.lane)===2?2:1);
           document.getElementById('adgbNoticeTarget').value=item.target;
           document.getElementById('adgbNoticeStart').value=adgbNoticeTimeIST_();
           document.getElementById('adgbNoticeEnd').value=adgbNoticeTimeIST_(86400000);
@@ -6331,7 +6338,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
              !window.confirm('Discard current unsaved draft and edit this notice?'))return;
           adgbNoticeEditId_=item.id;
-          document.getElementById('adgbNoticeText').value=item.text;
+          document.getElementById('adgbNoticeText').value=item.text;document.getElementById('adgbNoticeLane').value=String(Number(item.lane)===2?2:1);
           document.getElementById('adgbNoticeTarget').value=item.target;
           document.getElementById('adgbNoticeStart').value=item.start;
           document.getElementById('adgbNoticeEnd').value=item.end;
