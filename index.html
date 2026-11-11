@@ -4350,6 +4350,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const expectedSubjectName=renamedSubjectId?String(payload.subjectName||'').trim():'';
         const expectedRenamedLinkText=renamedSubjectId?String(payload.linkText||'').trim():'';
         const viewingSubmission=payload.action==='viewSubmission';
+        const noticeManageAction=payload.action==='adminNoticeBoardManage';
         const toggledSubjectId=payload.action==='adminSetSubjectSubmission'?String(payload.subjectId||''):'';
         const visibilitySubjectId=payload.action==='adminSetSubjectVisibility'?String(payload.subjectId||''):'';
         const scheduledSubjectId=payload.action==='adminSetSubjectRecurrence'?String(payload.subjectId||''):'';
@@ -4373,7 +4374,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
         let finished=false,statusTimer=null;
 
-        const timeoutMessage=payload.action==='upload'
+        const timeoutMessage=noticeManageAction
+          ?'Notice save could not be confirmed. Reload saved notices before retrying; do not create a duplicate.'
+          :payload.action==='upload'
           ?'The upload could not be confirmed. Refresh and check the submission matrix.'
           :payload.action==='removeSubmission'
             ?'The PDF may already have been removed. Refresh and check the status.'
@@ -4504,7 +4507,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
         if(uploadKey||removalKey||addedSubjectName||archivedSubjectId||
            updatedLinkSubjectId||renamedSubjectId||viewingSubmission||toggledSubjectId||
-           visibilitySubjectId||scheduledSubjectId){
+           visibilitySubjectId||scheduledSubjectId||noticeManageAction){
           statusTimer=setTimeout(pollBackendStatus,900);
         }
       });
