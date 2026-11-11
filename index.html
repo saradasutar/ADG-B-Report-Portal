@@ -6903,6 +6903,42 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     adgbMoreToolsButton_?.addEventListener('click',()=>adgbSetMoreTools_(adgbMoreToolsButton_.getAttribute('aria-expanded')!=='true'));
     adgbSetMoreTools_(false);
 
+    // V17.10.6: reveal the administrator entry as soon as the shared auth session hydrates.
+    // The session provider can finish after DOMContentLoaded; the old role-only observer missed that change.
+    function adgbAdminNavRefresh_(){
+      try{syncAdminCodeFromSession();}catch{}
+      const authorized=!!window.ADGB_AUTH?.token&&isRecognizedAsAdmin();
+      const control=document.querySelector('[data-adgb-control-entry]');
+      const health=document.querySelector('[data-adgb-health-entry]');
+      if(control)control.hidden=!authorized;
+      if(health)health.hidden=!authorized;
+      if(authorized){
+        // Admin Control Centre is visible immediately after sign-in, without expanding More tools.
+        adgbSetMoreTools_(true);
+      }
+      return authorized;
+    }
+    window.addEventListener('adgb-auth-changed',()=>{
+      adgbAdminNavRefresh_();
+      try{adgbFeatureApply_();}catch{}
+      adgbAdminNavRefresh_();
+    });
+    const adgbAdminRoleWatch_=document.getElementById('adgbUserRole');
+    if(adgbAdminRoleWatch_){
+      new MutationObserver(adgbAdminNavRefresh_).observe(adgbAdminRoleWatch_,{childList:true,characterData:true,subtree:true});
+    }
+    const adgbAdminManageWatch_=document.getElementById('adgbManageUsers');
+    if(adgbAdminManageWatch_){
+      new MutationObserver(adgbAdminNavRefresh_).observe(adgbAdminManageWatch_,{attributes:true,attributeFilter:['hidden','style','class']});
+    }
+    adgbAdminNavRefresh_();
+    // Fallback for older sign-in flows that hydrate silently without dispatching the auth event.
+    let adgbAdminNavRetries_=0;
+    const adgbAdminNavRetry_=setInterval(()=>{
+      adgbAdminNavRetries_++;
+      if(adgbAdminNavRefresh_()||adgbAdminNavRetries_>=40)clearInterval(adgbAdminNavRetry_);
+    },250);
+
     function adgbRenderLivePanels(){
       adgbHealthAccess_();
       adgbFeatureApply_();
