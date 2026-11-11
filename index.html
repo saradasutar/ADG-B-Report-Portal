@@ -1645,6 +1645,19 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbNoticeSpeed{width:min(100%,410px);display:block;accent-color:#ba2433;cursor:pointer;margin:9px 0 0}
 .adgb-notice-speed-ends{width:min(100%,410px);display:flex;justify-content:space-between;font-size:10px;color:#68748a}
 @media(prefers-reduced-motion:reduce){#adgbNoticeSpeed{opacity:.7}}
+/* V17.10.1 strict two-row ticker and independent pause buttons */
+#adgbNoticeStrip.adgb-two-lane-strip{display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 12px;box-sizing:border-box}
+#adgbNoticeStrip.adgb-two-lane-strip[hidden]{display:none!important}
+#adgbNoticeStrip .adgb-notice-lanes{display:grid;grid-template-rows:repeat(2,minmax(27px,1fr));gap:2px;min-width:0;flex:1;overflow:hidden}
+#adgbNoticeStrip .adgb-notice-lane{position:relative;display:flex;align-items:center;min-width:0;min-height:27px;overflow:hidden;padding-right:31px;box-sizing:border-box}
+#adgbNoticeStrip .adgb-notice-lane+.adgb-notice-lane{border-top:1px dashed rgba(120,100,60,.35)}
+#adgbNoticeStrip .adgb-notice-track{display:inline-flex;align-items:center;gap:0;width:max-content;max-width:none;white-space:nowrap;line-height:1.2;will-change:transform;animation-name:adgbNoticeMarquee;animation-timing-function:linear;animation-iteration-count:infinite;animation-fill-mode:both}
+#adgbNoticeStrip .adgb-rich-message{display:inline-flex;align-items:center;gap:0;white-space:nowrap;margin-right:44px}
+#adgbNoticeStrip .adgb-rich-line-display{display:inline-block!important;white-space:nowrap!important;vertical-align:middle;margin:0 5px 0 0;line-height:1.2}
+#adgbNoticeStrip .adgb-lane-pause{position:absolute;z-index:2;right:0;top:50%;transform:translateY(-50%);width:27px;height:25px;padding:0;border:1px solid #d6b84e;border-radius:6px;background:#fff5bb;color:#7e2024;font-weight:900;cursor:pointer}
+#adgbNoticeStrip .adgb-lane-pause[aria-pressed="true"]{background:#174b78;color:white;border-color:#174b78}
+#adgbNoticeStrip .adgb-notice-heading{flex:none}
+@media(max-width:650px){#adgbNoticeStrip.adgb-two-lane-strip{min-height:78px;gap:6px;padding:7px}#adgbNoticeStrip .adgb-notice-heading{font-size:11px}#adgbNoticeStrip .adgb-notice-lane{min-height:29px}}
 /* V17.10.0 two independent horizontal notice lanes */
 .adgb-notice-lanes{display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;min-height:48px}
 .adgb-notice-lane{position:relative;overflow:hidden;width:100%;min-height:22px;display:flex;align-items:center}
@@ -2791,7 +2804,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       <div class="adgb-sidebar-foot"><span class="adgb-sidebar-dot"></span><strong>Portal status</strong><small id="adgbSidebarStatus">Connecting…</small></div>
     </aside>
     <main class="page" id="top">
-      <section id="adgbNoticeStrip" class="adgb-notice-strip" hidden aria-label="Scheduled office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window adgb-notice-lanes"><div class="adgb-notice-lane"><div id="adgbNoticeTrack1" class="adgb-notice-track"></div></div><div class="adgb-notice-lane"><div id="adgbNoticeTrack2" class="adgb-notice-track"></div></div></div><button id="adgbNoticePause" type="button" aria-pressed="false" title="Pause moving notices">Ⅱ</button></section>
+      <section id="adgbNoticeStrip" class="adgb-notice-strip adgb-two-lane-strip" hidden aria-label="Two independent moving office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window adgb-notice-lanes"><div class="adgb-notice-lane" data-lane="1"><div id="adgbNoticeTrack1" class="adgb-notice-track"></div><button id="adgbNoticePause1" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 1">Ⅱ</button></div><div class="adgb-notice-lane" data-lane="2"><div id="adgbNoticeTrack2" class="adgb-notice-track"></div><button id="adgbNoticePause2" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 2">Ⅱ</button></div></div></section>
     <div class="notice hidden" id="connectionNotice">
       <span id="connectionMessage"></span>
       <button id="retryButton" type="button">Retry connection</button>
@@ -5534,7 +5547,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       finally{if(button){button.disabled=false;button.textContent='Capture current-cycle snapshot';}}
     }
     // V17.7.81 moving notice board: server decides the audience and returns only active notices.
-    let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=false;
+    let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=[false,false];
     let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewLane1Speed_=null,adgbNoticePreviewLane2Speed_=null,adgbNoticePreviewLane2Delay_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
     function adgbNoticeContrast_(foreground,background='#fff7cc'){
@@ -5992,7 +6005,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
           for(const message of lanes[index]){
             const span=document.createElement('span');span.className='adgb-rich-message';
             const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
-            adgbRichFill_(span,message);track.appendChild(span);
+            adgbRichParse_(message.replace(/[\\r\\n]+/g,' ')).forEach((part,partIndex)=>{if(partIndex)span.appendChild(document.createTextNode(' '));span.appendChild(adgbRichTextNode_(part));});track.appendChild(span);
           }
         });
         adgbNoticeLastRenderedKey_=nextKey;
@@ -6009,9 +6022,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         const length=Math.max(20,lanes[index].join(' ').length/9);
         track.style.animationDuration=Math.max(8,Math.min(240,length*5/speed))+'s';
         track.style.animationDelay=index===1?Math.max(0,Math.min(30,Number(adgbNoticePreviewLane2Delay_??feed.lane2Delay??0)))+'s':'0s';
-        track.classList.toggle('paused',adgbNoticePaused_);
+        track.classList.toggle('paused',adgbNoticePaused_[index]);
+        const pauseButton=document.getElementById('adgbNoticePause'+(index+1));if(pauseButton){pauseButton.textContent=adgbNoticePaused_[index]?'▶':'Ⅱ';pauseButton.setAttribute('aria-pressed',String(adgbNoticePaused_[index]));pauseButton.title=(adgbNoticePaused_[index]?'Resume':'Pause')+' line '+(index+1);}
       });
-      strip.classList.toggle('is-multiline',lanes[1].length>0||lanes.some(a=>a.some(t=>/[\\r\\n]/.test(t))));
+      strip.classList.toggle('is-multiline',lanes[1].length>0);
     }
     async function adgbNoticeLoad_(force=false){
       if(!state.connected||!endpointReady()||adgbNoticeBusy_)return;
@@ -6305,10 +6319,11 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         adgbNoticeRenderStrip_();
         adgbNoticeAppearanceIndicator_();
       });
-      document.getElementById('adgbNoticePause')?.addEventListener('click',()=>{
-        adgbNoticePaused_=!adgbNoticePaused_;const button=document.getElementById('adgbNoticePause');
-        if(button){button.textContent=adgbNoticePaused_?'▶':'Ⅱ';button.setAttribute('aria-pressed',String(adgbNoticePaused_));}
-        adgbNoticeRenderStrip_();
+      [1,2].forEach(lane=>{
+        document.getElementById('adgbNoticePause'+lane)?.addEventListener('click',()=>{
+          adgbNoticePaused_[lane-1]=!adgbNoticePaused_[lane-1];
+          adgbNoticeRenderStrip_();
+        });
       });
       document.getElementById('adgbNoticeStatusFilter')?.addEventListener('change',adgbNoticeRenderRows_);
       document.getElementById('adgbNoticeSearch')?.addEventListener('input',adgbNoticeRenderRows_);
