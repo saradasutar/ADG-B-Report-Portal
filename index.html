@@ -6202,7 +6202,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       const style=adgbNoticeStyleFromForm_();
       if(adgbNoticeContrast_(style.textColor,style.backgroundColor)<4.5){adgbNoticeStatus_('Choose a notice text colour with sufficient contrast against the selected background.');return;}
       try{await adgbNoticeAdminRequest_({operation:'settings',showPending,pendingOfficeIds,scrollSpeed,lane1Speed,lane2Speed,lane2Delay,...style});
-        adgbNoticeStatus_('Notice background, text colour, font size, weight, speed and pending display settings saved.');}
+        adgbNoticeStatus_('Both lane speeds, second-line start delay, appearance and pending display settings saved.');}
       catch(error){adgbNoticeStatus_('Settings NOT saved: '+(error.message||'Connection failed'));}
     }
     function adgbNoticeSetDuration_(days){
