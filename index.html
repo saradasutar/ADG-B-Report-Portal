@@ -12060,21 +12060,15 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const notices=Array.isArray(feed.notices)?feed.notices:[];
 
-      // Honour explicit Line 2 assignments. If every saved notice is on Line 1,
+      // Each notice starts on its explicitly selected row. Multiline notices
 
-      // auto-balance separate notices across both rows so the lower row is not left blank.
-
-      // Real newline characters are split into separate moving rows.
+      // continue onto the next row(s); separate notices are never silently moved.
 
       const lanes=[[],[]];
 
-      const hasExplicitLine2=notices.some(notice=>Number(notice.lane)===2);
-
-      let defaultNoticeIndex=0;
-
       notices.forEach(notice=>{
 
-        const preferred=Number(notice.lane)===2?1:(hasExplicitLine2?0:(defaultNoticeIndex++%2));
+        const preferred=Number(notice.lane)===2?1:0;
 
         const lines=String(notice.text||'').split(/\r\n|\n|\r/).map(line=>line.trim()).filter(Boolean);
 
