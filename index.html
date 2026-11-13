@@ -6180,7 +6180,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
         <div class="adgb-notice-form">
 
-          <h4 class="adgb-notice-step">1. Write your notice</h4><p class="adgb-notice-simple-help">Type or paste your message below. Press Enter for a new line. All lines will travel together horizontally as one notice panel.</p>
+          <h4 class="adgb-notice-step">1. Write your notice</h4><p class="adgb-notice-simple-help">Enter one or two lines. Each line moves in its own ticker row, starting from the selected Moving line. A two-line notice fills both rows; use a separate notice to add another message to a chosen row.</p>
 
           <label class="adgb-notice-plain-label">Notice text <textarea id="adgbNoticeText" maxlength="220" rows="4" placeholder="Example:\nImportant announcement\nAll offices must submit the report by 5 PM."></textarea></label>
 
@@ -6212,7 +6212,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
             <p id="adgbNoticePreviewState" class="adgb-notice-preview-state" aria-live="polite"></p>
 
-            <div class="adgb-notice-preview-ticker"><strong>NOTICE</strong><span id="adgbNoticePreviewText">Enter your notice to preview its appearance.</span></div>
+            <div class="adgb-notice-preview-ticker adgb-notice-preview-two-lanes"><strong>NOTICE</strong><div class="adgb-notice-preview-lanes"><div id="adgbNoticePreviewLane1" class="adgb-notice-preview-lane">—</div><div id="adgbNoticePreviewLane2" class="adgb-notice-preview-lane">—</div></div></div>
 
             <div id="adgbNoticePreviewAudience" class="adgb-notice-preview-audience"></div>
 
@@ -11976,9 +11976,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       if(stateLabel)stateLabel.textContent=schedule;
 
-      const ticker=document.getElementById('adgbNoticePreviewText');
-
-      if(ticker)adgbRichFill_(ticker,text||'Enter your notice to preview its appearance.');
+      const previewLanes=[[],[]];
+      const startLane=Number(document.getElementById('adgbNoticeLane')?.value||1)===2?1:0;
+      const previewLines=adgbRichParse_(text||'Enter your notice to preview its appearance.');
+      previewLines.forEach((line,index)=>previewLanes[(startLane+index)%2].push(line));
+      previewLanes.forEach((lines,index)=>{
+        const node=document.getElementById('adgbNoticePreviewLane'+(index+1));
+        if(!node)return;
+        node.replaceChildren();
+        if(!lines.length){node.textContent='—';return;}
+        lines.forEach(line=>node.appendChild(adgbRichTextNode_(line)));
+      });
 
       const audience=document.getElementById('adgbNoticePreviewAudience');
 
@@ -12644,7 +12652,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       adgbRichInit_();
 
-      ['adgbNoticeText','adgbNoticeTarget','adgbNoticeStart','adgbNoticeEnd','adgbNoticeEnabled'].forEach(id=>{
+      ['adgbNoticeText','adgbNoticeLane','adgbNoticeTarget','adgbNoticeStart','adgbNoticeEnd','adgbNoticeEnabled'].forEach(id=>{
 
         const node=document.getElementById(id);
 
@@ -18341,3 +18349,11 @@ function renderAdminSubjects(){
 </body>
 
 </html> 
+
+/* V17.10.4: preview mirrors the two independently managed ticker rows */
+.adgb-notice-preview-two-lanes{align-items:stretch!important;gap:10px!important;min-height:62px}
+.adgb-notice-preview-lanes{display:grid;grid-template-rows:repeat(2,minmax(22px,auto));gap:2px;min-width:0;flex:1}
+.adgb-notice-preview-lane{display:flex;align-items:center;min-height:22px;white-space:nowrap;overflow:hidden;font-size:14px;font-weight:900;line-height:1.1}
+.adgb-notice-preview-lane+.adgb-notice-preview-lane{border-top:1px dashed rgba(120,100,60,.35)}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{animation-fill-mode:backwards!important}
+@media(max-width:650px){.adgb-notice-preview-lane{font-size:12px}}
