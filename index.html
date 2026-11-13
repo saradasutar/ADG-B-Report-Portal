@@ -5544,6 +5544,14 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
 @media(prefers-reduced-motion:reduce){#adgbControlPanel .adgb-historical-compare *{scroll-behavior:auto!important;transition:none!important}}
 
+/* V17.10.4: preview mirrors the two independently managed ticker rows */
+.adgb-notice-preview-two-lanes{align-items:stretch!important;gap:10px!important;min-height:62px}
+.adgb-notice-preview-lanes{display:grid;grid-template-rows:repeat(2,minmax(22px,auto));gap:2px;min-width:0;flex:1}
+.adgb-notice-preview-lane{display:flex;align-items:center;min-height:22px;white-space:nowrap;overflow:hidden;font-size:14px;font-weight:900;line-height:1.1}
+.adgb-notice-preview-lane+.adgb-notice-preview-lane{border-top:1px dashed rgba(120,100,60,.35)}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{animation-fill-mode:backwards!important}
+@media(max-width:650px){.adgb-notice-preview-lane{font-size:12px}}
+
 </style>
 
 
@@ -16177,15 +16185,7 @@ function adgbAlignPreviewLayout(){
 
       try{
 
-        viewer.document.write('<!doctype html><title>Opening report…</title><style>body{font-family:Arial;display:grid;place-items:center;min-height:90vh;color:#31576d;background:#eef4f6}/* V17.10.4: preview mirrors the two independently managed ticker rows */
-.adgb-notice-preview-two-lanes{align-items:stretch!important;gap:10px!important;min-height:62px}
-.adgb-notice-preview-lanes{display:grid;grid-template-rows:repeat(2,minmax(22px,auto));gap:2px;min-width:0;flex:1}
-.adgb-notice-preview-lane{display:flex;align-items:center;min-height:22px;white-space:nowrap;overflow:hidden;font-size:14px;font-weight:900;line-height:1.1}
-.adgb-notice-preview-lane+.adgb-notice-preview-lane{border-top:1px dashed rgba(120,100,60,.35)}
-#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{animation-fill-mode:backwards!important}
-@media(max-width:650px){.adgb-notice-preview-lane{font-size:12px}}
-
-</style><p>Preparing secure report…</p>');
+        viewer.document.write('<!doctype html><title>Opening report…</title><style>body{font-family:Arial;display:grid;place-items:center;min-height:90vh;color:#31576d;background:#eef4f6}</style><p>Preparing secure report…</p>');
 
         viewer.document.close();
 
