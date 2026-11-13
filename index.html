@@ -2771,7 +2771,27 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbControlPanel .adgb-historical-presets button:focus-visible,#adgbControlPanel .adgb-historical-filters button:focus-visible{outline:3px solid #dfac2f;outline-offset:2px}
 @media(max-width:620px){#adgbControlPanel .adgb-historical-filters label{flex:1 1 110px}#adgbControlPanel .adgb-historical-filters select{max-width:none;width:100%}#adgbControlPanel .adgb-historical-presets button{flex:1 1 auto}}
 @media(prefers-reduced-motion:reduce){#adgbControlPanel .adgb-historical-compare *{scroll-behavior:auto!important;transition:none!important}}
-</style>
+/* V17.11.0 Noticeboard Smooth Marquee & Single-Lane Collapse */
+@keyframes adgbNoticeMarqueeSmooth {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track {
+  padding-left: 100%;
+  animation-name: adgbNoticeMarqueeSmooth !important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip.single-lane-active {
+  min-height: 36px !important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip.single-lane-active .adgb-notice-window.adgb-notice-lanes {
+  grid-template-rows: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip.single-lane-active .adgb-notice-lane.is-empty-lane {
+  display: none !important;
+}
+  </style>
 
   <!-- Cache/service-worker cleanup -- runs on every load, not just once,
        so a service worker registered at any point (even accidentally, at
