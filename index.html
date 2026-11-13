@@ -11298,9 +11298,10 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const label=document.getElementById('adgbNoticeFontSizeLabel');if(label)label.textContent=style.fontSize+'px';
 
-      const preview=document.getElementById('adgbNoticePreviewText');
-
-      if(preview){preview.style.color=style.textColor;preview.style.fontSize=style.fontSize+'px';preview.style.fontWeight=String(style.fontWeight);}
+      ['adgbNoticePreviewLane1','adgbNoticePreviewLane2'].forEach(id=>{
+        const preview=document.getElementById(id);
+        if(preview){preview.style.color=style.textColor;preview.style.fontSize=style.fontSize+'px';preview.style.fontWeight=String(style.fontWeight);}
+      });
 
       const previewBanner=document.querySelector('.adgb-notice-preview-ticker');
 
