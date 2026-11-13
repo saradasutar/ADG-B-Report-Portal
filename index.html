@@ -12921,6 +12921,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
              !window.confirm('Replace your unsaved notice draft with this duplicate?'))return;
 
           adgbNoticeAdminLaneFilter_=String(Number(item.lane)===2?2:1);
+          adgbNoticeRenderRows_();
           adgbNoticeResetForm_();
 
           document.getElementById('adgbNoticeText').value=item.text;document.getElementById('adgbNoticeLane').value=String(Number(item.lane)===2?2:1);
