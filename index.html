@@ -11368,6 +11368,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       return {text:String(document.getElementById('adgbNoticeText')?.value||''),
 
+        lane:String(Number(document.getElementById('adgbNoticeLane')?.value)===2?2:1),
+
         target:String(document.getElementById('adgbNoticeTarget')?.value||'ALL'),
 
         start:String(document.getElementById('adgbNoticeStart')?.value||''),
@@ -12076,7 +12078,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const save=document.getElementById('adgbNoticeSave');if(save)save.textContent='Save scheduled notice';
 
-      adgbNoticeDraftFormSnapshot_={text:'',target:'ALL',start:start?.value||'',end:end?.value||'',enabled:true};
+      adgbNoticeDraftFormSnapshot_={text:'',lane:String(Number(lane?.value)===2?2:1),target:'ALL',start:start?.value||'',end:end?.value||'',enabled:true};
 
       adgbNoticePreview_();
 
@@ -12318,7 +12320,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const q=String(document.getElementById('adgbNoticeSearch')?.value||'').trim().toLowerCase();
 
-      return adgbNoticeAdminRows_.filter(x=>(filter==='all'||adgbNoticeState_(x)===filter)&&
+      return adgbNoticeAdminRows_.filter(x=>(Number(x.lane)===2?'2':'1')===adgbNoticeAdminLaneFilter_&&
+
+        (filter==='all'||adgbNoticeState_(x)===filter)&&
 
         (audience==='all'||String(x.target)===audience)&&
 
@@ -12356,9 +12360,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const rows=adgbNoticeFiltered_();
 
-      adgbNoticeDownloadCsv_(['Text','Audience','Start IST','End IST','Enabled','Status'],rows.map(x=>
+      adgbNoticeDownloadCsv_(['Line','Text','Audience','Start IST','End IST','Enabled','Status'],rows.map(x=>
 
-        [x.text,x.target,x.start,x.end,x.enabled?'Yes':'No',adgbNoticeState_(x)]),
+        [Number(x.lane)===2?'Line 2':'Line 1',x.text,x.target,x.start,x.end,x.enabled?'Yes':'No',adgbNoticeState_(x)]),
 
         'ADGB-notices-filtered-'+adgbTodayIST()+'.csv');
 
