@@ -5552,6 +5552,23 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{animation-fill-mode:backwards!important}
 @media(max-width:650px){.adgb-notice-preview-lane{font-size:12px}}
 
+
+/* V17.10.5: separate, lane-specific notice management panels */
+.adgb-notice-lane-managers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 12px}
+.adgb-notice-lane-manager{border:1px solid #d5e1ef;border-radius:10px;background:#f8fbff;padding:11px;display:grid;gap:9px;min-width:0}
+.adgb-notice-lane-manager.is-selected{border:2px solid #2366a3;background:#eef6ff;box-shadow:0 2px 8px rgba(28,77,124,.08)}
+.adgb-notice-lane-manager-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.adgb-notice-lane-manager-head>div{display:grid;gap:3px;min-width:0}
+.adgb-notice-lane-manager-head strong{font-size:14px;color:#174a79}
+.adgb-notice-lane-manager-head small{font-size:11px;color:#5d7187}
+.adgb-notice-lane-count{white-space:nowrap;background:#e3edf8;color:#174a79;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:850}
+.adgb-notice-lane-manager-actions{display:flex;flex-wrap:wrap;gap:7px}
+.adgb-notice-lane-manager-actions button{border:1px solid #b9cde0;background:#fff;color:#174a79;border-radius:7px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}
+.adgb-notice-lane-manager-actions button[data-notice-new-lane]{background:#185b94;color:#fff;border-color:#185b94}
+.adgb-notice-lane-manager-actions button[aria-pressed="true"]{background:#174a79;color:white}
+.adgb-notice-lane-filter-hint{margin:5px 12px 2px;padding:8px 10px;border-radius:7px;background:#edf4fb;color:#355a7d;font-size:11px}
+@media(max-width:760px){.adgb-notice-lane-managers{grid-template-columns:1fr}.adgb-notice-lane-manager-head{align-items:flex-start}}
+
 </style>
 
 
@@ -6182,6 +6199,17 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
         <div class="adgb-insights-toolbar"><button id="adgbNoticeAdminLoad" type="button">Load notices and settings</button><button id="adgbNoticeNew" type="button">New notice</button><label>Status <select id="adgbNoticeStatusFilter"><option value="all">All notices</option><option value="active">Active now</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select></label><label>Find notice <input type="search" id="adgbNoticeSearch" placeholder="Search message or office"></label><label>Audience <select id="adgbNoticeAudienceFilter"><option value="all">All audiences</option><option value="ALL">General notices</option></select></label><label>Sort <select id="adgbNoticeSort"><option value="startAsc">Earliest start</option><option value="startDesc">Latest start</option><option value="endAsc">Ending soonest</option></select></label><button type="button" id="adgbNoticeExport">Export filtered notices CSV (admin)</button></div>
 
+        <div id="adgbNoticeLaneManagers" class="adgb-notice-lane-managers" role="group" aria-label="Choose which notice line to manage">
+          <section class="adgb-notice-lane-manager is-selected" data-lane-panel="1">
+            <div class="adgb-notice-lane-manager-head"><div><strong>Line 1 · Upper ticker</strong><small>Manage only notices displayed in the upper row</small></div><span id="adgbNoticeLaneCount1" class="adgb-notice-lane-count">0 notices</span></div>
+            <div class="adgb-notice-lane-manager-actions"><button type="button" data-notice-lane-filter="1" aria-pressed="true">Manage Line 1</button><button type="button" data-notice-new-lane="1">＋ New Line 1 notice</button></div>
+          </section>
+          <section class="adgb-notice-lane-manager" data-lane-panel="2">
+            <div class="adgb-notice-lane-manager-head"><div><strong>Line 2 · Lower ticker</strong><small>Manage only notices displayed in the lower row</small></div><span id="adgbNoticeLaneCount2" class="adgb-notice-lane-count">0 notices</span></div>
+            <div class="adgb-notice-lane-manager-actions"><button type="button" data-notice-lane-filter="2" aria-pressed="false">Manage Line 2</button><button type="button" data-notice-new-lane="2">＋ New Line 2 notice</button></div>
+          </section>
+        </div>
+        <p id="adgbNoticeLaneFilterHint" class="adgb-notice-lane-filter-hint">Showing saved notices for Line 1 only. Line 2 notices are managed separately.</p>
         <div id="adgbNoticeSummary" class="adgb-notice-summary" aria-live="polite"></div><p id="adgbNoticeFilteredCount" class="adgb-insights-count" aria-live="polite"></p>
 
         <div id="adgbNoticeSavedList" class="adgb-notice-saved-list"></div>
@@ -11184,6 +11212,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=[false,false];
 
+    let adgbNoticeAdminLaneFilter_='1';
     let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewLane1Speed_=null,adgbNoticePreviewLane2Speed_=null,adgbNoticePreviewLane2Delay_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
 
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
@@ -12037,7 +12066,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const enabled=document.getElementById('adgbNoticeEnabled');
 
-      if(text)text.value='';if(target)target.value='ALL';if(lane)lane.value='1';
+      if(text)text.value='';if(target)target.value='ALL';if(lane)lane.value=adgbNoticeAdminLaneFilter_;
 
       if(start)start.value=adgbNoticeTimeIST_();
 
@@ -12229,7 +12258,19 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       const sort=String(document.getElementById('adgbNoticeSort')?.value||'startAsc');
 
-      const rows=adgbNoticeAdminRows_.map(x=>({...x,noticeState:adgbNoticeState_(x)}));
+      const allRows=adgbNoticeAdminRows_.map(x=>({...x,noticeState:adgbNoticeState_(x)}));
+      const rows=allRows.filter(x=>(Number(x.lane)===2?'2':'1')===adgbNoticeAdminLaneFilter_);
+      [1,2].forEach(lane=>{
+        const count=document.getElementById('adgbNoticeLaneCount'+lane);
+        const panel=document.querySelector('[data-lane-panel="'+lane+'"]');
+        const tab=document.querySelector('[data-notice-lane-filter="'+lane+'"]');
+        const total=allRows.filter(x=>(Number(x.lane)===2?'2':'1')===String(lane)).length;
+        if(count)count.textContent=total+' saved notice'+(total===1?'':'s');
+        if(panel)panel.classList.toggle('is-selected',String(lane)===adgbNoticeAdminLaneFilter_);
+        if(tab)tab.setAttribute('aria-pressed',String(lane)===adgbNoticeAdminLaneFilter_?'true':'false');
+      });
+      const laneHint=document.getElementById('adgbNoticeLaneFilterHint');
+      if(laneHint)laneHint.textContent='Showing saved notices for Line '+adgbNoticeAdminLaneFilter_+' only. '+(adgbNoticeAdminLaneFilter_==='1'?'Line 2':'Line 1')+' notices are managed separately.';
 
       const summary=document.getElementById('adgbNoticeSummary');
 
@@ -12797,6 +12838,30 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       });
 
+      const laneManager=document.getElementById('adgbNoticeLaneManagers');
+      laneManager?.addEventListener('click',event=>{
+        const add=event.target.closest('[data-notice-new-lane]');
+        if(add){
+          const lane=String(Number(add.getAttribute('data-notice-new-lane'))===2?2:1);
+          adgbNoticeAdminLaneFilter_=lane;
+          adgbNoticeResetForm_();
+          const picker=document.getElementById('adgbNoticeLane');if(picker)picker.value=lane;
+          adgbNoticeDraftFormSnapshot_=adgbNoticeDraftForm_();
+          adgbNoticeRenderRows_();adgbNoticePreview_();
+          document.getElementById('adgbNoticeText')?.focus();
+          document.querySelector('.adgb-notice-form')?.scrollIntoView({behavior:'smooth',block:'start'});
+          return;
+        }
+        const tab=event.target.closest('[data-notice-lane-filter]');
+        if(tab){
+          adgbNoticeAdminLaneFilter_=String(Number(tab.getAttribute('data-notice-lane-filter'))===2?2:1);
+          adgbNoticeRenderRows_();
+        }
+      });
+      document.getElementById('adgbNoticeLane')?.addEventListener('change',event=>{
+        adgbNoticeAdminLaneFilter_=String(Number(event.target.value)===2?2:1);
+        adgbNoticeRenderRows_();
+      });
       const discardNoticeDraft=()=>{
 
         if(adgbNoticeDraftChanged_()&&document.getElementById('adgbNoticeText')?.value.trim()&&
@@ -12851,6 +12916,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
              !window.confirm('Replace your unsaved notice draft with this duplicate?'))return;
 
+          adgbNoticeAdminLaneFilter_=String(Number(item.lane)===2?2:1);
           adgbNoticeResetForm_();
 
           document.getElementById('adgbNoticeText').value=item.text;document.getElementById('adgbNoticeLane').value=String(Number(item.lane)===2?2:1);
@@ -12881,7 +12947,9 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
              !window.confirm('Discard current unsaved draft and edit this notice?'))return;
 
+          adgbNoticeAdminLaneFilter_=String(Number(item.lane)===2?2:1);
           adgbNoticeEditId_=item.id;
+          adgbNoticeRenderRows_();
 
           document.getElementById('adgbNoticeText').value=item.text;document.getElementById('adgbNoticeLane').value=String(Number(item.lane)===2?2:1);
 
