@@ -5607,6 +5607,8 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 .adgb-il-ticker-option input{width:16px!important;height:16px!important;flex:none}
 .adgb-il-ticker-card{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px dashed #dce6ef;color:#315b7e;font-size:10px;font-weight:800}
 .adgb-il-ticker-card input{accent-color:#16735e}
+.adgb-il-notice-row-setting{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:9px!important}
+.adgb-il-notice-row-setting select{max-width:145px;min-width:120px;border:1px solid #c3d5e6;border-radius:6px;background:#fff;color:#245579;padding:5px 7px;font-size:10px;font-weight:850}
 @media(prefers-reduced-motion:reduce){.adgb-il-ticker-track{animation:none;transform:none}}
 @media(max-width:650px){.adgb-il-ticker{min-height:32px;gap:7px;padding:4px 7px}.adgb-il-ticker-label{font-size:9px}.adgb-il-ticker-track a{font-size:11px}}
 .adgb-il-notice-lane-option{display:grid;grid-template-columns:auto minmax(130px,1fr);align-items:center;gap:8px;padding:9px 11px;border:1px solid #c9dced;border-radius:8px;background:#f8fbff;color:#245579;font-size:11px;font-weight:850}
@@ -14358,7 +14360,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       if(host)host.innerHTML=[...grouped.entries()].map(([cat,items])=>'<section class="adgb-il-group"><div class="adgb-il-group-heading"><h2>'+escapeHtml(cat)+'</h2><span>'+items.length+' website'+(items.length===1?'':'s')+'</span></div><div class="adgb-il-grid">'+items.map(x=>{
         const domain=(()=>{try{return new URL(x.url).hostname.replace(/^www\./,'')}catch{return x.url}})();
         const index=adgbImportantLinks_.links.findIndex(z=>z.id===x.id);
-        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div><label class="adgb-il-ticker-card"><input type="checkbox" data-il-ticker="'+escapeAttr(x.id)+'" '+(x.includeInTicker===true?'checked':'')+'> Show in separate moving line</label><label class="adgb-il-ticker-card"><input type="checkbox" data-il-notice="'+escapeAttr(x.id)+'" '+([1,2].includes(Number(x.noticeLane))?'checked':'')+'> Show in existing NOTICE board</label>':'';
+        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div><label class="adgb-il-ticker-card"><input type="checkbox" data-il-ticker="'+escapeAttr(x.id)+'" '+(x.includeInTicker===true?'checked':'')+'> Show in separate moving line</label><label class="adgb-il-ticker-card adgb-il-notice-row-setting">NOTICE board row <select data-il-notice-lane="'+escapeAttr(x.id)+'"><option value="0" '+(![1,2].includes(Number(x.noticeLane))?'selected':'')+'>Not displayed</option><option value="1" '+(Number(x.noticeLane)===1?'selected':'')+'>Line 1 — upper</option><option value="2" '+(Number(x.noticeLane)===2?'selected':'')+'>Line 2 — lower</option></select></label>':'';
         return '<article class="adgb-il-card"><div class="adgb-il-card-top"><span class="adgb-il-card-icon">'+escapeHtml(x.icon||'↗')+'</span><span class="adgb-il-domain">'+escapeHtml(domain)+'</span></div><h3>'+escapeHtml(x.title)+'</h3><p>'+escapeHtml(x.description||'Open website')+'</p><a href="'+escapeAttr(x.url)+'" target="_blank" rel="noopener noreferrer">Open website <span>↗</span></a>'+actions+'</article>';
       }).join('')+'</div></section>').join('');
       if(empty)empty.hidden=selected.length!==0;
@@ -14449,20 +14451,24 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       });
       document.getElementById('adgbILGroups')?.addEventListener('change',async event=>{
         const ticker=event.target.closest('[data-il-ticker]');
-        const notice=event.target.closest('[data-il-notice]');
-        if((!ticker&&!notice)||!adgbILIsAdmin_())return;
-        const id=(ticker||notice).getAttribute(ticker?'data-il-ticker':'data-il-notice');
+        const noticeLaneSelect=event.target.closest('[data-il-notice-lane]');
+        if((!ticker&&!noticeLaneSelect)||!adgbILIsAdmin_())return;
+        const id=ticker?ticker.getAttribute('data-il-ticker'):noticeLaneSelect.getAttribute('data-il-notice-lane');
+        const selectedLane=noticeLaneSelect?Math.max(0,Math.min(2,Number(noticeLaneSelect.value)||0)):0;
         const links=adgbImportantLinks_.links.map(x=>x.id===id
-          ? (ticker?{...x,includeInTicker:ticker.checked}:{...x,noticeLane:notice.checked?(Number(x.noticeLane)===2?2:1):0})
+          ? (ticker?{...x,includeInTicker:ticker.checked}:{...x,noticeLane:selectedLane})
           : ({...x}));
-        (ticker||notice).disabled=true;
+        const control=ticker||noticeLaneSelect;
+        control.disabled=true;
         try{
           await adgbILSaveList_(links,ticker
             ? (ticker.checked?'Website added to separate moving line.':'Website removed from separate moving line.')
-            : (notice.checked?'Website added to existing NOTICE board.':'Website removed from existing NOTICE board.'));
+            : (selectedLane?'Website assigned to NOTICE Line '+selectedLane+'.':'Website removed from NOTICE board.'));
         }catch(error){
           adgbILStatus_('Display setting not saved: '+(error.message||'Please retry.'),'error');
           await adgbImportantLinksLoad_(true);
+        }finally{
+          control.disabled=false;
         }
       });
       document.getElementById('adgbILGroups')?.addEventListener('click',async event=>{
