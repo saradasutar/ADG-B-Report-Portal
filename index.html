@@ -12338,6 +12338,15 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       const notices=Array.isArray(feed.notices)?feed.notices:[];
 
+      const noticeLinks=[[],[]];
+      (Array.isArray(adgbImportantLinks_?.links)?adgbImportantLinks_.links:[]).forEach(item=>{
+        const lane=Number(item.noticeLane);
+        if(item.enabled!==false&&(lane===1||lane===2)&&adgbILValidUrl_(item.url)){
+          noticeLinks[lane-1].push({title:String(item.title||'Website'),url:String(item.url),description:String(item.description||'Open website'),id:String(item.id||''),order:Number(item.order)||0});
+        }
+      });
+      noticeLinks.forEach(list=>list.sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title)));
+
       // Each notice starts on its explicitly selected row. Multiline notices
 
       // continue onto the next row(s); separate notices are never silently moved.
