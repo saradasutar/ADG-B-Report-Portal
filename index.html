@@ -5569,6 +5569,28 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 .adgb-notice-lane-filter-hint{margin:5px 12px 2px;padding:8px 10px;border-radius:7px;background:#edf4fb;color:#355a7d;font-size:11px}
 @media(max-width:760px){.adgb-notice-lane-managers{grid-template-columns:1fr}.adgb-notice-lane-manager-head{align-items:flex-start}}
 
+/* Important Links directory */
+body.adgb-important-links-active main.page>#adgbImportantLinksPanel{display:block!important}
+body.adgb-important-links-active main.page>:not(#adgbImportantLinksPanel){display:none!important}
+.adgb-important-links-panel{max-width:1440px;margin:12px auto;padding:0 4px 24px}
+.adgb-il-hero{display:flex;align-items:center;gap:18px;padding:24px;border-radius:16px;background:linear-gradient(120deg,#0e3b70 0%,#2853a4 58%,#087c78 100%);color:#fff;box-shadow:0 10px 24px rgba(18,55,99,.16)}
+.adgb-il-hero-icon{width:62px;height:62px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);font-size:30px;flex:none}
+.adgb-il-hero-copy{min-width:0;flex:1}.adgb-il-eyebrow{font-size:10px;letter-spacing:.13em;font-weight:900;opacity:.78}.adgb-il-hero h1{font-size:28px;margin:4px 0 3px;line-height:1.1}.adgb-il-hero p{margin:0;font-size:13px;color:#e3efff}
+.adgb-il-hero-meta{display:grid;gap:5px;text-align:right}.adgb-il-hero-meta span{font-size:18px;font-weight:900}.adgb-il-hero-meta small{font-size:10px;max-width:180px;color:#d8e7fa}
+.adgb-il-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:12px;align-items:center;padding:16px 2px 12px}
+.adgb-il-search{display:flex;align-items:center;gap:10px;border:1px solid #cbd9e8;background:#fff;border-radius:10px;padding:0 12px;min-height:43px;color:#477092}.adgb-il-search span{font-size:22px}.adgb-il-search input{border:0!important;outline:0!important;box-shadow:none!important;width:100%;min-width:0;background:transparent;font-size:13px}
+.adgb-il-categories{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:7px}.adgb-il-chip{border:1px solid #d0dfed;background:#fff;color:#315878;border-radius:22px;padding:7px 13px;font-size:11px;font-weight:800;cursor:pointer}.adgb-il-chip.is-active{background:#174f86;border-color:#174f86;color:#fff}
+.adgb-il-admin-tools{display:flex;gap:7px;justify-content:flex-end}.adgb-il-admin-tools button,.adgb-il-editor-actions button{border:1px solid #c8d8e8;background:#fff;color:#245276;border-radius:8px;padding:10px 13px;font-size:12px;font-weight:850;cursor:pointer}.adgb-il-admin-tools .adgb-il-primary,.adgb-il-editor-actions .adgb-il-primary{background:#185b94;border-color:#185b94;color:#fff}
+.adgb-il-status{font-size:12px;color:#536d85;margin:0 0 12px;padding:9px 12px;border-radius:8px;background:#eff5fb}.adgb-il-status[data-type="error"]{background:#fff0f0;color:#a42b35}.adgb-il-status[data-type="success"]{background:#edf8f2;color:#176348}
+.adgb-il-editor{border:1px solid #a9c6df;background:linear-gradient(130deg,#f7fbff,#fff);border-radius:13px;padding:17px;margin:0 0 18px;box-shadow:0 7px 18px rgba(20,65,110,.08)}.adgb-il-editor-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.adgb-il-editor-head h2{font-size:18px;color:#174a79;margin:3px 0}.adgb-il-editor-head button{border:0;background:#e8f0f8;color:#315878;border-radius:7px;padding:7px 10px;cursor:pointer}
+.adgb-il-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.adgb-il-form-grid label{display:grid;gap:5px;color:#465b70;font-size:11px;font-weight:850}.adgb-il-form-grid input{min-width:0;border:1px solid #c7d7e6;background:#fff;border-radius:8px;padding:10px;font-size:13px;color:#203b58}.adgb-il-description{grid-column:1/-1}.adgb-il-editor-actions{display:flex;gap:8px;margin-top:14px}
+.adgb-il-group{margin:16px 0 22px}.adgb-il-group-heading{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dce7f0;padding:0 2px 8px;margin-bottom:10px}.adgb-il-group-heading h2{margin:0;color:#1c4e7c;font-size:16px}.adgb-il-group-heading span{color:#77899b;font-size:11px}
+.adgb-il-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.adgb-il-card{background:#fff;border:1px solid #d8e4ee;border-radius:12px;padding:14px;box-shadow:0 4px 12px rgba(24,58,93,.045);display:flex;flex-direction:column;min-height:178px;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.adgb-il-card:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(24,58,93,.1);border-color:#9bbbd6}.adgb-il-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.adgb-il-card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#eaf3fb;color:#1d5688;font-size:19px}.adgb-il-domain{font-size:10px;color:#7a8da0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adgb-il-card h3{font-size:15px;color:#173f68;margin:12px 0 4px}.adgb-il-card p{font-size:11px;line-height:1.5;color:#697d90;margin:0 0 12px;flex:1;overflow-wrap:anywhere}.adgb-il-card>a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:#17629b;font-size:11px;font-weight:900;border-top:1px solid #edf2f6;padding-top:10px}.adgb-il-card>a:hover{text-decoration:underline}.adgb-il-card-admin{display:flex;gap:5px;margin-top:10px;padding-top:9px;border-top:1px dashed #dce6ef}.adgb-il-card-admin button{border:1px solid #d5e1eb;background:#f8fbfe;color:#315b7e;border-radius:6px;padding:5px 7px;font-size:10px;font-weight:800;cursor:pointer}.adgb-il-card-admin button:last-child{margin-left:auto;color:#a33740}.adgb-il-card-admin button:disabled{opacity:.35;cursor:not-allowed}
+.adgb-il-empty{display:grid;justify-items:center;gap:8px;padding:48px 15px;border:1px dashed #b9cde0;border-radius:13px;background:#f8fbff;color:#345b7e;text-align:center}.adgb-il-empty>span{font-size:32px}.adgb-il-empty strong{font-size:16px}.adgb-il-empty p{font-size:12px;color:#70859a;margin:0}
+.adgb-il-footer{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #dce7f0;padding-top:12px;color:#77899b;font-size:10px;margin-top:22px}
+body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]{background:#d7edff;color:#0b3c70;border-color:#a6cdeb}
+@media(max-width:760px){.adgb-il-hero{padding:16px;gap:11px;flex-wrap:wrap}.adgb-il-hero-icon{width:45px;height:45px;font-size:22px}.adgb-il-hero h1{font-size:22px}.adgb-il-hero-meta{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left}.adgb-il-toolbar{grid-template-columns:1fr}.adgb-il-admin-tools{justify-content:flex-start}.adgb-il-form-grid{grid-template-columns:1fr}.adgb-il-description{grid-column:auto}.adgb-il-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.adgb-il-footer{flex-direction:column}}
+
 </style>
 
 
@@ -5674,6 +5696,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
         <button type="button" class="adgb-nav-item" data-adgb-nav="analytics">▥ <span>Office Analytics</span></button>
 
         <button type="button" class="adgb-nav-item" data-adgb-nav="pending">◷ <span>Pending Reports</span></button>
+        <button type="button" class="adgb-nav-item adgb-important-links-nav" data-adgb-nav="importantLinks">🔗 <span>Important Links</span></button>
 
         
 
@@ -5706,6 +5729,35 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
     </aside>
 
     <main class="page" id="top">
+      <section id="adgbImportantLinksPanel" class="adgb-important-links-panel" hidden aria-labelledby="adgbImportantLinksTitle">
+        <div class="adgb-il-hero">
+          <div class="adgb-il-hero-icon">↗</div>
+          <div class="adgb-il-hero-copy"><span class="adgb-il-eyebrow">QUICK ACCESS DIRECTORY</span><h1 id="adgbImportantLinksTitle">Important Links</h1><p>Frequently used official websites and essential online services in one place.</p></div>
+          <div class="adgb-il-hero-meta"><span id="adgbILCount">0 links</span><small>Verified links managed by portal administrator</small></div>
+        </div>
+        <div class="adgb-il-toolbar">
+          <label class="adgb-il-search"><span>⌕</span><input id="adgbILSearch" type="search" placeholder="Search websites, categories or descriptions" aria-label="Search important links"></label>
+          <div id="adgbILCategories" class="adgb-il-categories" aria-label="Filter links by category"></div>
+          <div class="adgb-il-admin-tools" id="adgbILAdminTools" hidden><button type="button" id="adgbILAdd" class="adgb-il-primary">＋ Add important link</button><button type="button" id="adgbILRefresh">↻ Refresh</button></div>
+        </div>
+        <p id="adgbILStatus" class="adgb-il-status" role="status" aria-live="polite">Loading important links…</p>
+        <section id="adgbILEditor" class="adgb-il-editor" hidden aria-labelledby="adgbILEditorTitle">
+          <div class="adgb-il-editor-head"><div><span class="adgb-il-eyebrow">ADMINISTRATOR</span><h2 id="adgbILEditorTitle">Add a website</h2></div><button type="button" id="adgbILCloseEditor" aria-label="Close editor">✕</button></div>
+          <form id="adgbILForm">
+            <div class="adgb-il-form-grid">
+              <label>Website name <input id="adgbILName" maxlength="70" required placeholder="e.g. CPWD official website"></label>
+              <label>Website URL <input id="adgbILUrl" type="url" maxlength="500" required placeholder="https://example.gov.in"></label>
+              <label>Category <input id="adgbILCategory" maxlength="40" list="adgbILCategoryOptions" required placeholder="e.g. CPWD / Government / Finance"><datalist id="adgbILCategoryOptions"><option value="CPWD"><option value="Government"><option value="Office Services"><option value="Finance"><option value="Utilities"><option value="Other"></datalist></label>
+              <label>Icon / emoji <input id="adgbILIcon" maxlength="8" placeholder="🏛️"></label>
+              <label class="adgb-il-description">Short description <input id="adgbILDescription" maxlength="140" placeholder="What this website is used for"></label>
+            </div>
+            <div class="adgb-il-editor-actions"><button type="submit" class="adgb-il-primary" id="adgbILSave">Save link</button><button type="button" id="adgbILCancel">Cancel</button></div>
+          </form>
+        </section>
+        <div id="adgbILGroups" class="adgb-il-groups"></div>
+        <div id="adgbILEmpty" class="adgb-il-empty" hidden><span>🔗</span><strong>No links found</strong><p>Try another search or category. The administrator can add websites to this directory.</p></div>
+        <footer class="adgb-il-footer"><span>↗ External websites open in a new tab.</span><span id="adgbILUpdated"></span></footer>
+      </section>
 
       <section id="adgbNoticeStrip" class="adgb-notice-strip adgb-two-lane-strip" hidden aria-label="Two independent moving office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window adgb-notice-lanes"><div class="adgb-notice-lane" data-lane="1"><div id="adgbNoticeTrack1" class="adgb-notice-track"></div><button id="adgbNoticePause1" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 1">Ⅱ</button></div><div class="adgb-notice-lane" data-lane="2"><div id="adgbNoticeTrack2" class="adgb-notice-track"></div><button id="adgbNoticePause2" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 2">Ⅱ</button></div></div></section>
 
@@ -7607,6 +7659,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       adgbInitLayout();
 
       adgbInitInsights();
+      adgbImportantLinksInit_();
 
       adgbInitArchive();
 
@@ -10554,7 +10607,8 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
       }
 
-      window.addEventListener('adgb-auth-changed',()=>{adgbHistoryReset_();adgbHistoryStatus_('Select Load comparison to retrieve historical archive records.');});
+      window.addEventListener('adgb-auth-changed',()=>{
+      if(document.body.classList.contains('adgb-important-links-active'))adgbImportantLinksLoad_();adgbHistoryReset_();adgbHistoryStatus_('Select Load comparison to retrieve historical archive records.');});
 
     }
 
@@ -13881,6 +13935,13 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
       document.querySelectorAll('[data-adgb-nav]').forEach(btn=>btn.addEventListener('click',()=>{
 
         const nav=btn.getAttribute('data-adgb-nav');
+        if(nav==='importantLinks'){
+          document.querySelectorAll('.adgb-nav-item').forEach(b=>b.classList.toggle('active',b===btn));
+          document.body.classList.add('adgb-important-links-active');
+          adgbImportantLinksOpen_();
+          return;
+        }
+        document.body.classList.remove('adgb-important-links-active');
 
         if(nav==='health'){
 
@@ -14028,7 +14089,122 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 
 
 
-    function adgbRenderLivePanels(){
+    // Important Links: public read-only directory, administrator-only writes.
+    const adgbImportantLinks_={links:[],version:0,loaded:false,loading:false,query:'',category:'All',editId:''};
+    function adgbILStatus_(message,type='info'){
+      const node=document.getElementById('adgbILStatus');if(node){node.textContent=message;node.dataset.type=type;}
+    }
+    function adgbILIsAdmin_(){return !!String(window.ADGB_AUTH?.token||'')&&isRecognizedAsAdmin();}
+    function adgbILValidUrl_(value){
+      try{const u=new URL(String(value||'').trim());return u.protocol==='https:'&&!u.username&&!u.password&&!!u.hostname&&u.hostname.includes('.');}
+      catch{return false;}
+    }
+    function adgbILCategories_(){
+      return ['All',...new Set(adgbImportantLinks_.links.filter(x=>x.enabled!==false).map(x=>String(x.category||'Other').trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b)))];
+    }
+    function adgbILRender_(){
+      const links=adgbImportantLinks_.links.filter(x=>x.enabled!==false).slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)||String(a.title).localeCompare(String(b.title)));
+      const cats=adgbILCategories_(),catHost=document.getElementById('adgbILCategories');
+      if(catHost)catHost.innerHTML=cats.map(cat=>'<button type="button" class="adgb-il-chip'+(adgbImportantLinks_.category===cat?' is-active':'')+'" data-il-category="'+escapeAttr(cat)+'" aria-pressed="'+(adgbImportantLinks_.category===cat?'true':'false')+'">'+escapeHtml(cat)+'</button>').join('');
+      const adminTools=document.getElementById('adgbILAdminTools');if(adminTools)adminTools.hidden=!adgbILIsAdmin_();
+      const search=adgbImportantLinks_.query.trim().toLowerCase();
+      const selected=links.filter(x=>(adgbImportantLinks_.category==='All'||String(x.category||'Other')===adgbImportantLinks_.category)&&(!search||(String(x.title||'')+' '+String(x.url||'')+' '+String(x.category||'')+' '+String(x.description||'')).toLowerCase().includes(search)));
+      const grouped=new Map();selected.forEach(link=>{const cat=String(link.category||'Other');if(!grouped.has(cat))grouped.set(cat,[]);grouped.get(cat).push(link);});
+      const host=document.getElementById('adgbILGroups'),empty=document.getElementById('adgbILEmpty');
+      if(host)host.innerHTML=[...grouped.entries()].map(([cat,items])=>'<section class="adgb-il-group"><div class="adgb-il-group-heading"><h2>'+escapeHtml(cat)+'</h2><span>'+items.length+' website'+(items.length===1?'':'s')+'</span></div><div class="adgb-il-grid">'+items.map(x=>{
+        const domain=(()=>{try{return new URL(x.url).hostname.replace(/^www\./,'')}catch{return x.url}})();
+        const index=adgbImportantLinks_.links.findIndex(z=>z.id===x.id);
+        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div>':'';
+        return '<article class="adgb-il-card"><div class="adgb-il-card-top"><span class="adgb-il-card-icon">'+escapeHtml(x.icon||'↗')+'</span><span class="adgb-il-domain">'+escapeHtml(domain)+'</span></div><h3>'+escapeHtml(x.title)+'</h3><p>'+escapeHtml(x.description||'Open website')+'</p><a href="'+escapeAttr(x.url)+'" target="_blank" rel="noopener noreferrer">Open website <span>↗</span></a>'+actions+'</article>';
+      }).join('')+'</div></section>').join('');
+      if(empty)empty.hidden=selected.length!==0;
+      const count=document.getElementById('adgbILCount');if(count)count.textContent=links.length+' active link'+(links.length===1?'':'s');
+      const updated=document.getElementById('adgbILUpdated');if(updated)updated.textContent=adgbImportantLinks_.updatedAt?'Updated '+new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(adgbImportantLinks_.updatedAt)):'';
+    }
+    async function adgbImportantLinksLoad_(){
+      if(adgbImportantLinks_.loading)return;
+      adgbImportantLinks_.loading=true;adgbILStatus_('Loading shared website directory…');
+      try{
+        const result=await jsonpRequest('importantLinks',{sessionToken:window.ADGB_AUTH?.token||''});
+        if(!result?.ok)throw new Error(result?.message||'Could not load links.');
+        adgbImportantLinks_.links=Array.isArray(result.links)?result.links:[];
+        adgbImportantLinks_.version=Number(result.version)||0;
+        adgbImportantLinks_.updatedAt=String(result.updatedAt||'');
+        adgbImportantLinks_.loaded=true;
+        adgbILStatus_(adgbImportantLinks_.links.length?'Directory loaded. Select a category or open a website.':'No websites have been added yet.', 'success');
+        adgbILRender_();
+      }catch(error){adgbILStatus_('Could not load Important Links: '+(error.message||'Backend update may be required.'),'error');}
+      finally{adgbImportantLinks_.loading=false;}
+    }
+    function adgbImportantLinksOpen_(){
+      const panel=document.getElementById('adgbImportantLinksPanel');if(panel)panel.hidden=false;
+      if(!adgbImportantLinks_.loaded)adgbImportantLinksLoad_();else adgbILRender_();
+      panel?.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    function adgbILOpenEditor_(link){
+      if(!adgbILIsAdmin_())return;
+      adgbImportantLinks_.editId=link?.id||'';
+      document.getElementById('adgbILEditorTitle').textContent=link?'Edit website':'Add a website';
+      document.getElementById('adgbILName').value=link?.title||'';
+      document.getElementById('adgbILUrl').value=link?.url||'';
+      document.getElementById('adgbILCategory').value=link?.category||'';
+      document.getElementById('adgbILIcon').value=link?.icon||'';
+      document.getElementById('adgbILDescription').value=link?.description||'';
+      document.getElementById('adgbILSave').textContent=link?'Update website':'Save website';
+      const editor=document.getElementById('adgbILEditor');editor.hidden=false;editor.scrollIntoView({behavior:'smooth',block:'center'});
+      document.getElementById('adgbILName').focus();
+    }
+    async function adgbILSaveList_(links,successMessage){
+      const token=String(window.ADGB_AUTH?.token||'');
+      if(!adgbILIsAdmin_()||!token)throw new Error('Administrator sign-in is required to manage Important Links.');
+      const result=await postToBackend({action:'adminImportantLinksManage',sessionToken:token,operation:'save',expectedVersion:adgbImportantLinks_.version,links});
+      if(!result?.ok||!Array.isArray(result.links))throw new Error(result?.message||'The server did not confirm the saved links.');
+      adgbImportantLinks_.links=result.links;adgbImportantLinks_.version=Number(result.version)||adgbImportantLinks_.version+1;adgbImportantLinks_.updatedAt=String(result.updatedAt||'');
+      adgbILStatus_(successMessage||'Important Links saved successfully.','success');adgbILRender_();
+    }
+    function adgbImportantLinksInit_(){
+      const search=document.getElementById('adgbILSearch');
+      search?.addEventListener('input',()=>{adgbImportantLinks_.query=search.value;adgbILRender_();});
+      document.getElementById('adgbILCategories')?.addEventListener('click',event=>{
+        const button=event.target.closest('[data-il-category]');if(!button)return;
+        adgbImportantLinks_.category=button.getAttribute('data-il-category');adgbILRender_();
+      });
+      document.getElementById('adgbILAdd')?.addEventListener('click',()=>adgbILOpenEditor_(null));
+      document.getElementById('adgbILRefresh')?.addEventListener('click',adgbImportantLinksLoad_);
+      const close=()=>{document.getElementById('adgbILEditor').hidden=true;adgbImportantLinks_.editId='';};
+      document.getElementById('adgbILCloseEditor')?.addEventListener('click',close);
+      document.getElementById('adgbILCancel')?.addEventListener('click',close);
+      document.getElementById('adgbILForm')?.addEventListener('submit',async event=>{
+        event.preventDefault();if(!adgbILIsAdmin_())return;
+        const title=document.getElementById('adgbILName').value.trim(),url=document.getElementById('adgbILUrl').value.trim();
+        const category=document.getElementById('adgbILCategory').value.trim(),description=document.getElementById('adgbILDescription').value.trim(),icon=document.getElementById('adgbILIcon').value.trim();
+        if(!title||!category||!adgbILValidUrl_(url)){adgbILStatus_('Enter a website name, category and valid HTTPS URL.','error');return;}
+        const button=document.getElementById('adgbILSave');button.disabled=true;button.textContent='Saving…';
+        try{
+          const links=adgbImportantLinks_.links.slice(),existing=links.findIndex(x=>x.id===adgbImportantLinks_.editId);
+          const item={id:adgbImportantLinks_.editId||('il-'+nonce()),title,url,category,description,icon,enabled:true,order:existing>=0?links[existing].order:links.length};
+          if(existing>=0)links[existing]=item;else links.push(item);
+          await adgbILSaveList_(links,existing>=0?'Website updated successfully.':'Website added successfully.');
+          close();event.target.reset();
+        }catch(error){adgbILStatus_('Not saved: '+(error.message||'Please retry.'),'error');}
+        finally{button.disabled=false;button.textContent=adgbImportantLinks_.editId?'Update website':'Save website';}
+      });
+      document.getElementById('adgbILGroups')?.addEventListener('click',async event=>{
+        const edit=event.target.closest('[data-il-edit]'),remove=event.target.closest('[data-il-delete]'),up=event.target.closest('[data-il-up]'),down=event.target.closest('[data-il-down]');
+        if(edit){const item=adgbImportantLinks_.links.find(x=>x.id===edit.getAttribute('data-il-edit'));if(item)adgbILOpenEditor_(item);return;}
+        if(remove||up||down){
+          if(!adgbILIsAdmin_())return;
+          const id=(remove||up||down).getAttribute(remove?'data-il-delete':up?'data-il-up':'data-il-down');
+          const links=adgbImportantLinks_.links.slice(),index=links.findIndex(x=>x.id===id);if(index<0)return;
+          if(remove){if(!window.confirm('Remove '+links[index].title+' from Important Links?'))return;links.splice(index,1);}
+          else{const next=index+(up?-1:1);if(next<0||next>=links.length)return;[links[index],links[next]]=[links[next],links[index]];links.forEach((x,i)=>x.order=i);}
+          try{await adgbILSaveList_(links,remove?'Website removed.':'Website order updated.');}
+          catch(error){adgbILStatus_('Update failed: '+(error.message||'Please retry.'),'error');}
+        }
+      });
+    }
+
+        function adgbRenderLivePanels(){
 
       adgbHealthAccess_();
 
