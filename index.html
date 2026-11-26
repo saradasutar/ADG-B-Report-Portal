@@ -5616,6 +5616,33 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-window{padding-left:0!important;margin-left:0!important}
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-heading{margin-right:0!important}
 
+/* V17.10.8: anchor the moving lanes immediately after the NOTICE label */
+#adgbNoticeStrip.adgb-two-lane-strip{
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr)!important;
+  column-gap:8px!important;
+  align-items:center!important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip>.adgb-notice-heading{
+  grid-column:1!important;
+  width:48px!important;
+  min-width:48px!important;
+  margin:0!important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip>.adgb-notice-window.adgb-notice-lanes{
+  grid-column:2!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  justify-self:stretch!important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{
+  width:100%!important;
+  min-width:0!important;
+}
+
 </style>
 
 
