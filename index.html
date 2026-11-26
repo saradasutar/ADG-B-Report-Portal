@@ -5609,6 +5609,12 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 .adgb-il-ticker-card input{accent-color:#16735e}
 @media(prefers-reduced-motion:reduce){.adgb-il-ticker-track{animation:none;transform:none}}
 @media(max-width:650px){.adgb-il-ticker{min-height:32px;gap:7px;padding:4px 7px}.adgb-il-ticker-label{font-size:9px}.adgb-il-ticker-track a{font-size:11px}}
+.adgb-il-notice-lane-option{display:grid;grid-template-columns:auto minmax(130px,1fr);align-items:center;gap:8px;padding:9px 11px;border:1px solid #c9dced;border-radius:8px;background:#f8fbff;color:#245579;font-size:11px;font-weight:850}
+.adgb-il-notice-lane-option select{min-width:0;border:1px solid #c3d5e6;border-radius:7px;background:#fff;padding:7px 9px;color:#234c70;font-size:11px;font-weight:800}
+.adgb-il-notice-lane-option select:disabled{opacity:.55}
+.adgb-notice-link-message{margin-right:34px!important}
+.adgb-notice-link{color:inherit!important;font-weight:950!important;text-decoration:underline!important;text-decoration-thickness:1px;text-underline-offset:2px;cursor:pointer}
+.adgb-notice-link:hover,.adgb-notice-link:focus{filter:brightness(.8);}
 
 /* V17.10.7: continuous ticker begins beside NOTICE instead of one viewport-width away */
 @keyframes adgbNoticeContinuous{
@@ -5929,7 +5935,11 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
               <label>Category <input id="adgbILCategory" maxlength="40" list="adgbILCategoryOptions" required placeholder="e.g. CPWD / Government / Finance"><datalist id="adgbILCategoryOptions"><option value="CPWD"><option value="Government"><option value="Office Services"><option value="Finance"><option value="Utilities"><option value="Other"></datalist></label>
               <label>Icon / emoji <input id="adgbILIcon" maxlength="8" placeholder="🏛️"></label>
               <label class="adgb-il-description">Short description <input id="adgbILDescription" maxlength="140" placeholder="What this website is used for"></label>
-              <label class="adgb-il-ticker-option"><input id="adgbILTicker" type="checkbox"> Include this website in the single-line moving notification</label>
+              <label class="adgb-il-ticker-option"><input id="adgbILTicker" type="checkbox"> Include this website in a separate Important Links line</label>
+              <label class="adgb-il-ticker-option"><input id="adgbILNoticeBoard" type="checkbox"> Show this website in the existing NOTICE board</label>
+              <label class="adgb-il-notice-lane-option">NOTICE board line
+                <select id="adgbILNoticeLane"><option value="1">Line 1 — upper row</option><option value="2">Line 2 — lower row</option></select>
+              </label>
             </div>
             <div class="adgb-il-editor-actions"><button type="submit" class="adgb-il-primary" id="adgbILSave">Save link</button><button type="button" id="adgbILCancel">Cancel</button></div>
           </form>
@@ -12399,9 +12409,15 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
             const bullet=document.createElement('span');bullet.textContent='●';span.appendChild(bullet);
 
-            adgbRichParse_(message).forEach((part,partIndex)=>{if(partIndex)span.appendChild(document.createTextNode(' '));span.appendChild(adgbRichTextNode_(part));});track.appendChild(span);
-
+            adgbRichParse_(message).forEach((part,partIndex)=>{if(partIndex)span.appendChild(document.createTextNode(' '));span.appendChild(adgbRichTextNode_(part));});
+            track.appendChild(span);
           }
+          noticeLinks[index].forEach(item=>{
+            const span=document.createElement('span');span.className='adgb-rich-message adgb-notice-link-message';
+            const bullet=document.createElement('span');bullet.textContent='↗';span.appendChild(bullet);
+            const link=document.createElement('a');link.className='adgb-notice-link';link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';
+            link.textContent=item.title;link.title=item.description||item.title;span.appendChild(link);track.appendChild(span);
+          });
           // Repeat the full lane content far enough to cover the entire visible
           // window. A single duplicate is insufficient when the notice is shorter
           // than the window: the animation then exposes a long empty section.
@@ -12437,7 +12453,8 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
         const speed=Number.isInteger(Number(raw))&&Number(raw)>=1&&Number(raw)<=10?Number(raw):5;
 
-        const length=Math.max(20,lanes[index].join(' ').length/9);
+        const noticeLinkLength=noticeLinks[index].reduce((sum,item)=>sum+item.title.length+2,0);
+        const length=Math.max(20,(lanes[index].join(' ').length+noticeLinkLength)/9);
 
         track.style.animationDuration=Math.max(8,Math.min(240,length*5/speed))+'s';
 
@@ -14324,6 +14341,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       }
       const characters=selected.reduce((sum,x)=>sum+String(x.title||'').length+String(x.url||'').length,0);
       track.style.animationDuration=Math.max(22,Math.min(100,characters*0.32+18))+'s';
+      if(typeof adgbNoticeRenderStrip_==='function')adgbNoticeRenderStrip_();
     }
 
     function adgbILRender_(){
@@ -14338,7 +14356,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       if(host)host.innerHTML=[...grouped.entries()].map(([cat,items])=>'<section class="adgb-il-group"><div class="adgb-il-group-heading"><h2>'+escapeHtml(cat)+'</h2><span>'+items.length+' website'+(items.length===1?'':'s')+'</span></div><div class="adgb-il-grid">'+items.map(x=>{
         const domain=(()=>{try{return new URL(x.url).hostname.replace(/^www\./,'')}catch{return x.url}})();
         const index=adgbImportantLinks_.links.findIndex(z=>z.id===x.id);
-        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div><label class="adgb-il-ticker-card"><input type="checkbox" data-il-ticker="'+escapeAttr(x.id)+'" '+(x.includeInTicker===true?'checked':'')+'> Show in moving ticker</label>':'';
+        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div><label class="adgb-il-ticker-card"><input type="checkbox" data-il-ticker="'+escapeAttr(x.id)+'" '+(x.includeInTicker===true?'checked':'')+'> Show in separate moving line</label><label class="adgb-il-ticker-card"><input type="checkbox" data-il-notice="'+escapeAttr(x.id)+'" '+([1,2].includes(Number(x.noticeLane))?'checked':'')+'> Show in existing NOTICE board</label>':'';
         return '<article class="adgb-il-card"><div class="adgb-il-card-top"><span class="adgb-il-card-icon">'+escapeHtml(x.icon||'↗')+'</span><span class="adgb-il-domain">'+escapeHtml(domain)+'</span></div><h3>'+escapeHtml(x.title)+'</h3><p>'+escapeHtml(x.description||'Open website')+'</p><a href="'+escapeAttr(x.url)+'" target="_blank" rel="noopener noreferrer">Open website <span>↗</span></a>'+actions+'</article>';
       }).join('')+'</div></section>').join('');
       if(empty)empty.hidden=selected.length!==0;
@@ -14380,6 +14398,10 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       document.getElementById('adgbILIcon').value=link?.icon||'';
       document.getElementById('adgbILDescription').value=link?.description||'';
       document.getElementById('adgbILTicker').checked=link?.includeInTicker===true;
+      const noticeLane=Number(link?.noticeLane)||0;
+      document.getElementById('adgbILNoticeBoard').checked=noticeLane===1||noticeLane===2;
+      document.getElementById('adgbILNoticeLane').value=String(noticeLane===2?2:1);
+      document.getElementById('adgbILNoticeLane').disabled=!(noticeLane===1||noticeLane===2);
       document.getElementById('adgbILSave').textContent=link?'Update website':'Save website';
       const editor=document.getElementById('adgbILEditor');editor.hidden=false;editor.scrollIntoView({behavior:'smooth',block:'center'});
       document.getElementById('adgbILName').focus();
@@ -14412,19 +14434,34 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         const button=document.getElementById('adgbILSave');button.disabled=true;button.textContent='Saving…';
         try{
           const links=adgbImportantLinks_.links.slice(),existing=links.findIndex(x=>x.id===adgbImportantLinks_.editId);
-          const item={id:adgbImportantLinks_.editId||('il-'+nonce()),title,url,category,description,icon,enabled:true,includeInTicker:document.getElementById('adgbILTicker').checked,order:existing>=0?links[existing].order:links.length};
+          const item={id:adgbImportantLinks_.editId||('il-'+nonce()),title,url,category,description,icon,enabled:true,includeInTicker:document.getElementById('adgbILTicker').checked,noticeLane:document.getElementById('adgbILNoticeBoard').checked?(Number(document.getElementById('adgbILNoticeLane').value)===2?2:1):0,order:existing>=0?links[existing].order:links.length};
           if(existing>=0)links[existing]=item;else links.push(item);
           await adgbILSaveList_(links,existing>=0?'Website updated successfully.':'Website added successfully.');
           close();event.target.reset();
         }catch(error){adgbILStatus_('Not saved: '+(error.message||'Please retry.'),'error');}
         finally{button.disabled=false;button.textContent=adgbImportantLinks_.editId?'Update website':'Save website';}
       });
+      document.getElementById('adgbILNoticeBoard')?.addEventListener('change',event=>{
+        const lane=document.getElementById('adgbILNoticeLane');
+        if(lane)lane.disabled=!event.target.checked;
+      });
       document.getElementById('adgbILGroups')?.addEventListener('change',async event=>{
-        const checkbox=event.target.closest('[data-il-ticker]');if(!checkbox||!adgbILIsAdmin_())return;
-        const id=checkbox.getAttribute('data-il-ticker'),links=adgbImportantLinks_.links.map(x=>x.id===id?{...x,includeInTicker:checkbox.checked}:({...x}));
-        checkbox.disabled=true;
-        try{await adgbILSaveList_(links,checkbox.checked?'Website added to moving ticker.':'Website removed from moving ticker.');}
-        catch(error){adgbILStatus_('Ticker setting not saved: '+(error.message||'Please retry.'),'error');await adgbImportantLinksLoad_(true);}
+        const ticker=event.target.closest('[data-il-ticker]');
+        const notice=event.target.closest('[data-il-notice]');
+        if((!ticker&&!notice)||!adgbILIsAdmin_())return;
+        const id=(ticker||notice).getAttribute(ticker?'data-il-ticker':'data-il-notice');
+        const links=adgbImportantLinks_.links.map(x=>x.id===id
+          ? (ticker?{...x,includeInTicker:ticker.checked}:{...x,noticeLane:notice.checked?(Number(x.noticeLane)===2?2:1):0})
+          : ({...x}));
+        (ticker||notice).disabled=true;
+        try{
+          await adgbILSaveList_(links,ticker
+            ? (ticker.checked?'Website added to separate moving line.':'Website removed from separate moving line.')
+            : (notice.checked?'Website added to existing NOTICE board.':'Website removed from existing NOTICE board.'));
+        }catch(error){
+          adgbILStatus_('Display setting not saved: '+(error.message||'Please retry.'),'error');
+          await adgbImportantLinksLoad_(true);
+        }
       });
       document.getElementById('adgbILGroups')?.addEventListener('click',async event=>{
         const edit=event.target.closest('[data-il-edit]'),remove=event.target.closest('[data-il-delete]'),up=event.target.closest('[data-il-up]'),down=event.target.closest('[data-il-down]');
