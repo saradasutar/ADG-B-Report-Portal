@@ -5570,7 +5570,7 @@ header{background:linear-gradient(110deg,#062c5f 0%,#07579b 58%,#0a4580 100%);bo
 @media(max-width:760px){.adgb-notice-lane-managers{grid-template-columns:1fr}.adgb-notice-lane-manager-head{align-items:flex-start}}
 
 /* Important Links directory */
-body.adgb-important-links-active main.page>#adgbImportantLinksPanel{display:block!important}
+body.adgb-important-links-active main.page>#adgbImportantLinksPanel:not([hidden]){display:block!important}
 body.adgb-important-links-active main.page>:not(#adgbImportantLinksPanel){display:none!important}
 .adgb-important-links-panel{max-width:1440px;margin:12px auto;padding:0 4px 24px}
 .adgb-il-hero{display:flex;align-items:center;gap:18px;padding:24px;border-radius:16px;background:linear-gradient(120deg,#0e3b70 0%,#2853a4 58%,#087c78 100%);color:#fff;box-shadow:0 10px 24px rgba(18,55,99,.16)}
@@ -13942,6 +13942,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
           return;
         }
         document.body.classList.remove('adgb-important-links-active');
+        const importantLinksPanel=document.getElementById('adgbImportantLinksPanel');if(importantLinksPanel)importantLinksPanel.hidden=true;
 
         if(nav==='health'){
 
