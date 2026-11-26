@@ -5591,6 +5591,25 @@ body.adgb-important-links-active main.page>:not(#adgbImportantLinksPanel){displa
 body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]{background:#d7edff;color:#0b3c70;border-color:#a6cdeb}
 @media(max-width:760px){.adgb-il-hero{padding:16px;gap:11px;flex-wrap:wrap}.adgb-il-hero-icon{width:45px;height:45px;font-size:22px}.adgb-il-hero h1{font-size:22px}.adgb-il-hero-meta{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left}.adgb-il-toolbar{grid-template-columns:1fr}.adgb-il-admin-tools{justify-content:flex-start}.adgb-il-form-grid{grid-template-columns:1fr}.adgb-il-description{grid-column:auto}.adgb-il-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.adgb-il-footer{flex-direction:column}}
 
+/* Single-line Important Links moving ticker */
+.adgb-il-ticker{display:flex;align-items:center;gap:12px;min-height:35px;margin:4px 0 8px;padding:4px 10px;border:1px solid #c9dced;border-radius:8px;background:linear-gradient(90deg,#edf6ff,#f7fbff);overflow:hidden;box-sizing:border-box}
+.adgb-il-ticker[hidden]{display:none!important}
+.adgb-il-ticker-label{flex:none;color:#174b78;font-size:10px;font-weight:950;letter-spacing:.055em;white-space:nowrap}
+.adgb-il-ticker-window{min-width:0;flex:1;overflow:hidden}
+.adgb-il-ticker-track{display:flex;align-items:center;gap:17px;width:max-content;white-space:nowrap;will-change:transform;animation:adgbILTickerMove 38s linear infinite}
+.adgb-il-ticker-track a{color:#17588c;text-decoration:none;font-size:12px;font-weight:850}
+.adgb-il-ticker-track a:hover,.adgb-il-ticker-track a:focus{text-decoration:underline;color:#a32c35}
+.adgb-il-ticker-separator{color:#c08a23;font-size:8px}
+.adgb-il-ticker:hover .adgb-il-ticker-track,.adgb-il-ticker:focus-within .adgb-il-ticker-track{animation-play-state:paused}
+@keyframes adgbILTickerMove{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.adgb-il-ticker-label:before{content:"↗";margin-right:5px;color:#0b8a79}
+.adgb-il-ticker-option{grid-column:1/-1!important;display:flex!important;align-items:center!important;gap:9px!important;padding:10px 12px;border:1px solid #c9dced;border-radius:8px;background:#eef6ff;color:#245579!important;font-size:12px!important}
+.adgb-il-ticker-option input{width:16px!important;height:16px!important;flex:none}
+.adgb-il-ticker-card{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px dashed #dce6ef;color:#315b7e;font-size:10px;font-weight:800}
+.adgb-il-ticker-card input{accent-color:#16735e}
+@media(prefers-reduced-motion:reduce){.adgb-il-ticker-track{animation:none;transform:none}}
+@media(max-width:650px){.adgb-il-ticker{min-height:32px;gap:7px;padding:4px 7px}.adgb-il-ticker-label{font-size:9px}.adgb-il-ticker-track a{font-size:11px}}
+
 </style>
 
 
@@ -5750,6 +5769,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
               <label>Category <input id="adgbILCategory" maxlength="40" list="adgbILCategoryOptions" required placeholder="e.g. CPWD / Government / Finance"><datalist id="adgbILCategoryOptions"><option value="CPWD"><option value="Government"><option value="Office Services"><option value="Finance"><option value="Utilities"><option value="Other"></datalist></label>
               <label>Icon / emoji <input id="adgbILIcon" maxlength="8" placeholder="🏛️"></label>
               <label class="adgb-il-description">Short description <input id="adgbILDescription" maxlength="140" placeholder="What this website is used for"></label>
+              <label class="adgb-il-ticker-option"><input id="adgbILTicker" type="checkbox"> Include this website in the single-line moving notification</label>
             </div>
             <div class="adgb-il-editor-actions"><button type="submit" class="adgb-il-primary" id="adgbILSave">Save link</button><button type="button" id="adgbILCancel">Cancel</button></div>
           </form>
@@ -5760,6 +5780,10 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       </section>
 
       <section id="adgbNoticeStrip" class="adgb-notice-strip adgb-two-lane-strip" hidden aria-label="Two independent moving office notices"><strong class="adgb-notice-heading">NOTICE</strong><div class="adgb-notice-window adgb-notice-lanes"><div class="adgb-notice-lane" data-lane="1"><div id="adgbNoticeTrack1" class="adgb-notice-track"></div><button id="adgbNoticePause1" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 1">Ⅱ</button></div><div class="adgb-notice-lane" data-lane="2"><div id="adgbNoticeTrack2" class="adgb-notice-track"></div><button id="adgbNoticePause2" class="adgb-lane-pause" type="button" aria-pressed="false" title="Pause line 2">Ⅱ</button></div></div></section>
+      <section id="adgbImportantLinksTicker" class="adgb-il-ticker" hidden aria-label="Important Links moving notification">
+        <strong class="adgb-il-ticker-label">IMPORTANT LINKS</strong>
+        <div class="adgb-il-ticker-window"><div id="adgbILTickerTrack" class="adgb-il-ticker-track"></div></div>
+      </section>
 
     <div class="notice hidden" id="connectionNotice">
 
@@ -14103,6 +14127,26 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
     function adgbILCategories_(){
       return ['All',...new Set(adgbImportantLinks_.links.filter(x=>x.enabled!==false).map(x=>String(x.category||'Other').trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b)))];
     }
+    function adgbILRenderTicker_(){
+      const strip=document.getElementById('adgbImportantLinksTicker'),track=document.getElementById('adgbILTickerTrack');
+      if(!strip||!track)return;
+      const selected=adgbImportantLinks_.links.filter(x=>x.enabled!==false&&x.includeInTicker===true&&adgbILValidUrl_(x.url))
+        .slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)||String(a.title).localeCompare(String(b.title)));
+      const key=JSON.stringify(selected.map(x=>[x.id,x.title,x.url]));
+      strip.hidden=!selected.length;
+      if(!selected.length){track.replaceChildren();track.style.animationDuration='';return;}
+      if(track.dataset.key!==key){
+        track.replaceChildren();
+        selected.forEach((item,index)=>{
+          if(index){const separator=document.createElement('span');separator.className='adgb-il-ticker-separator';separator.textContent='◆';track.appendChild(separator);}
+          const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=String(item.title||'Website');link.title=String(item.description||item.title||'Open website');track.appendChild(link);
+        });
+        track.dataset.key=key;
+      }
+      const characters=selected.reduce((sum,x)=>sum+String(x.title||'').length+String(x.url||'').length,0);
+      track.style.animationDuration=Math.max(22,Math.min(100,characters*0.32+18))+'s';
+    }
+
     function adgbILRender_(){
       const links=adgbImportantLinks_.links.filter(x=>x.enabled!==false).slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)||String(a.title).localeCompare(String(b.title)));
       const cats=adgbILCategories_(),catHost=document.getElementById('adgbILCategories');
@@ -14115,16 +14159,20 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       if(host)host.innerHTML=[...grouped.entries()].map(([cat,items])=>'<section class="adgb-il-group"><div class="adgb-il-group-heading"><h2>'+escapeHtml(cat)+'</h2><span>'+items.length+' website'+(items.length===1?'':'s')+'</span></div><div class="adgb-il-grid">'+items.map(x=>{
         const domain=(()=>{try{return new URL(x.url).hostname.replace(/^www\./,'')}catch{return x.url}})();
         const index=adgbImportantLinks_.links.findIndex(z=>z.id===x.id);
-        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div>':'';
+        const actions=adgbILIsAdmin_()?'<div class="adgb-il-card-admin"><button type="button" data-il-edit="'+escapeAttr(x.id)+'">Edit</button><button type="button" data-il-up="'+escapeAttr(x.id)+'" '+(index<=0?'disabled':'')+' title="Move earlier">↑</button><button type="button" data-il-down="'+escapeAttr(x.id)+'" '+(index===adgbImportantLinks_.links.length-1?'disabled':'')+' title="Move later">↓</button><button type="button" data-il-delete="'+escapeAttr(x.id)+'">Remove</button></div><label class="adgb-il-ticker-card"><input type="checkbox" data-il-ticker="'+escapeAttr(x.id)+'" '+(x.includeInTicker===true?'checked':'')+'> Show in moving ticker</label>':'';
         return '<article class="adgb-il-card"><div class="adgb-il-card-top"><span class="adgb-il-card-icon">'+escapeHtml(x.icon||'↗')+'</span><span class="adgb-il-domain">'+escapeHtml(domain)+'</span></div><h3>'+escapeHtml(x.title)+'</h3><p>'+escapeHtml(x.description||'Open website')+'</p><a href="'+escapeAttr(x.url)+'" target="_blank" rel="noopener noreferrer">Open website <span>↗</span></a>'+actions+'</article>';
       }).join('')+'</div></section>').join('');
       if(empty)empty.hidden=selected.length!==0;
       const count=document.getElementById('adgbILCount');if(count)count.textContent=links.length+' active link'+(links.length===1?'':'s');
       const updated=document.getElementById('adgbILUpdated');if(updated)updated.textContent=adgbImportantLinks_.updatedAt?'Updated '+new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(adgbImportantLinks_.updatedAt)):'';
+      adgbILRenderTicker_();
     }
-    async function adgbImportantLinksLoad_(){
+    async function adgbImportantLinksLoad_(force=false){
       if(adgbImportantLinks_.loading)return;
-      adgbImportantLinks_.loading=true;adgbILStatus_('Loading shared website directory…');
+      if(!force&&adgbImportantLinks_.loaded&&Date.now()-(adgbImportantLinks_.lastLoadAt||0)<60000){adgbILRenderTicker_();return;}
+      if(!state.connected||!endpointReady())return;
+      adgbImportantLinks_.loading=true;
+      if(document.body.classList.contains('adgb-important-links-active'))adgbILStatus_('Loading shared website directory…');
       try{
         const result=await jsonpRequest('importantLinks',{sessionToken:window.ADGB_AUTH?.token||''});
         if(!result?.ok)throw new Error(result?.message||'Could not load links.');
@@ -14132,9 +14180,10 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         adgbImportantLinks_.version=Number(result.version)||0;
         adgbImportantLinks_.updatedAt=String(result.updatedAt||'');
         adgbImportantLinks_.loaded=true;
-        adgbILStatus_(adgbImportantLinks_.links.length?'Directory loaded. Select a category or open a website.':'No websites have been added yet.', 'success');
+        adgbImportantLinks_.lastLoadAt=Date.now();
+        if(document.body.classList.contains('adgb-important-links-active'))adgbILStatus_(adgbImportantLinks_.links.length?'Directory loaded. Select a category or open a website.':'No websites have been added yet.', 'success');
         adgbILRender_();
-      }catch(error){adgbILStatus_('Could not load Important Links: '+(error.message||'Backend update may be required.'),'error');}
+      }catch(error){if(document.body.classList.contains('adgb-important-links-active'))adgbILStatus_('Could not load Important Links: '+(error.message||'Backend update may be required.'),'error');}
       finally{adgbImportantLinks_.loading=false;}
     }
     function adgbImportantLinksOpen_(){
@@ -14151,6 +14200,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       document.getElementById('adgbILCategory').value=link?.category||'';
       document.getElementById('adgbILIcon').value=link?.icon||'';
       document.getElementById('adgbILDescription').value=link?.description||'';
+      document.getElementById('adgbILTicker').checked=link?.includeInTicker===true;
       document.getElementById('adgbILSave').textContent=link?'Update website':'Save website';
       const editor=document.getElementById('adgbILEditor');editor.hidden=false;editor.scrollIntoView({behavior:'smooth',block:'center'});
       document.getElementById('adgbILName').focus();
@@ -14161,7 +14211,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       const result=await postToBackend({action:'adminImportantLinksManage',sessionToken:token,operation:'save',expectedVersion:adgbImportantLinks_.version,links});
       if(!result?.ok||!Array.isArray(result.links))throw new Error(result?.message||'The server did not confirm the saved links.');
       adgbImportantLinks_.links=result.links;adgbImportantLinks_.version=Number(result.version)||adgbImportantLinks_.version+1;adgbImportantLinks_.updatedAt=String(result.updatedAt||'');
-      adgbILStatus_(successMessage||'Important Links saved successfully.','success');adgbILRender_();
+      adgbILStatus_(successMessage||'Important Links saved successfully.','success');adgbILRender_();adgbILRenderTicker_();
     }
     function adgbImportantLinksInit_(){
       const search=document.getElementById('adgbILSearch');
@@ -14171,7 +14221,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         adgbImportantLinks_.category=button.getAttribute('data-il-category');adgbILRender_();
       });
       document.getElementById('adgbILAdd')?.addEventListener('click',()=>adgbILOpenEditor_(null));
-      document.getElementById('adgbILRefresh')?.addEventListener('click',adgbImportantLinksLoad_);
+      document.getElementById('adgbILRefresh')?.addEventListener('click',()=>adgbImportantLinksLoad_(true));
       const close=()=>{document.getElementById('adgbILEditor').hidden=true;adgbImportantLinks_.editId='';};
       document.getElementById('adgbILCloseEditor')?.addEventListener('click',close);
       document.getElementById('adgbILCancel')?.addEventListener('click',close);
@@ -14183,12 +14233,19 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         const button=document.getElementById('adgbILSave');button.disabled=true;button.textContent='Saving…';
         try{
           const links=adgbImportantLinks_.links.slice(),existing=links.findIndex(x=>x.id===adgbImportantLinks_.editId);
-          const item={id:adgbImportantLinks_.editId||('il-'+nonce()),title,url,category,description,icon,enabled:true,order:existing>=0?links[existing].order:links.length};
+          const item={id:adgbImportantLinks_.editId||('il-'+nonce()),title,url,category,description,icon,enabled:true,includeInTicker:document.getElementById('adgbILTicker').checked,order:existing>=0?links[existing].order:links.length};
           if(existing>=0)links[existing]=item;else links.push(item);
           await adgbILSaveList_(links,existing>=0?'Website updated successfully.':'Website added successfully.');
           close();event.target.reset();
         }catch(error){adgbILStatus_('Not saved: '+(error.message||'Please retry.'),'error');}
         finally{button.disabled=false;button.textContent=adgbImportantLinks_.editId?'Update website':'Save website';}
+      });
+      document.getElementById('adgbILGroups')?.addEventListener('change',async event=>{
+        const checkbox=event.target.closest('[data-il-ticker]');if(!checkbox||!adgbILIsAdmin_())return;
+        const id=checkbox.getAttribute('data-il-ticker'),links=adgbImportantLinks_.links.map(x=>x.id===id?{...x,includeInTicker:checkbox.checked}:({...x}));
+        checkbox.disabled=true;
+        try{await adgbILSaveList_(links,checkbox.checked?'Website added to moving ticker.':'Website removed from moving ticker.');}
+        catch(error){adgbILStatus_('Ticker setting not saved: '+(error.message||'Please retry.'),'error');await adgbImportantLinksLoad_(true);}
       });
       document.getElementById('adgbILGroups')?.addEventListener('click',async event=>{
         const edit=event.target.closest('[data-il-edit]'),remove=event.target.closest('[data-il-delete]'),up=event.target.closest('[data-il-up]'),down=event.target.closest('[data-il-down]');
@@ -14216,6 +14273,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       adgbNoticeRenderStrip_();
 
       adgbNoticeLoad_();
+      if(state.connected)adgbImportantLinksLoad_();
 
       const timeline=document.getElementById('adgbTimeline');
 
