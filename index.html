@@ -14324,6 +14324,9 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       return ['All',...new Set(adgbImportantLinks_.links.filter(x=>x.enabled!==false).map(x=>String(x.category||'Other').trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b)))];
     }
     function adgbILRenderTicker_(){
+      // Refresh the existing NOTICE rows independently of the optional
+      // separate Important Links ticker. Do this before its empty-state return.
+      if(typeof adgbNoticeRenderStrip_==='function')adgbNoticeRenderStrip_();
       const strip=document.getElementById('adgbImportantLinksTicker'),track=document.getElementById('adgbILTickerTrack');
       if(!strip||!track)return;
       const selected=adgbImportantLinks_.links.filter(x=>x.enabled!==false&&x.includeInTicker===true&&adgbILValidUrl_(x.url))
@@ -14341,7 +14344,6 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       }
       const characters=selected.reduce((sum,x)=>sum+String(x.title||'').length+String(x.url||'').length,0);
       track.style.animationDuration=Math.max(22,Math.min(100,characters*0.32+18))+'s';
-      if(typeof adgbNoticeRenderStrip_==='function')adgbNoticeRenderStrip_();
     }
 
     function adgbILRender_(){
