@@ -5611,12 +5611,19 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 @media(max-width:650px){.adgb-il-ticker{min-height:32px;gap:7px;padding:4px 7px}.adgb-il-ticker-label{font-size:9px}.adgb-il-ticker-track a{font-size:11px}}
 
 /* V17.10.7: continuous ticker begins beside NOTICE instead of one viewport-width away */
-@keyframes adgbNoticeContinuous{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{animation-name:adgbNoticeContinuous!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important}
+@keyframes adgbNoticeContinuous{
+  from{transform:translateX(0)}
+  to{transform:translateX(var(--adgb-notice-shift,-50%))}
+}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{
+  animation-name:adgbNoticeContinuous!important;
+  animation-timing-function:linear!important;
+  animation-iteration-count:infinite!important;
+}
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-window{padding-left:0!important;margin-left:0!important}
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-heading{margin-right:0!important}
 
-/* V17.10.8: anchor the moving lanes immediately after the NOTICE label */
+/* V17.10.9: fixed label column; ticker is anchored to its immediate right */
 #adgbNoticeStrip.adgb-two-lane-strip{
   display:grid!important;
   grid-template-columns:48px minmax(0,1fr)!important;
@@ -5641,6 +5648,17 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 #adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-lane{
   width:100%!important;
   min-width:0!important;
+  position:relative!important;
+  display:block!important;
+}
+#adgbNoticeStrip.adgb-two-lane-strip .adgb-notice-track{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  bottom:0!important;
+  height:100%!important;
+  display:inline-flex!important;
+  align-items:center!important;
 }
 
 </style>
@@ -12266,10 +12284,17 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
             adgbRichParse_(message).forEach((part,partIndex)=>{if(partIndex)span.appendChild(document.createTextNode(' '));span.appendChild(adgbRichTextNode_(part));});track.appendChild(span);
 
           }
-          // Duplicate the lane content once. The second copy follows the first
-          // so the ticker can move from the NOTICE label continuously, without
-          // an empty viewport-width lead-in or a blank reset.
-          Array.from(track.children).forEach(node=>track.appendChild(node.cloneNode(true)));
+          // Repeat the full lane content far enough to cover the entire visible
+          // window. A single duplicate is insufficient when the notice is shorter
+          // than the window: the animation then exposes a long empty section.
+          const baseNodes=Array.from(track.children);
+          const baseWidth=Math.max(1,track.scrollWidth);
+          const laneWidth=Math.max(1,track.parentElement?.clientWidth||window.innerWidth||1200);
+          const copies=Math.min(64,Math.max(2,Math.ceil(laneWidth/baseWidth)+2));
+          for(let copy=1;copy<copies;copy++)
+            baseNodes.forEach(node=>track.appendChild(node.cloneNode(true)));
+          track.dataset.adgbCycleWidth=String(baseWidth);
+          track.style.setProperty('--adgb-notice-shift','-'+baseWidth+'px');
         });
 
         adgbNoticeLastRenderedKey_=nextKey;
