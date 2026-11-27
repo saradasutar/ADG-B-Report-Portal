@@ -12660,6 +12660,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       adgbNoticeAdminRows_=Array.isArray(result.notices)?result.notices:[];
 
       adgbNoticeAdminLoaded_=true;
+      adgbNoticePreview_();
 
       const audience=document.getElementById('adgbNoticeAudienceFilter');
 
@@ -14376,6 +14377,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       const count=document.getElementById('adgbILCount');if(count)count.textContent=links.length+' active link'+(links.length===1?'':'s');
       const updated=document.getElementById('adgbILUpdated');if(updated)updated.textContent=adgbImportantLinks_.updatedAt?'Updated '+new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}).format(new Date(adgbImportantLinks_.updatedAt)):'';
       adgbILRenderTicker_();
+      if(typeof adgbNoticePreview_==='function'&&isRecognizedAsAdmin())adgbNoticePreview_();
     }
     async function adgbImportantLinksLoad_(force=false){
       if(adgbImportantLinks_.loading)return;
