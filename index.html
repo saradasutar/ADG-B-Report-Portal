@@ -12240,72 +12240,81 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       adgbNoticeDraftIndicator_();
 
-      const text=String(document.getElementById('adgbNoticeText')?.value||'').trim();
-
+      const draftText=String(document.getElementById('adgbNoticeText')?.value||'').trim();
       const target=String(document.getElementById('adgbNoticeTarget')?.value||'ALL');
-
       const enabled=document.getElementById('adgbNoticeEnabled')?.checked===true;
-
       const start=String(document.getElementById('adgbNoticeStart')?.value||'');
-
       const end=String(document.getElementById('adgbNoticeEnd')?.value||'');
-
       const now=adgbNoticeTimeIST_();
 
       let schedule='Choose valid start and end dates';
-
       if(start&&end&&end>start){
-
         schedule=!enabled?'Disabled — will not display':start>now?'Scheduled — starts '+start+' IST':
-
           end<=now?'Expired — period already ended':'Active period — eligible to display now';
-
       }
-
       const stateLabel=document.getElementById('adgbNoticePreviewState');
-
       if(stateLabel)stateLabel.textContent=schedule;
 
+      // Preview a draft when text is entered; otherwise show the saved active
+      // notice rows plus Important Links, matching the live board composition.
       const previewLanes=[[],[]];
-      const startLane=Number(document.getElementById('adgbNoticeLane')?.value||1)===2?1:0;
-      const previewLines=adgbRichParse_(text||'Enter your notice to preview its appearance.');
-      previewLines.forEach((line,index)=>previewLanes[(startLane+index)%2].push(line));
-      previewLanes.forEach((lines,index)=>{
+      if(draftText){
+        const startLane=Number(document.getElementById('adgbNoticeLane')?.value||1)===2?1:0;
+        draftText.split(/\r\n|\n|\r/).map(x=>x.trim()).filter(Boolean).forEach((line,index)=>{
+          previewLanes[(startLane+index)%2].push({type:'text',value:line});
+        });
+      }else{
+        const nowMs=Date.now();
+        (Array.isArray(adgbNoticeAdminRows_)?adgbNoticeAdminRows_:[]).filter(item=>{
+          const from=String(item.start||'').replace(' ','T'),to=String(item.end||'').replace(' ','T');
+          return item.enabled!==false&&from&&to&&new Date(from).getTime()<=nowMs&&new Date(to).getTime()>nowMs;
+        }).forEach(item=>{
+          const lane=Number(item.lane)===2?1:0;
+          String(item.text||'').split(/\r\n|\n|\r/).map(x=>x.trim()).filter(Boolean).forEach((line,index)=>{
+            previewLanes[(lane+index)%2].push({type:'text',value:line});
+          });
+        });
+        (Array.isArray(adgbImportantLinks_?.links)?adgbImportantLinks_.links:[]).filter(item=>
+          item.enabled!==false&&[1,2].includes(Number(item.noticeLane))&&adgbILValidUrl_(item.url)
+        ).sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)).forEach(item=>{
+          previewLanes[Number(item.noticeLane)-1].push({type:'link',value:String(item.title||'Website'),url:String(item.url)});
+        });
+      }
+
+      previewLanes.forEach((items,index)=>{
         const node=document.getElementById('adgbNoticePreviewLane'+(index+1));
         if(!node)return;
         node.replaceChildren();
-        if(!lines.length){node.textContent='—';return;}
-        lines.forEach(line=>node.appendChild(adgbRichTextNode_(line)));
+        if(!items.length){node.textContent='No content assigned to this line';return;}
+        items.forEach((item,itemIndex)=>{
+          if(itemIndex)node.appendChild(document.createTextNode('   •   '));
+          if(item.type==='link'){
+            const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';
+            link.textContent=item.value;link.style.color='inherit';link.style.fontWeight='900';link.style.textDecoration='underline';
+            node.appendChild(link);
+          }else{
+            adgbRichParse_(item.value).forEach((part,partIndex)=>{
+              if(partIndex)node.appendChild(document.createTextNode(' '));
+              node.appendChild(adgbRichTextNode_(part));
+            });
+          }
+        });
       });
 
       const audience=document.getElementById('adgbNoticePreviewAudience');
-
       if(!audience)return;
-
       const offices=state.offices.length?state.offices:FALLBACK_OFFICES;
-
       const eligible=target==='ALL'?'All permitted portal viewers, subject to login/access mode':'Head Office Administrator and '+(offices.find(x=>String(x.id)===target)?.name||'selected office')+' only';
-
       const cards=offices.map(office=>{
-
         const isTarget=target==='ALL'||String(office.id)===target;
-
         return '<div class="preview-office" data-included="'+(isTarget?'yes':'no')+'"><strong>'+
-
           escapeHtml(office.name)+'</strong><small>'+(isTarget?'✓ Included for authorized office users':'— Not targeted')+'</small></div>';
-
       });
-
       audience.innerHTML='<div class="preview-office" data-included="yes"><strong>Head Office Admin</strong><small>✓ Can view authorized active notices</small></div>'+cards.join('')+
-
         '<div class="preview-office" data-included="'+(target==='ALL'?'yes':'no')+'"><strong>Other viewers / guests</strong><small>'+
-
         (target==='ALL'?'May see notice if portal access permits':'Not targeted')+'</small></div>';
-
       const help=document.querySelector('.adgb-notice-preview-help');
-
-      if(help)help.textContent=eligible+'. These are expected audiences, not confirmations of actual account delivery. Office pending counts follow separate admin settings.';
-
+      if(help)help.textContent=(draftText?'Draft preview. ':'Saved live-content preview. ')+eligible+'. Actual delivery is restricted by backend and portal access rules. Office pending counts follow separate admin settings.';
     }
 
     function adgbNoticeResetForm_(){
