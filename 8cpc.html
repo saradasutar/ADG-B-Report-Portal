@@ -282,7 +282,7 @@ function renderRecordLayout(a,fields,row,locked){
  if(a==='N'){
   return ['FY 2023-24','FY 2024-25'].map(fy=>{
    const fs=grouped[fy]||[];
-   return '<div class="entry-year-panel"><div class="entry-year-heading">'+esc(fy)+'<small>Employee-months · enter 0 where nil</small></div><div class="entry-region-grid">'+['R1','R2','R3'].map(region=>renderFieldGroup(region+' zone',fs.filter(f=>f.key.toUpperCase().startsWith(region.toLowerCase())),row,locked,'compact')).join('')+'</div></div>';
+   return '<div class="entry-year-panel"><div class="entry-year-heading">'+esc(fy)+'<small>Employee-months · enter 0 where nil</small></div><div class="entry-region-grid">'+['R1','R2','R3'].map(region=>renderFieldGroup(region+' zone',fs.filter(f=>f.key.toUpperCase().startsWith(region.toUpperCase())),row,locked,'compact')).join('')+'</div></div>';
   }).join('')+renderFieldGroup('Remarks',grouped.Other||[],row,locked);
  }
  if(a==='O'){
