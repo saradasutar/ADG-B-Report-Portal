@@ -98,6 +98,56 @@ main{max-width:1600px;margin:22px auto;padding:0 clamp(12px,2vw,28px)}.hero{back
 .entry-workspace .btn:focus-visible,.annexure-navigation a:focus-visible{outline:3px solid #72b6d1;outline-offset:2px}
 @media(max-width:900px){.annexure-navigation{align-items:flex-start;flex-direction:column}.annexure-navigation nav{width:100%}.annexure-navigation nav a{flex:1;justify-content:center}}
 @media(max-width:700px){.entry-hero{padding:23px 18px}.entry-hero h3{font-size:22px!important}.entry-hero-mark{display:none}.entry-stepbar{padding:0 10px}.entry-step{padding:12px 5px;gap:7px}.entry-step>span{width:29px;height:29px}.entry-step b{font-size:11px}.entry-step small{font-size:9px}.office-selector-card{padding:19px 16px 14px}.office-selector-card .control{min-width:100%}.entry-meta{margin:0 16px 15px!important;padding:15px!important}.annexure-navigation{margin:0 16px 15px;padding:14px}.annexure-navigation nav a{min-width:29%;font-size:12px}.annexure-navigation nav a span{display:none}.entry-savebar{margin:0 16px 17px;align-items:flex-start;flex-direction:column}.entry-savebar .btn{width:100%}.annexure-work-card{margin:0 12px 16px!important}.annexure-work-card .table-toolbar{padding:15px!important}.annexure-work-card .table-toolbar b{font-size:15px}.annexure-work-card .entry-grid-wrap{margin:12px 10px 0}.annexure-work-card .actions{padding:0 10px 13px}.annexure-work-card .actions .btn{flex:1}.entry-workspace{padding-bottom:2px!important}}
+
+/* V17.14.0 — hybrid annexure workspaces, preserving official schema keys */
+.annexure-work-card{padding:0!important;overflow:hidden;border-radius:17px!important;border:1px solid #d6e3ef!important;box-shadow:0 10px 30px #173d5f0c!important}
+.annexure-work-card .table-toolbar{margin:0!important;padding:18px 21px!important;min-height:78px;border-radius:0!important}
+.annexure-work-card .table-toolbar b{font-size:17px;letter-spacing:-.2px}
+.annexure-work-card .table-toolbar small{font-size:11px;margin-top:5px}
+.entry-help{display:flex;align-items:flex-start;gap:10px;margin:17px 20px 13px;padding:12px 14px;border:1px solid #d5e7f3;border-radius:11px;background:#f2f8fd;color:#46627d;font-size:12px;line-height:1.5}
+.entry-help-icon{flex:0 0 22px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:#d9eefa;color:#17659b;font-weight:900}
+.entry-record-list{display:grid;gap:14px;padding:0 20px 4px}
+.entry-record{border:1px solid #dbe5ef;border-radius:14px;background:#fff;overflow:hidden}
+.entry-record-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;background:linear-gradient(90deg,#f1f6fb,#f8fbfe);border-bottom:1px solid #e2eaf2}
+.entry-record-head>div{display:flex;align-items:center;gap:10px;color:#183f65;font-size:13px}
+.entry-row-number{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#174f80;color:#fff;font-size:11px;font-weight:900}
+.entry-record-head .btn{padding:7px 10px;font-size:11px}
+.entry-field-group{min-width:0;padding:15px 16px;border-bottom:1px solid #edf1f6}
+.entry-field-group:last-child{border-bottom:0}
+.entry-group-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;color:#174a77;font-size:13px;font-weight:900}
+.entry-group-title span{color:#7b8da0;font-size:10px;font-weight:700}
+.entry-field-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.entry-data-field{min-width:0;display:flex;flex-direction:column;gap:6px}
+.entry-data-field label{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-height:30px;color:#465e77;font-size:11px;font-weight:800;line-height:1.35}
+.entry-data-field label i{flex:0 0 auto;color:#b64b3d;font-size:9px;font-style:normal}
+.entry-data-field input,.entry-data-field select,.entry-data-field textarea{width:100%;min-width:0;min-height:43px;border:1px solid #cbd9e7;border-radius:9px;padding:10px 11px;background:#fbfdff;color:#173b60;font:13px/1.35 Inter,Segoe UI,Arial,sans-serif;transition:border-color .15s,box-shadow .15s}
+.entry-data-field textarea{min-height:75px;resize:vertical}
+.entry-data-field input:focus,.entry-data-field select:focus,.entry-data-field textarea:focus{outline:0;border-color:#2782bf;box-shadow:0 0 0 3px #2782bf20;background:#fff}
+.entry-data-field input::placeholder,.entry-data-field textarea::placeholder{color:#9aaabd;font-size:11px}
+.entry-year-panel{margin:0 0 14px;border:1px solid #dce7f1;border-radius:13px;overflow:hidden;background:#fff}
+.entry-year-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;background:#eaf3fb;color:#164c78;font-size:14px;font-weight:900}
+.entry-year-heading small{font-size:10px;color:#647f98;font-weight:600}
+.entry-year-panel .entry-field-group{border:0}
+.entry-region-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px}
+.entry-region-grid .entry-field-group{padding:12px;border:1px solid #e4ebf2;border-radius:10px;background:#fbfdff}
+.entry-region-grid .entry-field-grid{grid-template-columns:1fr}
+.entry-region-grid .entry-data-field label{min-height:0}
+.entry-year-panel .entry-field-group .entry-field-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.entry-field-group.year-grid.six .entry-field-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.entry-field-group.paylevel-group .entry-field-grid{grid-template-columns:minmax(180px,320px)}
+.entry-city-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.entry-city-grid .entry-field-group{border:1px solid #dce7f1;border-radius:12px;background:#fbfdff}
+.entry-city-grid .entry-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.entry-field-group.city-pair .entry-data-field label{min-height:42px}
+.entry-field-group.cadre-group .entry-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.entry-field-group.service-group .entry-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.entry-card-actions{padding:0 20px 19px!important;margin:0!important;gap:10px}
+.entry-card-actions .btn{min-height:43px;padding:10px 17px}
+.annexure-work-card .grid-foot{padding:10px 21px 13px;margin:0!important}
+.annexure-work-card .source-note{margin:14px 20px!important}
+.annexure-work-card .notice.error{margin:14px 20px!important}
+@media(max-width:1050px){.entry-field-grid,.entry-field-group.cadre-group .entry-field-grid,.entry-field-group.service-group .entry-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.entry-region-grid{grid-template-columns:1fr}.entry-region-grid .entry-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.entry-year-panel .entry-field-group .entry-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.entry-field-group.year-grid.six .entry-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.annexure-work-card .table-toolbar{padding:14px!important}.entry-record-list{padding:0 10px 4px}.entry-field-group{padding:12px}.entry-field-grid,.entry-field-group.cadre-group .entry-field-grid,.entry-field-group.service-group .entry-field-grid{grid-template-columns:1fr}.entry-region-grid{padding:8px}.entry-region-grid .entry-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.entry-year-panel .entry-field-group .entry-field-grid,.entry-field-group.year-grid.six .entry-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.entry-city-grid{grid-template-columns:1fr}.entry-city-grid .entry-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.entry-year-heading{align-items:flex-start;flex-direction:column;gap:3px}.entry-card-actions{padding:0 10px 14px!important}.entry-card-actions .btn{flex:1;min-width:0;padding:10px 8px;font-size:11px}.entry-record-head{padding:10px}.entry-help{margin:12px 10px}}
 </style>
 </head>
 <body>
@@ -198,7 +248,13 @@ function initEntry(){
  fillEntrySubs();$('multiReportingOfficer').value=state.boot.user.displayName||'';loadAllAnnexures();
 }
 function fillEntrySubs(){const p=$('entryParent').value;const subs=activeEntryAccess().filter(a=>a.parentOfficeId===p).map(a=>({value:a.subOffice,label:a.subOffice}));fillSelect($('entrySub'),subs,subs.length?'Select sub-office':'No assigned sub-office');if(subs.length===1)$('entrySub').value=subs[0].value;}
-function fieldInput(f,value=''){let val=value;if(f.type==='number'&&val==='')val='0';if(f.type==='select')return '<select data-field="'+f.key+'"><option value="">Select…</option>'+(f.options||[]).map(o=>'<option '+(String(val)===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';if(f.type==='number')return '<input data-field="'+f.key+'" type="number" min="0" step="1" value="'+esc(val)+'" '+(f.required?'required':'')+'>';if(f.label.toLowerCase().includes('remarks')||f.label.length>65||f.label.toLowerCase().includes('qualification')||f.label.toLowerCase().includes('experience'))return '<textarea data-field="'+f.key+'" placeholder="'+esc(f.label)+'">'+esc(val)+'</textarea>';return '<input data-field="'+f.key+'" type="text" value="'+esc(val)+'" placeholder="'+esc(f.label)+'" '+(f.required?'required':'')+'>';}
+function fieldInput(f,value='',locked=false){
+ const val=value??'',disabled=locked?'disabled':'';
+ if(f.type==='select')return '<select data-field="'+esc(f.key)+'" '+disabled+'><option value="">Select…</option>'+(f.options||[]).map(o=>'<option value="'+esc(o)+'" '+(String(val)===String(o)?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
+ if(f.type==='number')return '<input data-field="'+esc(f.key)+'" type="number" min="0" step="1" value="'+esc(val)+'" placeholder="Enter 0 if nil" '+disabled+'>';
+ if(f.label.toLowerCase().includes('remarks')||f.label.length>65||f.label.toLowerCase().includes('qualification')||f.label.toLowerCase().includes('experience'))return '<textarea data-field="'+esc(f.key)+'" placeholder="'+esc(f.label)+'" '+disabled+'>'+esc(val)+'</textarea>';
+ return '<input data-field="'+esc(f.key)+'" type="text" value="'+esc(val)+'" placeholder="'+esc(f.label)+'" '+disabled+'>';
+}
 const annexureWorkspace={};
 function annexureIds(){return Object.keys(state.boot.schemas||{}).filter(k=>['L','N','O','P','Q','R'].includes(k));}
 function officeReady(){return !!($('entryParent').value&&$('entrySub').value);}
@@ -211,18 +267,47 @@ async function loadAllAnnexures(){
 function renderAllAnnexureCards(){
  const host=$('entryAnnexures');host.innerHTML=annexureIds().map(renderAnnexureCard).join('');
  annexureIds().forEach(a=>{const card=host.querySelector('[data-annexure-card="'+a+'"]');if(!card)return;const w=annexureWorkspace[a],fields=state.boot.schemas[a].fields.filter(f=>!['reportingOfficer','contactEmail'].includes(f.key));
- card.querySelectorAll('[data-field]').forEach(el=>{const idx=Number(el.closest('tr').dataset.row),key=el.dataset.field;const update=()=>{if(!w.rows[idx])w.rows[idx]={};w.rows[idx][key]=el.value;};el.addEventListener('input',update);el.addEventListener('change',update);});
+ card.querySelectorAll('[data-field]').forEach(el=>{const idx=Number(el.closest('[data-row]').dataset.row),key=el.dataset.field;const update=()=>{if(!w.rows[idx])w.rows[idx]={};w.rows[idx][key]=el.value;};el.addEventListener('input',update);el.addEventListener('change',update);});
  card.querySelector('[data-add-row]').onclick=()=>{const row={reportingOfficer:$('multiReportingOfficer').value,contactEmail:$('multiContactEmail').value};fields.forEach(f=>row[f.key]='');w.rows.push(row);renderAllAnnexureCards();};
  card.querySelectorAll('[data-remove-row]').forEach(b=>b.onclick=()=>{w.rows.splice(Number(b.dataset.removeRow),1);if(!w.rows.length)w.rows.push({});renderAllAnnexureCards();});
  card.querySelector('[data-save-annexure]').onclick=()=>saveOneAnnexure(a,false);card.querySelector('[data-submit-annexure]').onclick=()=>{if(confirm('Submit Annexure '+a+' for parent-office verification? It will be locked until returned for correction.'))saveOneAnnexure(a,true);};
  });
 }
+function renderFieldGroup(title,fields,row,locked,extraClass=''){
+ if(!fields.length)return '';
+ return '<section class="entry-field-group '+extraClass+'"><div class="entry-group-title">'+esc(title)+'<span>'+fields.length+' field(s)</span></div><div class="entry-field-grid">'+fields.map(f=>'<div class="entry-data-field"><label>'+esc(displayLabel(f))+(f.required?'<i>Required</i>':'')+'</label>'+fieldInput(f,row[f.key]??'',locked)+'</div>').join('')+'</div></section>';
+}
+function renderRecordLayout(a,fields,row,locked){
+ const grouped={};fields.forEach(f=>(grouped[f.group||'Annexure fields']??=[]).push(f));
+ if(a==='N'){
+  return ['FY 2023-24','FY 2024-25'].map(fy=>{
+   const fs=grouped[fy]||[];
+   return '<div class="entry-year-panel"><div class="entry-year-heading">'+esc(fy)+'<small>Employee-months · enter 0 where nil</small></div><div class="entry-region-grid">'+['R1','R2','R3'].map(region=>renderFieldGroup(region+' zone',fs.filter(f=>f.key.toUpperCase().startsWith(region.toLowerCase())),row,locked,'compact')).join('')+'</div></div>';
+  }).join('')+renderFieldGroup('Remarks',grouped.Other||[],row,locked);
+ }
+ if(a==='O'){
+  const years=fields.filter(f=>/^y20/.test(f.key)),first=years.filter(f=>Number(f.key.slice(1))<=2030),second=years.filter(f=>Number(f.key.slice(1))>2030);
+  return renderFieldGroup('Pay Level',fields.filter(f=>f.key==='payLevel'),row,locked,'paylevel-group')+
+   '<div class="entry-year-panel"><div class="entry-year-heading">2026–2030<small>First five retirement years</small></div>'+renderFieldGroup('Annual retirement counts',first,row,locked,'year-grid five')+'</div>'+
+   '<div class="entry-year-panel"><div class="entry-year-heading">2031–2036<small>Following six retirement years</small></div>'+renderFieldGroup('Annual retirement counts',second,row,locked,'year-grid six')+'</div>'+
+   renderFieldGroup('Remarks',grouped.Other||[],row,locked);
+ }
+ if(a==='P'){
+  const cities=Object.keys(grouped).filter(g=>g!=='Pay Level'&&g!=='Other');
+  return renderFieldGroup('Pay Level',grouped['Pay Level']||[],row,locked,'paylevel-group')+
+   '<div class="entry-city-grid">'+cities.map(city=>renderFieldGroup(city,grouped[city],row,locked,'city-pair')).join('')+'</div>'+
+   renderFieldGroup('Remarks',grouped.Other||[],row,locked);
+ }
+ return Object.entries(grouped).map(([g,fs])=>renderFieldGroup(g,fs,row,locked,(a==='L'?'cadre-group':a==='R'?'service-group':''))).join('');
+}
 function renderAnnexureCard(a){
- const schema=state.boot.schemas[a],w=annexureWorkspace[a]||{rows:[{}],submission:null};const fields=schema.fields.filter(f=>!['reportingOfficer','contactEmail'].includes(f.key));const groups=[...new Set(fields.map(f=>f.group||'Annexure fields'))];
- const gh=groups.map(g=>'<th class="group-head" colspan="'+fields.filter(f=>(f.group||'Annexure fields')===g).length+'">'+esc(g)+'</th>').join('');const hh=fields.map(f=>'<th title="'+esc(displayLabel(f))+'">'+esc(displayLabel(f))+(f.required?'<span class="required"> *</span>':'')+'</th>').join('');
+ const schema=state.boot.schemas[a],w=annexureWorkspace[a]||{rows:[{}],submission:null};
+ const fields=schema.fields.filter(f=>!['reportingOfficer','contactEmail'].includes(f.key));
  const rows=w.rows.length?w.rows:[{}],locked=['SUBMITTED','VERIFIED'].includes(w.submission&&w.submission.status),status=(w.submission&&w.submission.status)||'NOT SAVED';
- const body=rows.map((row,i)=>'<tr data-row="'+i+'"><td class="sticky-index">'+(i+1)+'</td>'+fields.map(f=>'<td>'+fieldInput(f,row[f.key]??'')+'</td>').join('')+'<td class="action-cell"><button type="button" class="btn danger small" data-remove-row="'+i+'" '+(locked?'disabled':'')+'>Remove</button></td></tr>').join('');
- return '<section class="panel annexure-work-card" id="annexure-'+a+'" data-annexure-card="'+a+'"><div class="table-toolbar"><div><b>Annexure '+a+' — '+esc(schema.title)+'</b><small>'+fields.length+' data columns · '+rows.length+' row(s) · <span class="status">'+status+'</span></small></div><div class="actions"><button type="button" class="btn secondary small" data-add-row '+(locked?'disabled':'')+'>＋ Add row</button></div></div>'+(w.error?'<div class="notice error">'+esc(w.error)+'</div>':'')+(ANNEXURE_SOURCE_NOTES[a]?'<div class="notice source-note">'+esc(ANNEXURE_SOURCE_NOTES[a])+'</div>':'')+'<div class="entry-grid-wrap"><table class="entry-grid"><thead><tr><th class="sticky-index" rowspan="2">Sl. No.</th>'+gh+'<th rowspan="2" class="action-head">Action</th></tr><tr>'+hh+'</tr></thead><tbody>'+body+'</tbody></table></div><div class="grid-foot"><span>Scroll horizontally to view all official columns. Required fields are marked *.</span><strong>'+rows.length+' row(s)</strong></div><div class="actions"><button type="button" class="btn" data-save-annexure '+(locked?'disabled':'')+'>Save Annexure '+a+' draft</button><button type="button" class="btn success" data-submit-annexure '+(locked?'disabled':'')+'>Submit Annexure '+a+'</button></div></section>';
+ const addLabel=a==='Q'?'＋ Add location record':a==='L'?'＋ Add cadre / post':'＋ Add Pay Level';
+ const body=rows.map((row,i)=>'<article class="entry-record" data-row="'+i+'"><div class="entry-record-head"><div><span class="entry-row-number">'+String(i+1).padStart(2,'0')+'</span><strong>'+(a==='Q'?'Location record':a==='L'?'Cadre / post record':'Pay Level record')+' '+(i+1)+'</strong></div><button type="button" class="btn danger small" data-remove-row="'+i+'" '+(locked?'disabled':'')+'>Remove row</button></div>'+renderRecordLayout(a,fields,row,locked)+'</article>').join('');
+ const helper=a==='P'?'Each city has two official figures: persons in position and persons drawing HRA.':a==='Q'?'Add one row for each Pay Level and location combination. The official location columns are represented as individual location records.':a==='N'?'Figures are grouped by financial year and R1/R2/R3 zones; each half-year value remains a separate official field.':a==='O'?'Enter the number of OPS employees retiring in each year from 2026 to 2036.':a==='R'?'Figures are grouped by qualifying-service band and MACP category.':'Complete the cadre, recruitment, feeder-post and cadre-review sections for each post.';
+ return '<section class="panel annexure-work-card" id="annexure-'+a+'" data-annexure-card="'+a+'"><div class="table-toolbar"><div><b>Annexure '+a+' — '+esc(schema.title.replace(/^Annexure [A-Z] — /,''))+'</b><small>'+fields.length+' official fields · '+rows.length+' record(s) · <span class="status">'+esc(status)+'</span></small></div><div class="actions"><button type="button" class="btn secondary small" data-add-row '+(locked?'disabled':'')+'>'+addLabel+'</button></div></div>'+(w.error?'<div class="notice error">'+esc(w.error)+'</div>':'')+(ANNEXURE_SOURCE_NOTES[a]?'<div class="notice source-note">'+esc(ANNEXURE_SOURCE_NOTES[a])+'</div>':'')+'<div class="entry-help"><span class="entry-help-icon">i</span>'+esc(helper)+'</div><div class="entry-record-list">'+body+'</div><div class="grid-foot"><span>Use Tab to move between fields. Required fields are checked before submission. For nil figures, enter 0.</span><strong>'+rows.length+' record(s)</strong></div><div class="actions entry-card-actions"><button type="button" class="btn" data-save-annexure '+(locked?'disabled':'')+'>Save Annexure '+a+' draft</button><button type="button" class="btn success" data-submit-annexure '+(locked?'disabled':'')+'>Submit Annexure '+a+'</button></div></section>';
 }
 async function saveOneAnnexure(a,submit){
  const w=annexureWorkspace[a],schema=state.boot.schemas[a],officer=$('multiReportingOfficer').value.trim(),contact=$('multiContactEmail').value.trim();if(!officeReady()){showMessage('Select parent office and sub-office first.','error');return;}if(!officer){showMessage('Enter the Reporting Officer name.','error');$('multiReportingOfficer').focus();return;}
