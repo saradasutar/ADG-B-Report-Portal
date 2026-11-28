@@ -45,7 +45,60 @@ main{max-width:1600px;margin:22px auto;padding:0 clamp(12px,2vw,28px)}.hero{back
 .grid-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#6b8097;font-size:11px;padding:9px 3px}
 .source-note{border-left:4px solid #d69a2e;background:#fff8e8;color:#77521a}.annexure-work-card{margin:16px 0;padding:16px}.annexure-work-card .table-toolbar{margin-top:0}.annexure-work-card .actions{margin-top:12px}#addRecordBtn{display:none}
 @media(max-width:700px){.meta-grid{grid-template-columns:1fr}.panel{padding:14px}.entry-grid th,.entry-grid td{min-width:165px}.entry-grid td input,.entry-grid td select{min-width:150px}}
-.project-builder,.project-entry{background:#f7faff;border:1px solid #dce7f4;border-radius:14px;padding:16px;margin:14px 0}.project-builder h4,.project-entry h4{margin:0 0 12px;color:#123968}.project-fields-head{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.project-field-row{display:grid;grid-template-columns:1.2fr 1fr .8fr .7fr 1.4fr auto;gap:8px;align-items:end;padding:10px;background:white;border:1px solid #e1e9f3;border-radius:10px;margin:8px 0}.project-field-row label{display:block;font-size:11px;margin-bottom:4px}.project-field-row input,.project-field-row select{width:100%;min-width:0}.dynamic-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.dynamic-form .field{background:white;border:1px solid #e1e9f3;border-radius:10px;padding:10px}.dynamic-form label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.dynamic-form input,.dynamic-form select,.dynamic-form textarea{width:100%}@media(max-width:760px){.project-field-row{grid-template-columns:1fr 1fr}.dynamic-form{grid-template-columns:1fr}}</style>
+.project-builder,.project-entry{background:#f7faff;border:1px solid #dce7f4;border-radius:14px;padding:16px;margin:14px 0}.project-builder h4,.project-entry h4{margin:0 0 12px;color:#123968}.project-fields-head{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.project-field-row{display:grid;grid-template-columns:1.2fr 1fr .8fr .7fr 1.4fr auto;gap:8px;align-items:end;padding:10px;background:white;border:1px solid #e1e9f3;border-radius:10px;margin:8px 0}.project-field-row label{display:block;font-size:11px;margin-bottom:4px}.project-field-row input,.project-field-row select{width:100%;min-width:0}.dynamic-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.dynamic-form .field{background:white;border:1px solid #e1e9f3;border-radius:10px;padding:10px}.dynamic-form label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.dynamic-form input,.dynamic-form select,.dynamic-form textarea{width:100%}@media(max-width:760px){.project-field-row{grid-template-columns:1fr 1fr}.dynamic-form{grid-template-columns:1fr}}
+/* V17.13.1 — professional reporting workspace */
+.entry-workspace{padding:0!important;overflow:hidden;border-radius:20px!important}
+.entry-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:30px 32px 24px;background:linear-gradient(115deg,#102f55 0%,#155b91 64%,#087e7d 100%);color:#fff}
+.entry-hero .eyebrow{font-size:10px;letter-spacing:1.6px;font-weight:900;color:#a9d9e8;margin-bottom:10px}
+.entry-hero h3{font-size:27px!important;line-height:1.2;color:#fff!important;margin:0 0 8px!important;letter-spacing:-.5px}
+.entry-hero .sub{font-size:14px;color:#d9e9f5;max-width:790px;line-height:1.6;margin:0}
+.entry-hero-mark{flex:0 0 142px;min-height:112px;border:1px solid #ffffff45;border-radius:16px;background:#ffffff12;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+.entry-hero-mark span{font-size:17px;font-weight:900;letter-spacing:1px}.entry-hero-mark b{font-size:21px;margin-top:4px}.entry-hero-mark small{font-size:10px;color:#d8eaf5;margin-top:3px}
+.entry-stepbar{display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:0 32px;background:#f4f8fc;border-bottom:1px solid #e0e9f2}
+.entry-step{display:flex;align-items:center;gap:12px;padding:17px 12px;border-right:1px solid #e0e9f2}.entry-step:last-child{border:0}
+.entry-step>span{width:35px;height:35px;display:grid;place-items:center;border-radius:11px;background:#e1eaf3;color:#46637e;font-size:12px;font-weight:900}
+.entry-step.active>span{background:#d9edf0;color:#087b78}.entry-step b{display:block;color:#193f65;font-size:13px}.entry-step small{display:block;color:#71869b;font-size:11px;margin-top:2px}
+.office-selector-card{padding:24px 32px 17px;background:#fff}
+.section-kicker{font-size:10px;letter-spacing:1.3px;font-weight:900;color:#2470a4;margin-bottom:7px}
+.office-selector-card .toolbar{gap:15px;margin:10px 0 8px;align-items:stretch}
+.office-selector-card .control{min-width:230px;gap:8px}
+.office-selector-card .control label{font-size:12px;color:#344f6b}
+.office-selector-card .control label em{font-style:normal;color:#a43a47;font-size:10px;margin-left:4px}
+.office-selector-card .control select{min-height:51px;border:1px solid #c8d8e8;border-radius:11px;padding:12px 14px;font-size:14px;font-weight:600;background:#fbfdff}
+.office-hint-box{min-height:51px;display:flex;align-items:center;gap:11px;padding:9px 13px;border:1px solid #cce7e5;background:#f0faf8;border-radius:11px}
+.hint-icon{width:29px;height:29px;display:grid;place-items:center;background:#d9f1eb;color:#087c68;border-radius:9px;font-weight:900}
+.office-hint-box b{display:block;font-size:12px;color:#176052}.office-hint-box small{display:block;font-size:11px;color:#577b75;margin-top:2px}
+.entry-state{padding:12px 15px!important;font-size:12px!important;margin:13px 0 0!important}
+.entry-meta{margin:0 32px 20px!important;padding:19px 20px!important;border-radius:14px!important;background:linear-gradient(110deg,#eff6ff,#f0faf8)!important}
+.entry-meta .meta-title{font-size:15px;margin-bottom:13px}.entry-meta .meta-title span{font-size:11px}
+.entry-meta .meta-grid{gap:18px}.entry-meta .field label{font-size:12px}.entry-meta .field input{min-height:49px;border-radius:10px;font-size:14px;padding:11px 13px}
+.annexure-navigation{margin:0 32px 18px;padding:17px 19px;border:1px solid #dbe6f0;border-radius:14px;background:#fbfdff;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.annexure-navigation b{display:block;color:#193f65;font-size:15px}.annexure-navigation small{display:block;color:#71869b;font-size:11px;margin-top:3px}
+.annexure-navigation nav{display:flex;gap:7px;flex-wrap:wrap}
+.annexure-navigation nav a{display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:9px;border:1px solid #d5e3ef;background:#fff;color:#174c7c;text-decoration:none;font-size:13px;font-weight:900;transition:.15s}
+.annexure-navigation nav a span{font-size:10px;font-weight:600;color:#6a8197}
+.annexure-navigation nav a:hover{border-color:#278b9a;background:#eff9f8;transform:translateY(-1px)}
+.entry-savebar{margin:0 32px 22px;padding:15px 18px;background:#f0f6fc;border:1px solid #dbe8f4;border-radius:13px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.entry-savebar b{display:block;color:#183f67;font-size:14px}.entry-savebar small{display:block;color:#637c94;font-size:11px;margin-top:3px}
+.entry-savebar .btn{min-height:43px;padding:10px 19px;font-size:13px;white-space:nowrap}
+.annexure-work-card{margin:0 32px 23px!important;padding:0!important;border:1px solid #d9e4ef!important;border-radius:16px!important;overflow:hidden;box-shadow:0 8px 26px #153b5c0c!important;scroll-margin-top:18px}
+.annexure-work-card .table-toolbar{margin:0!important;padding:19px 21px!important;border-radius:0!important;min-height:76px}
+.annexure-work-card .table-toolbar b{font-size:17px;letter-spacing:-.15px}.annexure-work-card .table-toolbar small{font-size:12px;margin-top:5px}
+.annexure-work-card .table-toolbar .btn{min-height:39px;padding:9px 15px;font-size:12px}
+.annexure-work-card>.notice{margin:13px 17px 0!important}
+.annexure-work-card .entry-grid-wrap{margin:15px 16px 0;border-radius:12px;max-height:72vh}
+.annexure-work-card .entry-grid{font-size:13px}
+.annexure-work-card .entry-grid th{padding:14px 12px;min-width:205px;font-size:12px}
+.annexure-work-card .entry-grid td{padding:9px;min-width:205px}
+.annexure-work-card .entry-grid td input,.annexure-work-card .entry-grid td select,.annexure-work-card .entry-grid td textarea{min-height:47px;font-size:13px;border-radius:9px}
+.annexure-work-card .grid-foot{margin:0 17px;padding:10px 2px;font-size:11px}
+.annexure-work-card>.actions{padding:0 17px 17px;margin:0!important;gap:9px}
+.annexure-work-card>.actions .btn{min-height:42px;padding:10px 16px;font-size:12px}
+.entry-workspace .btn{border-radius:9px;font-weight:800}
+.entry-workspace .btn:focus-visible,.annexure-navigation a:focus-visible{outline:3px solid #72b6d1;outline-offset:2px}
+@media(max-width:900px){.annexure-navigation{align-items:flex-start;flex-direction:column}.annexure-navigation nav{width:100%}.annexure-navigation nav a{flex:1;justify-content:center}}
+@media(max-width:700px){.entry-hero{padding:23px 18px}.entry-hero h3{font-size:22px!important}.entry-hero-mark{display:none}.entry-stepbar{padding:0 10px}.entry-step{padding:12px 5px;gap:7px}.entry-step>span{width:29px;height:29px}.entry-step b{font-size:11px}.entry-step small{font-size:9px}.office-selector-card{padding:19px 16px 14px}.office-selector-card .control{min-width:100%}.entry-meta{margin:0 16px 15px!important;padding:15px!important}.annexure-navigation{margin:0 16px 15px;padding:14px}.annexure-navigation nav a{min-width:29%;font-size:12px}.annexure-navigation nav a span{display:none}.entry-savebar{margin:0 16px 17px;align-items:flex-start;flex-direction:column}.entry-savebar .btn{width:100%}.annexure-work-card{margin:0 12px 16px!important}.annexure-work-card .table-toolbar{padding:15px!important}.annexure-work-card .table-toolbar b{font-size:15px}.annexure-work-card .entry-grid-wrap{margin:12px 10px 0}.annexure-work-card .actions{padding:0 10px 13px}.annexure-work-card .actions .btn{flex:1}.entry-workspace{padding-bottom:2px!important}}
+</style>
 </head>
 <body>
 <header><div class="head">
@@ -65,15 +118,18 @@ main{max-width:1600px;margin:22px auto;padding:0 clamp(12px,2vw,28px)}.hero{back
       <button class="tab hidden" data-tab="access" id="accessTab">⚙ Access Control</button>
     </nav>
     <div id="message" class="hidden"></div>
-    <section id="entryPanel" class="panel">
-      <h3>Sub-office data entry</h3><p class="sub">Select your office once. All six annexures appear together below in the prescribed sequence. Complete, save and submit each annexure independently.</p>
-      <div class="toolbar">
-        <div class="control"><label>Parent office</label><select id="entryParent"></select></div>
-        <div class="control"><label>Sub-office</label><select id="entrySub"></select></div>
-        <div class="control office-hint"><label>Reporting workspace</label><div class="notice" style="margin:0">All six annexures load automatically after office selection.</div></div>
-      </div>
-      <div id="entryState" class="notice">Select the office, sub-office and annexure.</div>
-      <div class="entry-meta" id="entryOfficeMeta"><div class="meta-title">Office identification <span>Applied to all six annexures</span></div><div class="meta-grid"><div class="field"><label>Reporting Officer *</label><input id="multiReportingOfficer" placeholder="Name and designation"></div><div class="field"><label>Contact / Email</label><input id="multiContactEmail" placeholder="Official email / contact"></div></div></div><div class="actions" style="margin:12px 0"><button class="btn" id="saveAllDraftsBtn">Save all drafts</button><span class="sub" style="margin:0;align-self:center">Each annexure remains a separate submission for review and compilation.</span></div><div id="entryAnnexures"></div>
+    <section id="entryPanel" class="panel entry-workspace">
+      <div class="entry-hero"><div><div class="eyebrow">OFFICIAL DATA COLLECTION WORKSPACE · 8TH CENTRAL PAY COMMISSION</div><h3>Sub-office reporting centre</h3><p class="sub">Complete the six prescribed annexures in one continuous workspace. Your office details are applied across every annexure; each annexure is saved and submitted separately.</p></div><div class="entry-hero-mark"><span>CPWD</span><b>8th CPC</b><small>Regional return</small></div></div>
+      <div class="entry-stepbar"><div class="entry-step active"><span>01</span><div><b>Identify office</b><small>Select reporting unit</small></div></div><div class="entry-step"><span>02</span><div><b>Enter information</b><small>Complete annexure grids</small></div></div><div class="entry-step"><span>03</span><div><b>Save & submit</b><small>Send for verification</small></div></div></div>
+      <div class="office-selector-card"><div class="section-kicker">REPORTING UNIT</div><div class="toolbar">
+        <div class="control"><label>Parent office <em>Required</em></label><select id="entryParent"></select></div>
+        <div class="control"><label>Sub-office <em>Required</em></label><select id="entrySub"></select></div>
+        <div class="control office-hint"><label>Workspace configuration</label><div class="office-hint-box"><span class="hint-icon">✓</span><div><b>Six annexures in one workspace</b><small>Choose your office once. Annexures L, N, O, P, Q and R load automatically.</small></div></div></div>
+      </div><div id="entryState" class="notice entry-state">Select your parent office and sub-office to open the reporting workspace.</div></div>
+      <div class="entry-meta" id="entryOfficeMeta"><div class="meta-title">Reporting officer details <span>Shared across all six annexures</span></div><div class="meta-grid"><div class="field"><label>Reporting Officer <span class="required">*</span></label><input id="multiReportingOfficer" placeholder="Enter name and designation"></div><div class="field"><label>Official contact / email</label><input id="multiContactEmail" placeholder="Enter official email address or contact number"></div></div></div>
+      <div class="annexure-navigation"><div><div class="section-kicker">ANNEXURE NAVIGATION</div><b>Reporting sections</b><small>Use these shortcuts to move directly to an annexure.</small></div><nav><a href="#annexure-L">L <span>Cadre & posts</span></a><a href="#annexure-N">N <span>Hardship allowance</span></a><a href="#annexure-O">O <span>Retirements</span></a><a href="#annexure-P">P <span>HRA cities</span></a><a href="#annexure-Q">Q <span>Location HRA</span></a><a href="#annexure-R">R <span>Service & MACP</span></a></nav></div>
+      <div class="entry-savebar"><div><b>Save your progress safely</b><small>Save all six drafts at any time. Submit each annexure when its figures are complete.</small></div><button class="btn" id="saveAllDraftsBtn">Save all drafts</button></div>
+      <div id="entryAnnexures"></div>
     </section>
     <section id="reviewPanel" class="panel hidden">
       <h3>Parent-office verification</h3><p class="sub">Review submitted annexures from subordinate offices. Verified records are included in the parent-office and ADG(B) compilation.</p>
@@ -166,7 +222,7 @@ function renderAnnexureCard(a){
  const gh=groups.map(g=>'<th class="group-head" colspan="'+fields.filter(f=>(f.group||'Annexure fields')===g).length+'">'+esc(g)+'</th>').join('');const hh=fields.map(f=>'<th title="'+esc(displayLabel(f))+'">'+esc(displayLabel(f))+(f.required?'<span class="required"> *</span>':'')+'</th>').join('');
  const rows=w.rows.length?w.rows:[{}],locked=['SUBMITTED','VERIFIED'].includes(w.submission&&w.submission.status),status=(w.submission&&w.submission.status)||'NOT SAVED';
  const body=rows.map((row,i)=>'<tr data-row="'+i+'"><td class="sticky-index">'+(i+1)+'</td>'+fields.map(f=>'<td>'+fieldInput(f,row[f.key]??'')+'</td>').join('')+'<td class="action-cell"><button type="button" class="btn danger small" data-remove-row="'+i+'" '+(locked?'disabled':'')+'>Remove</button></td></tr>').join('');
- return '<section class="panel annexure-work-card" data-annexure-card="'+a+'"><div class="table-toolbar"><div><b>Annexure '+a+' — '+esc(schema.title)+'</b><small>'+fields.length+' data columns · '+rows.length+' row(s) · <span class="status">'+status+'</span></small></div><div class="actions"><button type="button" class="btn secondary small" data-add-row '+(locked?'disabled':'')+'>＋ Add row</button></div></div>'+(w.error?'<div class="notice error">'+esc(w.error)+'</div>':'')+(ANNEXURE_SOURCE_NOTES[a]?'<div class="notice source-note">'+esc(ANNEXURE_SOURCE_NOTES[a])+'</div>':'')+'<div class="entry-grid-wrap"><table class="entry-grid"><thead><tr><th class="sticky-index" rowspan="2">Sl. No.</th>'+gh+'<th rowspan="2" class="action-head">Action</th></tr><tr>'+hh+'</tr></thead><tbody>'+body+'</tbody></table></div><div class="grid-foot"><span>Scroll horizontally to view all official columns. Required fields are marked *.</span><strong>'+rows.length+' row(s)</strong></div><div class="actions"><button type="button" class="btn" data-save-annexure '+(locked?'disabled':'')+'>Save Annexure '+a+' draft</button><button type="button" class="btn success" data-submit-annexure '+(locked?'disabled':'')+'>Submit Annexure '+a+'</button></div></section>';
+ return '<section class="panel annexure-work-card" id="annexure-'+a+'" data-annexure-card="'+a+'"><div class="table-toolbar"><div><b>Annexure '+a+' — '+esc(schema.title)+'</b><small>'+fields.length+' data columns · '+rows.length+' row(s) · <span class="status">'+status+'</span></small></div><div class="actions"><button type="button" class="btn secondary small" data-add-row '+(locked?'disabled':'')+'>＋ Add row</button></div></div>'+(w.error?'<div class="notice error">'+esc(w.error)+'</div>':'')+(ANNEXURE_SOURCE_NOTES[a]?'<div class="notice source-note">'+esc(ANNEXURE_SOURCE_NOTES[a])+'</div>':'')+'<div class="entry-grid-wrap"><table class="entry-grid"><thead><tr><th class="sticky-index" rowspan="2">Sl. No.</th>'+gh+'<th rowspan="2" class="action-head">Action</th></tr><tr>'+hh+'</tr></thead><tbody>'+body+'</tbody></table></div><div class="grid-foot"><span>Scroll horizontally to view all official columns. Required fields are marked *.</span><strong>'+rows.length+' row(s)</strong></div><div class="actions"><button type="button" class="btn" data-save-annexure '+(locked?'disabled':'')+'>Save Annexure '+a+' draft</button><button type="button" class="btn success" data-submit-annexure '+(locked?'disabled':'')+'>Submit Annexure '+a+'</button></div></section>';
 }
 async function saveOneAnnexure(a,submit){
  const w=annexureWorkspace[a],schema=state.boot.schemas[a],officer=$('multiReportingOfficer').value.trim(),contact=$('multiContactEmail').value.trim();if(!officeReady()){showMessage('Select parent office and sub-office first.','error');return;}if(!officer){showMessage('Enter the Reporting Officer name.','error');$('multiReportingOfficer').focus();return;}
