@@ -24,33 +24,20 @@ footer{text-align:center;color:#78899b;font-size:10px;padding:12px}
 <header><div class="head"><div class="brand"><div class="mark">ADG(B)</div><div><h1>Information Projects</h1><p>O/o ADG(B), CPWD · Information Collection & Compilation</p></div></div><a class="back" href="./index.html">← Back to Report Portal</a></div></header>
 <main>
 <div class="intro"><div><div class="eyebrow">Reusable information collection framework</div><h2>Project Dashboard</h2><p>Manage structured information-collection exercises through one common framework. Each project will have its own forms, office mapping, review workflow, records and compiled outputs.</p></div><span class="pill">Framework setup in progress</span></div>\n<div style="display:flex;justify-content:flex-end;margin:-5px 0 12px"><a class="back" href="./office-directory.html" style="background:#0b5e8e;color:#fff;border:0">⚙ Manage Office Directory</a></div>
-<div class="metrics">
+<div class="metrics" id="directoryMetrics">
 <div class="metric"><small>Registered projects</small><strong>01</strong><span>8th Central Pay Commission</span></div>
-<div class="metric"><small>Reporting streams</small><strong>06</strong><span>Five controlling streams + ADG(B) own office</span></div>
-<div class="metric"><small>SE (Mysore) units</small><strong>05</strong><span>Corrected office directory</span></div>
+<div class="metric"><small>Reporting streams</small><strong id="streamCount">Loading…</strong><span>Live from master office directory</span></div>
+<div class="metric"><small>Active reporting units</small><strong id="unitCount">Loading…</strong><span>Live active offices</span></div>
 </div>
 <section class="project">
 <div class="project-head"><div class="project-title"><div class="project-icon">📋</div><div><h3>Project 01 · 8th Central Pay Commission</h3><p>Information collection, office-level scrutiny and regional compilation</p></div></div><a class="back" href="./8cpc.html" style="background:#0b5e8e;color:#fff;border:0">Open 8th CPC Workspace →</a><span class="status">Configuration in progress</span></div>
 <div class="project-body">
 <p class="section-title">Six reporting streams</p>
-<div class="streams">
-<div class="stream"><strong>01 · O/o ADG(B)</strong><small>Independent own-office submission; counted once in regional compilation</small></div>
-<div class="stream"><strong>02 · CE(B)</strong><small>Controlling office submission after subordinate-office verification</small></div>
-<div class="stream"><strong>03 · CE cum ED HALPZ, Bengaluru</strong><small>Main-office submission plus verification and compilation of four subordinate reporting units</small></div>
-<div class="stream"><strong>04 · SE&amp;PD</strong><small>Controlling office submission after subordinate-office verification</small></div>
-<div class="stream"><strong>05 · SE (Mysore)</strong><small>Controlling office submission after subordinate-office verification</small></div>
-<div class="stream"><strong>06 · SE (Hubli)</strong><small>Controlling office submission after subordinate-office verification</small></div>
-</div>
-<div class="offices">
-<div class="office own"><h4>O/o ADG(B) · Own-office stream</h4><ul><li>Admin / establishment data</li><li>Independent stream, counted once</li></ul></div>
-<div class="office control"><h4>CE(B) · 8 reporting units</h4><ul><li>CE (B) HQ</li><li>EE-I</li><li>EE-II</li><li>EE-III</li><li>EE-IV</li><li>HORT</li><li>EE(E)-I</li><li>EE(E)-II</li></ul></div>
-<div class="office control"><h4>CE cum ED HALPZ, Bengaluru · 5 reporting units</h4><ul><li><strong>Main Office:</strong> CE cum ED HALPZ, Bengaluru</li><li>EE &amp; SM, HALPD-I, Bengaluru</li><li>EE &amp; SM, HALPD-II, Gubbi</li><li>EE &amp; SM, HALPD-III, Challakere</li><li>EE &amp; SM (E), HALPED, Bengaluru</li></ul></div>
-<div class="office control"><h4>SE&amp;PD · 4 reporting units</h4><ul><li>HQ</li><li>PD1 · PD2</li><li>PED</li></ul></div>
-<div class="office control"><h4>SE (Mysore) · 5 reporting offices</h4><ul><li>SE (Mysore)</li><li>EE (Mysore)</li><li>EE (E), Mysore</li><li>EE (Challakere)</li><li>EE (Mangalore)</li></ul></div>
-<div class="office control"><h4>SE (Hubli) · 4 reporting offices</h4><ul><li>SE (Hubli)</li><li>EE(C), Hubli</li><li>EE(E), Hubli</li><li>EE(C), Kalaburagi</li></ul></div>
-</div>
+<div class="streams" id="liveStreams"><div class="stream"><strong>Loading reporting streams…</strong><small>Reading the master office directory.</small></div></div>
+<div class="offices" id="liveOfficeGroups"><div class="office"><h4>Loading office directory…</h4><p>Names and reporting units will be shown from the master directory.</p></div></div>
+
 <div class="note"><strong>Workflow rule:</strong> Subordinate offices submit to their designated controlling office. The controlling office reviews, returns corrections where required, verifies and compiles the records. ADG(B) compiles the five verified controlling-office streams together with its independent own-office stream. Draft and returned records are excluded from official totals; only verified/accepted records count.</div>
-<div class="note"><strong>Current implementation status:</strong> This page establishes the project landing page and displays the confirmed reporting structure. Form configuration, authenticated submission, review actions, spreadsheet creation and compilation outputs are not yet connected. No live submissions or totals are represented here.</div>
+<div class="note" id="directorySyncStatus" role="status" aria-live="polite"><strong>Office directory sync:</strong> Connecting to the master Office Directory Manager. This dashboard does not maintain a separate office-name list.</div>
 </div>
 </section>
 <section class="project">
@@ -66,5 +53,26 @@ footer{text-align:center;color:#78899b;font-size:10px;padding:12px}
 </section>
 <footer>ADG(B) Report Portal · Information Projects · Project structure view</footer>
 </main>
+<script>
+(()=>{'use strict';
+const API='https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
+const TOKEN_KEY='adgbPortalSessionTokenV1512';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function nonce(){return(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');}
+function jsonp(action,params={}){return new Promise((resolve,reject)=>{const cb='ipJsonp_'+nonce(),sc=document.createElement('script'),to=setTimeout(()=>done(new Error('Office directory read timed out.')),20000);function done(e,d){clearTimeout(to);try{delete window[cb]}catch(x){}sc.remove();e?reject(e):resolve(d)}window[cb]=d=>done(null,d);sc.onerror=()=>done(new Error('Could not reach the office directory backend.'));sc.src=API+'?'+new URLSearchParams({...params,action,callback:cb,_:Date.now()});document.head.appendChild(sc);});}
+function post(action,data={}){return new Promise((resolve,reject)=>{const n=nonce(),frame=document.createElement('iframe'),form=document.createElement('form'),field=document.createElement('textarea');frame.name='ipFrame_'+n;frame.style.display='none';form.method='POST';form.action=API;form.target=frame.name;form.style.display='none';field.name='payload';field.value=JSON.stringify({action,nonce:n,...data});form.appendChild(field);let done=false,timer;const timeout=setTimeout(()=>finish(new Error('Directory request could not be confirmed.')),60000);function finish(e,r){if(done)return;done=true;clearTimeout(timeout);if(timer)clearTimeout(timer);window.removeEventListener('message',onMessage);setTimeout(()=>{form.remove();frame.remove()},0);e?reject(e):resolve(r)}function onMessage(e){const p=e.data;if(p?.source==='ADGB_PORTAL'&&p?.data?.nonce===n){p.data.ok?finish(null,p.data):finish(new Error(p.data.message||'Directory request failed.'))}}async function poll(){if(done)return;try{const r=await jsonp('receipt',{nonce:n});if(r&&!r.pending){r.ok?finish(null,r):finish(new Error(r.message||'Directory request failed.'));return}}catch(e){}if(!done)timer=setTimeout(poll,1000)}window.addEventListener('message',onMessage);document.body.append(frame,form);form.submit();timer=setTimeout(poll,700)});}
+function renderDirectory(data){
+ const parents=data.parents||[],offices=(data.offices||[]).filter(o=>String(o.status||'ACTIVE').toUpperCase()==='ACTIVE');
+ $('streamCount').textContent=parents.length;
+ $('unitCount').textContent=offices.length;
+ $('liveStreams').innerHTML=parents.map((p,i)=>'<div class="stream"><strong>'+String(i+1).padStart(2,'0')+' · '+esc(p.name)+'</strong><small>'+(offices.filter(o=>o.parentOfficeId===p.id).length)+' active reporting unit(s) in the master directory</small></div>').join('');
+ $('liveOfficeGroups').innerHTML=parents.map((p,i)=>{const units=offices.filter(o=>o.parentOfficeId===p.id).sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0));return '<div class="office '+(i===0?'own':'control')+'"><h4>'+esc(p.name)+' · '+units.length+' reporting unit(s)</h4>'+(units.length?'<ul>'+units.map(o=>'<li>'+esc(o.officeName)+'</li>').join('')+'</ul>':'<p>No active reporting units configured.</p>')+'</div>'}).join('');
+ $('directorySyncStatus').innerHTML='<strong>Office directory synchronised:</strong> Reporting streams and unit names are loaded from the live Office Directory Manager. Last refreshed '+new Date().toLocaleString('en-IN')+'.';
+}
+async function init(){const token=sessionStorage.getItem(TOKEN_KEY)||'';if(!token){$('directorySyncStatus').innerHTML='<strong>Sign-in required:</strong> Open this page after signing in to the ADG(B) Report Portal. The page will not show a stale manually maintained office list.';return;}try{const r=await post('ipDirectoryBootstrap',{sessionToken:token});if(!r||!Array.isArray(r.parents)||!Array.isArray(r.offices))throw new Error('The backend did not return a valid master office directory.');renderDirectory(r);}catch(e){$('liveStreams').innerHTML='<div class="stream"><strong>Directory unavailable</strong><small>'+esc(e.message)+'</small></div>';$('liveOfficeGroups').innerHTML='<div class="office"><h4>Unable to load master directory</h4><p>'+esc(e.message)+'</p></div>';$('directorySyncStatus').innerHTML='<strong>Sync failed:</strong> '+esc(e.message)+' Please sign in as an administrator and refresh.';}}
+init();
+})();
+</script>
 </body>
 </html>
