@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>8th CPC — Sub-office Data Submission</title>
+<style>
+:root{--navy:#123968;--blue:#1769aa;--teal:#078b83;--bg:#f2f6fc;--line:#dce6f2;--text:#183653}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.45 Arial,sans-serif;color:var(--text)}
+header{background:linear-gradient(110deg,#123968,#1769aa,#078b83);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}header p{margin:4px 0 0;opacity:.9}
+main{max-width:1500px;margin:22px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 5px 18px #173d6410}
+h2{font-size:18px;margin:0 0 8px;color:var(--navy)}.muted{color:#617a96}.identity{display:flex;gap:12px;flex-wrap:wrap}.chip{background:#edf5ff;border:1px solid #d8e8fb;padding:8px 12px;border-radius:9px;font-weight:600}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.control{display:flex;flex-direction:column;gap:5px;min-width:180px;flex:1}
+label{font-weight:600;color:#45627f;font-size:12px}select,input,textarea{font:inherit;border:1px solid #ccd9e8;border-radius:7px;padding:9px;background:white;color:#183653;min-width:0;width:100%}
+button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#eaf1f8;color:#214a70}button.good{background:#078b67}button:disabled{opacity:.45;cursor:not-allowed}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:14px;max-height:65vh}
+table{border-collapse:separate;border-spacing:0;min-width:100%;width:max-content}th,td{border-bottom:1px solid #e5edf6;border-right:1px solid #e5edf6;padding:7px;vertical-align:top}th{position:sticky;top:0;background:#eaf2fb;color:#234c74;z-index:2;text-align:left;font-size:12px;min-width:160px}td{min-width:160px;background:#fff}td:first-child,th:first-child{position:sticky;left:0;z-index:3;min-width:48px;width:48px;text-align:center;background:#f4f8fc}td input,td select{min-width:145px;padding:7px}
+.row-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.notice{padding:11px 13px;background:#edf5ff;border:1px solid #d6e7fb;border-radius:9px;margin:10px 0}.notice.error{background:#fff0ef;border-color:#f5d0cb;color:#9b3028}.notice.ok{background:#eaf8f1;border-color:#ccebdc;color:#126344}.hidden{display:none!important}
+.status{font-weight:700;font-size:12px}.status.DRAFT{color:#a56a00}.status.SUBMITTED{color:#08745b}.status.RETURNED{color:#b45a00}.status.VERIFIED{color:#1769aa}
+@media(max-width:650px){header{padding:15px}main{padding:0 9px}.card{padding:13px}.toolbar .control{min-width:100%}.row-actions button{flex:1}}
+</style></head>
+<body>
+<header><div><h1>8th CPC — Data Collection</h1><p>O/o ADG(B), CPWD · Secure sub-office submission</p></div><div id="expiry" class="muted" style="color:#fff"></div></header>
+<main>
+<section id="loading" class="card"><h2>Validating submission link…</h2><p class="muted">Please wait.</p></section>
+<section id="invalid" class="card hidden"><h2>Submission link unavailable</h2><div id="errorText" class="notice error"></div><p class="muted">Contact your controlling office for a new link.</p></section>
+<div id="workspace" class="hidden">
+<section class="card"><h2>Assigned reporting office</h2><div class="identity"><div class="chip" id="parent"></div><div class="chip" id="suboffice"></div><div class="chip">No portal login required</div></div><div class="notice">This link is restricted to the office shown above. Do not forward it outside your office. Your submission will be visible to your controlling office.</div></section>
+<section class="card"><h2>Annexure data entry</h2><div class="toolbar"><div class="control"><label>Annexure</label><select id="annexure"></select></div><div class="control"><label>Current status</label><div id="status" class="chip">Not started</div></div><div class="control"><label>Reporting Officer</label><input id="officer" placeholder="Name of reporting officer"></div><div class="control"><label>Contact / Email</label><input id="contact" placeholder="Contact / email"></div></div><div id="remark" class="notice hidden"></div>
+<div class="toolbar" style="margin-top:12px"><button id="addRow" class="secondary">＋ Add row</button><button id="pasteHelp" class="secondary" type="button">Excel paste guidance</button><span class="muted">Scroll horizontally to view all annexure columns.</span></div>
+<div id="table" class="table-wrap"></div>
+<div class="row-actions"><button id="save" class="secondary">Save Draft</button><button id="submit" class="good">Validate & Submit</button></div>
+<div id="message" class="notice hidden"></div></section>
+<section class="card"><h2>Submission history</h2><div id="history" class="muted">No submissions yet.</div></section>
+</div></main>
+<script>
+(()=>{
+'use strict';
+const API='https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec', token=new URLSearchParams(location.search).get('k')||'';
+const $=id=>document.getElementById(id), state={boot:null,rows:[],fields:[],locked:false};
+function nonce(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
+function post(action,data={}){return new Promise((resolve,reject)=>{const n=nonce(),frame=document.createElement('iframe'),form=document.createElement('form'),field=document.createElement('textarea');frame.name='pubCpc_'+n;frame.style.display='none';form.method='POST';form.action=API;form.target=frame.name;form.style.display='none';field.name='payload';field.value=JSON.stringify({action,nonce:n,...data});form.appendChild(field);let done=false,timer;const finish=(err,result)=>{if(done)return;done=true;clearTimeout(timer);window.removeEventListener('message',onMessage);setTimeout(()=>{form.remove();frame.remove()},0);err?reject(err):resolve(result)};function onMessage(e){const p=e.data;if(p?.source==='ADGB_PORTAL'&&p?.data?.nonce===n){p.data.ok?finish(null,p.data):finish(new Error(p.data.message||'Request failed.'))}}async function poll(){if(done)return;try{const r=await getReceipt(n);if(r&&!r.pending){r.ok?finish(null,r):finish(new Error(r.message||'Request failed.'));return}}catch(e){}if(!done)timer=setTimeout(poll,1100)}window.addEventListener('message',onMessage);document.body.append(frame,form);form.submit();timer=setTimeout(poll,900);setTimeout(()=>{if(!done)finish(new Error('The server did not confirm this action. Refresh and check the submission status before retrying.'))},65000)})}
+function getReceipt(n){return new Promise((resolve,reject)=>{const cb='pubReceipt_'+n,sc=document.createElement('script'),t=setTimeout(()=>finish(new Error('Timeout')),12000);function finish(e,d){clearTimeout(t);delete window[cb];sc.remove();e?reject(e):resolve(d)}window[cb]=finishData=>finish(null,finishData);sc.onerror=()=>finish(new Error('Receipt unavailable'));sc.src=API+'?action=receipt&nonce='+encodeURIComponent(n)+'&callback='+cb+'&_='+Date.now();document.head.appendChild(sc)})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function message(t,type=''){const e=$('message');e.textContent=t;e.className='notice'+(type?' '+type:'');e.classList.remove('hidden')}
+function schema(){return state.boot.schemas[$('annexure').value]}
+function input(f,v){const value=v??'';if(f.type==='select')return `<select data-k="${f.key}"><option value="">Select…</option>${(f.options||[]).map(o=>`<option value="${esc(o)}" ${String(value)===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;return `<input data-k="${f.key}" type="${f.type==='number'?'number':'text'}" min="0" step="1" value="${esc(value)}" placeholder="${esc(f.label)}">`}
+function render(){const s=schema();state.fields=s.fields;$('table').innerHTML=`<table><thead><tr><th>#</th>${s.fields.map(f=>`<th>${esc(f.label)}${f.required?' *':''}</th>`).join('')}<th>Action</th></tr></thead><tbody>${state.rows.map((r,i)=>`<tr><td>${i+1}</td>${s.fields.map(f=>`<td>${input(f,r[f.key])}</td>`).join('')}<td><button class="secondary" data-remove="${i}" type="button">Remove</button></td></tr>`).join('')}</tbody></table>`;
+$('table').querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{const tr=el.closest('tr'),i=[...tr.parentNode.children].indexOf(tr);state.rows[i][el.dataset.k]=el.value}));
+$('table').querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{const tr=el.closest('tr'),i=[...tr.parentNode.children].indexOf(tr);state.rows[i][el.dataset.k]=el.value}));
+$('table').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{state.rows.splice(Number(b.dataset.remove),1);render()});
+$('table').querySelectorAll('input,select,button').forEach(el=>el.disabled=state.locked);
+$('addRow').disabled=state.locked;$('save').disabled=state.locked;$('submit').disabled=state.locked;
+}
+function newRow(){const r={reportingOfficer:$('officer').value,contactEmail:$('contact').value};state.fields.forEach(f=>{if(!(f.key in r))r[f.key]=''});return r}
+function updateMeta(){state.rows.forEach(r=>{r.reportingOfficer=$('officer').value;r.contactEmail=$('contact').value})}
+function renderHistory(){const a=state.boot.submissions||[];$('history').innerHTML=a.length?a.map(x=>`<div style="padding:8px 0;border-bottom:1px solid #e4edf6"><b>Annexure ${esc(x.annexure)}</b> · ${x.rowCount} row(s) · <span class="status ${esc(x.status)}">${esc(x.status)}</span>${x.reviewRemark?`<div class="notice error">Review remark: ${esc(x.reviewRemark)}</div>`:''}</div>`).join(''):'No submissions yet.'}
+async function load(){try{if(!token)throw new Error('The submission link does not contain its access token.');const r=await post('cpcPublicBootstrap',{publicToken:token});state.boot=r;$('parent').textContent=r.office.parentOffice;$('suboffice').textContent=r.office.subOffice;$('expiry').textContent=r.linkExpiresAt?'Link expires: '+new Date(r.linkExpiresAt).toLocaleDateString('en-IN'):'';$('annexure').innerHTML=Object.keys(r.schemas).map(k=>`<option value="${k}">${esc(r.schemas[k].title)}</option>`).join('');renderHistory();$('loading').classList.add('hidden');$('workspace').classList.remove('hidden');state.rows=[newRow()];render();}catch(e){$('loading').classList.add('hidden');$('invalid').classList.remove('hidden');$('errorText').textContent=e.message}}
+async function save(submit){if(state.locked)return;updateMeta();if(!state.rows.length){message('Add at least one row.','error');return}const btn=submit?$('submit'):$('save');btn.disabled=true;try{const r=await post(submit?'cpcPublicSubmit':'cpcPublicSaveDraft',{publicToken:token,annexure:$('annexure').value,rows:state.rows});message(r.message,'ok');state.locked=submit;render();const b=await post('cpcPublicBootstrap',{publicToken:token});state.boot=b;renderHistory();$('status').textContent=r.status;}catch(e){message(e.message,'error')}finally{btn.disabled=state.locked}}
+$('annexure').addEventListener('change',()=>{state.rows=[newRow()];state.locked=false;$('status').textContent='Not started';$('remark').classList.add('hidden');render()});
+$('addRow').onclick=()=>{updateMeta();state.rows.push(newRow());render()};
+$('save').onclick=()=>save(false);$('submit').onclick=()=>{if(confirm('Submit this annexure to your controlling office? You cannot edit it unless it is returned for correction.'))save(true)};
+$('pasteHelp').onclick=()=>message('For this first release, enter or paste values cell by cell. Bulk Excel range paste is planned for the next table enhancement.','');
+$('officer').addEventListener('input',updateMeta);$('contact').addEventListener('input',updateMeta);
+load();
+})();
+</script></body></html>
