@@ -5778,6 +5778,20 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
   }
 }
 
+
+/* V17.13.2 — notice controls made easier and independent per lane */
+.adgb-notice-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:13px 0;padding:13px;background:#eef5fb;border:1px solid #d4e3f1;border-radius:10px}
+.adgb-notice-mode-grid label{display:grid;gap:7px;font-size:12px;font-weight:850;color:#254b70}
+.adgb-notice-mode-grid select{min-height:40px;border:1px solid #bdcfe0;border-radius:8px;padding:8px;background:#fff;color:#193e63;font-weight:700}
+.adgb-notice-mode-grid small{font-size:10px;font-weight:500;color:#637a90}
+#adgbRichNoticeLines .adgb-rich-line{display:grid;grid-template-columns:minmax(180px,1fr) 48px 48px 34px;gap:9px;align-items:center;padding:9px;margin:7px 0;border:1px solid #d9e4ef;border-radius:9px;background:#fff}
+#adgbRichNoticeLines .adgb-rich-line input[type=text]{width:100%;min-height:39px;border:1px solid #cbd8e5;border-radius:7px;padding:8px 10px}
+#adgbRichNoticeLines .adgb-rich-line input[type=color]{width:42px;height:38px;padding:2px;border:1px solid #ccd8e4;border-radius:7px;background:#fff;cursor:pointer}
+#adgbRichNoticeLines .adgb-rich-line button{min-height:34px;border:1px solid #f0c5c8;border-radius:7px;background:#fff1f2;color:#a52d3a;font-size:20px;font-weight:800;cursor:pointer}
+.adgb-notice-track.adgb-notice-static,.adgb-notice-track.adgb-notice-static *{animation:none!important;transition:none!important}
+.adgb-notice-track.adgb-notice-static{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:100%!important;max-width:100%!important;white-space:normal!important;transform:none!important;text-align:center!important}
+.adgb-notice-track.adgb-notice-static>.adgb-rich-message{display:inline-flex!important;align-items:center;justify-content:center;flex:0 1 auto!important;white-space:normal!important;text-align:center!important;margin:0 8px!important}
+@media(max-width:700px){.adgb-notice-mode-grid{grid-template-columns:1fr}#adgbRichNoticeLines .adgb-rich-line{grid-template-columns:minmax(0,1fr) 40px 40px 30px;gap:5px}}
 </style>
 
 
@@ -6527,6 +6541,10 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
           <input id="adgbNoticeSpeed" type="hidden" value="5"><span id="adgbNoticeSpeedLabel" hidden>Normal (5/10)</span>
 
+          <div class="adgb-notice-mode-grid">
+            <label>Line 1 display mode<select id="adgbNoticeLane1Mode"><option value="moving">Moving ticker</option><option value="static">Constant / fixed notice</option></select><small>Upper row: scroll continuously or remain visible.</small></label>
+            <label>Line 2 display mode<select id="adgbNoticeLane2Mode"><option value="moving">Moving ticker</option><option value="static">Constant / fixed notice</option></select><small>Lower row: independent of Line 1.</small></label>
+          </div>
           <div class="adgb-notice-style-grid">
 
             <label>Background <select id="adgbNoticeBackgroundMode" aria-label="Moving notice background"><option value="solid">Coloured background</option><option value="transparent">No Background (transparent)</option></select><input type="color" id="adgbNoticeBackgroundColor" value="#fff7cc" aria-label="Moving notice background colour"></label>
@@ -11511,6 +11529,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         scrollSpeed:Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane1Speed:Number(document.getElementById('adgbNoticeLane1Speed')?.value||5),lane2Speed:Number(document.getElementById('adgbNoticeLane2Speed')?.value||5),lane2Delay:Number(document.getElementById('adgbNoticeLane2Delay')?.value||0),
 
         showPending:document.getElementById('adgbNoticePendingEnabled')?.checked===true,
+        lane1Mode:String(document.getElementById('adgbNoticeLane1Mode')?.value||'moving'),lane2Mode:String(document.getElementById('adgbNoticeLane2Mode')?.value||'moving'),
 
         pendingOfficeIds:[...document.querySelectorAll('[data-notice-office]:checked')].map(x=>x.getAttribute('data-notice-office')).sort()};
 
@@ -11549,6 +11568,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       document.getElementById('adgbNoticeFontSize').value=String(settings.fontSize||17);
 
       document.getElementById('adgbNoticeFontWeight').value=String(settings.fontWeight||900);
+      document.getElementById('adgbNoticeLane1Mode').value=settings.lane1Mode==='static'?'static':'moving';document.getElementById('adgbNoticeLane2Mode').value=settings.lane2Mode==='static'?'static':'moving';
 
       document.getElementById('adgbNoticeLane1Speed').value=String(settings.lane1Speed||settings.scrollSpeed||5);document.getElementById('adgbNoticeLane2Speed').value=String(settings.lane2Speed||settings.scrollSpeed||5);document.getElementById('adgbNoticeLane2Delay').value=String(settings.lane2Delay||0);document.getElementById('adgbNoticeSpeed').value=String(settings.lane1Speed||settings.scrollSpeed||5);
 
@@ -11791,7 +11811,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       const source=document.getElementById('adgbNoticeText');if(!source)return;
 
-      source.addEventListener('input',()=>{if(!adgbRichCompiling_)adgbRichRenderEditor_();});
+      source.addEventListener('change',()=>{if(!adgbRichCompiling_)adgbRichRenderEditor_();});document.getElementById('adgbRichNoticeEditor')?.addEventListener('toggle',()=>{if(document.getElementById('adgbRichNoticeEditor')?.open)adgbRichRenderEditor_();});
 
       document.getElementById('adgbRichNoticeAdd')?.addEventListener('click',()=>{
 
@@ -12407,7 +12427,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       if(strip.hidden){track1.replaceChildren();track2.replaceChildren();adgbNoticeLastRenderedKey_='';return;}
 
-      const nextKey=JSON.stringify(lanes);
+      const nextKey=JSON.stringify({lanes,modes:laneModes});
 
       if(nextKey!==adgbNoticeLastRenderedKey_){
 
@@ -12436,7 +12456,8 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
           const baseNodes=Array.from(track.children);
           const baseWidth=Math.max(1,track.scrollWidth);
           const laneWidth=Math.max(1,track.parentElement?.clientWidth||window.innerWidth||1200);
-          const copies=Math.min(64,Math.max(2,Math.ceil(laneWidth/baseWidth)+2));
+          const isStatic=laneModes[index]==='static';
+          const copies=isStatic?1:Math.min(64,Math.max(2,Math.ceil(laneWidth/baseWidth)+2));
           for(let copy=1;copy<copies;copy++)
             baseNodes.forEach(node=>track.appendChild(node.cloneNode(true)));
           track.dataset.adgbCycleWidth=String(baseWidth);
@@ -12450,6 +12471,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
       const style=adgbNoticePreviewStyle_&&isRecognizedAsAdmin()?adgbNoticePreviewStyle_:feed;
 
       const bg=String(style.backgroundColor||'#fff7cc').toLowerCase(),background=bg==='transparent'||/^#[0-9a-f]{6}$/.test(bg)?bg:'#fff7cc';
+      const laneModes=[String(adgbNoticePreviewLane1Mode_??feed.lane1Mode??'moving'),String(adgbNoticePreviewLane2Mode_??feed.lane2Mode??'moving')];
 
       const colour=String(style.textColor||'#bd1726'),size=Number(style.fontSize||17),weight=Number(style.fontWeight||900);
 
@@ -12468,7 +12490,15 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
         const noticeLinkLength=noticeLinks[index].reduce((sum,item)=>sum+item.title.length+2,0);
         const length=Math.max(20,(lanes[index].join(' ').length+noticeLinkLength)/9);
 
-        track.style.animationDuration=Math.max(8,Math.min(240,length*5/speed))+'s';
+        const isStatic=laneModes[index]==='static';
+        track.classList.toggle('adgb-notice-static',isStatic);
+        track.style.animation=isStatic?'none':'';
+        track.style.transform=isStatic?'none':'';
+        track.style.width=isStatic?'100%':'max-content';
+        track.style.justifyContent=isStatic?'center':'';
+        track.style.whiteSpace=isStatic?'normal':'';
+        track.style.textAlign=isStatic?'center':'';
+        track.style.animationDuration=isStatic?'0s':Math.max(8,Math.min(240,length*5/speed))+'s';
 
         track.style.animationDelay=index===1?Math.max(0,Math.min(30,Number(adgbNoticePreviewLane2Delay_??feed.lane2Delay??0)))+'s':'0s';
 
@@ -12919,7 +12949,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
           operation:'settings',showPending,pendingOfficeIds,
 
-          scrollSpeed:lane1Speed,lane1Speed,lane2Speed,lane2Delay,...style
+          scrollSpeed:lane1Speed,lane1Speed,lane2Speed,lane2Delay,lane1Mode:String(document.getElementById('adgbNoticeLane1Mode').value||'moving'),lane2Mode:String(document.getElementById('adgbNoticeLane2Mode').value||'moving'),...style
 
         });
 
@@ -13005,6 +13035,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       });
 
+      ['adgbNoticeLane1Mode','adgbNoticeLane2Mode'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{adgbNoticeRenderStrip_();adgbNoticeAppearanceIndicator_();}));
       ['adgbNoticeBackgroundMode','adgbNoticeBackgroundColor','adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
 
         document.getElementById(id)?.addEventListener('input',adgbNoticeStylePreview_);
