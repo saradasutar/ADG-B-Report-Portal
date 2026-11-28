@@ -11482,7 +11482,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
     let adgbNoticeFeed_=null,adgbNoticeFeedToken_='',adgbNoticeLastFetch_=0,adgbNoticeBusy_=false,adgbNoticePaused_=[false,false];
 
     let adgbNoticeAdminLaneFilter_='1';
-    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewLane1Speed_=null,adgbNoticePreviewLane2Speed_=null,adgbNoticePreviewLane2Delay_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
+    let adgbNoticeAdminRows_=[],adgbNoticeEditId_='',adgbNoticeAdminLoaded_=false,adgbNoticePreviewSpeed_=null,adgbNoticePreviewLane1Speed_=null,adgbNoticePreviewLane2Speed_=null,adgbNoticePreviewLane2Delay_=null,adgbNoticePreviewLane1Mode_=null,adgbNoticePreviewLane2Mode_=null,adgbNoticePreviewStyle_=null,adgbNoticeSavedSettings_=null,adgbNoticeDraftFormSnapshot_=null;
 
     function adgbNoticeStatus_(message){const el=document.getElementById('adgbNoticeAdminStatus');if(el)el.textContent=message;}
 
@@ -11578,7 +11578,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       document.querySelectorAll('[data-notice-office]').forEach(x=>{x.checked=selected.has(x.getAttribute('data-notice-office'));});
 
-      adgbNoticePreviewSpeed_=null;adgbNoticePreviewLane1Speed_=null;adgbNoticePreviewLane2Speed_=null;adgbNoticePreviewLane2Delay_=null;
+      adgbNoticePreviewSpeed_=null;adgbNoticePreviewLane1Speed_=null;adgbNoticePreviewLane2Speed_=null;adgbNoticePreviewLane2Delay_=null;adgbNoticePreviewLane1Mode_=null;adgbNoticePreviewLane2Mode_=null;
 
       adgbNoticeStylePreview_();
 
@@ -13035,7 +13035,7 @@ body.adgb-important-links-active .adgb-side-nav [data-adgb-nav="importantLinks"]
 
       });
 
-      ['adgbNoticeLane1Mode','adgbNoticeLane2Mode'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{adgbNoticeRenderStrip_();adgbNoticeAppearanceIndicator_();}));
+      ['adgbNoticeLane1Mode','adgbNoticeLane2Mode'].forEach((id,index)=>document.getElementById(id)?.addEventListener('change',()=>{adgbNoticePreviewLane1Mode_=document.getElementById('adgbNoticeLane1Mode').value;adgbNoticePreviewLane2Mode_=document.getElementById('adgbNoticeLane2Mode').value;adgbNoticeRenderStrip_();adgbNoticeAppearanceIndicator_();}));
       ['adgbNoticeBackgroundMode','adgbNoticeBackgroundColor','adgbNoticeTextColor','adgbNoticeFontSize','adgbNoticeFontWeight'].forEach(id=>{
 
         document.getElementById(id)?.addEventListener('input',adgbNoticeStylePreview_);
