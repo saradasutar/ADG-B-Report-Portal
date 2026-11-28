@@ -288,8 +288,24 @@ function jsonp(action,params={}){return new Promise((resolve,reject)=>{const cb=
 function post(action,data={}){return new Promise((resolve,reject)=>{const n=nonce(),frame=document.createElement('iframe'),form=document.createElement('form'),field=document.createElement('textarea');frame.name='cpcFrame_'+n;frame.style.display='none';form.method='POST';form.action=API;form.target=frame.name;form.style.display='none';field.name='payload';field.value=JSON.stringify({action,nonce:n,...data});form.appendChild(field);let done=false,timer=null;const timeout=setTimeout(()=>finish(new Error('The action could not be confirmed. Refresh and check its status before retrying.')),60000);function finish(err,result){if(done)return;done=true;clearTimeout(timeout);if(timer)clearTimeout(timer);window.removeEventListener('message',onMessage);setTimeout(()=>{form.remove();frame.remove()},0);err?reject(err):resolve(result)}function onMessage(e){const p=e.data;if(p?.source==='ADGB_PORTAL'&&p?.data?.nonce===n){p.data.ok?finish(null,p.data):finish(new Error(p.data.message||'Request failed.'));}}async function poll(){if(done)return;try{const r=await jsonp('receipt',{nonce:n});if(r&&!r.pending){r.ok?finish(null,r):finish(new Error(r.message||'Request failed.'));return}}catch(e){}if(!done)timer=setTimeout(poll,1000)}window.addEventListener('message',onMessage);document.body.append(frame,form);form.submit();timer=setTimeout(poll,700);});}
 function showMessage(text,type='info'){const el=$('message');el.className='notice '+(type==='error'?'error':type==='ok'?'ok':'');el.textContent=text;el.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const CEHAL_OFFICE_NAME='CE cum ED HALPZ, Bengaluru';
+const CEHAL_REPORTING_UNITS=[
+ 'CE cum ED HALPZ, Bengaluru',
+ 'EE & SM, HALPD-I, Bengaluru',
+ 'EE & SM, HALPD-II, Gubbi',
+ 'EE & SM, HALPD-III, Challakere',
+ 'EE & SM (E), HALPED, Bengaluru'
+];
+function normalizeOfficeDirectory(){
+ (state.boot.offices||[]).forEach(o=>{
+  if(o.id==='CEHAL'){o.name=CEHAL_OFFICE_NAME;o.subOffices=[...CEHAL_REPORTING_UNITS];}
+ });
+}
 function office(id){return state.boot.offices.find(x=>x.id===id);}
-function activeEntryAccess(){if(state.boot.user.role==='ADMIN')return state.boot.offices.flatMap(o=>o.subOffices.map(s=>({parentOfficeId:o.id,parentOffice:o.name,subOffice:s,accessRole:'ENTRY'})));return state.boot.access.filter(a=>a.accessRole==='ENTRY');}
+function activeEntryAccess(){
+ if(state.boot.user.role==='ADMIN')return state.boot.offices.flatMap(o=>o.subOffices.map(s=>({parentOfficeId:o.id,parentOffice:o.name,subOffice:s,accessRole:'ENTRY'})));
+ return state.boot.access.filter(a=>a.accessRole==='ENTRY');
+}
 function reviewerAccess(){return state.boot.user.role==='ADMIN'||state.boot.access.some(a=>a.accessRole==='REVIEWER');}
 function renderStats(){const a=state.boot.submissions||[],count=s=>a.filter(x=>x.status===s).length;$('stats').innerHTML=[['Submissions',a.length],['Drafts',count('DRAFT')],['Awaiting review',count('SUBMITTED')],['Verified',count('VERIFIED')]].map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');}
 function fillSelect(el,items,first){el.innerHTML=(first?`<option value="">${esc(first)}</option>`:'')+items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('');}
@@ -456,7 +472,7 @@ async function generateAllOfficeLinks(){const btn=$('generateShareLinks');btn.di
 function copyAllOfficeLinks(){const t=generatedShareLinks.map(x=>x.parentOffice+' — '+x.subOffice+' : '+x.url).join('\n');navigator.clipboard.writeText(t).then(()=>showMessage('All office links copied.','ok')).catch(()=>showMessage('Clipboard blocked; download CSV instead.','error'))}
 function downloadAllOfficeLinks(){downloadLinkCsv(generatedShareLinks,'8CPC_All_Office_Submission_Links.csv')}
 function downloadLinkCsv(links,name){const rows=[['Parent Office','Sub-office','Submission URL','Expires At'],...links.map(x=>[x.parentOffice,x.subOffice,x.url,x.expiresAt])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a'),u=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
-async function refresh(){const r=await post('cpcBootstrap',{sessionToken:state.token});state.boot=r;applyOfficialColumnNumbers();renderStats();$('userPill').textContent=r.user.displayName+' · '+r.user.role;$('accessTab').classList.toggle('hidden',r.user.role!=='ADMIN');const canEnter=r.user.role==='ADMIN'||r.access.some(a=>a.accessRole==='ENTRY');const canReview=reviewerAccess();document.querySelector('[data-tab="entry"]').classList.toggle('hidden',!canEnter);document.querySelector('[data-tab="review"]').classList.toggle('hidden',!canReview);document.querySelector('[data-tab="compile"]').classList.toggle('hidden',!canReview);$('entryParent').innerHTML='';initEntry();if(r.user.role==='ADMIN'){initAccess();}renderReviewList();setTab(canEnter?'entry':canReview?'review':'entry');}
+async function refresh(){const r=await post('cpcBootstrap',{sessionToken:state.token});state.boot=r;normalizeOfficeDirectory();applyOfficialColumnNumbers();renderStats();$('userPill').textContent=r.user.displayName+' · '+r.user.role;$('accessTab').classList.toggle('hidden',r.user.role!=='ADMIN');const canEnter=r.user.role==='ADMIN'||r.access.some(a=>a.accessRole==='ENTRY');const canReview=reviewerAccess();document.querySelector('[data-tab="entry"]').classList.toggle('hidden',!canEnter);document.querySelector('[data-tab="review"]').classList.toggle('hidden',!canReview);document.querySelector('[data-tab="compile"]').classList.toggle('hidden',!canReview);$('entryParent').innerHTML='';initEntry();if(r.user.role==='ADMIN'){initAccess();}renderReviewList();setTab(canEnter?'entry':canReview?'review':'entry');}
 async function init(){state.token=sessionStorage.getItem(TOKEN_KEY)||'';if(!state.token){$('loginGuard').classList.remove('hidden');return;}try{$('userPill').textContent='Validating session…';$('app').classList.remove('hidden');await refresh();}catch(e){$('app').classList.add('hidden');$('loginGuard').classList.remove('hidden');$('loginGuard').querySelector('p').textContent=e.message+' Sign in to the main portal and reopen this page.';}}
 $('entryParent').addEventListener('change',()=>{fillEntrySubs();loadAllAnnexures();});$('entrySub').addEventListener('change',loadAllAnnexures);$('saveAllDraftsBtn').onclick=saveAllAnnexureDrafts;
 
