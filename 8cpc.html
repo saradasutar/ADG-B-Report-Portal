@@ -1,1000 +1,130 @@
-/**
- * ADG(B) REPORT SUBMISSION PORTAL — CORE BACKEND V17.9.10 — MULTI-NOTICE STORAGE FIX
- * MULTI-NOTICE STORAGE: verified chunked Script Properties; legacy data preserved.
- * PG/RTI PENDENCY MODULE REMOVED.
- * Preserves normal submission, PDF viewing, login, office reports, notice board,
- * analytics, permissions, users, raw data, reports and other existing services.
- * This replacement does not delete or modify existing Drive files, Sheets, or Script Properties.
- * Deploy as NEW version of your existing Apps Script web app.
- * Do NOT run setupPortal() or setPortalSecurityCodes() while upgrading.
- */
-/**
- * ADG(B) REPORT SUBMISSION PORTAL - BACKEND V17.6.8 - TURBO LOGIN + STABLE PERFORMANCE
- * Google Apps Script + Google Drive + Google Sheets
- *
- * EXISTING PORTAL UPGRADE
- * 1. Replace the complete old Code.gs with this file.
- * 2. Save the project.
- * 3. Deploy > Manage deployments > Edit > New version > Deploy.
- * 4. Execute as: Me | Who has access: Anyone.
- *
- * IMPORTANT FOR AN EXISTING PORTAL
- * Do NOT run setupPortal() or setPortalSecurityCodes() again unless you
- * intentionally want to initialise a new database or change the codes.
- *
- * V15.8 keeps Raw Data and implements the HR dashboard Targets & Reminders feature in the Report Portal. The new Raw_Data_Items and Raw_Data sheets are
- * created automatically after deployment; existing report data is preserved.
- */
-
-var CONFIG = Object.freeze({
-  PORTAL_NAME: 'ADG(B) Report Submission Portal',
-  ROOT_FOLDER_ID: '1Dna4xHyOSfH1-0Oq9tJ2xfmlmEaJlHRF',
-  SUBJECTS_PARENT_FOLDER: 'Current Submission Cycle',
-  DATABASE_NAME: 'ADG(B) Portal Database',
-  SUBJECTS_SHEET: 'Subjects',
-  SUBMISSIONS_SHEET: 'Submissions',
-  CURRENT_STATUS_SHEET: 'Current_Status',
-  SUBMISSION_ACTIVITY_SHEET: 'Submission_Activity',
-  RAW_ITEMS_SHEET: 'Raw_Data_Items',
-  RAW_DATA_SHEET: 'Raw_Data',
-  STICKY_NOTES_SHEET: 'Sticky_Notes',
-  USERS_SHEET: 'Portal_Users',
-  OFFICE_EMAILS_SHEET: 'Office_Emails',
-  BACKEND_VERSION: '17.11.0-8CPC',
-  TIME_ZONE: 'Asia/Kolkata',
-  DEFAULT_LOGIN_IDLE_MINUTES: 30,
-  SESSION_FALLBACK_MINUTES: 5,
-  QUARTERLY_MONTHS: [1, 4, 7, 10],
-  QUARTERLY_LABEL: 'Previous Quarter',
-  MAX_FILE_MB: 8,
-  CACHE_SECONDS: 600,
-  DEFAULT_SUBJECTS: [
-    'Monthly Progress Report',
-    'Financial Report',
-    'Tender Status Report',
-    'Pension',
-    'Law'
-  ]
-});
-
-var OFFICES = Object.freeze([
-  { id: 'CEB', name: 'CE(B)' },
-  { id: 'CEHAL', name: 'CE(HAL)' },
-  { id: 'SEPD', name: 'SE&PD' },
-  { id: 'SEMYSORE', name: 'SE(Mysore)' },
-  { id: 'SEHUBLI', name: 'SE(Hubli)' }
-]);
-
-/**
- * Raw Data includes Head Office plus all five sub-offices.
- * Security is still controlled by the same six portal codes.
- */
-var RAW_DATA_OFFICES = Object.freeze([
-  { id: 'HEAD_OFFICE', name: 'O/o ADG(B)' },
-  { id: 'CEB', name: 'CE(B)' },
-  { id: 'CEHAL', name: 'CE(HAL)' },
-  { id: 'SEPD', name: 'SE&PD' },
-  { id: 'SEMYSORE', name: 'SE(Mysore)' },
-  { id: 'SEHUBLI', name: 'SE(Hubli)' }
-]);
-
-/**
- * Run only when setting/changing portal codes.
- * Do not place these codes in index.html.
- */
-function setPortalSecurityCodes() {
-  var codes = {
-    HEAD_OFFICE: 'CHANGE-ONLY-IF-INTENTIONAL',
-    CEB: 'CHANGE-ONLY-IF-INTENTIONAL',
-    CEHAL: 'CHANGE-ONLY-IF-INTENTIONAL',
-    SEPD: 'CHANGE-ONLY-IF-INTENTIONAL',
-    SEMYSORE: 'CHANGE-ONLY-IF-INTENTIONAL',
-    SEHUBLI: 'CHANGE-ONLY-IF-INTENTIONAL'
-  };
-
-  var properties = PropertiesService.getScriptProperties();
-  Object.keys(codes).forEach(function (key) {
-    if (/^CHANGE-/.test(codes[key])) {
-      throw new Error('Replace all six sample security codes before running setPortalSecurityCodes().');
-    }
-  });
-
-  Object.keys(codes).forEach(function (key) {
-    properties.setProperty('CODE_HASH_' + key, hashText_(codes[key]));
-  });
-
-  properties.setProperty('CODES_CONFIGURED_AT', new Date().toISOString());
-  Logger.log('All six portal security codes were saved securely.');
-}
-
-/** First-time setup only. */
-function setupPortal() {
-  var lock = acquirePortalLock_();
-  try {
-    getRootFolder_();
-    var spreadsheet = getDatabase_();
-    ensureSheets_(spreadsheet);
-
-    var subjectsSheet = spreadsheet.getSheetByName(CONFIG.SUBJECTS_SHEET);
-    if (subjectsSheet.getLastRow() === 1) {
-      CONFIG.DEFAULT_SUBJECTS.forEach(function (subjectName) {
-        createSubject_(subjectName, 'System setup');
-      });
-    }
-
-    invalidateCache_();
-    Logger.log('Portal setup complete. Database: ' + spreadsheet.getUrl());
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-
-/* =========================================================================
- * V17.6 PORTAL ACCESS CONTROL
- * ========================================================================= */
-
-var PORTAL_ACCESS_DEFAULTS = Object.freeze({
-  mode: 'LOGIN_REQUIRED',
-  publicRawData: false,
-  publicSubmittedTimes: true,
-  publicOfficeActions: true
-});
-
-function normalisePortalMode_(value) {
-  value = String(value || '').trim().toUpperCase();
-  return ['PUBLIC_VIEW', 'LOGIN_REQUIRED', 'ADMIN_ONLY'].indexOf(value) >= 0
-    ? value
-    : PORTAL_ACCESS_DEFAULTS.mode;
-}
-
-function getPortalAccessConfig_() {
-  var properties = PropertiesService.getScriptProperties();
-  var stored = {};
-
-  try {
-    stored = JSON.parse(
-      properties.getProperty('PORTAL_ACCESS_CONFIG_V171') || '{}'
-    ) || {};
-  } catch (ignore) {
-    stored = {};
-  }
-
-  return {
-    mode: normalisePortalMode_(stored.mode),
-    publicRawData: stored.publicRawData === true,
-    publicSubmittedTimes: stored.publicSubmittedTimes !== false,
-    publicOfficeActions: stored.publicOfficeActions !== false
-  };
-}
-
-function publicPortalAccessConfig_() {
-  var config = getPortalAccessConfig_();
-
-  return {
-    mode: config.mode,
-    publicRawData: config.publicRawData,
-    publicSubmittedTimes: config.publicSubmittedTimes,
-    publicOfficeActions: config.publicOfficeActions,
-    backendVersion: CONFIG.BACKEND_VERSION
-  };
-}
-
-function savePortalAccessConfig_(input) {
-  input = input || {};
-
-  var config = {
-    mode: normalisePortalMode_(input.mode),
-    publicRawData:
-      input.publicRawData === true ||
-      String(input.publicRawData || '').toLowerCase() === 'true',
-    publicSubmittedTimes:
-      input.publicSubmittedTimes === true ||
-      String(input.publicSubmittedTimes || '').toLowerCase() === 'true',
-    publicOfficeActions:
-      input.publicOfficeActions === true ||
-      String(input.publicOfficeActions || '').toLowerCase() === 'true'
-  };
-
-  PropertiesService.getScriptProperties().setProperty(
-    'PORTAL_ACCESS_CONFIG_V171',
-    JSON.stringify(config)
-  );
-
-  invalidateCache_();
-  invalidateRawCache_();
-
-  return config;
-}
-
-
-function normalisePortalIdleMinutes_(value) {
-  var allowed = [5, 10, 15, 20, 30];
-  var numeric = Number(value);
-
-  return allowed.indexOf(numeric) !== -1
-    ? numeric
-    : CONFIG.DEFAULT_LOGIN_IDLE_MINUTES;
-}
-
-function getPortalSecurityConfig_() {
-  var properties = PropertiesService.getScriptProperties();
-  var text = properties.getProperty('PORTAL_SECURITY_CONFIG_V176');
-  var stored = {};
-
-  try {
-    if (text) stored = JSON.parse(text);
-  } catch (ignore) {
-    stored = {};
-  }
-
-  return {
-    idleMinutes: normalisePortalIdleMinutes_(stored.idleMinutes),
-    warningSeconds: 60,
-    fallbackMinutes: CONFIG.SESSION_FALLBACK_MINUTES
-  };
-}
-
-function publicPortalSecurityConfig_() {
-  return getPortalSecurityConfig_();
-}
-
-function savePortalSecurityConfig_(input) {
-  input = input || {};
-
-  var config = {
-    idleMinutes: normalisePortalIdleMinutes_(input.idleMinutes),
-    warningSeconds: 60,
-    fallbackMinutes: CONFIG.SESSION_FALLBACK_MINUTES
-  };
-
-  PropertiesService.getScriptProperties().setProperty(
-    'PORTAL_SECURITY_CONFIG_V176',
-    JSON.stringify(config)
-  );
-
-  return config;
-}
-
-function getPortalIdleSeconds_() {
-  return getPortalSecurityConfig_().idleMinutes * 60;
-}
-
-function getPortalServerSessionSeconds_() {
-  var security = getPortalSecurityConfig_();
-
-  return (
-    security.idleMinutes * 60 +
-    security.fallbackMinutes * 60
-  );
-}
-
-function handleAdminGetSecuritySettings_(payload) {
-  requirePortalAdminSession_(payload.sessionToken);
-
-  return {
-    ok: true,
-    security: publicPortalSecurityConfig_(),
-    idleSeconds: getPortalIdleSeconds_(),
-    backendVersion: CONFIG.BACKEND_VERSION
-  };
-}
-
-function handleAdminSaveSecuritySettings_(payload) {
-  var admin = requirePortalAdminSession_(payload.sessionToken);
-  var security = savePortalSecurityConfig_(payload);
-
-  return {
-    ok: true,
-    message: 'Security settings updated successfully.',
-    security: security,
-    idleSeconds: security.idleMinutes * 60,
-    backendVersion: CONFIG.BACKEND_VERSION,
-    changedBy: admin.username
-  };
-}
-
-function optionalPortalSession_(token) {
-  token = String(token || '').trim();
-  if (!token) return null;
-
-  try {
-    return requirePortalSession_(token);
-  } catch (ignore) {
-    return null;
-  }
-}
-
-function authoriseDashboardRead_(token) {
-  var access = getPortalAccessConfig_();
-  var session = optionalPortalSession_(token);
-
-  if (access.mode === 'PUBLIC_VIEW') {
-    return {
-      access: access,
-      session: session,
-      publicGuest: !session
-    };
-  }
-
-  if (!session) {
-    throw new Error(
-      access.mode === 'ADMIN_ONLY'
-        ? 'Administrator login is required while the portal is restricted.'
-        : 'Username and password login is required to view this dashboard.'
-    );
-  }
-
-  if (access.mode === 'ADMIN_ONLY' && session.role !== 'ADMIN') {
-    throw new Error('The portal is currently restricted to Administrator access.');
-  }
-
-  return {
-    access: access,
-    session: session,
-    publicGuest: false
-  };
-}
-
-function authoriseRawDataRead_(token) {
-  var context = authoriseDashboardRead_(token);
-
-  if (
-    context.publicGuest &&
-    context.access.publicRawData !== true
-  ) {
-    throw new Error('Raw Data is available only after login.');
-  }
-
-  return context;
-}
-
-function enforcePortalOfficeActionMode_(securityCode) {
-  var access = getPortalAccessConfig_();
-  var credential = String(securityCode || '').trim();
-  var isSession = credential.indexOf('SESSION:') === 0;
-
-  if (access.mode === 'PUBLIC_VIEW') {
-    if (!isSession && access.publicOfficeActions !== true) {
-      throw new Error(
-        'Office actions are currently available only after username/password login.'
-      );
-    }
-    return true;
-  }
-
-  if (!isSession) {
-    throw new Error(
-      access.mode === 'ADMIN_ONLY'
-        ? 'Administrator username/password login is required.'
-        : 'Username/password login is required for this action.'
-    );
-  }
-
-  if (access.mode === 'ADMIN_ONLY') {
-    var token = credential.substring('SESSION:'.length);
-    requirePortalAdminSession_(token);
-  }
-
-  return true;
-}
-
-function handleAdminGetPortalAccess_(payload) {
-  requirePortalAdminSession_(payload.sessionToken);
-
-  return {
-    ok: true,
-    access: publicPortalAccessConfig_()
-  };
-}
-
-function handleAdminSavePortalAccess_(payload) {
-  var admin = requirePortalAdminSession_(payload.sessionToken);
-  var config = savePortalAccessConfig_(payload.access || payload);
-
-  return {
-    ok: true,
-    message: 'Portal access mode updated successfully.',
-    access: publicPortalAccessConfig_(),
-    changedBy: admin.username
-  };
-}
-
-function doGet(e) {
-  try {
-    var parameters = (e && e.parameter) || {};
-    var action = String(parameters.action || 'bootstrap').trim();
-    var result;
-
-    if (action === 'featureAccess') {
-      result = adgbFeatureEffective_(parameters.sessionToken);
-    } else if (action === 'portalAccess' || action === 'accessConfig') {
-      result = {
-        ok: true,
-        access: publicPortalAccessConfig_(),
-        backendVersion: CONFIG.BACKEND_VERSION
-      };
-    } else if (action === 'noticeBoard') {
-      adgbFeatureGate_('notices',parameters.sessionToken);
-      result = adgbNoticeFeed_(parameters.sessionToken);
-    } else if (action === 'importantLinks') {
-      // Public/private access follows the portal's current access mode.
-      result = adgbImportantLinksRead_(parameters.sessionToken);
-    } else if (action === 'bootstrap') {
-      result = getBootstrapData_(parameters.sessionToken, String(parameters.fresh || '') === '1');
-    } else if (
-      action === 'rawBootstrap' ||
-      action === 'rawDataBootstrap' ||
-      action === 'raw'
-    ) {
-      adgbFeatureGate_('rawData',parameters.sessionToken);
-      result = getRawBootstrapData_(parameters.sessionToken);
-    } else if (
-      action === 'stickyBootstrap' ||
-      action === 'targetReminderBootstrap' ||
-      action === 'stickyNotes'
-    ) {
-      adgbFeatureGate_('stickyNotes',parameters.sessionToken);
-      var stickySession = requirePortalSession_(parameters.sessionToken);
-      requirePortalPermission_(stickySession, 'stickyView');
-      result = getStickyNotesBootstrap_();
-    } else if (action === 'stickyHealth') {
-      // ADMIN only, READ ONLY; no ensureStickyNotesSheet_ auto-creation.
-      requirePortalAdminSession_(parameters.sessionToken);
-      var stickyDb = adgbExistingDatabaseReadOnly_();
-      var stickySheet = stickyDb.getSheetByName(CONFIG.STICKY_NOTES_SHEET);
-      result = {
-        ok: true,
-        available: !!stickySheet,
-        backendVersion: CONFIG.BACKEND_VERSION
-      };
-    } else if (action === 'databaseHealth') {
-      // Do not return spreadsheet identifiers through a public GET endpoint.
-      requirePortalAdminSession_(parameters.sessionToken);
-      var healthDb = adgbExistingDatabaseReadOnly_();
-      result = {
-        ok: true,
-        backendVersion: CONFIG.BACKEND_VERSION,
-        subjects: countPortalRows_(healthDb, CONFIG.SUBJECTS_SHEET),
-        submissions: countPortalRows_(healthDb, CONFIG.SUBMISSIONS_SHEET),
-        rawItems: countPortalRows_(healthDb, CONFIG.RAW_ITEMS_SHEET),
-        rawData: countPortalRows_(healthDb, CONFIG.RAW_DATA_SHEET)
-      };
-    } else if (action === 'previewFolderNames') {
-      requirePortalAdminSession_(parameters.sessionToken);
-      result = previewFolderNames_();
-    } else if (action === 'ping') {
-      result = {
-        ok: true,
-        message: 'Portal backend is available.',
-        backendVersion: CONFIG.BACKEND_VERSION,
-        supportsRawData: true,
-        rawDataVersion: '17.6.7',
-        supportsStickyNotes: true,
-        stickyNotesVersion: '17.6.7',
-        supportsLogin: true,
-        loginVersion: '17.6.7',
-        supportsSecuritySettings: true,
-        supportsDriveFolderLink: true,
-        supportsAccessControl: true,
-        supports8CPC: true,
-        eightCPCVersion: CPC_VERSION,
-        portalAccess: publicPortalAccessConfig_(),
-        loginRoles: ['ADMIN', 'OFFICE', 'VIEWER'],
-        stickyNoteActions: [
-          'stickyBootstrap',
-          'adminAddStickyNote',
-          'adminUpdateStickyNote',
-          'adminCompleteStickyNote',
-          'adminRestoreStickyNote',
-          'adminDeleteStickyNote'
-        ],
-        rawDataActions: [
-          'rawBootstrap',
-          'adminAddRawItem',
-          'adminAddRawSubItem',
-          'adminDeleteRawSubItem',
-          'adminRenameRawItem',
-          'saveRawDataValue',
-          'adminArchiveRawItem'
-        ],
-        diagnosticActions: []
-      };
-    } else if (action === 'receipt') {
-      result = getReceipt_(parameters.nonce);
-    } else if (action === 'view') {
-      return securePdfViewer_(parameters.token);
-    } else {
-      throw new Error('Unsupported request.');
-    }
-
-    return jsonpResponse_(result, parameters.callback);
-  } catch (error) {
-    if (e && e.parameter && String(e.parameter.action || '') === 'view') {
-      return pdfViewerError_(friendlyError_(error));
-    }
-    return jsonpResponse_(
-      { ok: false, message: friendlyError_(error) },
-      e && e.parameter && e.parameter.callback
-    );
-  }
-}
-
-function doPost(e) {
-  var nonce = '';
-  try {
-    if (!e || !e.parameter || !e.parameter.payload) {
-      throw new Error('No request data was received.');
-    }
-
-    var payload = JSON.parse(e.parameter.payload);
-    nonce = String(payload.nonce || '');
-    var action = String(payload.action || '').trim();
-    var result;
-
-    if (action.indexOf('cpc') !== 0) adgbFeatureGuardPost_(action,payload);
-
-    if (action === 'adminReleaseReadiness') {
-      result = adgbAdminReleaseReadiness_(payload);
-    } else if (action === 'viewSubjectLinkedPdf') {
-      result = adgbViewSubjectLinkedPdf_(payload);
-    } else if (action === 'adminSubjectPdfModeStatus') {
-      result = adgbSubjectPdfModeStatus_(payload);
-    } else if (action === 'adminPdfSharingAudit') {
-      result = adgbAdminPdfSharingAuditReadOnly_(payload);
-    } else if (action === 'adminRecoveryAudit') {
-      result = adgbRecoveryAuditReadOnly_(payload);
-    } else if (action === 'adminDriveInventory') {
-      result = adgbDriveInventoryReadOnly_(payload);
-    } else if (action === 'adminHealthMonitor') {
-      result = adgbAdminHealthMonitor_(payload);
-    } else if (action === 'adminDiagnostics') {
-      result = adgbAdminDiagnostics_(payload);
-    } else if (action === 'adminFeatureAccess') {
-      result = adgbFeatureManage_(payload);
-    } else if (action === 'login') {
-      result = handlePortalLogin_(payload);
-    } else if (action === 'sessionCheck') {
-      result = handlePortalSessionCheck_(payload);
-    } else if (action === 'logout') {
-      result = handlePortalLogout_(payload);
-    } else if (action === 'adminListUsers') {
-      result = handleAdminListUsers_(payload);
-    } else if (action === 'adminSaveUser') {
-      result = handleAdminSaveUser_(payload);
-    } else if (action === 'adminDeleteUser') {
-      result = handleAdminDeleteUser_(payload);
-    } else if (action === 'adminGetPortalAccess') {
-      result = handleAdminGetPortalAccess_(payload);
-    } else if (action === 'adminSavePortalAccess') {
-      result = handleAdminSavePortalAccess_(payload);
-    } else if (action === 'adminGetSecuritySettings') {
-      result = handleAdminGetSecuritySettings_(payload);
-    } else if (action === 'adminSaveSecuritySettings') {
-      result = handleAdminSaveSecuritySettings_(payload);
-    } else if (action === 'upload') {
-      result = handleUpload_(payload);
-    } else if (action === 'viewSubmission') {
-      result = handleViewSubmission_(payload);
-    } else if (action === 'removeSubmission') {
-      result = handleRemoveSubmission_(payload);
-    } else if (action === 'adminMarkPhysicallyReceived') {
-      result = handleAdminMarkPhysicallyReceived_(payload);
-    } else if (action === 'permissionVerify') {
-      var permissionSession = requirePortalSession_(payload.sessionToken);
-      requirePortalPermission_(permissionSession, String(payload.permission || ''));
-      result = {
-        ok: true,
-        message: 'Permission verified.',
-        user: publicPortalUser_(permissionSession)
-      };
-    } else if (action === 'adminGetSubmissionHistory') {
-      result = handleAdminGetSubmissionHistory_(payload);
-    } else if (action === 'getDriveFolderLink') {
-      var driveSession = requirePortalSession_(payload.sessionToken);
-      requirePortalPermission_(driveSession, 'driveFolderView');
-
-      // V15.21: expose ONLY the Current Submission Cycle folder.
-      var submissionFolder = getSubjectParentFolder_();
-
-      result = {
-        ok: true,
-        folderName: submissionFolder.getName(),
-        folderId: submissionFolder.getId(),
-        folderUrl: submissionFolder.getUrl(),
-        message: 'Current Submission Cycle folder link ready.'
-      };
-    } else if (action === 'adminVerify') {
-      verifyCode_('HEAD_OFFICE', payload.securityCode, 'subjectManage');
-      result = {
-        ok: true,
-        message: 'Management access verified.',
-        backendVersion: CONFIG.BACKEND_VERSION
-      };
-    } else if (action === 'adminAddSubject') {
-      result = handleAddSubject_(payload);
-    } else if (action === 'adminUpdateSubjectLink') {
-      result = handleUpdateSubjectLink_(payload);
-    } else if (
-      action === 'adminRenameSubject' ||
-      action === 'renameSubject' ||
-      action === 'adminRenameReportSubject'
-    ) {
-      // Main fix: the frontend Save new name button sends adminRenameSubject.
-      result = handleRenameSubject_(payload);
-    } else if (action === 'adminSetSubjectSubmission') {
-      result = handleSetSubjectSubmission_(payload);
-    } else if (action === 'adminSetSubjectVisibility') {
-      result = handleSetSubjectVisibility_(payload);
-    } else if (
-      action === 'adminSetSubjectUrgency' ||
-      action === 'adminSetSubjectImportance'
-    ) {
-      result = handleSetSubjectUrgency_(payload);
-    } else if (action === 'adminSetSubjectTimeBound') {
-      result = handleSetSubjectTimeBound_(payload);
-    } else if (action === 'adminSetSubjectNote') {
-      result = handleSetSubjectNote_(payload);
-    } else if (action === 'adminNoticeBoardManage') {
-      result = adgbNoticeManage_(payload);
-    } else if (action === 'adminImportantLinksManage') {
-      // This handler independently requires a verified ADMIN session.
-      result = adgbImportantLinksManage_(payload);
-    } else if (action === 'cpcBootstrap') {
-      result = cpcBootstrap_(payload);
-    } else if (action === 'cpcGetSubmission') {
-      result = cpcGetSubmission_(payload);
-    } else if (action === 'cpcSaveDraft') {
-      result = cpcSave_(payload, false);
-    } else if (action === 'cpcSubmit') {
-      result = cpcSave_(payload, true);
-    } else if (action === 'cpcReview') {
-      result = cpcReview_(payload);
-    } else if (action === 'cpcCompilation') {
-      result = cpcCompilation_(payload);
-    } else if (action === 'cpcAdminSaveAccess') {
-      result = cpcAdminSaveAccess_(payload);
-    } else if (action === 'cpcAdminRemoveAccess') {
-      result = cpcAdminRemoveAccess_(payload);
-    } else if (action === 'adminArchiveList') {
-      result = adgbArchiveList_(payload);
-    } else if (action === 'adminArchiveView') {
-      result = adgbArchiveView_(payload);
-    } else if (action === 'adminOfficeReviewList') {
-      result = adgbOfficeReviewList_(payload);
-    } else if (action === 'adminOfficeReviewSave') {
-      result = adgbOfficeReviewSave_(payload);
-    } else if (action === 'adminOfficeReviewAuditList') {
-      result = adgbOfficeReviewAuditList_(payload);
-    } else if (action === 'adminComplianceTrends') {
-      result = adgbComplianceTrends_(payload);
-    } else if (action === 'adminComplianceCapture') {
-      result = adgbComplianceCapture_(payload);
-    } else if (action === 'adminGetOfficeEmails') {
-      result = handleGetOfficeEmails_(payload);
-    } else if (action === 'adminSetOfficeEmail') {
-      result = handleSetOfficeEmail_(payload);
-    } else if (action === 'adminSendPendingEmails') {
-      result = handleAdminSendPendingEmails_(payload);
-    } else if (action === 'adminSetSubjectRecurrence') {
-      result = handleSetSubjectRecurrence_(payload);
-    } else if (action === 'adminArchiveSubject') {
-      result = handleArchiveSubject_(payload);
-    } else if (
-      action === 'adminRenameSubjectFolders' ||
-      action === 'fixSubjectFolderNames'
-    ) {
-      result = handleAdminRenameSubjectFolders_(payload);
-    } else if (
-      action === 'adminAddStickyNote' ||
-      action === 'addStickyNote'
-    ) {
-      result = handleAddStickyNote_(payload);
-    } else if (
-      action === 'adminUpdateStickyNote' ||
-      action === 'updateStickyNote'
-    ) {
-      result = handleUpdateStickyNote_(payload);
-    } else if (
-      action === 'adminCompleteStickyNote' ||
-      action === 'completeStickyNote'
-    ) {
-      result = handleCompleteStickyNote_(payload);
-    } else if (
-      action === 'adminRestoreStickyNote' ||
-      action === 'restoreStickyNote'
-    ) {
-      result = handleRestoreStickyNote_(payload);
-    } else if (
-      action === 'adminDeleteStickyNote' ||
-      action === 'deleteStickyNote'
-    ) {
-      result = handleDeleteStickyNote_(payload);
-    } else if (
-      action === 'adminReorderStickyNotes' ||
-      action === 'reorderStickyNotes'
-    ) {
-      result = handleReorderStickyNotes_(payload);
-    } else if (
-      action === 'adminAddRawItem' ||
-      action === 'addRawItem' ||
-      action === 'adminAddRawDataItem' ||
-      action === 'adminAddRawDataRow' ||
-      action === 'addRawDataRow'
-    ) {
-      result = handleAddRawItem_(payload);
-    } else if (
-      action === 'adminAddRawSubItem' ||
-      action === 'addRawSubItem' ||
-      action === 'adminAddRawSubRow'
-    ) {
-      result = handleAddRawSubItem_(payload);
-    } else if (
-      action === 'adminDeleteRawSubItem' ||
-      action === 'deleteRawSubItem' ||
-      action === 'adminRemoveRawSubItem'
-    ) {
-      result = handleDeleteRawSubItem_(payload);
-    } else if (
-      action === 'adminRenameRawItem' ||
-      action === 'renameRawItem' ||
-      action === 'adminEditRawItem'
-    ) {
-      result = handleRenameRawItem_(payload);
-    } else if (
-      action === 'saveRawDataValue' ||
-      action === 'saveRawValue' ||
-      action === 'updateRawDataValue'
-    ) {
-      result = handleSaveRawDataValue_(payload);
-    } else if (
-      action === 'adminArchiveRawItem' ||
-      action === 'archiveRawItem'
-    ) {
-      result = handleArchiveRawItem_(payload);
-    } else {
-      throw new Error('Unsupported operation: ' + (action || '(blank)') + '.');
-    }
-
-    result.nonce = nonce;
-    result.backendVersion = CONFIG.BACKEND_VERSION;
-
-    if (
-      [
-        'adminAddRawItem',
-        'adminAddRawSubItem',
-        'adminDeleteRawSubItem',
-        'adminRenameRawItem',
-        'saveRawDataValue',
-        'adminArchiveRawItem'
-      ].indexOf(action) !== -1
-    ) {
-      invalidateRawCache_();
-    }
-
-    saveReceipt_(nonce, result);
-    return postMessageResponse_(result);
-  } catch (error) {
-    var failure = {
-      ok: false,
-      nonce: nonce,
-      message: friendlyError_(error),
-      backendVersion: CONFIG.BACKEND_VERSION
-    };
-    saveReceipt_(nonce, failure);
-    return postMessageResponse_(failure);
-  }
-}
-
-function handleUpload_(payload) {
-  enforcePortalOfficeActionMode_(payload.securityCode);
-  var office=getOfficeById_(payload.officeId); verifyCode_(office.id,payload.securityCode,'reportUpload');
-  var instance=resolveActiveSubjectInstance_(payload.subjectId), subject=instance.master;
-  if(!subject.submissionEnabled)throw new Error('Head Office has disabled submissions for this report subject.');
-  var originalName=cleanFileName_(payload.fileName||'report.pdf'), mime=String(payload.mimeType||'').toLowerCase(); if(mime&&mime!=='application/pdf')throw new Error('Only PDF files are permitted.');
-  var base64=String(payload.fileBase64||'').replace(/^data:application\/pdf;base64,/,''); if(!base64)throw new Error('The selected PDF was empty.');
-  var maxBytes=CONFIG.MAX_FILE_MB*1024*1024; if(Math.floor(base64.length*.75)>maxBytes)throw new Error('The PDF exceeds the '+CONFIG.MAX_FILE_MB+' MB file limit.');
-  var bytes; try{bytes=Utilities.base64Decode(base64);}catch(e){throw new Error('The PDF could not be read. Select the file again.');}
-  if(bytes.length>maxBytes)throw new Error('The PDF exceeds the '+CONFIG.MAX_FILE_MB+' MB file limit.'); if(!looksLikePdf_(bytes))throw new Error('The selected file is not a valid PDF.');
-  instance=resolveActiveSubjectInstance_(payload.subjectId);subject=instance.master;if(!instance.submissionEnabled)throw new Error('Submissions are closed for this report subject or reporting period.');
-  /* V17.6.10: acquire the portal lock BEFORE resolving/creating the Drive
-     folder. Two offices can upload at the same time; creating the folder
-     outside the lock allowed both requests to see "no folder" and create
-     duplicate same-named folders. */
-  var lock=acquirePortalLock_();
-  try{
-    instance=resolveActiveSubjectInstance_(payload.subjectId);subject=instance.master;
-    if(!instance.submissionEnabled)throw new Error('Submissions are closed for this report subject or reporting period.');
-    // V17.8.2: best-effort replay protection for the SAME frontend request.
-    // The server lock prevents concurrent requests with the same nonce from
-    // both creating PDFs. New intentional uploads use a new nonce.
-    var uploadRequestNonce=String(payload.nonce||'').trim();
-    if(uploadRequestNonce && !/^[A-Za-z0-9_-]{16,100}$/.test(uploadRequestNonce))
-      throw new Error('Invalid upload request reference. Refresh and try again.');
-    var uploadFingerprint=uploadRequestNonce ? adgbUploadFingerprint_(office.id,instance.instanceId,originalName,bytes) : '';
-    // V17.8.7: query the durable append-only event marker before creating
-    // another Drive file. This guards retries even after CacheService eviction.
-    // The marker lives in existing Submissions column Q; no new sheet.
-    var spreadsheet=getDatabase_();
-    var persistedUpload=uploadRequestNonce ? adgbPersistentUploadLookup_(
-      spreadsheet,uploadRequestNonce,uploadFingerprint,office.id,instance.instanceId) : null;
-    if(persistedUpload)return persistedUpload;
-    var previousUpload=uploadRequestNonce ? adgbUploadReplayLookup_(uploadRequestNonce,uploadFingerprint) : null;
-    if(previousUpload)return previousUpload;
-    var folder=getOrCreateReportCycleFolder_(subject,instance.reportKind);
-    var timestamp=Utilities.formatDate(new Date(),CONFIG.TIME_ZONE,'yyyyMMdd_HHmmss');
-    var savedName=sanitizeName_(office.name)+'_'+(instance.reportKind==='QUARTERLY'?'QUARTERLY':'MONTHLY')+'_'+timestamp+'_'+originalName;
-    var file=folder.createFile(Utilities.newBlob(bytes,'application/pdf',savedName));
-    var id=Utilities.getUuid(), cycle=currentCycleKey_();
-    var uploadNote=uploadRequestNonce ? adgbPersistentUploadMarker_(uploadRequestNonce,uploadFingerprint) : '';
-    appendSubmission_({submissionId:id,subjectId:instance.instanceId,masterSubjectId:subject.id,subjectName:instance.displayName,reportKind:instance.reportKind,cycleKey:cycle,officeId:office.id,officeName:office.name,fileName:savedName,fileId:file.getId(),fileUrl:file.getUrl(),sizeBytes:bytes.length,note:uploadNote},spreadsheet);
-    upsertCurrentStatus_({submissionId:id,subjectId:instance.instanceId,masterSubjectId:subject.id,subjectName:instance.displayName,reportKind:instance.reportKind,cycleKey:cycle,officeId:office.id,officeName:office.name,submitted:true,submittedAt:new Date(),fileName:savedName,fileId:file.getId(),fileUrl:file.getUrl(),sizeBytes:bytes.length},spreadsheet);
-    SpreadsheetApp.flush();
-
-    /*
-     * V17.6.9 FIX:
-     * Do NOT perform a second full dashboard read immediately after writing.
-     * That read could see a transient/stale index and incorrectly report
-     * "status could not be confirmed" even though the PDF and submission
-     * rows had already been written. The frontend already paints Submitted
-     * from the successful response and then performs a fresh dashboard read.
-     * Current_Status + append-only Submissions remain the source of truth.
-     */
-    SpreadsheetApp.flush();
-    invalidateCache_();
-
-    var submittedAt=new Date().toISOString();
-    var uploadResponse={
-      ok:true,
-      message:office.name+' '+(instance.reportKind==='QUARTERLY'?'quarterly':(instance.reportKind==='ONE_TIME'?'one-time':'monthly'))+' report submitted successfully.',
-      submittedAt:submittedAt,
-      statusKey:instance.instanceId+'__'+office.id,
-      subjectId:instance.instanceId,
-      officeId:office.id
-    };
-    // Successful response is recorded before releasing the lock. A retry of
-    // this very same request returns the original result, not a second PDF.
-    if(uploadRequestNonce)adgbUploadReplayStore_(uploadRequestNonce,uploadFingerprint,uploadResponse);
-    return uploadResponse;
-  }catch(error){
-    /* Keep a successfully created PDF if a later indexing/cache operation
-       fails. The append-only submission record is authoritative. */
-    throw error;
-  }finally{lock.releaseLock();}
-}
-
-function handleRemoveSubmission_(payload) {
-  enforcePortalOfficeActionMode_(payload.securityCode);
-  var office=getOfficeById_(payload.officeId);
-  verifyCode_(office.id,payload.securityCode,'reportRemove');
-  var instance=resolveActiveSubjectInstance_(payload.subjectId);
-  if(!instance.master.submissionEnabled)throw new Error('Head Office has disabled changes for this report subject.');
-  var lock=acquirePortalLock_();
-  try {
-    instance=resolveActiveSubjectInstance_(payload.subjectId);
-    var subject=instance.master;
-    if(!subject.submissionEnabled)throw new Error('Submissions are closed for this report subject.');
-    var spreadsheet=getDatabase_();
-    var latest=findLatestSubmissionForOffice_(instance.instanceId,office.id,spreadsheet);
-    if(!latest||latest.status!=='SUBMITTED')throw new Error('No submitted report is available for removal in this reporting period. Refresh to confirm the current status.');
-    // V17.8.3: do not put the ONLY PDF in Trash before an auditable removal
-    // event and the Current_Status record are durably written and verified.
-    var id=Utilities.getUuid(),cycle=currentCycleKey_();
-    var event={submissionId:id,subjectId:instance.instanceId,masterSubjectId:subject.id,
-      subjectName:instance.displayName,reportKind:instance.reportKind,cycleKey:cycle,
-      officeId:office.id,officeName:office.name,fileName:latest.fileName,
-      fileId:latest.fileId,fileUrl:latest.fileUrl,sizeBytes:latest.sizeBytes,
-      status:'Removed',receivedPhysically:latest.receivedPhysically===true,
-      note:'ADGB_REMOVAL_PENDING_V187'};
-    appendSubmission_(event,spreadsheet);
-    var removalLog=spreadsheet.getSheetByName(CONFIG.SUBMISSIONS_SHEET);
-    var removalRow=removalLog.getLastRow();
-    // Confirm this is our event row before considering any cleanup.
-    if(String(removalLog.getRange(removalRow,1).getValue())!==id)
-      throw new Error('Removal record could not be confirmed. PDF has not been moved to Trash.');
-    upsertCurrentStatus_({submissionId:id,subjectId:instance.instanceId,
-      masterSubjectId:subject.id,subjectName:instance.displayName,
-      reportKind:instance.reportKind,cycleKey:cycle,officeId:office.id,
-      officeName:office.name,submitted:false,submittedAt:'',
-      fileName:latest.fileName,fileId:latest.fileId,fileUrl:latest.fileUrl,
-      sizeBytes:latest.sizeBytes},spreadsheet);
-    SpreadsheetApp.flush();
-    var parsed=parseSubjectInstanceId_(instance.instanceId);
-    var key=cycle+'__'+(instance.reportKind==='FORTNIGHTLY'
-      ?subjectInstanceId_(subject.id,'FORTNIGHTLY',parsed.periodToken)
-      :subjectInstanceId_(subject.id,instance.reportKind))+'__'+office.id;
-    var verified=getCurrentStatusIndex_(spreadsheet)[key];
-    if(!verified||verified.submitted!==false||String(verified.submissionId)!==id){
-      throw new Error('Removal event saved, but status verification failed. PDF was NOT trashed. Contact the Administrator to reconcile before retrying.');
-    }
-    // DB changes are now authoritative even if Drive cleanup fails.
-    var cleanupPending=false;
-    if(latest.fileId){
-      try{ DriveApp.getFileById(latest.fileId).setTrashed(true); }
-      catch(error){ cleanupPending=true; }
-    }
-    // Persistent cleanup marker lives in the SAME append-only event row.
-    // A crash leaves PENDING for an administrator to inspect. Do not try
-    // deleting/trashing anything from the read-only recovery audit.
-    if(!cleanupPending){
-      try{
-        removalLog.getRange(removalRow,17).setValue('ADGB_REMOVAL_DONE_V187');
-        SpreadsheetApp.flush();
-      }catch(error){ cleanupPending=true; }
-    }
-    invalidateCache_();
-    return {ok:true,removalRecorded:true,cleanupPending:cleanupPending,
-      message:office.name+' report marked Removed for this reporting period.'+
-      (cleanupPending?' PDF cleanup requires Administrator review; do not submit the removal again.':
-       latest.fileId?' PDF moved to Google Drive Trash.':' No PDF was attached.')};
-  } finally { lock.releaseLock(); }
-}
-
-/**
- * V17.7.21:
- * Head Office can mark an office's report as received WITHOUT a digital
- * upload -- e.g. a report that physically arrived on paper, or by email
- * outside the portal. Records the office-provided/admin-provided date of
- * receipt as the "Submitted At" time, and flags this record as
- * receivedPhysically so it displays with its own distinct badge and is
- * clearly distinguishable from a normal PDF upload everywhere in the
- * portal (dashboard cell, submission history, View action).
- *
- * Deliberately mirrors handleUpload_'s write pattern (append-only log +
- * Current_Status upsert) so it is subject to the exact same "permanently
- * submitted until removed" guarantee as a normal upload -- there is only
- * ONE status pipeline in this portal, not a separate one for this case.
- */
-function handleAdminMarkPhysicallyReceived_(payload) {
-  verifyCode_('HEAD_OFFICE', payload.securityCode, 'subjectManage');
-
-  var office = getOfficeById_(payload.officeId);
-  var receivedDateInput = String(payload.receivedDate || '').trim();
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(receivedDateInput)) {
-    throw new Error('Enter a valid date of receipt.');
-  }
-
-  var receivedDate = new Date(receivedDateInput + 'T12:00:00');
-  if (isNaN(receivedDate.getTime())) {
-    throw new Error('Enter a valid date of receipt.');
-  }
-
-  var lock = acquirePortalLock_();
-
-  try {
-    var instance = resolveActiveSubjectInstance_(payload.subjectId);
-    var subject = instance.master;
-
-    if (!instance.submissionEnabled) {
-      throw new Error('Submissions are closed for this report subject or reporting period.');
-    }
-
-    var id = Utilities.getUuid();
-    var spreadsheet = getDatabase_();
-    var cycle = currentCycleKey_();
-
-    appendSubmission_({
-      submissionId: id,
-      subjectId: instance.instanceId,
-      masterSubjectId: subject.id,
-      subjectName: instance.displayName,
-      reportKind: instance.reportKind,
-      cycleKey: cycle,
-      officeId: office.id,
-      officeName: office.name,
-      fileName: '',
-      fileId: '',
-      fileUrl: '',
-      sizeBytes: 0,
-      timestamp: receivedDate,
-      receivedPhysically: true
-    }, spreadsheet);
-
-    upsertCurrentStatus_({
-      submissionId: id,
-      subjectId: instance.instanceId,
-      masterSubjectId: subject.id,
-      subjectName: instance.displayName,
-      reportKind: instance.reportKind,
-      cycleKey: cycle,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123968">
+<title>8th CPC Data Collection | ADG(B) CPWD</title>
+<style>
+:root{--navy:#123968;--blue:#1761a0;--ink:#17365d;--muted:#60758f;--line:#d9e5f1;--bg:#f2f6fb;--card:#fff;--green:#13845c;--amber:#b7791f;--red:#c43c4b;--shadow:0 8px 24px rgba(24,62,103,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif}
+header{background:linear-gradient(110deg,#0c315e,#214e9b 62%,#087c78);color:#fff;padding:17px clamp(14px,3vw,34px);box-shadow:0 4px 18px #12396824}
+.head{max-width:1600px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:12px}.seal{width:42px;height:42px;border:2px solid #fff;border-radius:11px;display:grid;place-items:center;font-weight:900}.brand h1{font-size:20px;margin:0}.brand p{font-size:11px;margin:2px 0 0;color:#d7e8fa}.head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.pill{border-radius:30px;padding:8px 13px;background:#ffffff1c;border:1px solid #ffffff55;color:#fff;font-size:12px;font-weight:700}
+main{max-width:1600px;margin:22px auto;padding:0 clamp(12px,2vw,28px)}.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}.eyebrow{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:#3274b2;font-weight:900}.hero h2{margin:5px 0;font-size:25px;color:var(--navy)}.hero p{margin:0;color:var(--muted)}.btn{border:0;border-radius:9px;padding:10px 15px;font-weight:800;cursor:pointer;background:var(--blue);color:#fff;box-shadow:0 3px 8px #174d8520}.btn:hover{filter:brightness(1.06)}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.secondary{background:#eaf2fb;color:#174d80;border:1px solid #c9dbee;box-shadow:none}.btn.success{background:var(--green)}.btn.warn{background:#fff4df;color:#895a10;border:1px solid #efd49a;box-shadow:none}.btn.danger{background:#fff0f1;color:#b12c3c;border:1px solid #efc2c8;box-shadow:none}.btn.small{padding:7px 10px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0}.stat{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}.stat b{font-size:23px;color:var(--navy);display:block}.stat span{font-size:11px;color:var(--muted);font-weight:700}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:17px 0}.tab{border:1px solid #cddded;background:#fff;color:#345879;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}.panel h3{margin:0 0 5px;color:var(--navy);font-size:18px}.sub{color:var(--muted);font-size:12px;margin:0 0 15px}.toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:12px 0}.control{display:flex;flex-direction:column;gap:5px;min-width:180px;flex:1}.control label{font-size:11px;font-weight:800;color:#536a84}.control input,.control select,.control textarea{width:100%;border:1px solid #cbd9e8;border-radius:8px;padding:10px 11px;background:#fff;color:#183b60;font:inherit;outline:none}.control input:focus,.control select:focus,.control textarea:focus{border-color:#4a8cc7;box-shadow:0 0 0 3px #3d83c21a}.control textarea{min-height:75px;resize:vertical}
+.group{border:1px solid #e0e9f2;border-radius:12px;margin:13px 0;padding:13px}.group h4{margin:0 0 10px;color:#1d578d;font-size:13px}.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.field{min-width:0}.field label{display:block;font-size:11px;font-weight:800;color:#536a84;margin:0 0 5px}.field input,.field select,.field textarea{width:100%;min-height:38px;border:1px solid #cbd9e8;border-radius:8px;padding:8px 9px;background:#fff;color:#183b60;font:inherit}.field textarea{min-height:65px}.required{color:#bd3544}
+.records{display:grid;gap:8px;margin-top:13px}.record{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}.record strong{display:block}.record small{color:var(--muted)}.actions{display:flex;gap:6px;flex-wrap:wrap}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px;max-height:65vh}.data-table{border-collapse:separate;border-spacing:0;width:100%;min-width:800px;font-size:12px}.data-table th{position:sticky;top:0;background:#164d80;color:#fff;text-align:left;padding:10px;white-space:nowrap;z-index:1}.data-table td{padding:9px 10px;border-bottom:1px solid #e5edf5;vertical-align:top}.data-table tr:nth-child(even) td{background:#f8fbfe}
+.status{display:inline-block;padding:4px 8px;border-radius:20px;font-size:10px;font-weight:900;letter-spacing:.3px}.DRAFT{background:#edf2f7;color:#53677d}.SUBMITTED{background:#fff3d8;color:#94620c}.VERIFIED{background:#dcf6e9;color:#08764d}.RETURNED{background:#ffe8eb;color:#b52f43}
+.notice{border-radius:10px;padding:11px 13px;margin:10px 0;font-size:12px;background:#edf5ff;border:1px solid #cfe2f7;color:#27537f}.notice.error{background:#fff0f1;border-color:#f0c9ce;color:#a62e3e}.notice.ok{background:#e9f8ef;border-color:#c8ebd4;color:#176c45}
+.empty{padding:25px;text-align:center;color:#71849b;border:1px dashed #cbd9e8;border-radius:12px;background:#fbfdff}.hidden{display:none!important}.footer{color:#75879b;text-align:center;font-size:11px;padding:12px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.brand h1{font-size:16px}.hero h2{font-size:21px}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:20px}.panel{padding:13px}.fields{grid-template-columns:1fr}.toolbar .control{min-width:100%}.record{align-items:flex-start;flex-direction:column}.head-actions{width:100%}}
+@media print{header,.tabs,.toolbar,.actions,.btn,.footer{display:none!important}body{background:#fff}.panel,.hero{box-shadow:none;border:0;padding:0}main{max-width:none;margin:0;padding:0}.table-wrap{max-height:none;overflow:visible}.data-table{min-width:0;font-size:9px}.data-table th{position:static;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header><div class="head">
+  <div class="brand"><div class="seal">CPWD</div><div><h1>8th CPC Data Collection & Compilation</h1><p>O/o Additional Director General (B), CPWD · Bengaluru</p></div></div>
+  <div class="head-actions"><span class="pill" id="userPill">Checking portal session…</span><a class="pill" href="./index.html" style="text-decoration:none">← Main Portal</a></div>
+</div></header>
+<main>
+  <div id="loginGuard" class="panel hidden"><h3>Portal login required</h3><p class="sub">Sign in to the ADG(B) Report Portal first, then open the 8th CPC module.</p><a class="btn" href="./index.html">Go to Main Portal Login</a></div>
+  <div id="app" class="hidden">
+    <section class="hero"><div><div class="eyebrow">Dedicated reporting workspace</div><h2>8th Central Pay Commission — Regional Return</h2><p>Sub-office entry → Parent-office verification → ADG(B) consolidated compilation</p></div><div class="actions"><button class="btn secondary" id="refreshBtn">↻ Refresh status</button></div></section>
+    <section class="stats" id="stats"></section>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="entry">✎ Data Entry</button>
+      <button class="tab" data-tab="review">✓ Office Review</button>
+      <button class="tab" data-tab="compile">▦ Compilation</button>
+      <button class="tab hidden" data-tab="access" id="accessTab">⚙ Access Control</button>
+    </nav>
+    <div id="message" class="hidden"></div>
+    <section id="entryPanel" class="panel">
+      <h3>Sub-office data entry</h3><p class="sub">Enter one record per cadre/post, Pay Level, or Pay Level + location as prescribed. Save drafts before submitting.</p>
+      <div class="toolbar">
+        <div class="control"><label>Parent office</label><select id="entryParent"></select></div>
+        <div class="control"><label>Sub-office</label><select id="entrySub"></select></div>
+        <div class="control"><label>Annexure</label><select id="entryAnnexure"></select></div>
+      </div>
+      <div id="entryState" class="notice">Select the office, sub-office and annexure.</div>
+      <div id="entryForm"></div>
+      <div class="actions"><button class="btn secondary" id="addRecordBtn">＋ Add record to list</button><button class="btn" id="saveDraftBtn">Save draft</button><button class="btn success" id="submitBtn">Submit for verification</button></div>
+      <div id="recordList" class="records"></div>
+    </section>
+    <section id="reviewPanel" class="panel hidden">
+      <h3>Parent-office verification</h3><p class="sub">Review submitted annexures from subordinate offices. Verified records are included in the parent-office and ADG(B) compilation.</p>
+      <div class="toolbar"><div class="control"><label>Filter by status</label><select id="reviewFilter"><option value="SUBMITTED">Awaiting verification</option><option value="ALL">All statuses</option><option value="VERIFIED">Verified</option><option value="RETURNED">Returned</option><option value="DRAFT">Drafts</option></select></div><div class="control"><label>Filter by annexure</label><select id="reviewAnnexure"><option value="ALL">All annexures</option><option>L</option><option>N</option><option>O</option><option>P</option><option>Q</option><option>R</option></select></div></div>
+      <div id="reviewList" class="records"></div>
+      <div id="reviewDetail" class="hidden"></div>
+    </section>
+    <section id="compilePanel" class="panel hidden">
+      <h3>Automatic compilation</h3><p class="sub">Only parent-office verified records are included. Administrator sees the consolidated Bengaluru regional return; parent reviewers see their own office compilation.</p>
+      <div class="toolbar"><div class="control"><label>Select annexure</label><select id="compileAnnexure"><option value="L">Annexure L</option><option value="N">Annexure N</option><option value="O">Annexure O</option><option value="P">Annexure P</option><option value="Q">Annexure Q</option><option value="R">Annexure R</option></select></div><button class="btn" id="loadCompileBtn">Generate compilation</button><button class="btn secondary" id="csvBtn" disabled>Export CSV</button><button class="btn secondary" id="printBtn" disabled>Print / Save PDF</button></div>
+      <div id="compileSummary" class="notice">Select an annexure and generate the compilation.</div><div id="compileTable"></div>
+    </section>
+    <section id="accessPanel" class="panel hidden">
+      <h3>Administrator — 8th CPC access mapping</h3><p class="sub">Map existing portal OFFICE accounts to a specific sub-office (Entry) or to an entire parent office (Reviewer). A user must already be assigned to the matching parent office in Portal User Management.</p>
+      <div class="toolbar">
+        <div class="control"><label>Portal OFFICE user</label><select id="accessUser"></select></div>
+        <div class="control"><label>Parent office</label><select id="accessParent"></select></div>
+        <div class="control"><label>Access role</label><select id="accessRole"><option value="ENTRY">Sub-office data entry</option><option value="REVIEWER">Parent-office reviewer</option></select></div>
+        <div class="control" id="accessSubWrap"><label>Assigned sub-office</label><select id="accessSub"></select></div>
+      </div>
+      <button class="btn" id="saveAccessBtn">Save access mapping</button>
+      <div id="accessList" class="records"></div>
+    </section>
+  </div>
+  <div class="footer">ADG(B) Report Submission Portal · 8th CPC module · All times in Indian Standard Time</div>
+</main>
+<script>
+(() => {
+'use strict';
+const API='https://script.google.com/macros/s/AKfycbzDXfkgXAd5WMHErA-qHn4ZMcQV-Irx4Yeg-HNgZJKKJ-RpNcAiDbpyJx_4uyJvKwIzxg/exec';
+const TOKEN_KEY='adgbPortalSessionTokenV1512';
+const $=id=>document.getElementById(id);
+const state={token:'',boot:null,tab:'entry',rows:[],editing:-1,currentSubmission:null,compile:null,reviewSubmission:null};
+function nonce(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');}
+function jsonp(action,params={}){return new Promise((resolve,reject)=>{const cb='cpcJsonp_'+nonce();const sc=document.createElement('script');const t=setTimeout(()=>done(new Error('Backend read timed out.')),20000);function done(err,data){clearTimeout(t);try{delete window[cb]}catch(e){}sc.remove();err?reject(err):resolve(data)}window[cb]=d=>done(null,d);sc.onerror=()=>done(new Error('Could not reach the portal backend.'));const q=new URLSearchParams({...params,action,callback:cb,_:Date.now()});sc.src=API+'?'+q.toString();document.head.appendChild(sc);});}
+function post(action,data={}){return new Promise((resolve,reject)=>{const n=nonce(),frame=document.createElement('iframe'),form=document.createElement('form'),field=document.createElement('textarea');frame.name='cpcFrame_'+n;frame.style.display='none';form.method='POST';form.action=API;form.target=frame.name;form.style.display='none';field.name='payload';field.value=JSON.stringify({action,nonce:n,...data});form.appendChild(field);let done=false,timer=null;const timeout=setTimeout(()=>finish(new Error('The action could not be confirmed. Refresh and check its status before retrying.')),60000);function finish(err,result){if(done)return;done=true;clearTimeout(timeout);if(timer)clearTimeout(timer);window.removeEventListener('message',onMessage);setTimeout(()=>{form.remove();frame.remove()},0);err?reject(err):resolve(result)}function onMessage(e){const p=e.data;if(p?.source==='ADGB_PORTAL'&&p?.data?.nonce===n){p.data.ok?finish(null,p.data):finish(new Error(p.data.message||'Request failed.'));}}async function poll(){if(done)return;try{const r=await jsonp('receipt',{nonce:n});if(r&&!r.pending){r.ok?finish(null,r):finish(new Error(r.message||'Request failed.'));return}}catch(e){}if(!done)timer=setTimeout(poll,1000)}window.addEventListener('message',onMessage);document.body.append(frame,form);form.submit();timer=setTimeout(poll,700);});}
+function showMessage(text,type='info'){const el=$('message');el.className='notice '+(type==='error'?'error':type==='ok'?'ok':'');el.textContent=text;el.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function office(id){return state.boot.offices.find(x=>x.id===id);}
+function activeEntryAccess(){if(state.boot.user.role==='ADMIN')return state.boot.offices.flatMap(o=>o.subOffices.map(s=>({parentOfficeId:o.id,parentOffice:o.name,subOffice:s,accessRole:'ENTRY'})));return state.boot.access.filter(a=>a.accessRole==='ENTRY');}
+function reviewerAccess(){return state.boot.user.role==='ADMIN'||state.boot.access.some(a=>a.accessRole==='REVIEWER');}
+function renderStats(){const a=state.boot.submissions||[],count=s=>a.filter(x=>x.status===s).length;$('stats').innerHTML=[['Submissions',a.length],['Drafts',count('DRAFT')],['Awaiting review',count('SUBMITTED')],['Verified',count('VERIFIED')]].map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');}
+function fillSelect(el,items,first){el.innerHTML=(first?`<option value="">${esc(first)}</option>`:'')+items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('');}
+function initEntry(){const accesses=activeEntryAccess();const parents=[...new Map(accesses.map(a=>[a.parentOfficeId,{value:a.parentOfficeId,label:a.parentOffice}])).values()];fillSelect($('entryParent'),parents,parents.length?'Select parent office':'No entry access assigned');$('entryParent').disabled=state.boot.user.role!=='ADMIN'&&parents.length===1;if(parents.length===1)$('entryParent').value=parents[0].value;fillEntrySubs();fillSelect($('entryAnnexure'),Object.keys(state.boot.schemas).map(k=>({value:k,label:state.boot.schemas[k].title})));loadEntry();}
+function fillEntrySubs(){const p=$('entryParent').value;let subs=activeEntryAccess().filter(a=>a.parentOfficeId===p).map(a=>({value:a.subOffice,label:a.subOffice}));fillSelect($('entrySub'),subs,subs.length?'Select sub-office':'No assigned sub-office');if(subs.length===1)$('entrySub').value=subs[0].value;}
+function fieldInput(f,value=''){let val=value;if(f.type==='number'&&val==='')val='0';if(f.type==='select')return `<select data-field="${f.key}"><option value="">Select…</option>${(f.options||[]).map(o=>`<option ${String(val)===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;if(f.type==='number')return `<input data-field="${f.key}" type="number" min="0" step="1" value="${esc(val)}" ${f.required?'required':''}>`;if(f.label.toLowerCase().includes('remarks')||f.label.length>65||f.label.toLowerCase().includes('qualification')||f.label.toLowerCase().includes('experience'))return `<textarea data-field="${f.key}" placeholder="${esc(f.label)}">${esc(val)}</textarea>`;return `<input data-field="${f.key}" type="text" value="${esc(val)}" placeholder="${esc(f.label)}" ${f.required?'required':''}>`;}
+function renderForm(row={}){if(!row.reportingOfficer&&state.boot?.user?.displayName)row.reportingOfficer=state.boot.user.displayName;const schema=state.boot.schemas[$('entryAnnexure').value];if(!schema){$('entryForm').innerHTML='';return;}const groups={};schema.fields.forEach(f=>(groups[f.group]??=[]).push(f));$('entryForm').innerHTML=Object.entries(groups).map(([g,fields])=>`<div class="group"><h4>${esc(g)}</h4><div class="fields">${fields.map(f=>`<div class="field"><label>${esc(f.label)} ${f.required?'<span class="required">*</span>':''}</label>${fieldInput(f,row[f.key]??'')}</div>`).join('')}</div></div>`).join('');}
+function currentMeta(){return state.boot.submissions.find(s=>s.parentOfficeId===$('entryParent').value&&s.subOffice===$('entrySub').value&&s.annexure===$('entryAnnexure').value);}
+async function loadEntry(){state.rows=[];state.editing=-1;state.currentSubmission=null;renderForm();renderRecordList();const p=$('entryParent').value,sub=$('entrySub').value,a=$('entryAnnexure').value;if(!p||!sub||!a){$('entryState').textContent='Select the parent office, sub-office and annexure.';return;}const meta=currentMeta();if(!meta){$('entryState').textContent='No saved draft or submission exists. Add records below.';setEntryLock(false);return;}try{const r=await post('cpcGetSubmission',{sessionToken:state.token,submissionId:meta.submissionId});state.currentSubmission=r.submission;state.rows=r.submission.rows||[];$('entryState').innerHTML=`Current status: <span class="status ${r.submission.status}">${r.submission.status}</span> · Version ${r.submission.version}${r.submission.reviewRemark?` · Review remark: ${esc(r.submission.reviewRemark)}`:''}`;setEntryLock(['SUBMITTED','VERIFIED'].includes(r.submission.status));renderRecordList();}catch(e){showMessage(e.message,'error');}}
+function setEntryLock(locked){$('entryForm').querySelectorAll('input,select,textarea').forEach(x=>x.disabled=locked);$('addRecordBtn').disabled=locked;$('saveDraftBtn').disabled=locked;$('submitBtn').disabled=locked;}
+function addRecord(){const obj={};document.querySelectorAll('#entryForm [data-field]').forEach(el=>obj[el.dataset.field]=el.value);const schema=state.boot.schemas[$('entryAnnexure').value];const missing=schema.fields.filter(f=>f.required&&!String(obj[f.key]??'').trim());if(missing.length){showMessage('Complete required fields before adding the record: '+missing.map(x=>x.label).join(', '),'error');return;}if(state.editing>=0){state.rows[state.editing]=obj;state.editing=-1;}else state.rows.push(obj);renderForm();renderRecordList();showMessage('Record added to the working list. Save draft or submit when ready.','ok');}
+function renderRecordList(){const schema=state.boot.schemas[$('entryAnnexure').value];if(!state.rows.length){$('recordList').innerHTML='<div class="empty">No records added yet. Complete the fields above and select “Add record to list”.</div>';return;}const keys=schema.fields.filter(f=>['payLevel','cadreName','postName','location','sanctionedStrength','inPosition','employeesDrawingHra','personsInPosition'].includes(f.key)).slice(0,5);$('recordList').innerHTML=state.rows.map((r,i)=>`<div class="record"><div><strong>Record ${i+1}: ${esc(keys.map(f=>r[f.key]).filter(Boolean).join(' · ')||'Entry')}</strong><small>${keys.map(f=>esc(f.label+': '+(r[f.key]??''))).join(' | ')}</small></div><div class="actions"><button class="btn secondary small" data-edit="${i}">Edit</button><button class="btn danger small" data-delete="${i}">Remove</button></div></div>`).join('');$('recordList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{state.editing=Number(b.dataset.edit);renderForm(state.rows[state.editing]);window.scrollTo({top:$('entryForm').offsetTop-80,behavior:'smooth'});});$('recordList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{state.rows.splice(Number(b.dataset.delete),1);renderRecordList();});}
+async function saveEntry(submit){if(state.editing>=0){showMessage('Finish editing the selected record by adding it to the list first.','error');return;}if(!state.rows.length){showMessage('Add at least one record before saving.','error');return;}const p=$('entryParent').value,sub=$('entrySub').value,a=$('entryAnnexure').value;const button=submit?$('submitBtn'):$('saveDraftBtn');button.disabled=true;try{const r=await post(submit?'cpcSubmit':'cpcSaveDraft',{sessionToken:state.token,parentOfficeId:p,subOffice:sub,annexure:a,rows:state.rows});showMessage(r.message,'ok');await refresh();await loadEntry();}catch(e){showMessage(e.message,'error');}finally{button.disabled=false;}}
+function setTab(tab){state.tab=tab;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['entry','review','compile','access'].forEach(t=>$(t+'Panel').classList.toggle('hidden',t!==tab));if(tab==='review')renderReviewList();if(tab==='access')renderAccessList();}
+function renderReviewList(){const can=reviewerAccess();if(!can){$('reviewList').innerHTML='<div class="empty">Parent-office reviewer access has not been assigned to this account.</div>';return;}const status=$('reviewFilter').value,a=$('reviewAnnexure').value;const rows=(state.boot.submissions||[]).filter(s=>(status==='ALL'||s.status===status)&&(a==='ALL'||s.annexure===a)).sort((x,y)=>String(y.submittedAt||'').localeCompare(String(x.submittedAt||'')));$('reviewList').innerHTML=rows.length?rows.map(s=>`<div class="record"><div><strong>${esc(s.parentOffice)} · ${esc(s.subOffice)} · Annexure ${esc(s.annexure)}</strong><small>${s.rowCount} record(s) · Submitted by ${esc(s.createdBy)} · ${s.submittedAt?new Date(s.submittedAt).toLocaleString('en-IN'):''}</small></div><div class="actions"><span class="status ${s.status}">${s.status}</span><button class="btn secondary small" data-review="${s.submissionId}">Review</button></div></div>`).join(''):'<div class="empty">No submissions match this filter.</div>';$('reviewList').querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>openReview(b.dataset.review));}
+async function openReview(id){try{const r=await post('cpcGetSubmission',{sessionToken:state.token,submissionId:id});state.reviewSubmission=r.submission;const s=r.submission,fields=state.boot.schemas[s.annexure].fields;$('reviewDetail').classList.remove('hidden');$('reviewDetail').innerHTML=`<div class="group"><h4>${esc(s.parentOffice)} · ${esc(s.subOffice)} · Annexure ${s.annexure} · ${s.status}</h4><div class="table-wrap"><table class="data-table"><thead><tr>${fields.map(f=>`<th>${esc(f.label)}</th>`).join('')}</tr></thead><tbody>${s.rows.map(row=>`<tr>${fields.map(f=>`<td>${esc(row[f.key]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="control" style="margin-top:12px"><label>Review remark (mandatory when returning)</label><textarea id="reviewRemark" placeholder="Enter verification observations or correction instructions"></textarea></div><div class="actions" style="margin-top:10px"><button class="btn success" id="verifyBtn" ${s.status!=='SUBMITTED'?'disabled':''}>✓ Verify submission</button><button class="btn warn" id="returnBtn" ${s.status!=='SUBMITTED'?'disabled':''}>↶ Return for correction</button></div></div>`;$('verifyBtn').onclick=()=>reviewDecision('VERIFY');$('returnBtn').onclick=()=>reviewDecision('RETURN');}catch(e){showMessage(e.message,'error');}}
+async function reviewDecision(decision){const s=state.reviewSubmission;try{const r=await post('cpcReview',{sessionToken:state.token,submissionId:s.submissionId,decision,remark:$('reviewRemark').value});showMessage(r.message,'ok');$('reviewDetail').classList.add('hidden');await refresh();renderReviewList();}catch(e){showMessage(e.message,'error');}}
+async function loadCompilation(){const a=$('compileAnnexure').value;try{const r=await post('cpcCompilation',{sessionToken:state.token,annexure:a});state.compile=r;const records=r.records||[];$('compileSummary').textContent=`${r.title}: ${records.length} verified record(s) included. Scope: ${state.boot.user.role==='ADMIN'?'All six parent-office groups':'Your parent office only'}.`;$('compileTable').innerHTML=records.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Parent Office</th><th>Sub-office</th>${r.fields.map(f=>`<th>${esc(f.label)}</th>`).join('')}</tr></thead><tbody>${records.map(row=>`<tr><td>${esc(row.parentOffice)}</td><td>${esc(row.subOffice)}</td>${r.fields.map(f=>`<td>${esc(row[f.key]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">No verified records are available for this annexure yet.</div>';$('csvBtn').disabled=!records.length;$('printBtn').disabled=!records.length;}catch(e){showMessage(e.message,'error');}}
+function csvCell(v){let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+function exportCsv(){if(!state.compile)return;const r=state.compile,headers=['Parent Office','Sub-office',...r.fields.map(f=>f.label)],keys=['parentOffice','subOffice',...r.fields.map(f=>f.key)];const lines=[headers.map(csvCell).join(','),...r.records.map(row=>keys.map(k=>csvCell(row[k])).join(','))];const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='8CPC_Annexure_'+r.annexure+'_Verified_Compilation.csv';a.click();URL.revokeObjectURL(url);}
+function renderAccessList(){if(state.boot.user.role!=='ADMIN')return;const rows=state.boot.access||[];$('accessList').innerHTML=rows.length?rows.map(a=>`<div class="record"><div><strong>${esc(a.username)} · ${esc(a.accessRole)}</strong><small>${esc(a.parentOffice)} ${a.subOffice?'· '+esc(a.subOffice):'· All subordinate offices'}</small></div><button class="btn danger small" data-revoke="${a.accessId}">Disable</button></div>`).join(''):'<div class="empty">No 8th CPC user mappings created yet.</div>';$('accessList').querySelectorAll('[data-revoke]').forEach(b=>b.onclick=async()=>{if(!confirm('Disable this 8th CPC access mapping?'))return;try{await post('cpcAdminRemoveAccess',{sessionToken:state.token,accessId:b.dataset.revoke});showMessage('Access mapping disabled.','ok');await refresh();renderAccessList();}catch(e){showMessage(e.message,'error');}});}
+function initAccess(){const users=state.boot.users.filter(u=>u.role==='OFFICE'&&u.active).map(u=>({value:u.id,label:u.displayName+' ('+u.username+') · '+u.officeId}));fillSelect($('accessUser'),users,'Select portal OFFICE user');fillSelect($('accessParent'),state.boot.offices.map(o=>({value:o.id,label:o.name})),'Select parent office');fillAccessSubs();}
+function fillAccessSubs(){const o=office($('accessParent').value);fillSelect($('accessSub'),(o?o.subOffices:[]).map(s=>({value:s,label:s})));$('accessSubWrap').classList.toggle('hidden',$('accessRole').value==='REVIEWER');}
+async function saveAccess(){try{const r=await post('cpcAdminSaveAccess',{sessionToken:state.token,userId:$('accessUser').value,parentOfficeId:$('accessParent').value,subOffice:$('accessRole').value==='ENTRY'?$('accessSub').value:'',accessRole:$('accessRole').value});showMessage(r.message,'ok');await refresh();renderAccessList();}catch(e){showMessage(e.message,'error');}}
+async function refresh(){const r=await post('cpcBootstrap',{sessionToken:state.token});state.boot=r;renderStats();$('userPill').textContent=r.user.displayName+' · '+r.user.role;$('accessTab').classList.toggle('hidden',r.user.role!=='ADMIN');const canEnter=r.user.role==='ADMIN'||r.access.some(a=>a.accessRole==='ENTRY');const canReview=reviewerAccess();document.querySelector('[data-tab="entry"]').classList.toggle('hidden',!canEnter);document.querySelector('[data-tab="review"]').classList.toggle('hidden',!canReview);document.querySelector('[data-tab="compile"]').classList.toggle('hidden',!canReview);$('entryParent').innerHTML='';initEntry();if(r.user.role==='ADMIN'){initAccess();}renderReviewList();setTab(canEnter?'entry':canReview?'review':'entry');}
+async function init(){state.token=sessionStorage.getItem(TOKEN_KEY)||'';if(!state.token){$('loginGuard').classList.remove('hidden');return;}try{$('userPill').textContent='Validating session…';$('app').classList.remove('hidden');await refresh();}catch(e){$('app').classList.add('hidden');$('loginGuard').classList.remove('hidden');$('loginGuard').querySelector('p').textContent=e.message+' Sign in to the main portal and reopen this page.';}}
+$('entryParent').addEventListener('change',()=>{fillEntrySubs();loadEntry();});$('entrySub').addEventListener('change',loadEntry);$('entryAnnexure').addEventListener('change',loadEntry);
+$('addRecordBtn').onclick=addRecord;$('saveDraftBtn').onclick=()=>saveEntry(false);$('submitBtn').onclick=()=>{if(confirm('Submit this annexure for parent-office verification? You will not be able to edit it unless it is returned.'))saveEntry(true);};
+$('tabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$('reviewFilter').onchange=renderReviewList;$('reviewAnnexure').onchange=renderReviewList;$('loadCompileBtn').onclick=loadCompilation;$('csvBtn').onclick=exportCsv;$('printBtn').onclick=()=>window.print();$('refreshBtn').onclick=()=>refresh().then(()=>showMessage('Status refreshed.','ok')).catch(e=>showMessage(e.message,'error'));
+$('accessParent').onchange=fillAccessSubs;$('accessRole').onchange=fillAccessSubs;$('saveAccessBtn').onclick=saveAccess;
+init();
+})();
+</script>
+</body>
+</html>
